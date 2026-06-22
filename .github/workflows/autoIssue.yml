@@ -47,10 +47,8 @@ jobs:
           labels: chore
 
       # 프로젝트의 'Backlog' 컬럼에 자동 추가
-      - name : Github 프로젝트에 추가
-        uses: jinhokim98/project-flow-add-issue-to-project@v1
+      - name : GitHub 프로젝트에 추가
+        uses: actions/add-to-project@v2
         with:
-          github_token: ${{ secrets.PROJECT_ACCESS_TOKEN }}
-          project_owner: rktclgh
-          project_number: 5
-          target_column: 'Backlog'
+          project-url: "https://github.com/users/rktclgh/projects/5"
+          github-token: ${{ secrets.PROJECT_ACCESS_TOKEN }}

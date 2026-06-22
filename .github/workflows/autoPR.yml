@@ -63,7 +63,7 @@ jobs:
 
       # 프로젝트에 등록
       - name: GitHub 프로젝트에 추가
-        uses: actions/add-to-project@v1.0.2
+        uses: actions/add-to-project@v2
         with:
           project-url: "https://github.com/users/rktclgh/projects/5"
           github-token: ${{ secrets.PROJECT_ACCESS_TOKEN }}
