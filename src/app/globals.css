@@ -4,10 +4,100 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Design tokens sourced from Figma "신한해커톤" (Spectral plugin export) */
+@theme {
+  /* Colors — node 732:2230 */
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  --color-primary-50: #ecf2fd;
+  --color-primary-100: #bdd0f9;
+  --color-primary-200: #8eaff5;
+  --color-primary-300: #608ef1;
+  --color-primary-400: #316ced;
+  --color-primary-500: #1351d8;
+  --color-primary-600: #0f40ab;
+  --color-primary-700: #0b2e7a;
+  --color-primary-800: #071c4b;
+  --color-primary-900: #020b1c;
+
+  --color-gray-50: #fafafa;
+  --color-gray-100: #eceeee;
+  --color-gray-200: #d0d6d7;
+  --color-gray-300: #b5bdbf;
+  --color-gray-400: #9aa5a8;
+  --color-gray-500: #7e8d90;
+  --color-gray-600: #657376;
+  --color-gray-700: #4e585a;
+  --color-gray-800: #363d3f;
+  --color-gray-900: #1f2324;
+
+  /* Typography — node 732:2496, family: SF Pro */
+  --text-title-bold-28: 28px;
+  --text-title-bold-28--line-height: 1.3;
+  --text-title-bold-28--font-weight: 700;
+
+  --text-title-bold-24: 24px;
+  --text-title-bold-24--line-height: 1.3;
+  --text-title-bold-24--font-weight: 700;
+
+  --text-title-bold-20: 20px;
+  --text-title-bold-20--line-height: 1.3;
+  --text-title-bold-20--font-weight: 700;
+
+  --text-title-semibold-20: 20px;
+  --text-title-semibold-20--line-height: 1.3;
+  --text-title-semibold-20--font-weight: 590;
+
+  --text-title-semibold-18: 18px;
+  --text-title-semibold-18--line-height: 1.4;
+  --text-title-semibold-18--font-weight: 590;
+
+  --text-title-semibold-16: 16px;
+  --text-title-semibold-16--line-height: 1.4;
+  --text-title-semibold-16--font-weight: 590;
+
+  --text-body-semibold-15: 15px;
+  --text-body-semibold-15--line-height: 1.4;
+  --text-body-semibold-15--font-weight: 590;
+
+  --text-body-semibold-14: 14px;
+  --text-body-semibold-14--line-height: 1.4;
+  --text-body-semibold-14--font-weight: 590;
+
+  --text-body-medium-16: 16px;
+  --text-body-medium-16--line-height: 1.4;
+  --text-body-medium-16--font-weight: 510;
+
+  --text-body-medium-14: 14px;
+  --text-body-medium-14--line-height: 1.4;
+  --text-body-medium-14--font-weight: 510;
+
+  --text-body-medium-13: 13px;
+  --text-body-medium-13--line-height: 1.4;
+  --text-body-medium-13--font-weight: 510;
+
+  --text-body-medium-12: 12px;
+  --text-body-medium-12--line-height: 1.4;
+  --text-body-medium-12--font-weight: 510;
+
+  --text-body-regular-14: 14px;
+  --text-body-regular-14--line-height: 1.4;
+  --text-body-regular-14--font-weight: 400;
+
+  --text-body-regular-13: 13px;
+  --text-body-regular-13--line-height: 1.4;
+  --text-body-regular-13--font-weight: 400;
+
+  --text-body-regular-12: 12px;
+  --text-body-regular-12--line-height: 1.4;
+  --text-body-regular-12--font-weight: 400;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-pretendard), -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -55,8 +145,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: var(--color-primary-500);
+  --primary-foreground: var(--color-white);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -66,7 +156,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: var(--color-primary-300);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -90,8 +180,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: var(--color-primary-400);
+  --primary-foreground: var(--color-gray-900);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -101,7 +191,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: var(--color-primary-500);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
