@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { QueryProvider } from "@/lib/query/query-provider";
 import "./globals.css";
 
-// Pretendard: free, openly-licensed substitute metric-matched to SF Pro,
-// with proper Hangul coverage (SF Pro has none). Variable font covers the
-// full weight range so it renders the Figma type scale's 510/590 weights.
+
 const pretendard = localFont({
   src: "../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
   variable: "--font-pretendard",
@@ -58,7 +57,9 @@ export default function RootLayout({
       lang="en"
       className={`${pretendard.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }
