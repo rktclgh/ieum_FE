@@ -69,6 +69,10 @@
   --text-body-medium-16--line-height: 1.4;
   --text-body-medium-16--font-weight: 510;
 
+  --text-body-medium-15: 15px;
+  --text-body-medium-15--line-height: 1.4;
+  --text-body-medium-15--font-weight: 510;
+
   --text-body-medium-14: 14px;
   --text-body-medium-14--line-height: 1.4;
   --text-body-medium-14--font-weight: 510;
@@ -84,6 +88,10 @@
   --text-body-regular-16: 16px;
   --text-body-regular-16--line-height: 1.4;
   --text-body-regular-16--font-weight: 400;
+
+  --text-body-regular-15: 15px;
+  --text-body-regular-15--line-height: 1.4;
+  --text-body-regular-15--font-weight: 400;
 
   --text-body-regular-14: 14px;
   --text-body-regular-14--line-height: 1.4;
