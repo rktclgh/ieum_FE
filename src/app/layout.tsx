@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { QueryProvider } from "@/lib/query/query-provider";
+import { I18nProvider } from "@/lib/i18n/i18n-provider";
 import "./globals.css";
 
 
@@ -54,11 +55,13 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="ko"
       className={`${pretendard.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <QueryProvider>{children}</QueryProvider>
+        <I18nProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </I18nProvider>
       </body>
     </html>
   );
