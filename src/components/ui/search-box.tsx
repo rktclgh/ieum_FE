@@ -10,10 +10,13 @@ function SearchBox({
   defaultValue,
   value,
   onChange,
+  onFocus,
+  onBlur,
   ...props
 }: React.ComponentProps<"input">) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [hasValue, setHasValue] = React.useState(Boolean(defaultValue ?? value ?? ""))
+  const [isFocused, setIsFocused] = React.useState(false)
 
   const handleClear = () => {
     const input = inputRef.current
@@ -32,7 +35,8 @@ function SearchBox({
     <div
       data-slot="search-box"
       className={cn(
-        "flex h-[45px] w-full items-center gap-3 rounded-full bg-white px-4 py-3 shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)] outline outline-1 -outline-offset-1 outline-gray-50",
+        "flex h-[45px] w-full items-center gap-3 rounded-full px-4 py-3 shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)] outline outline-1 -outline-offset-1 outline-gray-50 transition-colors",
+        hasValue || isFocused ? "bg-gray-50" : "bg-white",
         className
       )}
     >
@@ -45,8 +49,16 @@ function SearchBox({
           setHasValue(event.target.value.length > 0)
           onChange?.(event)
         }}
+        onFocus={(event) => {
+          setIsFocused(true)
+          onFocus?.(event)
+        }}
+        onBlur={(event) => {
+          setIsFocused(false)
+          onBlur?.(event)
+        }}
         className={cn(
-          "w-full bg-transparent text-body-regular-15 outline-none placeholder:text-body-regular-15 placeholder:text-gray-400",
+          "w-full bg-transparent text-body-regular-15 caret-primary-600 outline-none placeholder:text-body-regular-15 placeholder:text-gray-400",
           hasValue ? "text-body-medium-15 text-gray-900" : "text-gray-400"
         )}
         {...props}
