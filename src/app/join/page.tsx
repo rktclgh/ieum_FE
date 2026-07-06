@@ -4,8 +4,8 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
-import { JoinCredentialsForm } from "@/features/join/components/join-credentials-form"
-import { JoinProfileForm } from "@/features/join/components/join-profile-form"
+import { CredentialsForm } from "@/features/join/components/credentials-form"
+import { ProfileForm } from "@/features/join/components/profile-form"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 type JoinStep = "idpw" | "info"
@@ -26,11 +26,11 @@ export default function JoinPage() {
         className="w-full"
       />
       {/* Both steps stay mounted so switching back and forth never resets what's already typed. */}
-      <JoinCredentialsForm
+      <CredentialsForm
         className={step === "idpw" ? undefined : "hidden"}
         onSubmit={() => setStep("info")}
       />
-      <JoinProfileForm className={step === "info" ? undefined : "hidden"} />
+      <ProfileForm className={step === "info" ? undefined : "hidden"} />
     </main>
   )
 }
