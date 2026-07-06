@@ -5,6 +5,7 @@ import { Circle } from "@/components/ui/circle"
 import { Chip } from "@/components/ui/chip"
 import { SearchBox } from "@/components/ui/search-box"
 import { ChoicePill } from "@/components/ui/text-field/choice-pill"
+import { Explanation } from "@/components/ui/text-field/explanation"
 import { Input } from "@/components/ui/text-field/input"
 import { InputWithButton } from "@/components/ui/text-field/input-with-button"
 import { PasswordInput } from "@/components/ui/text-field/password-input"
@@ -17,6 +18,14 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4 pb-28">
         <h1 className="text-title-semibold-18">AppBar 컴포넌트 예시</h1>
         <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <SearchBox placeholder="Label" />
+            <Circle iconSrc="/icons/circle/alarm.svg" />
+          </div>
+          <div className="flex items-center gap-2">
+            <SearchBox placeholder="Label" />
+            <Circle iconSrc="/icons/circle/add-friend.svg" />
+          </div>
           <AppBar title="Label" className="rounded-2xl bg-white" />
           <AppBar title="정보 입력" trailingVariant="close" className="rounded-2xl bg-white" />
           <AppBar title="회원가입" leadingIcon={null} className="rounded-2xl bg-white" />
@@ -32,6 +41,20 @@ export default function Home() {
           <Input placeholder="Label" />
           <Input defaultValue="Label" readOnly />
           <Input defaultValue="Label" error readOnly />
+        </div>
+
+        <h1 className="text-title-semibold-18">Explanation 컴포넌트 예시</h1>
+        <div className="flex flex-col gap-1">
+          <Input placeholder="Label" />
+          <Explanation text="Label" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Input defaultValue="Label" readOnly />
+          <Explanation variant="great" text="Label" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Input defaultValue="Label" error readOnly />
+          <Explanation variant="error" text="Label" />
         </div>
 
         <h1 className="text-title-semibold-18">PasswordInput 컴포넌트 예시</h1>
