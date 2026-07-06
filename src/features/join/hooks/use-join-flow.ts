@@ -10,6 +10,7 @@ import {
   VERIFICATION_CODE_LENGTH,
 } from "@/features/join/constants/validation"
 import {
+  useCheckEmailDuplicate,
   useCheckNicknameDuplicate,
   useSendEmailVerificationCode,
   useSignup,
@@ -48,6 +49,7 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
     React.useState<VerificationStatus>("idle")
   const [secondsLeft, setSecondsLeft] = React.useState(0)
   const [emailVerificationToken, setEmailVerificationToken] = React.useState("")
+  const [isEmailDuplicate, setIsEmailDuplicate] = React.useState(false)
 
   const [nickname, setNickname] = React.useState("")
   const [nicknameStatus, setNicknameStatus] = React.useState<NicknameStatus>("idle")
@@ -55,6 +57,7 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const [gender, setGender] = React.useState<Gender | null>(null)
   const [nationality, setNationality] = React.useState<CountryCode | "">("")
 
+  const checkEmailMutation = useCheckEmailDuplicate()
   const sendCodeMutation = useSendEmailVerificationCode()
   const verifyCodeMutation = useVerifyEmailVerificationCode()
   const checkNicknameMutation = useCheckNicknameDuplicate()
@@ -82,7 +85,9 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const isPasswordConfirmMatch = passwordConfirm.length > 0 && passwordConfirm === password
   const isPasswordConfirmMismatch = passwordConfirm.length > 0 && passwordConfirm !== password
   const isVerified = verificationStatus === "verified"
-  const isVerificationMismatch = verificationStatus === "sent" && verifyCodeMutation.isError
+  const isVerificationExpired = verificationStatus === "sent" && secondsLeft <= 0
+  const isVerificationMismatch =
+    verificationStatus === "sent" && !isVerificationExpired && verifyCodeMutation.isError
   const isCredentialsStepValid = isVerified && isPasswordValid && isPasswordConfirmMatch
 
   const isBirthDateComplete = birthDateDigits.length === BIRTH_DATE_DIGIT_LENGTH
@@ -90,16 +95,35 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const isProfileStepValid =
     nicknameStatus === "available" && isBirthDateComplete && gender !== null && nationality !== ""
 
+  const handleEmailChange = (rawValue: string) => {
+    setEmail(rawValue)
+    setIsEmailDuplicate(false)
+    if (checkEmailMutation.isError) checkEmailMutation.reset()
+    if (sendCodeMutation.isError) sendCodeMutation.reset()
+  }
+
   const handleSendVerification = () => {
     if (!isEmailValid || isVerified) return
     verifyCodeMutation.reset()
-    sendCodeMutation.mutate(
+    checkEmailMutation.mutate(
       { email },
       {
         onSuccess: (data) => {
-          setVerificationCode("")
-          setVerificationStatus("sent")
-          setSecondsLeft(data.expiresInSeconds)
+          if (!data.available) {
+            setIsEmailDuplicate(true)
+            return
+          }
+          setIsEmailDuplicate(false)
+          sendCodeMutation.mutate(
+            { email },
+            {
+              onSuccess: (sendData) => {
+                setVerificationCode("")
+                setVerificationStatus("sent")
+                setSecondsLeft(sendData.expiresInSeconds)
+              },
+            }
+          )
         },
       }
     )
@@ -171,7 +195,7 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
     setStep,
     credentials: {
       email,
-      setEmail,
+      onEmailChange: handleEmailChange,
       password,
       setPassword,
       passwordConfirm,
@@ -181,14 +205,17 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
       verificationStatus,
       secondsLeft,
       isEmailInvalid,
+      isEmailDuplicate,
       isPasswordInvalid,
       isPasswordConfirmMatch,
       isPasswordConfirmMismatch,
       isVerified,
       isVerificationMismatch,
+      isVerificationExpired,
       isNextEnabled: isCredentialsStepValid,
       onSendVerification: handleSendVerification,
       onSubmit: handleCredentialsSubmit,
+      checkEmailMutation,
       sendCodeMutation,
       verifyCodeMutation,
     },

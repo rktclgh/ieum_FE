@@ -29,7 +29,9 @@ export interface Messages {
     verificationSentExplanation: string
     verificationVerifiedExplanation: string
     verificationMismatchExplanation: string
+    verificationExpiredExplanation: string
     emailInvalidExplanation: string
+    emailDuplicateExplanation: string
     emailSendCodeErrorExplanation: string
     passwordLabel: string
     passwordPlaceholder: string
@@ -87,7 +89,9 @@ export const ko: Messages = {
     verificationSentExplanation: "인증코드를 보냈습니다.",
     verificationVerifiedExplanation: "이메일 인증이 완료되었습니다.",
     verificationMismatchExplanation: "인증번호가 일치하지 않습니다.",
+    verificationExpiredExplanation: "인증번호가 만료되었습니다. 다시 시도해주세요.",
     emailInvalidExplanation: "이메일 형식에 맞춰 입력해주세요.",
+    emailDuplicateExplanation: "이미 가입된 이메일입니다.",
     emailSendCodeErrorExplanation: "인증코드 발송에 실패했습니다. 다시 시도해주세요.",
     passwordLabel: "비밀번호",
     passwordPlaceholder: "비밀번호 입력",

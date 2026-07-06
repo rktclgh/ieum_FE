@@ -29,7 +29,7 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
 
   const {
     email,
-    setEmail,
+    onEmailChange,
     password,
     setPassword,
     passwordConfirm,
@@ -39,14 +39,17 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
     verificationStatus,
     secondsLeft,
     isEmailInvalid,
+    isEmailDuplicate,
     isPasswordInvalid,
     isPasswordConfirmMatch,
     isPasswordConfirmMismatch,
     isVerified,
     isVerificationMismatch,
+    isVerificationExpired,
     isNextEnabled,
     onSendVerification,
     onSubmit,
+    checkEmailMutation,
     sendCodeMutation,
     verifyCodeMutation,
   } = flow
@@ -68,20 +71,29 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
               autoComplete="email"
               placeholder={messages.join.emailPlaceholder}
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              error={isEmailInvalid}
+              onChange={(event) => onEmailChange(event.target.value)}
+              error={isEmailInvalid || isEmailDuplicate}
               buttonLabel={
                 verificationStatus === "idle"
                   ? messages.join.verifyButton
                   : messages.join.resendButton
               }
-              buttonDisabled={isEmailInvalid || !email || isVerified || sendCodeMutation.isPending}
+              buttonDisabled={
+                isEmailInvalid ||
+                !email ||
+                isVerified ||
+                checkEmailMutation.isPending ||
+                sendCodeMutation.isPending
+              }
               onButtonClick={onSendVerification}
             />
             {isEmailInvalid && (
               <Explanation variant="error" text={messages.join.emailInvalidExplanation} />
             )}
-            {sendCodeMutation.isError && (
+            {!isEmailInvalid && isEmailDuplicate && (
+              <Explanation variant="error" text={messages.join.emailDuplicateExplanation} />
+            )}
+            {!isEmailInvalid && !isEmailDuplicate && sendCodeMutation.isError && (
               <Explanation
                 variant="error"
                 text={getApiErrorMessage(
@@ -90,17 +102,22 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
                 )}
               />
             )}
-            {!isEmailInvalid && !sendCodeMutation.isError && verificationStatus !== "idle" && (
-              <Explanation variant="great" text={messages.join.verificationSentExplanation} />
-            )}
+            {!isEmailInvalid &&
+              !isEmailDuplicate &&
+              !sendCodeMutation.isError &&
+              verificationStatus !== "idle" && (
+                <Explanation variant="great" text={messages.join.verificationSentExplanation} />
+              )}
             <Input
               inputMode="numeric"
               name="verificationCode"
               placeholder={messages.join.verificationPlaceholder}
               value={verificationCode}
               onChange={(event) => onVerificationCodeChange(event.target.value)}
-              error={isVerificationMismatch}
-              disabled={verificationStatus === "idle" || verifyCodeMutation.isPending}
+              error={isVerificationMismatch || isVerificationExpired}
+              disabled={
+                verificationStatus === "idle" || verifyCodeMutation.isPending || isVerificationExpired
+              }
               endAdornment={
                 verificationStatus === "sent" ? (
                   <span className="shrink-0 text-body-medium-16 text-primary-600">
@@ -109,6 +126,9 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
                 ) : undefined
               }
             />
+            {isVerificationExpired && (
+              <Explanation variant="error" text={messages.join.verificationExpiredExplanation} />
+            )}
             {isVerificationMismatch && (
               <Explanation
                 variant="error"
