@@ -93,17 +93,30 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
             {!isEmailInvalid && isEmailDuplicate && (
               <Explanation variant="error" text={messages.join.emailDuplicateExplanation} />
             )}
-            {!isEmailInvalid && !isEmailDuplicate && sendCodeMutation.isError && (
+            {!isEmailInvalid && !isEmailDuplicate && checkEmailMutation.isError && (
               <Explanation
                 variant="error"
                 text={getApiErrorMessage(
-                  sendCodeMutation.error,
+                  checkEmailMutation.error,
                   messages.join.emailSendCodeErrorExplanation
                 )}
               />
             )}
             {!isEmailInvalid &&
               !isEmailDuplicate &&
+              !checkEmailMutation.isError &&
+              sendCodeMutation.isError && (
+                <Explanation
+                  variant="error"
+                  text={getApiErrorMessage(
+                    sendCodeMutation.error,
+                    messages.join.emailSendCodeErrorExplanation
+                  )}
+                />
+              )}
+            {!isEmailInvalid &&
+              !isEmailDuplicate &&
+              !checkEmailMutation.isError &&
               !sendCodeMutation.isError &&
               verificationStatus !== "idle" && (
                 <Explanation variant="great" text={messages.join.verificationSentExplanation} />
@@ -116,7 +129,10 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
               onChange={(event) => onVerificationCodeChange(event.target.value)}
               error={isVerificationMismatch || isVerificationExpired}
               disabled={
-                verificationStatus === "idle" || verifyCodeMutation.isPending || isVerificationExpired
+                verificationStatus === "idle" ||
+                verifyCodeMutation.isPending ||
+                isVerificationExpired ||
+                isVerified
               }
               endAdornment={
                 verificationStatus === "sent" ? (

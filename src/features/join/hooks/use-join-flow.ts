@@ -64,18 +64,12 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const signupMutation = useSignup()
 
   React.useEffect(() => {
-    if (verificationStatus !== "sent") return
-    const timer = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
+    if (verificationStatus !== "sent" || secondsLeft <= 0) return
+    const timer = setTimeout(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1))
     }, 1000)
-    return () => clearInterval(timer)
-  }, [verificationStatus])
+    return () => clearTimeout(timer)
+  }, [verificationStatus, secondsLeft])
 
   const isEmailValid = EMAIL_REGEX.test(email)
   const isEmailInvalid = email.length > 0 && !isEmailValid
@@ -100,6 +94,13 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
     setIsEmailDuplicate(false)
     if (checkEmailMutation.isError) checkEmailMutation.reset()
     if (sendCodeMutation.isError) sendCodeMutation.reset()
+    if (verificationStatus !== "idle") {
+      setVerificationStatus("idle")
+      setSecondsLeft(0)
+      setEmailVerificationToken("")
+      setVerificationCode("")
+      verifyCodeMutation.reset()
+    }
   }
 
   const handleSendVerification = () => {
