@@ -18,7 +18,7 @@ export const vi: Messages = {
   languagePicker: {
     confirm: "Xác nhận",
   },
-  signup: {
+  join: {
     appBarTitle: "Đăng ký",
     emailLabel: "Email",
     emailPlaceholder: "Nhập email",
@@ -37,6 +37,21 @@ export const vi: Messages = {
     passwordMatchExplanation: "Mật khẩu khớp.",
     passwordMismatchExplanation: "Mật khẩu không khớp.",
     nextButton: "Tiếp theo",
+    infoAppBarTitle: "Nhập thông tin",
+    nicknameLabel: "Biệt danh",
+    nicknamePlaceholder: "Nhập biệt danh",
+    nicknameDuplicateCheckButton: "Kiểm tra trùng",
+    nicknameAvailableExplanation: "Biệt danh này có thể sử dụng.",
+    nicknameDuplicateExplanation: "Biệt danh này đã được sử dụng.",
+    birthDateLabel: "Ngày sinh",
+    birthDatePlaceholder: "Nhập ngày sinh",
+    birthDateHintExplanation: "Vui lòng nhập 8 chữ số ngày sinh.",
+    genderLabel: "Giới tính",
+    genderFemale: "Nữ",
+    genderMale: "Nam",
+    nationalityLabel: "Quốc tịch",
+    nationalityPlaceholder: "Chọn quốc tịch",
+    createAccountButton: "Tạo tài khoản",
   },
   languages: {
     ko: "Tiếng Hàn",

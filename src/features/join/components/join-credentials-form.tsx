@@ -14,7 +14,7 @@ import {
   PASSWORD_SPECIAL_CHAR_REGEX,
   VERIFICATION_CODE_LENGTH,
   VERIFICATION_TIMEOUT_SECONDS,
-} from "@/features/signup/constants/validation"
+} from "@/features/join/constants/validation"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -32,11 +32,12 @@ function generateVerificationCode() {
   return String(Math.floor(100000 + Math.random() * 900000))
 }
 
-interface SignupIdpwFormProps {
+interface JoinCredentialsFormProps {
+  className?: string
   onSubmit?: (values: { email: string; password: string }) => void
 }
 
-function SignupIdpwForm({ onSubmit }: SignupIdpwFormProps) {
+function JoinCredentialsForm({ className, onSubmit }: JoinCredentialsFormProps) {
   const { messages } = useTranslation()
 
   const [email, setEmail] = React.useState("")
@@ -93,37 +94,37 @@ function SignupIdpwForm({ onSubmit }: SignupIdpwFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-1 flex-col items-center">
+    <form onSubmit={handleSubmit} className={cn("flex w-full flex-1 flex-col items-center", className)}>
       <div className="flex w-full flex-col gap-3 px-4 pb-32">
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.signup.emailLabel} />
+          <FieldLabel text={messages.join.emailLabel} />
           <div className="flex w-full flex-col gap-3">
             <InputWithButton
               type="email"
               name="email"
               autoComplete="email"
-              placeholder={messages.signup.emailPlaceholder}
+              placeholder={messages.join.emailPlaceholder}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               error={isEmailInvalid}
               buttonLabel={
                 verificationStatus === "idle"
-                  ? messages.signup.verifyButton
-                  : messages.signup.resendButton
+                  ? messages.join.verifyButton
+                  : messages.join.resendButton
               }
               buttonDisabled={!isEmailValid || isVerified}
               onButtonClick={handleSendVerification}
             />
             {isEmailInvalid && (
-              <Explanation variant="error" text={messages.signup.emailInvalidExplanation} />
+              <Explanation variant="error" text={messages.join.emailInvalidExplanation} />
             )}
             {!isEmailInvalid && verificationStatus !== "idle" && (
-              <Explanation variant="great" text={messages.signup.verificationSentExplanation} />
+              <Explanation variant="great" text={messages.join.verificationSentExplanation} />
             )}
             <Input
               inputMode="numeric"
               name="verificationCode"
-              placeholder={messages.signup.verificationPlaceholder}
+              placeholder={messages.join.verificationPlaceholder}
               value={verificationCode}
               onChange={(event) => handleVerificationCodeChange(event.target.value)}
               error={isVerificationMismatch}
@@ -139,49 +140,49 @@ function SignupIdpwForm({ onSubmit }: SignupIdpwFormProps) {
             {isVerificationMismatch && (
               <Explanation
                 variant="error"
-                text={messages.signup.verificationMismatchExplanation}
+                text={messages.join.verificationMismatchExplanation}
               />
             )}
             {isVerified && (
               <Explanation
                 variant="great"
-                text={messages.signup.verificationVerifiedExplanation}
+                text={messages.join.verificationVerifiedExplanation}
               />
             )}
           </div>
         </div>
 
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.signup.passwordLabel} />
+          <FieldLabel text={messages.join.passwordLabel} />
           <PasswordInput
             name="password"
             autoComplete="new-password"
-            placeholder={messages.signup.passwordPlaceholder}
+            placeholder={messages.join.passwordPlaceholder}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             error={isPasswordInvalid}
           />
           <Explanation
             variant={isPasswordInvalid ? "error" : "default"}
-            text={messages.signup.passwordHintExplanation}
+            text={messages.join.passwordHintExplanation}
           />
         </div>
 
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.signup.passwordConfirmLabel} />
+          <FieldLabel text={messages.join.passwordConfirmLabel} />
           <PasswordInput
             name="passwordConfirm"
             autoComplete="new-password"
-            placeholder={messages.signup.passwordPlaceholder}
+            placeholder={messages.join.passwordPlaceholder}
             value={passwordConfirm}
             onChange={(event) => setPasswordConfirm(event.target.value)}
             error={isPasswordConfirmMismatch}
           />
           {isPasswordConfirmMismatch && (
-            <Explanation variant="error" text={messages.signup.passwordMismatchExplanation} />
+            <Explanation variant="error" text={messages.join.passwordMismatchExplanation} />
           )}
           {isPasswordConfirmMatch && (
-            <Explanation variant="great" text={messages.signup.passwordMatchExplanation} />
+            <Explanation variant="great" text={messages.join.passwordMatchExplanation} />
           )}
         </div>
       </div>
@@ -194,7 +195,7 @@ function SignupIdpwForm({ onSubmit }: SignupIdpwFormProps) {
           disabled={!isNextEnabled}
           className={cn(!isNextEnabled && "bg-gray-200 text-white hover:bg-gray-200")}
         >
-          {messages.signup.nextButton}
+          {messages.join.nextButton}
         </Button>
         <span className="h-1 w-[135px] rounded-full bg-gray-900" />
       </div>
@@ -202,4 +203,4 @@ function SignupIdpwForm({ onSubmit }: SignupIdpwFormProps) {
   )
 }
 
-export { SignupIdpwForm }
+export { JoinCredentialsForm }

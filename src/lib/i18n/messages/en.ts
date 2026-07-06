@@ -18,7 +18,7 @@ export const en: Messages = {
   languagePicker: {
     confirm: "Confirm",
   },
-  signup: {
+  join: {
     appBarTitle: "Sign up",
     emailLabel: "Email",
     emailPlaceholder: "Enter your email",
@@ -37,6 +37,21 @@ export const en: Messages = {
     passwordMatchExplanation: "Passwords match.",
     passwordMismatchExplanation: "Passwords don't match.",
     nextButton: "Next",
+    infoAppBarTitle: "Enter your info",
+    nicknameLabel: "Nickname",
+    nicknamePlaceholder: "Enter your nickname",
+    nicknameDuplicateCheckButton: "Check",
+    nicknameAvailableExplanation: "This nickname is available.",
+    nicknameDuplicateExplanation: "This nickname is already taken.",
+    birthDateLabel: "Date of birth",
+    birthDatePlaceholder: "Enter your date of birth",
+    birthDateHintExplanation: "Please enter 8 digits for your date of birth.",
+    genderLabel: "Gender",
+    genderFemale: "Female",
+    genderMale: "Male",
+    nationalityLabel: "Nationality",
+    nationalityPlaceholder: "Select nationality",
+    createAccountButton: "Create account",
   },
   languages: {
     ko: "Korean",

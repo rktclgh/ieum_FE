@@ -18,7 +18,7 @@ export const zh: Messages = {
   languagePicker: {
     confirm: "选择完成",
   },
-  signup: {
+  join: {
     appBarTitle: "注册",
     emailLabel: "邮箱",
     emailPlaceholder: "请输入邮箱",
@@ -36,6 +36,21 @@ export const zh: Messages = {
     passwordMatchExplanation: "密码一致。",
     passwordMismatchExplanation: "密码不一致。",
     nextButton: "下一步",
+    infoAppBarTitle: "输入信息",
+    nicknameLabel: "昵称",
+    nicknamePlaceholder: "请输入昵称",
+    nicknameDuplicateCheckButton: "查重",
+    nicknameAvailableExplanation: "该昵称可以使用。",
+    nicknameDuplicateExplanation: "该昵称已被使用。",
+    birthDateLabel: "出生日期",
+    birthDatePlaceholder: "请输入出生日期",
+    birthDateHintExplanation: "请输入8位数字的出生日期。",
+    genderLabel: "性别",
+    genderFemale: "女性",
+    genderMale: "男性",
+    nationalityLabel: "国籍",
+    nationalityPlaceholder: "选择国籍",
+    createAccountButton: "创建账户",
   },
   languages: {
     ko: "韩语",

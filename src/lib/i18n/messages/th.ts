@@ -18,7 +18,7 @@ export const th: Messages = {
   languagePicker: {
     confirm: "ยืนยันการเลือก",
   },
-  signup: {
+  join: {
     appBarTitle: "สมัครสมาชิก",
     emailLabel: "อีเมล",
     emailPlaceholder: "กรอกอีเมล",
@@ -36,6 +36,21 @@ export const th: Messages = {
     passwordMatchExplanation: "รหัสผ่านตรงกัน",
     passwordMismatchExplanation: "รหัสผ่านไม่ตรงกัน",
     nextButton: "ถัดไป",
+    infoAppBarTitle: "กรอกข้อมูล",
+    nicknameLabel: "ชื่อเล่น",
+    nicknamePlaceholder: "กรอกชื่อเล่น",
+    nicknameDuplicateCheckButton: "ตรวจสอบซ้ำ",
+    nicknameAvailableExplanation: "ชื่อเล่นนี้สามารถใช้งานได้",
+    nicknameDuplicateExplanation: "ชื่อเล่นนี้ถูกใช้งานแล้ว",
+    birthDateLabel: "วันเกิด",
+    birthDatePlaceholder: "กรอกวันเกิด",
+    birthDateHintExplanation: "กรุณากรอกวันเกิด 8 หลัก",
+    genderLabel: "เพศ",
+    genderFemale: "หญิง",
+    genderMale: "ชาย",
+    nationalityLabel: "สัญชาติ",
+    nationalityPlaceholder: "เลือกสัญชาติ",
+    createAccountButton: "สร้างบัญชี",
   },
   languages: {
     ko: "เกาหลี",

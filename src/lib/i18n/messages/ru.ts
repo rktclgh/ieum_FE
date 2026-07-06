@@ -18,7 +18,7 @@ export const ru: Messages = {
   languagePicker: {
     confirm: "Подтвердить",
   },
-  signup: {
+  join: {
     appBarTitle: "Регистрация",
     emailLabel: "Email",
     emailPlaceholder: "Введите email",
@@ -37,6 +37,21 @@ export const ru: Messages = {
     passwordMatchExplanation: "Пароли совпадают.",
     passwordMismatchExplanation: "Пароли не совпадают.",
     nextButton: "Далее",
+    infoAppBarTitle: "Ввод информации",
+    nicknameLabel: "Никнейм",
+    nicknamePlaceholder: "Введите никнейм",
+    nicknameDuplicateCheckButton: "Проверить",
+    nicknameAvailableExplanation: "Этот никнейм доступен.",
+    nicknameDuplicateExplanation: "Этот никнейм уже занят.",
+    birthDateLabel: "Дата рождения",
+    birthDatePlaceholder: "Введите дату рождения",
+    birthDateHintExplanation: "Введите 8 цифр даты рождения.",
+    genderLabel: "Пол",
+    genderFemale: "Женский",
+    genderMale: "Мужской",
+    nationalityLabel: "Гражданство",
+    nationalityPlaceholder: "Выберите гражданство",
+    createAccountButton: "Создать аккаунт",
   },
   languages: {
     ko: "Корейский",

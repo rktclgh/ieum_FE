@@ -18,7 +18,7 @@ export const ja: Messages = {
   languagePicker: {
     confirm: "選択完了",
   },
-  signup: {
+  join: {
     appBarTitle: "会員登録",
     emailLabel: "メールアドレス",
     emailPlaceholder: "メールアドレスを入力",
@@ -36,6 +36,21 @@ export const ja: Messages = {
     passwordMatchExplanation: "パスワードが一致します。",
     passwordMismatchExplanation: "パスワードが一致しません。",
     nextButton: "次へ",
+    infoAppBarTitle: "情報入力",
+    nicknameLabel: "ニックネーム",
+    nicknamePlaceholder: "ニックネームを入力",
+    nicknameDuplicateCheckButton: "重複確認",
+    nicknameAvailableExplanation: "使用可能なニックネームです。",
+    nicknameDuplicateExplanation: "すでに使用されているニックネームです。",
+    birthDateLabel: "生年月日",
+    birthDatePlaceholder: "生年月日を入力",
+    birthDateHintExplanation: "生年月日を8桁で入力してください。",
+    genderLabel: "性別",
+    genderFemale: "女性",
+    genderMale: "男性",
+    nationalityLabel: "国籍",
+    nationalityPlaceholder: "国籍を選択",
+    createAccountButton: "アカウント作成",
   },
   languages: {
     ko: "韓国語",

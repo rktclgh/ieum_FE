@@ -19,7 +19,7 @@ export interface Messages {
   languagePicker: {
     confirm: string
   }
-  signup: {
+  join: {
     appBarTitle: string
     emailLabel: string
     emailPlaceholder: string
@@ -37,6 +37,21 @@ export interface Messages {
     passwordMatchExplanation: string
     passwordMismatchExplanation: string
     nextButton: string
+    infoAppBarTitle: string
+    nicknameLabel: string
+    nicknamePlaceholder: string
+    nicknameDuplicateCheckButton: string
+    nicknameAvailableExplanation: string
+    nicknameDuplicateExplanation: string
+    birthDateLabel: string
+    birthDatePlaceholder: string
+    birthDateHintExplanation: string
+    genderLabel: string
+    genderFemale: string
+    genderMale: string
+    nationalityLabel: string
+    nationalityPlaceholder: string
+    createAccountButton: string
   }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
@@ -60,7 +75,7 @@ export const ko: Messages = {
   languagePicker: {
     confirm: "선택 완료",
   },
-  signup: {
+  join: {
     appBarTitle: "회원가입",
     emailLabel: "이메일",
     emailPlaceholder: "이메일 입력",
@@ -78,6 +93,21 @@ export const ko: Messages = {
     passwordMatchExplanation: "비밀번호가 일치합니다.",
     passwordMismatchExplanation: "비밀번호가 불일치합니다.",
     nextButton: "다음",
+    infoAppBarTitle: "정보 입력",
+    nicknameLabel: "닉네임",
+    nicknamePlaceholder: "닉네임 입력",
+    nicknameDuplicateCheckButton: "중복확인",
+    nicknameAvailableExplanation: "사용 가능한 닉네임입니다.",
+    nicknameDuplicateExplanation: "이미 사용중인 닉네임입니다.",
+    birthDateLabel: "생년월일",
+    birthDatePlaceholder: "생년월일 입력",
+    birthDateHintExplanation: "생년월일 8자리를 입력해주세요.",
+    genderLabel: "성별",
+    genderFemale: "여성",
+    genderMale: "남성",
+    nationalityLabel: "국적",
+    nationalityPlaceholder: "국적 선택",
+    createAccountButton: "계정 만들기",
   },
   languages: {
     ko: "한국어",

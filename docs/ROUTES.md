@@ -5,7 +5,7 @@
 >
 > - 와이어프레임: [Figma – 신한해커톤 와이어프레임](https://www.figma.com/design/FPRPYHC1ukJph6hjRiyU0Z/?node-id=782-1049)
 > - 생성: 2026-07-02
-> - 최종 수정: 2026-07-02
+> - 최종 수정: 2026-07-06
 
 
 ## 네이밍 규칙
@@ -32,7 +32,7 @@ src/app/
 | URL | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
 |---|---|---|---|---|
 | `/login` | 로그인 (아이디·비밀번호, 소셜, 언어설정) | ① 로그인 | `POST /auth/login` | X |
-| `/sign-up` | 회원가입 — 계정 만들기 (이후 프로필 설정 단계 있음, 하위 화면 참고) | ② 회원가입 | `POST /auth/sign-up` | X |
+| `/join` | 회원가입 — 계정 만들기 (이후 프로필 설정 단계 있음, 하위 화면 참고) | ② 회원가입 | `POST /auth/signup` | X |
 | `/reset-password` | 비밀번호 찾기 | ① 로그인 | `POST /auth/reset-password` | X |
 
 ### (main) — 홈 (지도 기반)
@@ -78,7 +78,7 @@ src/app/
 
 | 상위 라우트 | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
 |---|---|---|---|---|
-| `/sign-up` | 회원가입 2/2 — 프로필 설정 (닉네임·국적·성별·생일) | ② 회원가입 | `PATCH /users/me` | X |
+| `/join` | 회원가입 2/2 — 프로필 설정 (닉네임·국적·성별·생일) | ② 회원가입 | `PATCH /users/me` | X |
 | `/meetups` | 모임 상세 (참여하기 → 그룹채팅 입장) | ④ 홈 2) | `GET /meetups/{id}`, `POST /meetups/{id}/join` | X (참여는 O) |
 | `/meetups` | 모임 만들기 | ⑥ 글쓰기 1) | `POST /meetups` | O |
 | `/questions` | 질문 상세 · 답변 목록 · 답변 채택 | ⑦ 질문 내역 2) | `GET /questions/{id}`, `POST /questions/{id}/answers`, `POST /answers/{id}/accept` | X (답변·채택은 O) |

@@ -20,6 +20,7 @@ import {
 interface SelectOption {
   value: string
   label: string
+  icon?: string
 }
 
 interface SelectInputProps {
@@ -50,6 +51,22 @@ function SelectInput({
   const [pendingValue, setPendingValue] = React.useState(selectedValue)
   const selectedOption = options.find((option) => option.value === selectedValue)
 
+  const [isScrolling, setIsScrolling] = React.useState(false)
+  const scrollHideTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleOptionsScroll = () => {
+    setIsScrolling(true)
+    if (scrollHideTimeoutRef.current) clearTimeout(scrollHideTimeoutRef.current)
+    scrollHideTimeoutRef.current = setTimeout(() => setIsScrolling(false), 800)
+  }
+
+  React.useEffect(
+    () => () => {
+      if (scrollHideTimeoutRef.current) clearTimeout(scrollHideTimeoutRef.current)
+    },
+    []
+  )
+
   return (
     <Drawer
       onOpenChange={(open) => {
@@ -65,13 +82,24 @@ function SelectInput({
           className
         )}
       >
-        <span
-          className={cn(
-            "w-full truncate text-body-regular-16",
-            selectedOption ? "text-body-medium-16 text-gray-900" : "text-gray-400"
+        <span className="flex w-full min-w-0 items-center gap-2">
+          {selectedOption?.icon && (
+            <Image
+              src={selectedOption.icon}
+              alt=""
+              width={24}
+              height={17}
+              className="h-[17px] w-6 shrink-0 rounded-[3px] border border-gray-100 object-cover"
+            />
           )}
-        >
-          {selectedOption?.label ?? placeholder}
+          <span
+            className={cn(
+              "truncate text-body-regular-16",
+              selectedOption ? "text-body-medium-16 text-gray-900" : "text-gray-400"
+            )}
+          >
+            {selectedOption?.label ?? placeholder}
+          </span>
         </span>
         <Image
           src="/icons/arrow/left.svg"
@@ -85,8 +113,17 @@ function SelectInput({
         <DrawerBackdrop />
         <DrawerViewport>
           <DrawerPopup>
-            <DrawerContent>
-              <div className="flex w-full flex-col items-start">
+            <DrawerContent className="min-h-0">
+              <div
+                onScroll={handleOptionsScroll}
+                data-scrolling={isScrolling}
+                className={cn(
+                  "flex w-full min-h-0 flex-1 flex-col items-start overflow-y-auto",
+                  "[scrollbar-width:thin] [scrollbar-color:transparent_transparent] data-[scrolling=true]:[scrollbar-color:var(--color-gray-200)_transparent]",
+                  "[&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb]:transition-colors",
+                  "data-[scrolling=true]:[&::-webkit-scrollbar-thumb]:bg-gray-200"
+                )}
+              >
                 {options.map((option) => {
                   const selected = option.value === pendingValue
                   return (
@@ -99,8 +136,19 @@ function SelectInput({
                         selected ? "rounded-2xl bg-gray-50" : "rounded-xl"
                       )}
                     >
-                      {option.label}
-                      {selected && <Check className="size-6 text-gray-400" strokeWidth={1.5} />}
+                      <span className="flex min-w-0 items-center gap-2">
+                        {option.icon && (
+                          <Image
+                            src={option.icon}
+                            alt=""
+                            width={24}
+                            height={17}
+                            className="h-[17px] w-6 shrink-0 rounded-[3px] border border-gray-100 object-cover"
+                          />
+                        )}
+                        <span className="truncate">{option.label}</span>
+                      </span>
+                      {selected && <Check className="size-6 shrink-0 text-gray-400" strokeWidth={1.5} />}
                     </button>
                   )
                 })}
