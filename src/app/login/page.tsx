@@ -3,7 +3,7 @@
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/text-field/input"
 import { LanguageToggle } from "@/features/language/components/language-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
