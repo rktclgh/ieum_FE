@@ -22,7 +22,9 @@ function Input({
   ...props
 }: InputProps) {
   const inputRef = React.useRef<HTMLInputElement>(null)
-  const [hasValue, setHasValue] = React.useState(Boolean(defaultValue ?? value ?? ""))
+  const isControlled = value !== undefined
+  const [uncontrolledHasValue, setUncontrolledHasValue] = React.useState(Boolean(defaultValue))
+  const hasValue = isControlled ? String(value).length > 0 : uncontrolledHasValue
 
   return (
     <div
@@ -39,7 +41,7 @@ function Input({
         defaultValue={defaultValue}
         value={value}
         onChange={(event) => {
-          setHasValue(event.target.value.length > 0)
+          if (!isControlled) setUncontrolledHasValue(event.target.value.length > 0)
           onChange?.(event)
         }}
         onFocus={onFocus}

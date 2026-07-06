@@ -32,12 +32,12 @@ function generateVerificationCode() {
   return String(Math.floor(100000 + Math.random() * 900000))
 }
 
-interface JoinCredentialsFormProps {
+interface CredentialsFormProps {
   className?: string
   onSubmit?: (values: { email: string; password: string }) => void
 }
 
-function JoinCredentialsForm({ className, onSubmit }: JoinCredentialsFormProps) {
+function CredentialsForm({ className, onSubmit }: CredentialsFormProps) {
   const { messages } = useTranslation()
 
   const [email, setEmail] = React.useState("")
@@ -46,15 +46,21 @@ function JoinCredentialsForm({ className, onSubmit }: JoinCredentialsFormProps) 
   const [passwordConfirm, setPasswordConfirm] = React.useState("")
   const [verificationStatus, setVerificationStatus] = React.useState<VerificationStatus>("idle")
   const [secondsLeft, setSecondsLeft] = React.useState(0)
-  const sentCodeRef = React.useRef("")
+  const [sentCode, setSentCode] = React.useState("")
 
   React.useEffect(() => {
-    if (verificationStatus !== "sent" || secondsLeft <= 0) return
+    if (verificationStatus !== "sent") return
     const timer = setInterval(() => {
-      setSecondsLeft((prev) => Math.max(prev - 1, 0))
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
     }, 1000)
     return () => clearInterval(timer)
-  }, [verificationStatus, secondsLeft])
+  }, [verificationStatus])
 
   const isEmailValid = EMAIL_REGEX.test(email)
   const isEmailInvalid = email.length > 0 && !isEmailValid
@@ -67,13 +73,13 @@ function JoinCredentialsForm({ className, onSubmit }: JoinCredentialsFormProps) 
   const isVerificationMismatch =
     verificationStatus === "sent" &&
     verificationCode.length === VERIFICATION_CODE_LENGTH &&
-    verificationCode !== sentCodeRef.current
+    verificationCode !== sentCode
 
   const isNextEnabled = isVerified && isPasswordValid && isPasswordConfirmMatch
 
   const handleSendVerification = () => {
     if (!isEmailValid || isVerified) return
-    sentCodeRef.current = generateVerificationCode()
+    setSentCode(generateVerificationCode())
     setVerificationCode("")
     setVerificationStatus("sent")
     setSecondsLeft(VERIFICATION_TIMEOUT_SECONDS)
@@ -82,7 +88,11 @@ function JoinCredentialsForm({ className, onSubmit }: JoinCredentialsFormProps) 
   const handleVerificationCodeChange = (rawValue: string) => {
     const value = rawValue.replace(/\D/g, "").slice(0, VERIFICATION_CODE_LENGTH)
     setVerificationCode(value)
-    if (value.length === VERIFICATION_CODE_LENGTH && value === sentCodeRef.current) {
+    if (
+      value.length === VERIFICATION_CODE_LENGTH &&
+      value === sentCode &&
+      secondsLeft > 0
+    ) {
       setVerificationStatus("verified")
     }
   }
@@ -203,4 +213,4 @@ function JoinCredentialsForm({ className, onSubmit }: JoinCredentialsFormProps) 
   )
 }
 
-export { JoinCredentialsForm }
+export { CredentialsForm }

@@ -27,8 +27,7 @@ function InputWithButton({
 }: InputWithButtonProps) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [hasValue, setHasValue] = React.useState(Boolean(defaultValue ?? value ?? ""))
-  const [isFocused, setIsFocused] = React.useState(false)
-  const isButtonActive = buttonDisabled === undefined ? isFocused : !buttonDisabled
+  const isButtonActive = buttonDisabled === undefined ? hasValue : !buttonDisabled
 
   return (
     <div
@@ -48,14 +47,8 @@ function InputWithButton({
           setHasValue(event.target.value.length > 0)
           onChange?.(event)
         }}
-        onFocus={(event) => {
-          setIsFocused(true)
-          onFocus?.(event)
-        }}
-        onBlur={(event) => {
-          setIsFocused(false)
-          onBlur?.(event)
-        }}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className="w-full min-w-0 bg-transparent text-body-medium-16 text-gray-900 caret-primary-600 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
         {...props}
       />

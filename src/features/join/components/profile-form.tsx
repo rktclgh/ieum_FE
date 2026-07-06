@@ -22,19 +22,19 @@ function formatBirthDate(digits: string) {
   return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6, 8)}`
 }
 
-interface JoinProfileFormValues {
+export interface ProfileFormValues {
   nickname: string
   birthDate: string
   gender: Gender
   nationality: string
 }
 
-interface JoinProfileFormProps {
+interface ProfileFormProps {
   className?: string
-  onSubmit?: (values: JoinProfileFormValues) => void
+  onSubmit?: (values: ProfileFormValues) => void
 }
 
-function JoinProfileForm({ className, onSubmit }: JoinProfileFormProps) {
+function ProfileForm({ className, onSubmit }: ProfileFormProps) {
   const { messages } = useTranslation()
 
   const [nickname, setNickname] = React.useState("")
@@ -149,4 +149,4 @@ function JoinProfileForm({ className, onSubmit }: JoinProfileFormProps) {
   )
 }
 
-export { JoinProfileForm }
+export { ProfileForm }
