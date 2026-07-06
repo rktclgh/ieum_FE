@@ -32,6 +32,9 @@
   --color-gray-800: #363d3f;
   --color-gray-900: #1f2324;
 
+  /* Error/red — node 1064:3742 (TextField), not in the original style-guide export */
+  --color-red: #f20808;
+
   /* Typography — node 732:2496, family: SF Pro */
   --text-title-bold-28: 28px;
   --text-title-bold-28--line-height: 1.3;
