@@ -30,6 +30,7 @@ export interface Messages {
     verificationVerifiedExplanation: string
     verificationMismatchExplanation: string
     emailInvalidExplanation: string
+    emailSendCodeErrorExplanation: string
     passwordLabel: string
     passwordPlaceholder: string
     passwordHintExplanation: string
@@ -52,6 +53,7 @@ export interface Messages {
     nationalityLabel: string
     nationalityPlaceholder: string
     createAccountButton: string
+    signupErrorExplanation: string
   }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
@@ -86,6 +88,7 @@ export const ko: Messages = {
     verificationVerifiedExplanation: "이메일 인증이 완료되었습니다.",
     verificationMismatchExplanation: "인증번호가 일치하지 않습니다.",
     emailInvalidExplanation: "이메일 형식에 맞춰 입력해주세요.",
+    emailSendCodeErrorExplanation: "인증코드 발송에 실패했습니다. 다시 시도해주세요.",
     passwordLabel: "비밀번호",
     passwordPlaceholder: "비밀번호 입력",
     passwordHintExplanation: "비밀번호는 특수문자를 포함하여 10자 이상이어야 합니다.",
@@ -108,6 +111,7 @@ export const ko: Messages = {
     nationalityLabel: "국적",
     nationalityPlaceholder: "국적 선택",
     createAccountButton: "계정 만들기",
+    signupErrorExplanation: "회원가입에 실패했습니다. 다시 시도해주세요.",
   },
   languages: {
     ko: "한국어",

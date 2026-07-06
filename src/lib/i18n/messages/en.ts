@@ -29,6 +29,7 @@ export const en: Messages = {
     verificationVerifiedExplanation: "Email verified.",
     verificationMismatchExplanation: "Verification code doesn't match.",
     emailInvalidExplanation: "Please enter a valid email address.",
+    emailSendCodeErrorExplanation: "Failed to send the verification code. Please try again.",
     passwordLabel: "Password",
     passwordPlaceholder: "Enter your password",
     passwordHintExplanation:
@@ -52,6 +53,7 @@ export const en: Messages = {
     nationalityLabel: "Nationality",
     nationalityPlaceholder: "Select nationality",
     createAccountButton: "Create account",
+    signupErrorExplanation: "Failed to create your account. Please try again.",
   },
   languages: {
     ko: "Korean",

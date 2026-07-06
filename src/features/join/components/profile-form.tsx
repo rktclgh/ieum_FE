@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import type { FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { ChoicePill } from "@/components/ui/text-field/choice-pill"
@@ -9,64 +9,40 @@ import { FieldLabel } from "@/components/ui/text-field/field-label"
 import { Input } from "@/components/ui/text-field/input"
 import { InputWithButton } from "@/components/ui/text-field/input-with-button"
 import { NationalitySelect } from "@/features/join/components/nationality-select"
-import { BIRTH_DATE_DIGIT_LENGTH, TAKEN_NICKNAMES } from "@/features/join/constants/validation"
+import { useJoinFlow } from "@/features/join/hooks/use-join-flow"
+import { getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
-type NicknameStatus = "idle" | "available" | "duplicate"
-type Gender = "female" | "male"
-
-function formatBirthDate(digits: string) {
-  if (digits.length <= 4) return digits
-  if (digits.length <= 6) return `${digits.slice(0, 4)}.${digits.slice(4)}`
-  return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6, 8)}`
-}
-
-export interface ProfileFormValues {
-  nickname: string
-  birthDate: string
-  gender: Gender
-  nationality: string
-}
-
 interface ProfileFormProps {
   className?: string
-  onSubmit?: (values: ProfileFormValues) => void
+  flow: ReturnType<typeof useJoinFlow>["profile"]
 }
 
-function ProfileForm({ className, onSubmit }: ProfileFormProps) {
+function ProfileForm({ className, flow }: ProfileFormProps) {
   const { messages } = useTranslation()
 
-  const [nickname, setNickname] = React.useState("")
-  const [nicknameStatus, setNicknameStatus] = React.useState<NicknameStatus>("idle")
-  const [birthDateDigits, setBirthDateDigits] = React.useState("")
-  const [gender, setGender] = React.useState<Gender | null>(null)
-  const [nationality, setNationality] = React.useState("")
+  const {
+    nickname,
+    onNicknameChange,
+    nicknameStatus,
+    onDuplicateCheck,
+    checkNicknameMutation,
+    birthDateDigits,
+    onBirthDateChange,
+    isBirthDateInvalid,
+    gender,
+    setGender,
+    nationality,
+    onNationalityChange,
+    isNextEnabled,
+    onSubmit,
+    signupMutation,
+  } = flow
 
-  const isBirthDateComplete = birthDateDigits.length === BIRTH_DATE_DIGIT_LENGTH
-  const isBirthDateInvalid = birthDateDigits.length > 0 && !isBirthDateComplete
-
-  const isNextEnabled =
-    nicknameStatus === "available" && isBirthDateComplete && gender !== null && nationality !== ""
-
-  const handleNicknameChange = (rawValue: string) => {
-    setNickname(rawValue)
-    setNicknameStatus("idle")
-  }
-
-  const handleDuplicateCheck = () => {
-    if (!nickname) return
-    setNicknameStatus(TAKEN_NICKNAMES.includes(nickname) ? "duplicate" : "available")
-  }
-
-  const handleBirthDateChange = (rawValue: string) => {
-    setBirthDateDigits(rawValue.replace(/\D/g, "").slice(0, BIRTH_DATE_DIGIT_LENGTH))
-  }
-
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    if (!isNextEnabled || gender === null) return
-    onSubmit?.({ nickname, birthDate: formatBirthDate(birthDateDigits), gender, nationality })
+    onSubmit()
   }
 
   return (
@@ -74,7 +50,7 @@ function ProfileForm({ className, onSubmit }: ProfileFormProps) {
       onSubmit={handleSubmit}
       className={cn("flex w-full flex-1 flex-col items-center", className)}
     >
-      <div className="flex w-full flex-col gap-3 px-4 pb-32">
+      <div className="flex w-full flex-col gap-3 px-4 pb-32 [&>[data-slot=explanation]]:-mt-3">
         <div className="flex w-full flex-col items-start">
           <FieldLabel text={messages.join.nicknameLabel} />
           <InputWithButton
@@ -82,17 +58,26 @@ function ProfileForm({ className, onSubmit }: ProfileFormProps) {
             autoComplete="nickname"
             placeholder={messages.join.nicknamePlaceholder}
             value={nickname}
-            onChange={(event) => handleNicknameChange(event.target.value)}
+            onChange={(event) => onNicknameChange(event.target.value)}
             error={nicknameStatus === "duplicate"}
             buttonLabel={messages.join.nicknameDuplicateCheckButton}
-            buttonDisabled={!nickname}
-            onButtonClick={handleDuplicateCheck}
+            buttonDisabled={!nickname || checkNicknameMutation.isPending}
+            onButtonClick={onDuplicateCheck}
           />
           {nicknameStatus === "available" && (
             <Explanation variant="great" text={messages.join.nicknameAvailableExplanation} />
           )}
           {nicknameStatus === "duplicate" && (
             <Explanation variant="error" text={messages.join.nicknameDuplicateExplanation} />
+          )}
+          {checkNicknameMutation.isError && (
+            <Explanation
+              variant="error"
+              text={getApiErrorMessage(
+                checkNicknameMutation.error,
+                messages.join.nicknameDuplicateExplanation
+              )}
+            />
           )}
         </div>
 
@@ -102,8 +87,8 @@ function ProfileForm({ className, onSubmit }: ProfileFormProps) {
             inputMode="numeric"
             name="birthDate"
             placeholder={messages.join.birthDatePlaceholder}
-            value={formatBirthDate(birthDateDigits)}
-            onChange={(event) => handleBirthDateChange(event.target.value)}
+            value={birthDateDigits}
+            onChange={(event) => onBirthDateChange(event.target.value)}
             error={isBirthDateInvalid}
           />
           <Explanation text={messages.join.birthDateHintExplanation} />
@@ -129,8 +114,15 @@ function ProfileForm({ className, onSubmit }: ProfileFormProps) {
 
         <div className="flex w-full flex-col items-start">
           <FieldLabel text={messages.join.nationalityLabel} />
-          <NationalitySelect value={nationality} onValueChange={setNationality} />
+          <NationalitySelect value={nationality} onValueChange={onNationalityChange} />
         </div>
+
+        {signupMutation.isError && (
+          <Explanation
+            variant="error"
+            text={getApiErrorMessage(signupMutation.error, messages.join.signupErrorExplanation)}
+          />
+        )}
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm flex-col items-center gap-2 bg-white px-4 pt-2 pb-2">
@@ -138,7 +130,7 @@ function ProfileForm({ className, onSubmit }: ProfileFormProps) {
           type="submit"
           variant="primary"
           size="block"
-          disabled={!isNextEnabled}
+          disabled={!isNextEnabled || signupMutation.isPending}
           className={cn(!isNextEnabled && "bg-gray-200 text-white hover:bg-gray-200")}
         >
           {messages.join.createAccountButton}

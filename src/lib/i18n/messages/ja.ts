@@ -29,6 +29,7 @@ export const ja: Messages = {
     verificationVerifiedExplanation: "メール認証が完了しました。",
     verificationMismatchExplanation: "認証番号が一致しません。",
     emailInvalidExplanation: "メール形式に合わせて入力してください。",
+    emailSendCodeErrorExplanation: "認証コードの送信に失敗しました。もう一度お試しください。",
     passwordLabel: "パスワード",
     passwordPlaceholder: "パスワードを入力",
     passwordHintExplanation: "パスワードは特殊文字を含めて10文字以上で入力してください。",
@@ -51,6 +52,7 @@ export const ja: Messages = {
     nationalityLabel: "国籍",
     nationalityPlaceholder: "国籍を選択",
     createAccountButton: "アカウント作成",
+    signupErrorExplanation: "会員登録に失敗しました。もう一度お試しください。",
   },
   languages: {
     ko: "韓国語",

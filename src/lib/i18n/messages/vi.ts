@@ -29,6 +29,7 @@ export const vi: Messages = {
     verificationVerifiedExplanation: "Xác thực email hoàn tất.",
     verificationMismatchExplanation: "Mã xác thực không khớp.",
     emailInvalidExplanation: "Vui lòng nhập đúng định dạng email.",
+    emailSendCodeErrorExplanation: "Gửi mã xác thực thất bại. Vui lòng thử lại.",
     passwordLabel: "Mật khẩu",
     passwordPlaceholder: "Nhập mật khẩu",
     passwordHintExplanation:
@@ -52,6 +53,7 @@ export const vi: Messages = {
     nationalityLabel: "Quốc tịch",
     nationalityPlaceholder: "Chọn quốc tịch",
     createAccountButton: "Tạo tài khoản",
+    signupErrorExplanation: "Tạo tài khoản thất bại. Vui lòng thử lại.",
   },
   languages: {
     ko: "Tiếng Hàn",
