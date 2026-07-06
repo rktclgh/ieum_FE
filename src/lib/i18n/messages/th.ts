@@ -28,7 +28,10 @@ export const th: Messages = {
     verificationSentExplanation: "ส่งรหัสยืนยันแล้ว",
     verificationVerifiedExplanation: "ยืนยันอีเมลเรียบร้อยแล้ว",
     verificationMismatchExplanation: "รหัสยืนยันไม่ตรงกัน",
+    verificationExpiredExplanation: "รหัสยืนยันหมดอายุแล้ว กรุณาลองใหม่อีกครั้ง",
     emailInvalidExplanation: "กรุณากรอกอีเมลให้ถูกต้องตามรูปแบบ",
+    emailDuplicateExplanation: "อีเมลนี้ถูกใช้งานแล้ว",
+    emailSendCodeErrorExplanation: "ส่งรหัสยืนยันไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
     passwordLabel: "รหัสผ่าน",
     passwordPlaceholder: "กรอกรหัสผ่าน",
     passwordHintExplanation: "รหัสผ่านต้องมีความยาวอย่างน้อย 10 ตัวอักษรและมีอักขระพิเศษ",
@@ -51,6 +54,7 @@ export const th: Messages = {
     nationalityLabel: "สัญชาติ",
     nationalityPlaceholder: "เลือกสัญชาติ",
     createAccountButton: "สร้างบัญชี",
+    signupErrorExplanation: "สร้างบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
   },
   languages: {
     ko: "เกาหลี",

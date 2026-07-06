@@ -28,7 +28,10 @@ export const zh: Messages = {
     verificationSentExplanation: "验证码已发送。",
     verificationVerifiedExplanation: "邮箱验证已完成。",
     verificationMismatchExplanation: "验证码不匹配。",
+    verificationExpiredExplanation: "验证码已过期,请重试。",
     emailInvalidExplanation: "请输入正确格式的邮箱。",
+    emailDuplicateExplanation: "该邮箱已被注册。",
+    emailSendCodeErrorExplanation: "验证码发送失败,请重试。",
     passwordLabel: "密码",
     passwordPlaceholder: "请输入密码",
     passwordHintExplanation: "密码需包含特殊字符且至少10位。",
@@ -51,6 +54,7 @@ export const zh: Messages = {
     nationalityLabel: "国籍",
     nationalityPlaceholder: "选择国籍",
     createAccountButton: "创建账户",
+    signupErrorExplanation: "注册失败,请重试。",
   },
   languages: {
     ko: "韩语",

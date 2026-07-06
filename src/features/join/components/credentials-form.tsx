@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import type { FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Explanation } from "@/components/ui/text-field/explanation"
@@ -8,17 +8,10 @@ import { FieldLabel } from "@/components/ui/text-field/field-label"
 import { Input } from "@/components/ui/text-field/input"
 import { InputWithButton } from "@/components/ui/text-field/input-with-button"
 import { PasswordInput } from "@/components/ui/text-field/password-input"
-import {
-  EMAIL_REGEX,
-  PASSWORD_MIN_LENGTH,
-  PASSWORD_SPECIAL_CHAR_REGEX,
-  VERIFICATION_CODE_LENGTH,
-  VERIFICATION_TIMEOUT_SECONDS,
-} from "@/features/join/constants/validation"
+import { useJoinFlow } from "@/features/join/hooks/use-join-flow"
+import { getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
-
-type VerificationStatus = "idle" | "sent" | "verified"
 
 function formatCountdown(seconds: number) {
   const minutes = Math.floor(seconds / 60)
@@ -26,81 +19,44 @@ function formatCountdown(seconds: number) {
   return `${minutes}:${remaining.toString().padStart(2, "0")}`
 }
 
-// Backend email verification isn't wired up yet, so the code is generated
-// and checked entirely on the client as a placeholder.
-function generateVerificationCode() {
-  return String(Math.floor(100000 + Math.random() * 900000))
-}
-
 interface CredentialsFormProps {
   className?: string
-  onSubmit?: (values: { email: string; password: string }) => void
+  flow: ReturnType<typeof useJoinFlow>["credentials"]
 }
 
-function CredentialsForm({ className, onSubmit }: CredentialsFormProps) {
+function CredentialsForm({ className, flow }: CredentialsFormProps) {
   const { messages } = useTranslation()
 
-  const [email, setEmail] = React.useState("")
-  const [verificationCode, setVerificationCode] = React.useState("")
-  const [password, setPassword] = React.useState("")
-  const [passwordConfirm, setPasswordConfirm] = React.useState("")
-  const [verificationStatus, setVerificationStatus] = React.useState<VerificationStatus>("idle")
-  const [secondsLeft, setSecondsLeft] = React.useState(0)
-  const [sentCode, setSentCode] = React.useState("")
+  const {
+    email,
+    onEmailChange,
+    password,
+    setPassword,
+    passwordConfirm,
+    setPasswordConfirm,
+    verificationCode,
+    onVerificationCodeChange,
+    verificationStatus,
+    secondsLeft,
+    isEmailInvalid,
+    isEmailDuplicate,
+    isPasswordInvalid,
+    isPasswordConfirmMatch,
+    isPasswordConfirmMismatch,
+    isVerified,
+    isVerificationMismatch,
+    isVerificationExpired,
+    isNextEnabled,
+    onSendVerification,
+    onSubmit,
+    checkEmailMutation,
+    sendCodeMutation,
+    verifyCodeMutation,
+  } = flow
 
-  React.useEffect(() => {
-    if (verificationStatus !== "sent") return
-    const timer = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [verificationStatus])
-
-  const isEmailValid = EMAIL_REGEX.test(email)
-  const isEmailInvalid = email.length > 0 && !isEmailValid
-  const isPasswordValid =
-    password.length >= PASSWORD_MIN_LENGTH && PASSWORD_SPECIAL_CHAR_REGEX.test(password)
-  const isPasswordInvalid = password.length > 0 && !isPasswordValid
-  const isPasswordConfirmMatch = passwordConfirm.length > 0 && passwordConfirm === password
-  const isPasswordConfirmMismatch = passwordConfirm.length > 0 && passwordConfirm !== password
-  const isVerified = verificationStatus === "verified"
-  const isVerificationMismatch =
-    verificationStatus === "sent" &&
-    verificationCode.length === VERIFICATION_CODE_LENGTH &&
-    verificationCode !== sentCode
-
-  const isNextEnabled = isVerified && isPasswordValid && isPasswordConfirmMatch
-
-  const handleSendVerification = () => {
-    if (!isEmailValid || isVerified) return
-    setSentCode(generateVerificationCode())
-    setVerificationCode("")
-    setVerificationStatus("sent")
-    setSecondsLeft(VERIFICATION_TIMEOUT_SECONDS)
-  }
-
-  const handleVerificationCodeChange = (rawValue: string) => {
-    const value = rawValue.replace(/\D/g, "").slice(0, VERIFICATION_CODE_LENGTH)
-    setVerificationCode(value)
-    if (
-      value.length === VERIFICATION_CODE_LENGTH &&
-      value === sentCode &&
-      secondsLeft > 0
-    ) {
-      setVerificationStatus("verified")
-    }
-  }
-
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    if (!isNextEnabled) return
-    onSubmit?.({ email, password })
+    onSubmit()
   }
 
   return (
@@ -108,37 +64,76 @@ function CredentialsForm({ className, onSubmit }: CredentialsFormProps) {
       <div className="flex w-full flex-col gap-3 px-4 pb-32">
         <div className="flex w-full flex-col items-start">
           <FieldLabel text={messages.join.emailLabel} />
-          <div className="flex w-full flex-col gap-3">
+          <div className="flex w-full flex-col gap-3 [&>[data-slot=explanation]]:-mt-3">
             <InputWithButton
               type="email"
               name="email"
               autoComplete="email"
               placeholder={messages.join.emailPlaceholder}
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              error={isEmailInvalid}
+              onChange={(event) => onEmailChange(event.target.value)}
+              error={isEmailInvalid || isEmailDuplicate}
               buttonLabel={
                 verificationStatus === "idle"
                   ? messages.join.verifyButton
                   : messages.join.resendButton
               }
-              buttonDisabled={!isEmailValid || isVerified}
-              onButtonClick={handleSendVerification}
+              buttonDisabled={
+                isEmailInvalid ||
+                !email ||
+                isVerified ||
+                checkEmailMutation.isPending ||
+                sendCodeMutation.isPending
+              }
+              onButtonClick={onSendVerification}
             />
             {isEmailInvalid && (
               <Explanation variant="error" text={messages.join.emailInvalidExplanation} />
             )}
-            {!isEmailInvalid && verificationStatus !== "idle" && (
-              <Explanation variant="great" text={messages.join.verificationSentExplanation} />
+            {!isEmailInvalid && isEmailDuplicate && (
+              <Explanation variant="error" text={messages.join.emailDuplicateExplanation} />
             )}
+            {!isEmailInvalid && !isEmailDuplicate && checkEmailMutation.isError && (
+              <Explanation
+                variant="error"
+                text={getApiErrorMessage(
+                  checkEmailMutation.error,
+                  messages.join.emailSendCodeErrorExplanation
+                )}
+              />
+            )}
+            {!isEmailInvalid &&
+              !isEmailDuplicate &&
+              !checkEmailMutation.isError &&
+              sendCodeMutation.isError && (
+                <Explanation
+                  variant="error"
+                  text={getApiErrorMessage(
+                    sendCodeMutation.error,
+                    messages.join.emailSendCodeErrorExplanation
+                  )}
+                />
+              )}
+            {!isEmailInvalid &&
+              !isEmailDuplicate &&
+              !checkEmailMutation.isError &&
+              !sendCodeMutation.isError &&
+              verificationStatus !== "idle" && (
+                <Explanation variant="great" text={messages.join.verificationSentExplanation} />
+              )}
             <Input
               inputMode="numeric"
               name="verificationCode"
               placeholder={messages.join.verificationPlaceholder}
               value={verificationCode}
-              onChange={(event) => handleVerificationCodeChange(event.target.value)}
-              error={isVerificationMismatch}
-              disabled={verificationStatus === "idle"}
+              onChange={(event) => onVerificationCodeChange(event.target.value)}
+              error={isVerificationMismatch || isVerificationExpired}
+              disabled={
+                verificationStatus === "idle" ||
+                verifyCodeMutation.isPending ||
+                isVerificationExpired ||
+                isVerified
+              }
               endAdornment={
                 verificationStatus === "sent" ? (
                   <span className="shrink-0 text-body-medium-16 text-primary-600">
@@ -147,10 +142,16 @@ function CredentialsForm({ className, onSubmit }: CredentialsFormProps) {
                 ) : undefined
               }
             />
+            {isVerificationExpired && (
+              <Explanation variant="error" text={messages.join.verificationExpiredExplanation} />
+            )}
             {isVerificationMismatch && (
               <Explanation
                 variant="error"
-                text={messages.join.verificationMismatchExplanation}
+                text={getApiErrorMessage(
+                  verifyCodeMutation.error,
+                  messages.join.verificationMismatchExplanation
+                )}
               />
             )}
             {isVerified && (

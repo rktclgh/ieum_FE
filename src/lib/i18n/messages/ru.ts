@@ -28,7 +28,10 @@ export const ru: Messages = {
     verificationSentExplanation: "Код подтверждения отправлен.",
     verificationVerifiedExplanation: "Email подтверждён.",
     verificationMismatchExplanation: "Код подтверждения не совпадает.",
+    verificationExpiredExplanation: "Код подтверждения истёк. Попробуйте снова.",
     emailInvalidExplanation: "Введите email в правильном формате.",
+    emailDuplicateExplanation: "Этот email уже зарегистрирован.",
+    emailSendCodeErrorExplanation: "Не удалось отправить код подтверждения. Попробуйте ещё раз.",
     passwordLabel: "Пароль",
     passwordPlaceholder: "Введите пароль",
     passwordHintExplanation:
@@ -52,6 +55,7 @@ export const ru: Messages = {
     nationalityLabel: "Гражданство",
     nationalityPlaceholder: "Выберите гражданство",
     createAccountButton: "Создать аккаунт",
+    signupErrorExplanation: "Не удалось создать аккаунт. Попробуйте ещё раз.",
   },
   languages: {
     ko: "Корейский",
