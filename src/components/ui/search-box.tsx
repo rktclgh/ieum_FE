@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
+import { ClearButton } from "@/components/ui/clear-button"
 
 function SearchBox({
   className,
@@ -17,19 +18,6 @@ function SearchBox({
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [hasValue, setHasValue] = React.useState(Boolean(defaultValue ?? value ?? ""))
   const [isFocused, setIsFocused] = React.useState(false)
-
-  const handleClear = () => {
-    const input = inputRef.current
-    if (!input) return
-
-    const nativeSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      "value"
-    )?.set
-    nativeSetter?.call(input, "")
-    input.dispatchEvent(new Event("input", { bubbles: true }))
-    input.focus()
-  }
 
   return (
     <div
@@ -63,16 +51,7 @@ function SearchBox({
         )}
         {...props}
       />
-      {hasValue && (
-        <button
-          type="button"
-          aria-label="지우기"
-          onClick={handleClear}
-          className="flex size-5 shrink-0 items-center justify-center rounded-full bg-gray-400"
-        >
-          <Image src="/icons/search-bar/clear.svg" alt="" width={12} height={12} />
-        </button>
-      )}
+      {hasValue && <ClearButton inputRef={inputRef} />}
     </div>
   )
 }
