@@ -18,6 +18,26 @@ export const ru: Messages = {
   languagePicker: {
     confirm: "Подтвердить",
   },
+  signup: {
+    appBarTitle: "Регистрация",
+    emailLabel: "Email",
+    emailPlaceholder: "Введите email",
+    verifyButton: "Подтвердить",
+    resendButton: "Отправить снова",
+    verificationPlaceholder: "Введите 6-значный код",
+    verificationSentExplanation: "Код подтверждения отправлен.",
+    verificationVerifiedExplanation: "Email подтверждён.",
+    verificationMismatchExplanation: "Код подтверждения не совпадает.",
+    emailInvalidExplanation: "Введите email в правильном формате.",
+    passwordLabel: "Пароль",
+    passwordPlaceholder: "Введите пароль",
+    passwordHintExplanation:
+      "Пароль должен содержать не менее 10 символов, включая спецсимвол.",
+    passwordConfirmLabel: "Подтвердите пароль",
+    passwordMatchExplanation: "Пароли совпадают.",
+    passwordMismatchExplanation: "Пароли не совпадают.",
+    nextButton: "Далее",
+  },
   languages: {
     ko: "Корейский",
     en: "Английский",

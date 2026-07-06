@@ -7,6 +7,7 @@ import { ClearButton } from "@/components/ui/clear-button"
 
 interface InputProps extends React.ComponentProps<"input"> {
   error?: boolean
+  endAdornment?: React.ReactNode
 }
 
 function Input({
@@ -14,6 +15,7 @@ function Input({
   defaultValue,
   value,
   error,
+  endAdornment,
   onChange,
   onFocus,
   onBlur,
@@ -45,7 +47,7 @@ function Input({
         className="w-full bg-transparent text-body-medium-16 text-gray-900 caret-primary-600 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
         {...props}
       />
-      {hasValue && <ClearButton inputRef={inputRef} />}
+      {endAdornment ?? (hasValue && <ClearButton inputRef={inputRef} />)}
     </div>
   )
 }

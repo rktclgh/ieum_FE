@@ -18,6 +18,26 @@ export const vi: Messages = {
   languagePicker: {
     confirm: "Xác nhận",
   },
+  signup: {
+    appBarTitle: "Đăng ký",
+    emailLabel: "Email",
+    emailPlaceholder: "Nhập email",
+    verifyButton: "Xác thực",
+    resendButton: "Gửi lại",
+    verificationPlaceholder: "Nhập mã xác thực gồm 6 số",
+    verificationSentExplanation: "Đã gửi mã xác thực.",
+    verificationVerifiedExplanation: "Xác thực email hoàn tất.",
+    verificationMismatchExplanation: "Mã xác thực không khớp.",
+    emailInvalidExplanation: "Vui lòng nhập đúng định dạng email.",
+    passwordLabel: "Mật khẩu",
+    passwordPlaceholder: "Nhập mật khẩu",
+    passwordHintExplanation:
+      "Mật khẩu phải có ít nhất 10 ký tự và bao gồm ký tự đặc biệt.",
+    passwordConfirmLabel: "Xác nhận mật khẩu",
+    passwordMatchExplanation: "Mật khẩu khớp.",
+    passwordMismatchExplanation: "Mật khẩu không khớp.",
+    nextButton: "Tiếp theo",
+  },
   languages: {
     ko: "Tiếng Hàn",
     en: "Tiếng Anh",

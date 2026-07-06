@@ -19,6 +19,25 @@ export interface Messages {
   languagePicker: {
     confirm: string
   }
+  signup: {
+    appBarTitle: string
+    emailLabel: string
+    emailPlaceholder: string
+    verifyButton: string
+    resendButton: string
+    verificationPlaceholder: string
+    verificationSentExplanation: string
+    verificationVerifiedExplanation: string
+    verificationMismatchExplanation: string
+    emailInvalidExplanation: string
+    passwordLabel: string
+    passwordPlaceholder: string
+    passwordHintExplanation: string
+    passwordConfirmLabel: string
+    passwordMatchExplanation: string
+    passwordMismatchExplanation: string
+    nextButton: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -40,6 +59,25 @@ export const ko: Messages = {
   },
   languagePicker: {
     confirm: "선택 완료",
+  },
+  signup: {
+    appBarTitle: "회원가입",
+    emailLabel: "이메일",
+    emailPlaceholder: "이메일 입력",
+    verifyButton: "인증하기",
+    resendButton: "다시전송",
+    verificationPlaceholder: "인증번호 6자리 입력",
+    verificationSentExplanation: "인증코드를 보냈습니다.",
+    verificationVerifiedExplanation: "이메일 인증이 완료되었습니다.",
+    verificationMismatchExplanation: "인증번호가 일치하지 않습니다.",
+    emailInvalidExplanation: "이메일 형식에 맞춰 입력해주세요.",
+    passwordLabel: "비밀번호",
+    passwordPlaceholder: "비밀번호 입력",
+    passwordHintExplanation: "비밀번호는 특수문자를 포함하여 10자 이상이어야 합니다.",
+    passwordConfirmLabel: "비밀번호 확인",
+    passwordMatchExplanation: "비밀번호가 일치합니다.",
+    passwordMismatchExplanation: "비밀번호가 불일치합니다.",
+    nextButton: "다음",
   },
   languages: {
     ko: "한국어",

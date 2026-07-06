@@ -18,6 +18,26 @@ export const en: Messages = {
   languagePicker: {
     confirm: "Confirm",
   },
+  signup: {
+    appBarTitle: "Sign up",
+    emailLabel: "Email",
+    emailPlaceholder: "Enter your email",
+    verifyButton: "Verify",
+    resendButton: "Resend",
+    verificationPlaceholder: "Enter the 6-digit code",
+    verificationSentExplanation: "Verification code sent.",
+    verificationVerifiedExplanation: "Email verified.",
+    verificationMismatchExplanation: "Verification code doesn't match.",
+    emailInvalidExplanation: "Please enter a valid email address.",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Enter your password",
+    passwordHintExplanation:
+      "Password must be at least 10 characters and include a special character.",
+    passwordConfirmLabel: "Confirm password",
+    passwordMatchExplanation: "Passwords match.",
+    passwordMismatchExplanation: "Passwords don't match.",
+    nextButton: "Next",
+  },
   languages: {
     ko: "Korean",
     en: "English",
