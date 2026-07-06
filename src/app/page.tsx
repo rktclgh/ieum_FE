@@ -11,11 +11,15 @@ import { InputWithButton } from "@/components/ui/text-field/input-with-button"
 import { PasswordInput } from "@/components/ui/text-field/password-input"
 import { SelectInput } from "@/components/ui/text-field/select-input"
 import { TabBar } from "@/features/navigation/components/tab-bar"
+import { LogoutButton } from "@/features/session/components/logout-button"
 
 export default function Home() {
   return (
     <>
       <main className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4 pb-28">
+        <h1 className="text-title-semibold-18">로그인 상태 확인용 임시 로그아웃 버튼</h1>
+        <LogoutButton />
+
         <h1 className="text-title-semibold-18">AppBar 컴포넌트 예시</h1>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">

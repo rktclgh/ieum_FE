@@ -3,6 +3,7 @@ import type { Messages } from "./ko"
 export const ru: Messages = {
   common: {
     or: "or",
+    logout: "Выйти",
   },
   login: {
     logoAlt: "Логотип",
@@ -14,6 +15,7 @@ export const ru: Messages = {
     continueWithGoogle: "Войти через Google",
     continueWithApple: "Войти через Apple",
     continueWithKakao: "Войти через Kakao",
+    loginErrorExplanation: "Проверьте email или пароль.",
   },
   languagePicker: {
     confirm: "Подтвердить",

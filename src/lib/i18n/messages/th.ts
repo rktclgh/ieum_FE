@@ -3,6 +3,7 @@ import type { Messages } from "./ko"
 export const th: Messages = {
   common: {
     or: "or",
+    logout: "ออกจากระบบ",
   },
   login: {
     logoAlt: "โลโก้",
@@ -14,6 +15,7 @@ export const th: Messages = {
     continueWithGoogle: "เข้าสู่ระบบด้วย Google",
     continueWithApple: "เข้าสู่ระบบด้วย Apple",
     continueWithKakao: "เข้าสู่ระบบด้วย Kakao",
+    loginErrorExplanation: "กรุณาตรวจสอบอีเมลหรือรหัสผ่านของคุณ",
   },
   languagePicker: {
     confirm: "ยืนยันการเลือก",

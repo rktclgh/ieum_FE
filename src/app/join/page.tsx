@@ -6,12 +6,16 @@ import { AppBar } from "@/components/ui/app-bar"
 import { CredentialsForm } from "@/features/join/components/credentials-form"
 import { ProfileForm } from "@/features/join/components/profile-form"
 import { useJoinFlow } from "@/features/join/hooks/use-join-flow"
+import { useGuestGuard } from "@/features/session/hooks/use-guest-guard"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 export default function JoinPage() {
   const router = useRouter()
   const { messages } = useTranslation()
+  const { isChecking } = useGuestGuard()
   const flow = useJoinFlow({ onSignupSuccess: () => router.push("/login") })
+
+  if (isChecking) return null
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center">

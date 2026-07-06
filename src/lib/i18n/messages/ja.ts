@@ -3,6 +3,7 @@ import type { Messages } from "./ko"
 export const ja: Messages = {
   common: {
     or: "or",
+    logout: "ログアウト",
   },
   login: {
     logoAlt: "ロゴ",
@@ -14,6 +15,7 @@ export const ja: Messages = {
     continueWithGoogle: "Googleでログイン",
     continueWithApple: "Appleでログイン",
     continueWithKakao: "Kakaoでログイン",
+    loginErrorExplanation: "メールアドレスまたはパスワードをご確認ください。",
   },
   languagePicker: {
     confirm: "選択完了",
