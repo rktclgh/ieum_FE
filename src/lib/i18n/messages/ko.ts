@@ -4,6 +4,7 @@ import type { CountryCode } from "@/lib/constants/countries"
 export interface Messages {
   common: {
     or: string
+    logout: string
   }
   login: {
     logoAlt: string
@@ -15,6 +16,7 @@ export interface Messages {
     continueWithGoogle: string
     continueWithApple: string
     continueWithKakao: string
+    loginErrorExplanation: string
   }
   languagePicker: {
     confirm: string
@@ -64,6 +66,7 @@ export interface Messages {
 export const ko: Messages = {
   common: {
     or: "or",
+    logout: "로그아웃",
   },
   login: {
     logoAlt: "로고",
@@ -75,6 +78,7 @@ export const ko: Messages = {
     continueWithGoogle: "구글로 로그인",
     continueWithApple: "애플로 로그인",
     continueWithKakao: "카카오로 로그인",
+    loginErrorExplanation: "이메일 또는 비밀번호를 확인해주세요.",
   },
   languagePicker: {
     confirm: "선택 완료",

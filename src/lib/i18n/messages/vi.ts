@@ -3,6 +3,7 @@ import type { Messages } from "./ko"
 export const vi: Messages = {
   common: {
     or: "or",
+    logout: "Đăng xuất",
   },
   login: {
     logoAlt: "Logo",
@@ -14,6 +15,7 @@ export const vi: Messages = {
     continueWithGoogle: "Đăng nhập bằng Google",
     continueWithApple: "Đăng nhập bằng Apple",
     continueWithKakao: "Đăng nhập bằng Kakao",
+    loginErrorExplanation: "Vui lòng kiểm tra email hoặc mật khẩu.",
   },
   languagePicker: {
     confirm: "Xác nhận",

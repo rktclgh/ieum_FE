@@ -3,6 +3,7 @@ import type { Messages } from "./ko"
 export const zh: Messages = {
   common: {
     or: "or",
+    logout: "退出登录",
   },
   login: {
     logoAlt: "标志",
@@ -14,6 +15,7 @@ export const zh: Messages = {
     continueWithGoogle: "使用 Google 登录",
     continueWithApple: "使用 Apple 登录",
     continueWithKakao: "使用 Kakao 登录",
+    loginErrorExplanation: "请确认邮箱或密码是否正确。",
   },
   languagePicker: {
     confirm: "选择完成",

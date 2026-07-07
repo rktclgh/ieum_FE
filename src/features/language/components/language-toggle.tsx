@@ -17,6 +17,7 @@ import {
   DrawerViewport,
 } from "@/components/ui/drawer"
 import { LANGUAGE_CODES, LANGUAGE_NATIVE_NAMES, type LanguageCode } from "@/lib/i18n/languages"
+import { MESSAGES } from "@/lib/i18n/messages"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 function LanguageToggle({ className, ...props }: React.ComponentProps<"button">) {
@@ -69,7 +70,7 @@ function LanguageToggle({ className, ...props }: React.ComponentProps<"button">)
                 render={<Button variant="primary" size="block" />}
                 onClick={() => setLanguage(pendingLanguage)}
               >
-                {messages.languagePicker.confirm}
+                {MESSAGES[pendingLanguage].languagePicker.confirm}
               </DrawerClose>
             </DrawerContent>
           </DrawerPopup>
