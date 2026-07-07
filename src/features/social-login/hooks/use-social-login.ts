@@ -27,13 +27,21 @@ function useSocialLogin() {
       const code = consumeSocialLoginError()
       if (code === "kakaoFailed") setErrorMessage(messages.social.kakaoFailed)
       if (code === "tokenExpired") setErrorMessage(messages.social.tokenExpired)
+      if (code === "invalidToken") setErrorMessage(messages.social.invalidToken)
+      if (code === "suspended") setErrorMessage(messages.social.suspended)
       if (code === "socialAlreadyRegistered") {
         setErrorMessage(messages.social.socialAlreadyRegistered)
       }
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
-  }, [messages.social.kakaoFailed, messages.social.socialAlreadyRegistered, messages.social.tokenExpired])
+  }, [
+    messages.social.invalidToken,
+    messages.social.kakaoFailed,
+    messages.social.socialAlreadyRegistered,
+    messages.social.suspended,
+    messages.social.tokenExpired,
+  ])
 
   const handleStartResponse = React.useCallback(
     (provider: SocialProvider, response: SocialStartResponse) => {

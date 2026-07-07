@@ -1,7 +1,12 @@
 const KAKAO_OAUTH_STATE_KEY = "ieum.kakao_oauth_state"
 const SOCIAL_LOGIN_ERROR_KEY = "ieum.social_login_error"
 
-type SocialLoginErrorCode = "kakaoFailed" | "tokenExpired" | "socialAlreadyRegistered"
+type SocialLoginErrorCode =
+  | "kakaoFailed"
+  | "tokenExpired"
+  | "socialAlreadyRegistered"
+  | "invalidToken"
+  | "suspended"
 
 function getStorage() {
   if (typeof window === "undefined") return null

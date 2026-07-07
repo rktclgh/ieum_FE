@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import * as React from "react"
 
 import { useStartSocial } from "@/features/social-login/hooks/use-social-mutations"
+import { getApiCode } from "@/features/social-login/lib/api-error"
 import {
   consumeKakaoOAuthState,
   saveSocialLoginError,
@@ -49,8 +50,11 @@ function KakaoCallbackContent() {
           })
           router.replace("/join/social")
         },
-        onError: () => {
-          saveSocialLoginError("kakaoFailed")
+        onError: (error) => {
+          const code = getApiCode(error)
+          if (code === "SUSPENDED_USER") saveSocialLoginError("suspended")
+          else if (code === "INVALID_SOCIAL_TOKEN") saveSocialLoginError("invalidToken")
+          else saveSocialLoginError("kakaoFailed")
           router.replace("/login")
         },
       }
