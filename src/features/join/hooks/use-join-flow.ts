@@ -3,7 +3,6 @@
 import * as React from "react"
 
 import {
-  BIRTH_DATE_DIGIT_LENGTH,
   EMAIL_REGEX,
   PASSWORD_MIN_LENGTH,
   PASSWORD_SPECIAL_CHAR_REGEX,
@@ -11,34 +10,20 @@ import {
 } from "@/features/join/constants/validation"
 import {
   useCheckEmailDuplicate,
-  useCheckNicknameDuplicate,
   useSendEmailVerificationCode,
   useSignup,
   useVerifyEmailVerificationCode,
 } from "@/features/join/hooks/use-join-mutations"
-import { toIsoDate } from "@/features/join/lib/format"
-import { toIso2 } from "@/features/join/lib/nationality-map"
+import { useProfileForm } from "@/features/join/hooks/use-profile-form"
 import type { JoinStep } from "@/features/join/types"
-import type { CountryCode } from "@/lib/constants/countries"
-import { useTranslation } from "@/lib/i18n/use-translation"
 
 type VerificationStatus = "idle" | "sent" | "verified"
-type NicknameStatus = "idle" | "available" | "duplicate"
-type Gender = "female" | "male"
-
-function formatBirthDate(digits: string) {
-  if (digits.length <= 4) return digits
-  if (digits.length <= 6) return `${digits.slice(0, 4)}.${digits.slice(4)}`
-  return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6, 8)}`
-}
 
 interface UseJoinFlowOptions {
   onSignupSuccess?: () => void
 }
 
 function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
-  const { language } = useTranslation()
-
   const [step, setStep] = React.useState<JoinStep>("credentials")
 
   const [email, setEmail] = React.useState("")
@@ -51,16 +36,10 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const [emailVerificationToken, setEmailVerificationToken] = React.useState("")
   const [isEmailDuplicate, setIsEmailDuplicate] = React.useState(false)
 
-  const [nickname, setNickname] = React.useState("")
-  const [nicknameStatus, setNicknameStatus] = React.useState<NicknameStatus>("idle")
-  const [birthDateDigits, setBirthDateDigits] = React.useState("")
-  const [gender, setGender] = React.useState<Gender | null>(null)
-  const [nationality, setNationality] = React.useState<CountryCode | "">("")
-
   const checkEmailMutation = useCheckEmailDuplicate()
   const sendCodeMutation = useSendEmailVerificationCode()
   const verifyCodeMutation = useVerifyEmailVerificationCode()
-  const checkNicknameMutation = useCheckNicknameDuplicate()
+  const profile = useProfileForm()
   const signupMutation = useSignup()
 
   React.useEffect(() => {
@@ -83,11 +62,6 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const isVerificationMismatch =
     verificationStatus === "sent" && !isVerificationExpired && verifyCodeMutation.isError
   const isCredentialsStepValid = isVerified && isPasswordValid && isPasswordConfirmMatch
-
-  const isBirthDateComplete = birthDateDigits.length === BIRTH_DATE_DIGIT_LENGTH
-  const isBirthDateInvalid = birthDateDigits.length > 0 && !isBirthDateComplete
-  const isProfileStepValid =
-    nicknameStatus === "available" && isBirthDateComplete && gender !== null && nationality !== ""
 
   const handleEmailChange = (rawValue: string) => {
     setEmail(rawValue)
@@ -152,39 +126,13 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
     setStep("profile")
   }
 
-  const handleNicknameChange = (rawValue: string) => {
-    setNickname(rawValue)
-    setNicknameStatus("idle")
-    if (checkNicknameMutation.isError) checkNicknameMutation.reset()
-  }
-
-  const handleNicknameDuplicateCheck = () => {
-    if (!nickname) return
-    checkNicknameMutation.mutate(
-      { nickname },
-      {
-        onSuccess: (data) => {
-          setNicknameStatus(data.available ? "available" : "duplicate")
-        },
-      }
-    )
-  }
-
-  const handleBirthDateChange = (rawValue: string) => {
-    setBirthDateDigits(rawValue.replace(/\D/g, "").slice(0, BIRTH_DATE_DIGIT_LENGTH))
-  }
-
   const handleSignupSubmit = () => {
-    if (!isProfileStepValid || gender === null) return
+    if (!profile.values) return
     signupMutation.mutate(
       {
         email,
         password,
-        nickname,
-        birthDate: toIsoDate(formatBirthDate(birthDateDigits)),
-        gender,
-        nationality: toIso2(nationality),
-        language,
+        ...profile.values,
         emailVerificationToken,
       },
       { onSuccess: onSignupSuccess }
@@ -221,19 +169,8 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
       verifyCodeMutation,
     },
     profile: {
-      nickname,
-      onNicknameChange: handleNicknameChange,
-      nicknameStatus,
-      onDuplicateCheck: handleNicknameDuplicateCheck,
-      checkNicknameMutation,
-      birthDateDigits: formatBirthDate(birthDateDigits),
-      onBirthDateChange: handleBirthDateChange,
-      isBirthDateInvalid,
-      gender,
-      setGender,
-      nationality,
-      onNationalityChange: (value: string) => setNationality(value as CountryCode),
-      isNextEnabled: isProfileStepValid,
+      ...profile,
+      isNextEnabled: profile.isValid,
       onSubmit: handleSignupSubmit,
       signupMutation,
     },

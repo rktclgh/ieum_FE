@@ -9,14 +9,14 @@ import { Input } from "@/components/ui/text-field/input"
 import { InputWithButton } from "@/components/ui/text-field/input-with-button"
 import { Title } from "@/components/ui/text-field/title"
 import { NationalitySelect } from "@/features/join/components/nationality-select"
-import { useJoinFlow } from "@/features/join/hooks/use-join-flow"
+import type { ProfileFormApi } from "@/features/join/types"
 import { getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
 interface ProfileFormProps {
   className?: string
-  flow: ReturnType<typeof useJoinFlow>["profile"]
+  flow: ProfileFormApi
 }
 
 function ProfileForm({ className, flow }: ProfileFormProps) {
