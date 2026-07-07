@@ -104,7 +104,15 @@ function cleanupPendingRequest() {
   pendingTokenRequest = null
 }
 
-function initializeGoogleIdentity(clientId: string, nonce: string) {
+let isInitialized = false
+let initializedNonce: string | null = null
+
+// GSI는 클라이언트 ID당 initialize를 한 번만 호출해야 한다(반복 호출 시 "called multiple times" 경고).
+// nonce는 페이지 로드당 1회 생성해 재사용하고, 백엔드에도 같은 값을 보내 id_token의 nonce claim과 대조한다.
+function ensureGoogleIdentityInitialized(clientId: string): string {
+  if (isInitialized && initializedNonce) return initializedNonce
+
+  const nonce = generateNonce()
   window.google?.accounts.id.initialize({
     client_id: clientId,
     nonce,
@@ -122,6 +130,9 @@ function initializeGoogleIdentity(clientId: string, nonce: string) {
       request.resolve({ idToken: response.credential, nonce: request.nonce })
     },
   })
+  isInitialized = true
+  initializedNonce = nonce
+  return nonce
 }
 
 async function requestGoogleIdToken(): Promise<{ idToken: string; nonce: string }> {
@@ -129,6 +140,8 @@ async function requestGoogleIdToken(): Promise<{ idToken: string; nonce: string 
   if (!clientId) throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured")
 
   await loadGsiScript()
+  const nonce = ensureGoogleIdentityInitialized(clientId)
+
   if (pendingTokenRequest) {
     const previousRequest = pendingTokenRequest
     cleanupPendingRequest()
@@ -136,9 +149,6 @@ async function requestGoogleIdToken(): Promise<{ idToken: string; nonce: string 
   }
 
   return new Promise<{ idToken: string; nonce: string }>((resolve, reject) => {
-    const nonce = generateNonce()
-    initializeGoogleIdentity(clientId, nonce)
-
     const container = createHiddenButtonContainer()
     const timeoutId = window.setTimeout(() => {
       cleanupPendingRequest()
