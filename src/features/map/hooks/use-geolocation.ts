@@ -17,7 +17,10 @@ function useGeolocation() {
   const isSupported = typeof navigator !== "undefined" && Boolean(navigator.geolocation)
 
   React.useEffect(() => {
-    if (!isSupported) return
+    if (!isSupported) {
+      setStatus("error")
+      return
+    }
 
     navigator.geolocation.getCurrentPosition(
       (result) => {

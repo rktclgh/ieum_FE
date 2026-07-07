@@ -1,5 +1,6 @@
 "use client"
 
+import axios from "axios"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 
@@ -11,13 +12,15 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 function MyPageContent() {
   const router = useRouter()
   const { messages } = useTranslation()
-  const { data: user, isPending } = useMe()
+  const { data: user, isPending, error } = useMe()
 
   // 서버 컴포넌트의 redirect는 최초 진입 시점에만 평가되므로, 이 페이지에
   // 머무는 중에 로그아웃해 user가 null이 되면 여기서 직접 보내준다.
+  // 단, 네트워크 장애 등 서버가 응답하지 않은 에러는 "로그아웃"이 아니므로 리다이렉트하지 않는다.
   React.useEffect(() => {
-    if (!isPending && !user) router.replace("/login")
-  }, [isPending, user, router])
+    if (isPending || user) return
+    if (axios.isAxiosError(error) && error.response) router.replace("/login")
+  }, [isPending, user, error, router])
 
   if (!user) return null
 

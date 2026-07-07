@@ -27,8 +27,13 @@ function MapSearchBar({
   const { messages } = useTranslation()
   const [query, setQuery] = React.useState("")
   const [debouncedQuery, setDebouncedQuery] = React.useState("")
+  const skipNextDebounceRef = React.useRef(false)
 
   React.useEffect(() => {
+    if (skipNextDebounceRef.current) {
+      skipNextDebounceRef.current = false
+      return
+    }
     const timer = setTimeout(() => setDebouncedQuery(query), 300)
     return () => clearTimeout(timer)
   }, [query])
@@ -73,6 +78,7 @@ function MapSearchBar({
                 className="flex w-full flex-col items-start gap-0.5 rounded-xl p-2 text-left hover:bg-gray-50"
                 onClick={() => {
                   onSelectPlace(place)
+                  skipNextDebounceRef.current = true
                   setQuery(place.name)
                   setDebouncedQuery("")
                 }}

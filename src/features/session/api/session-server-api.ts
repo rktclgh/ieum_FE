@@ -11,13 +11,18 @@ async function getMeServer(): Promise<UserMeResponse | null> {
   const cookieHeader = cookieStore.toString()
   if (!cookieHeader) return null
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/users/me`, {
-    headers: { Cookie: cookieHeader },
-    cache: "no-store",
-  })
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/users/me`, {
+      headers: { Cookie: cookieHeader },
+      cache: "no-store",
+    })
 
-  if (!response.ok) return null
-  return response.json() as Promise<UserMeResponse>
+    if (!response.ok) return null
+    return (await response.json()) as UserMeResponse
+  } catch {
+    // 백엔드 다운/네트워크 장애로 fetch 자체가 실패해도 서버 컴포넌트 렌더링은 계속되어야 한다.
+    return null
+  }
 }
 
 export { getMeServer }
