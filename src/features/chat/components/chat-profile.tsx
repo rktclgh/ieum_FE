@@ -64,7 +64,7 @@ function ChatProfile({
           <img src={src} alt={alt} className="size-full object-cover" />
         )}
       </div>
-      {online !== undefined && (
+      {!isGroup && online !== undefined && (
         <div
           className="absolute"
           style={{

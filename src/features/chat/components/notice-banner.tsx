@@ -1,7 +1,10 @@
+"use client"
+
 import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface NoticeBannerProps extends React.ComponentProps<"div"> {
   text: string
@@ -9,6 +12,8 @@ interface NoticeBannerProps extends React.ComponentProps<"div"> {
 }
 
 function NoticeBanner({ className, text, onClose, ...props }: NoticeBannerProps) {
+  const { messages } = useTranslation()
+
   return (
     <div
       data-slot="notice-banner"
@@ -22,7 +27,12 @@ function NoticeBanner({ className, text, onClose, ...props }: NoticeBannerProps)
         <Image src="/icons/chat/notification.svg" alt="" width={18} height={20} className="h-5 w-[18px]" />
         <p className="text-body-regular-14 text-gray-900">{text}</p>
       </div>
-      <button type="button" aria-label="닫기" onClick={onClose} className="flex size-4 shrink-0 items-center justify-center">
+      <button
+        type="button"
+        aria-label={messages.common.close}
+        onClick={onClose}
+        className="flex size-4 shrink-0 items-center justify-center"
+      >
         <Image src="/icons/app-bar/close.svg" alt="" width={16} height={16} className="size-4" />
       </button>
     </div>

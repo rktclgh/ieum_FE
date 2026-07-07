@@ -4,6 +4,8 @@ export const th: Messages = {
   common: {
     or: "or",
     logout: "ออกจากระบบ",
+    back: "ย้อนกลับ",
+    close: "ปิด",
   },
   login: {
     logoAlt: "โลโก้",
@@ -121,6 +123,7 @@ export const th: Messages = {
     leaveChatAction: "ออกจากห้องแชท",
     disbandChatAction: "ยุบห้องแชท",
     messageInputPlaceholder: "พิมพ์ข้อความ",
+    sendButtonLabel: "ส่ง",
   },
   languages: {
     ko: "เกาหลี",

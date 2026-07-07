@@ -51,14 +51,15 @@ function ChatMessageInput({ className, value, onChange, onSend, onCameraClick, .
         value={currentValue}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === "Enter") handleSend()
+          // 한글/일본어/중국어 IME 조합 중 Enter로 글자를 확정할 때는 전송하지 않는다.
+          if (event.key === "Enter" && !event.nativeEvent.isComposing) handleSend()
         }}
         placeholder={messages.chat.messageInputPlaceholder}
         className="flex-1 bg-transparent text-body-regular-14 text-gray-900 outline-none placeholder:text-gray-400"
       />
       <button
         type="button"
-        aria-label={messages.chat.replyAction}
+        aria-label={messages.chat.sendButtonLabel}
         onClick={handleSend}
         className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-400"
       >

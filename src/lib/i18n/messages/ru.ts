@@ -4,6 +4,8 @@ export const ru: Messages = {
   common: {
     or: "or",
     logout: "Выйти",
+    back: "Назад",
+    close: "Закрыть",
   },
   login: {
     logoAlt: "Логотип",
@@ -122,6 +124,7 @@ export const ru: Messages = {
     leaveChatAction: "Покинуть чат",
     disbandChatAction: "Распустить чат",
     messageInputPlaceholder: "Введите сообщение",
+    sendButtonLabel: "Отправить",
   },
   languages: {
     ko: "Корейский",

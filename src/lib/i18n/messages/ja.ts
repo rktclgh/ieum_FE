@@ -4,6 +4,8 @@ export const ja: Messages = {
   common: {
     or: "or",
     logout: "ログアウト",
+    back: "戻る",
+    close: "閉じる",
   },
   login: {
     logoAlt: "ロゴ",
@@ -121,6 +123,7 @@ export const ja: Messages = {
     leaveChatAction: "チャットルームを退出",
     disbandChatAction: "チャットルームを解散",
     messageInputPlaceholder: "メッセージを入力",
+    sendButtonLabel: "送信",
   },
   languages: {
     ko: "韓国語",

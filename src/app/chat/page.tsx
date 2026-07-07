@@ -43,7 +43,8 @@ function TestSection({ title, children }: { title: string; children: React.React
 
 export default function ChatComponentsTestPage() {
   const { messages } = useTranslation()
-  const [showPressMenu, setShowPressMenu] = React.useState(false)
+  const [showListMenu, setShowListMenu] = React.useState(false)
+  const [showRoomMenus, setShowRoomMenus] = React.useState(false)
   const [noticeVisible, setNoticeVisible] = React.useState(true)
 
   const listMenuItems: ChatContextMenuItem[] = [
@@ -103,15 +104,15 @@ export default function ChatComponentsTestPage() {
             <button
               type="button"
               className="text-body-regular-13 text-gray-500 underline"
-              onClick={() => setShowPressMenu((prev) => !prev)}
+              onClick={() => setShowListMenu((prev) => !prev)}
             >
               롱프레스 메뉴(고정/알림해제/삭제) 토글
             </button>
-            {showPressMenu && (
+            {showListMenu && (
               <ChatContextMenu
                 items={listMenuItems}
                 dimmed
-                onDismiss={() => setShowPressMenu(false)}
+                onDismiss={() => setShowListMenu(false)}
                 style={{ top: 8, left: 16 }}
               />
             )}
@@ -205,12 +206,16 @@ export default function ChatComponentsTestPage() {
             <button
               type="button"
               className="text-body-regular-13 text-gray-500 underline"
-              onClick={() => setShowPressMenu((prev) => !prev)}
+              onClick={() => setShowRoomMenus((prev) => !prev)}
             >
-              카메라 버튼 메뉴 / 말풍선 롱프레스 메뉴 미리보기
+              카메라 버튼 메뉴 / 말풍선 롱프레스 메뉴 토글
             </button>
-            <ChatContextMenu items={cameraMenuItems} style={{ top: 24, left: 0 }} />
-            <ChatContextMenu items={pressMenuItems} style={{ top: 24, left: 200 }} />
+            {showRoomMenus && (
+              <>
+                <ChatContextMenu items={cameraMenuItems} style={{ top: 24, left: 0 }} />
+                <ChatContextMenu items={pressMenuItems} style={{ top: 24, left: 200 }} />
+              </>
+            )}
           </div>
         </div>
       </TestSection>

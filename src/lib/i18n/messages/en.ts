@@ -4,6 +4,8 @@ export const en: Messages = {
   common: {
     or: "or",
     logout: "Log out",
+    back: "Back",
+    close: "Close",
   },
   login: {
     logoAlt: "Logo",
@@ -122,6 +124,7 @@ export const en: Messages = {
     leaveChatAction: "Leave chat",
     disbandChatAction: "Disband chat",
     messageInputPlaceholder: "Type a message",
+    sendButtonLabel: "Send",
   },
   languages: {
     ko: "Korean",

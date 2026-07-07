@@ -23,7 +23,7 @@ function FriendListAppBar({ className, onBack, onAddFriend, ...props }: FriendLi
     >
       <button
         type="button"
-        aria-label="뒤로 가기"
+        aria-label={messages.common.back}
         onClick={onBack}
         className="flex size-6 shrink-0 items-center justify-center"
       >

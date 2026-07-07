@@ -87,7 +87,7 @@ function ChatBubble({
               isMe ? "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl" : "rounded-tl-3xl rounded-tr-3xl rounded-br-3xl"
             )}
           >
-            <p className="text-body-regular-14 text-white">{replyQuote}</p>
+            <p className="text-body-regular-14 text-gray-700">{replyQuote}</p>
           </div>
           <div
             className={cn(

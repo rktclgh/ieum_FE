@@ -35,7 +35,7 @@ function ChatListItem({
   const titleRef = React.useRef<HTMLSpanElement>(null)
   const [titleTruncated, setTitleTruncated] = React.useState(false)
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     const el = titleRef.current
     if (!el) return
 

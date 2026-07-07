@@ -4,6 +4,8 @@ export const vi: Messages = {
   common: {
     or: "or",
     logout: "Đăng xuất",
+    back: "Quay lại",
+    close: "Đóng",
   },
   login: {
     logoAlt: "Logo",
@@ -122,6 +124,7 @@ export const vi: Messages = {
     leaveChatAction: "Rời khỏi phòng chat",
     disbandChatAction: "Giải tán phòng chat",
     messageInputPlaceholder: "Nhập tin nhắn",
+    sendButtonLabel: "Gửi",
   },
   languages: {
     ko: "Tiếng Hàn",

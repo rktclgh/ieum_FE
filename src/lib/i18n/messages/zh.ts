@@ -4,6 +4,8 @@ export const zh: Messages = {
   common: {
     or: "or",
     logout: "退出登录",
+    back: "返回",
+    close: "关闭",
   },
   login: {
     logoAlt: "标志",
@@ -121,6 +123,7 @@ export const zh: Messages = {
     leaveChatAction: "退出聊天室",
     disbandChatAction: "解散聊天室",
     messageInputPlaceholder: "输入消息",
+    sendButtonLabel: "发送",
   },
   languages: {
     ko: "韩语",
