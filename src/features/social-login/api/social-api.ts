@@ -24,7 +24,6 @@ type SocialStartResponse =
       isNewUser: true
       socialSignupToken: string
       expiresInSeconds: number
-      email?: string
     }
 
 interface SocialSignupRequest {

@@ -45,7 +45,6 @@ function useSocialLogin() {
       socialSignupStorage.save({
         provider,
         token: response.socialSignupToken,
-        email: response.email,
         expiresInSeconds: response.expiresInSeconds,
       })
       router.push("/join/social")

@@ -5,14 +5,12 @@ const SOCIAL_SIGNUP_STORAGE_KEY = "ieum.social_signup"
 interface SocialSignupStoragePayload {
   token: string
   provider: SocialProvider
-  email?: string
   expiresAt: number
 }
 
 interface SaveSocialSignupPayload {
   token: string
   provider: SocialProvider
-  email?: string
   expiresInSeconds: number
 }
 

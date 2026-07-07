@@ -45,7 +45,6 @@ function KakaoCallbackContent() {
           socialSignupStorage.save({
             provider: "kakao",
             token: response.socialSignupToken,
-            email: response.email,
             expiresInSeconds: response.expiresInSeconds,
           })
           router.replace("/join/social")

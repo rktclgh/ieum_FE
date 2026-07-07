@@ -52,9 +52,6 @@ export default function SocialJoinPage() {
         onTrailingClick={() => router.push("/login")}
         className="w-full"
       />
-      {payload.email && (
-        <p className="w-full px-4 pb-3 text-body-regular-12 text-gray-500">{payload.email}</p>
-      )}
       <ProfileForm flow={flow.profile} />
     </main>
   )
