@@ -24,6 +24,7 @@ function useProfileForm() {
   const [birthDateDigits, setBirthDateDigits] = React.useState("")
   const [gender, setGender] = React.useState<Gender | null>(null)
   const [nationality, setNationality] = React.useState<CountryCode | "">("")
+  const latestNicknameRef = React.useRef(nickname)
 
   const checkNicknameMutation = useCheckNicknameDuplicate()
 
@@ -33,6 +34,7 @@ function useProfileForm() {
     nicknameStatus === "available" && isBirthDateComplete && gender !== null && nationality !== ""
 
   const handleNicknameChange = (rawValue: string) => {
+    latestNicknameRef.current = rawValue
     setNickname(rawValue)
     setNicknameStatus("idle")
     if (checkNicknameMutation.isError) checkNicknameMutation.reset()
@@ -40,10 +42,12 @@ function useProfileForm() {
 
   const handleNicknameDuplicateCheck = () => {
     if (!nickname) return
+    const requestedNickname = nickname
     checkNicknameMutation.mutate(
-      { nickname },
+      { nickname: requestedNickname },
       {
         onSuccess: (data) => {
+          if (latestNicknameRef.current !== requestedNickname) return
           setNicknameStatus(data.available ? "available" : "duplicate")
         },
       }

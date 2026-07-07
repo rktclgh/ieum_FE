@@ -23,6 +23,7 @@ export const vi: Messages = {
     tokenExpired: "Phiên đăng ký đã hết hạn. Vui lòng đăng nhập lại.",
     googleFailed: "Đăng nhập Google thất bại. Vui lòng thử lại.",
     kakaoFailed: "Đăng nhập Kakao thất bại. Vui lòng thử lại.",
+    socialAlreadyRegistered: "Tài khoản mạng xã hội này đã được đăng ký. Vui lòng đăng nhập.",
   },
   languagePicker: {
     confirm: "Xác nhận",

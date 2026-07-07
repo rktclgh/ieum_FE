@@ -1,16 +1,12 @@
 "use client"
 
-import axios from "axios"
 import { useRouter } from "next/navigation"
 
 import { useProfileForm } from "@/features/join/hooks/use-profile-form"
 import { useCompleteSocialSignup } from "@/features/social-login/hooks/use-social-mutations"
+import { getApiCode } from "@/features/social-login/lib/api-error"
+import { saveSocialLoginError } from "@/features/social-login/lib/oauth-state-storage"
 import * as socialSignupStorage from "@/features/social-login/lib/social-signup-storage"
-
-function getApiCode(error: unknown) {
-  if (!axios.isAxiosError<{ code?: string }>(error)) return undefined
-  return error.response?.data?.code
-}
 
 function useSocialSignupFlow(socialSignupToken: string) {
   const router = useRouter()
@@ -18,7 +14,7 @@ function useSocialSignupFlow(socialSignupToken: string) {
   const signupMutation = useCompleteSocialSignup()
 
   const handleSubmit = () => {
-    if (!profile.values || !socialSignupToken) return
+    if (!profile.values || !socialSignupToken || signupMutation.isPending) return
 
     signupMutation.mutate(
       {
@@ -34,6 +30,9 @@ function useSocialSignupFlow(socialSignupToken: string) {
           const code = getApiCode(error)
           if (code === "INVALID_SOCIAL_SIGNUP_TOKEN" || code === "SOCIAL_ALREADY_REGISTERED") {
             socialSignupStorage.clear()
+            saveSocialLoginError(
+              code === "SOCIAL_ALREADY_REGISTERED" ? "socialAlreadyRegistered" : "tokenExpired"
+            )
             router.push("/login")
           }
         },

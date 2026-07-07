@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 function SessionAlarmButton() {
   const router = useRouter()
   const { messages } = useTranslation()
-  const { data } = useMe()
+  const { data } = useMe({ requireSessionHint: true })
   const logoutMutation = useLogoutMutation()
   const isLoggedIn = Boolean(data)
 

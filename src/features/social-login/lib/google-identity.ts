@@ -32,12 +32,10 @@ declare global {
 }
 
 let scriptPromise: Promise<void> | null = null
-let initializedClientId: string | null = null
-let initializedNonce: string | null = null
-let activeTokenRequest: Promise<{ idToken: string; nonce: string }> | null = null
 
 interface PendingTokenRequest {
   container: HTMLElement
+  nonce: string
   reject: (reason?: unknown) => void
   resolve: (value: { idToken: string; nonce: string }) => void
   timeoutId: number
@@ -56,9 +54,14 @@ function loadGsiScript(): Promise<void> {
     )
     if (existingScript) {
       existingScript.addEventListener("load", () => resolve(), { once: true })
-      existingScript.addEventListener("error", () => reject(new Error("Failed to load GSI")), {
-        once: true,
-      })
+      existingScript.addEventListener(
+        "error",
+        () => {
+          scriptPromise = null
+          reject(new Error("Failed to load GSI"))
+        },
+        { once: true }
+      )
       return
     }
 
@@ -67,7 +70,11 @@ function loadGsiScript(): Promise<void> {
     script.async = true
     script.defer = true
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error("Failed to load GSI"))
+    script.onerror = () => {
+      scriptPromise = null
+      script.remove()
+      reject(new Error("Failed to load GSI"))
+    }
     document.head.appendChild(script)
   })
 
@@ -75,12 +82,7 @@ function loadGsiScript(): Promise<void> {
 }
 
 function generateNonce() {
-  const bytes = new Uint8Array(16)
-  crypto.getRandomValues(bytes)
-  return btoa(String.fromCharCode(...bytes))
-    .replaceAll("+", "-")
-    .replaceAll("/", "_")
-    .replaceAll("=", "")
+  return crypto.randomUUID()
 }
 
 function createHiddenButtonContainer() {
@@ -102,15 +104,7 @@ function cleanupPendingRequest() {
   pendingTokenRequest = null
 }
 
-function initializeGoogleIdentity(clientId: string) {
-  if (initializedClientId === clientId && initializedNonce) return initializedNonce
-
-  if (initializedClientId && initializedClientId !== clientId) {
-    throw new Error("Google client ID changed after initialization")
-  }
-
-  const nonce = generateNonce()
-
+function initializeGoogleIdentity(clientId: string, nonce: string) {
   window.google?.accounts.id.initialize({
     client_id: clientId,
     nonce,
@@ -125,60 +119,54 @@ function initializeGoogleIdentity(clientId: string) {
       }
 
       cleanupPendingRequest()
-      request.resolve({ idToken: response.credential, nonce })
+      request.resolve({ idToken: response.credential, nonce: request.nonce })
     },
   })
-
-  initializedClientId = clientId
-  initializedNonce = nonce
-  return nonce
 }
 
 async function requestGoogleIdToken(): Promise<{ idToken: string; nonce: string }> {
-  if (activeTokenRequest) return activeTokenRequest
-
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
   if (!clientId) throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured")
 
-  activeTokenRequest = loadGsiScript()
-    .then(
-      () =>
-        new Promise<{ idToken: string; nonce: string }>((resolve, reject) => {
-          initializeGoogleIdentity(clientId)
+  await loadGsiScript()
+  if (pendingTokenRequest) {
+    const previousRequest = pendingTokenRequest
+    cleanupPendingRequest()
+    previousRequest.reject(new Error("Google sign-in was superseded"))
+  }
 
-          const container = createHiddenButtonContainer()
-          const timeoutId = window.setTimeout(() => {
-            cleanupPendingRequest()
-            reject(new Error("Google sign-in was not completed"))
-          }, 30000)
+  return new Promise<{ idToken: string; nonce: string }>((resolve, reject) => {
+    const nonce = generateNonce()
+    initializeGoogleIdentity(clientId, nonce)
 
-          pendingTokenRequest = {
-            container,
-            reject,
-            resolve,
-            timeoutId,
-          }
+    const container = createHiddenButtonContainer()
+    const timeoutId = window.setTimeout(() => {
+      cleanupPendingRequest()
+      reject(new Error("Google sign-in was not completed"))
+    }, 30000)
 
-          window.google?.accounts.id.renderButton(container, {
-            type: "standard",
-            theme: "outline",
-            size: "large",
-            text: "continue_with",
-            shape: "pill",
-          })
+    pendingTokenRequest = {
+      container,
+      nonce,
+      reject,
+      resolve,
+      timeoutId,
+    }
 
-          window.setTimeout(() => {
-            container
-              .querySelector<HTMLElement>('div[role="button"], iframe, button')
-              ?.click()
-          }, 0)
-        })
-    )
-    .finally(() => {
-      activeTokenRequest = null
+    window.google?.accounts.id.renderButton(container, {
+      type: "standard",
+      theme: "outline",
+      size: "large",
+      text: "continue_with",
+      shape: "pill",
     })
 
-  return activeTokenRequest
+    window.setTimeout(() => {
+      container
+        .querySelector<HTMLElement>('div[role="button"], iframe, button')
+        ?.click()
+    }, 0)
+  })
 }
 
 export { generateNonce, loadGsiScript, requestGoogleIdToken }

@@ -23,6 +23,7 @@ export const zh: Messages = {
     tokenExpired: "注册会话已过期,请重新登录。",
     googleFailed: "Google 登录失败,请重试。",
     kakaoFailed: "Kakao 登录失败,请重试。",
+    socialAlreadyRegistered: "该社交账号已注册,请登录。",
   },
   languagePicker: {
     confirm: "选择完成",

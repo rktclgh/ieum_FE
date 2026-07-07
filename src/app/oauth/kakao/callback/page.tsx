@@ -4,6 +4,10 @@ import { useRouter, useSearchParams } from "next/navigation"
 import * as React from "react"
 
 import { useStartSocial } from "@/features/social-login/hooks/use-social-mutations"
+import {
+  consumeKakaoOAuthState,
+  saveSocialLoginError,
+} from "@/features/social-login/lib/oauth-state-storage"
 import * as socialSignupStorage from "@/features/social-login/lib/social-signup-storage"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
@@ -20,8 +24,10 @@ function KakaoCallbackContent() {
 
     const error = searchParams.get("error")
     const code = searchParams.get("code")
+    const state = searchParams.get("state")
 
-    if (error || !code) {
+    if (error || !code || !consumeKakaoOAuthState(state)) {
+      saveSocialLoginError("kakaoFailed")
       router.replace("/login")
       return
     }
@@ -45,6 +51,7 @@ function KakaoCallbackContent() {
           router.replace("/join/social")
         },
         onError: () => {
+          saveSocialLoginError("kakaoFailed")
           router.replace("/login")
         },
       }

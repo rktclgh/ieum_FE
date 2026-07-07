@@ -24,6 +24,7 @@ export interface Messages {
     tokenExpired: string
     googleFailed: string
     kakaoFailed: string
+    socialAlreadyRegistered: string
   }
   languagePicker: {
     confirm: string
@@ -118,6 +119,7 @@ export const ko: Messages = {
     tokenExpired: "가입 시간이 만료되었습니다. 다시 로그인해주세요.",
     googleFailed: "구글 로그인에 실패했습니다. 다시 시도해주세요.",
     kakaoFailed: "카카오 로그인에 실패했습니다. 다시 시도해주세요.",
+    socialAlreadyRegistered: "이미 가입된 소셜 계정입니다. 로그인해주세요.",
   },
   languagePicker: {
     confirm: "선택 완료",

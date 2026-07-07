@@ -23,6 +23,7 @@ export const ja: Messages = {
     tokenExpired: "登録時間が切れました。もう一度ログインしてください。",
     googleFailed: "Googleログインに失敗しました。もう一度お試しください。",
     kakaoFailed: "Kakaoログインに失敗しました。もう一度お試しください。",
+    socialAlreadyRegistered: "すでに登録されているソーシャルアカウントです。ログインしてください。",
   },
   languagePicker: {
     confirm: "選択完了",

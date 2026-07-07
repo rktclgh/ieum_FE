@@ -19,6 +19,10 @@ function MyPageContent() {
   // 단, 네트워크 장애 등 서버가 응답하지 않은 에러는 "로그아웃"이 아니므로 리다이렉트하지 않는다.
   React.useEffect(() => {
     if (isPending || user) return
+    if (!error) {
+      router.replace("/login")
+      return
+    }
     if (axios.isAxiosError(error) && error.response) router.replace("/login")
   }, [isPending, user, error, router])
 

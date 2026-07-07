@@ -43,7 +43,7 @@ function load(): SocialSignupStoragePayload | null {
 
   try {
     const payload = JSON.parse(rawPayload) as SocialSignupStoragePayload
-    if (!payload.token || payload.expiresAt <= Date.now()) {
+    if (!payload.token || !Number.isFinite(payload.expiresAt) || payload.expiresAt <= Date.now()) {
       clear()
       return null
     }

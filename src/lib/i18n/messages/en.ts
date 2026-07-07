@@ -23,6 +23,7 @@ export const en: Messages = {
     tokenExpired: "Your sign-up session expired. Please sign in again.",
     googleFailed: "Google sign-in failed. Please try again.",
     kakaoFailed: "Kakao sign-in failed. Please try again.",
+    socialAlreadyRegistered: "This social account is already registered. Please sign in.",
   },
   languagePicker: {
     confirm: "Confirm",

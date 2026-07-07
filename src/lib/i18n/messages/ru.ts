@@ -23,6 +23,7 @@ export const ru: Messages = {
     tokenExpired: "Сессия регистрации истекла. Войдите снова.",
     googleFailed: "Не удалось войти через Google. Попробуйте снова.",
     kakaoFailed: "Не удалось войти через Kakao. Попробуйте снова.",
+    socialAlreadyRegistered: "Этот социальный аккаунт уже зарегистрирован. Войдите.",
   },
   languagePicker: {
     confirm: "Подтвердить",
