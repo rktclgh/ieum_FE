@@ -6,6 +6,7 @@ import * as React from "react"
 import { AppBar } from "@/components/ui/app-bar"
 import { ProfileForm } from "@/features/join/components/profile-form"
 import { useSocialSignupFlow } from "@/features/social-login/hooks/use-social-signup-flow"
+import { saveSocialLoginError } from "@/features/social-login/lib/oauth-state-storage"
 import {
   load,
   type SocialSignupStoragePayload,
@@ -22,6 +23,7 @@ export default function SocialJoinPage() {
   React.useEffect(() => {
     const storedPayload = load()
     if (!storedPayload) {
+      saveSocialLoginError("tokenExpired")
       router.replace("/login")
       return
     }
