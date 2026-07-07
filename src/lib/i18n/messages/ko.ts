@@ -5,6 +5,9 @@ export interface Messages {
   common: {
     or: string
     logout: string
+    back: string
+    close: string
+    more: string
   }
   login: {
     logoAlt: string
@@ -72,6 +75,7 @@ export interface Messages {
   home: {
     searchPlaceholder: string
     categoryAll: string
+    categoryFriend: string
     categoryMeetup: string
     categoryQuestion: string
     locateMeLabel: string
@@ -92,6 +96,37 @@ export interface Messages {
     questions: string
     my: string
   }
+  chat: {
+    listSearchPlaceholder: string
+    friendSearchPlaceholder: string
+    addFriendTitle: string
+    myFriendsTitle: string
+    receivedRequestsTitle: string
+    recommendedFriendsTitle: string
+    myFriendsSectionTitle: string
+    acceptButton: string
+    rejectButton: string
+    addFriendButton: string
+    requestedButton: string
+    startChatButton: string
+    pinAction: string
+    muteAction: string
+    deleteAction: string
+    replyAction: string
+    reportAction: string
+    blockAction: string
+    takePhotoAction: string
+    chooseAlbumAction: string
+    noticeLabel: string
+    scheduleLabel: string
+    membersTitle: string
+    meLabel: string
+    removeMemberButton: string
+    leaveChatAction: string
+    disbandChatAction: string
+    messageInputPlaceholder: string
+    sendButtonLabel: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -100,6 +135,9 @@ export const ko: Messages = {
   common: {
     or: "or",
     logout: "로그아웃",
+    back: "뒤로 가기",
+    close: "닫기",
+    more: "더보기",
   },
   login: {
     logoAlt: "로고",
@@ -167,6 +205,7 @@ export const ko: Messages = {
   home: {
     searchPlaceholder: "지역, 모임, 질문 검색",
     categoryAll: "전체",
+    categoryFriend: "친구",
     categoryMeetup: "모임",
     categoryQuestion: "질문",
     locateMeLabel: "내 위치로 이동",
@@ -186,6 +225,37 @@ export const ko: Messages = {
     meetups: "모임",
     questions: "질문",
     my: "마이",
+  },
+  chat: {
+    listSearchPlaceholder: "채팅, 친구 검색",
+    friendSearchPlaceholder: "닉네임 검색",
+    addFriendTitle: "친구 추가",
+    myFriendsTitle: "친구 목록",
+    receivedRequestsTitle: "받은 친구 요청",
+    recommendedFriendsTitle: "추천 친구",
+    myFriendsSectionTitle: "내 친구",
+    acceptButton: "수락",
+    rejectButton: "거절",
+    addFriendButton: "친구 요청",
+    requestedButton: "요청됨",
+    startChatButton: "채팅 시작",
+    pinAction: "고정",
+    muteAction: "알림 해제",
+    deleteAction: "삭제",
+    replyAction: "답글 달기",
+    reportAction: "신고",
+    blockAction: "차단",
+    takePhotoAction: "사진 찍기",
+    chooseAlbumAction: "앨범에서 고르기",
+    noticeLabel: "공지",
+    scheduleLabel: "일정",
+    membersTitle: "대화 상대",
+    meLabel: "나",
+    removeMemberButton: "내보내기",
+    leaveChatAction: "채팅방 나가기",
+    disbandChatAction: "채팅방 해체하기",
+    messageInputPlaceholder: "메시지 입력",
+    sendButtonLabel: "전송",
   },
   languages: {
     ko: "한국어",
