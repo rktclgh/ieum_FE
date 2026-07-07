@@ -76,6 +76,12 @@ export const zh: Messages = {
     gradeLabel: "等级",
     acceptedCountLabel: "被采纳的回答数",
   },
+  tabBar: {
+    home: "首页",
+    meetups: "聚会",
+    questions: "提问",
+    my: "我的",
+  },
   languages: {
     ko: "韩语",
     en: "英语",

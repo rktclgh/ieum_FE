@@ -76,6 +76,12 @@ export const ja: Messages = {
     gradeLabel: "等級",
     acceptedCountLabel: "採用された回答数",
   },
+  tabBar: {
+    home: "ホーム",
+    meetups: "集まり",
+    questions: "質問",
+    my: "マイ",
+  },
   languages: {
     ko: "韓国語",
     en: "英語",

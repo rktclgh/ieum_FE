@@ -76,6 +76,12 @@ export const th: Messages = {
     gradeLabel: "ระดับ",
     acceptedCountLabel: "จำนวนคำตอบที่ถูกเลือก",
   },
+  tabBar: {
+    home: "หน้าแรก",
+    meetups: "พบปะ",
+    questions: "คำถาม",
+    my: "ของฉัน",
+  },
   languages: {
     ko: "เกาหลี",
     en: "อังกฤษ",

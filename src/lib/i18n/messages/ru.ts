@@ -77,6 +77,12 @@ export const ru: Messages = {
     gradeLabel: "Уровень",
     acceptedCountLabel: "Принятые ответы",
   },
+  tabBar: {
+    home: "Главная",
+    meetups: "Встречи",
+    questions: "Вопросы",
+    my: "Профиль",
+  },
   languages: {
     ko: "Корейский",
     en: "Английский",

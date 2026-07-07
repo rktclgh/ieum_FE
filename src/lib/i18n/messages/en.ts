@@ -77,6 +77,12 @@ export const en: Messages = {
     gradeLabel: "Grade",
     acceptedCountLabel: "Accepted answers",
   },
+  tabBar: {
+    home: "Home",
+    meetups: "Meetups",
+    questions: "Questions",
+    my: "My",
+  },
   languages: {
     ko: "Korean",
     en: "English",

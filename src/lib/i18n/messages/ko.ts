@@ -77,6 +77,12 @@ export interface Messages {
     gradeLabel: string
     acceptedCountLabel: string
   }
+  tabBar: {
+    home: string
+    meetups: string
+    questions: string
+    my: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -156,6 +162,12 @@ export const ko: Messages = {
     emailLabel: "이메일",
     gradeLabel: "등급",
     acceptedCountLabel: "채택 수",
+  },
+  tabBar: {
+    home: "홈",
+    meetups: "모임",
+    questions: "질문",
+    my: "마이",
   },
   languages: {
     ko: "한국어",

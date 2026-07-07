@@ -77,6 +77,12 @@ export const vi: Messages = {
     gradeLabel: "Hạng",
     acceptedCountLabel: "Số câu trả lời được chọn",
   },
+  tabBar: {
+    home: "Trang chủ",
+    meetups: "Gặp mặt",
+    questions: "Câu hỏi",
+    my: "Của tôi",
+  },
   languages: {
     ko: "Tiếng Hàn",
     en: "Tiếng Anh",
