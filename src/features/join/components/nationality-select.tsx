@@ -34,6 +34,7 @@ function NationalitySelect({ className, value, onValueChange, error }: Nationali
       onValueChange={onValueChange}
       placeholder={messages.join.nationalityPlaceholder}
       confirmLabel={messages.languagePicker.confirm}
+      searchPlaceholder={messages.join.nationalitySearchPlaceholder}
       error={error}
     />
   )

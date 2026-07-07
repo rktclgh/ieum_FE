@@ -14,7 +14,6 @@ export interface Messages {
     forgotPassword: string
     signUp: string
     continueWithGoogle: string
-    continueWithApple: string
     continueWithKakao: string
     loginErrorExplanation: string
   }
@@ -23,6 +22,7 @@ export interface Messages {
   }
   join: {
     appBarTitle: string
+    languageLabel: string
     emailLabel: string
     emailPlaceholder: string
     verifyButton: string
@@ -56,8 +56,26 @@ export interface Messages {
     genderMale: string
     nationalityLabel: string
     nationalityPlaceholder: string
+    nationalitySearchPlaceholder: string
     createAccountButton: string
     signupErrorExplanation: string
+  }
+  home: {
+    searchPlaceholder: string
+    categoryAll: string
+    categoryMeetup: string
+    categoryQuestion: string
+    locateMeLabel: string
+    listViewLabel: string
+    createLabel: string
+    loginLabel: string
+    selectedLocationPrefix: string
+    clearSelectedLocationLabel: string
+  }
+  my: {
+    emailLabel: string
+    gradeLabel: string
+    acceptedCountLabel: string
   }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
@@ -76,7 +94,6 @@ export const ko: Messages = {
     forgotPassword: "비밀번호 찾기",
     signUp: "회원가입",
     continueWithGoogle: "구글로 로그인",
-    continueWithApple: "애플로 로그인",
     continueWithKakao: "카카오로 로그인",
     loginErrorExplanation: "이메일 또는 비밀번호를 확인해주세요.",
   },
@@ -85,6 +102,7 @@ export const ko: Messages = {
   },
   join: {
     appBarTitle: "회원가입",
+    languageLabel: "언어",
     emailLabel: "이메일",
     emailPlaceholder: "이메일 입력",
     verifyButton: "인증하기",
@@ -118,8 +136,26 @@ export const ko: Messages = {
     genderMale: "남성",
     nationalityLabel: "국적",
     nationalityPlaceholder: "국적 선택",
+    nationalitySearchPlaceholder: "국가 검색",
     createAccountButton: "계정 만들기",
     signupErrorExplanation: "회원가입에 실패했습니다. 다시 시도해주세요.",
+  },
+  home: {
+    searchPlaceholder: "지역, 모임, 질문 검색",
+    categoryAll: "전체",
+    categoryMeetup: "모임",
+    categoryQuestion: "질문",
+    locateMeLabel: "내 위치로 이동",
+    listViewLabel: "목록 보기",
+    createLabel: "만들기",
+    loginLabel: "로그인",
+    selectedLocationPrefix: "선택한 위치",
+    clearSelectedLocationLabel: "선택 해제",
+  },
+  my: {
+    emailLabel: "이메일",
+    gradeLabel: "등급",
+    acceptedCountLabel: "채택 수",
   },
   languages: {
     ko: "한국어",

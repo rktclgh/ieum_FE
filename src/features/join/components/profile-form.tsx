@@ -5,9 +5,9 @@ import type { FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { ChoicePill } from "@/components/ui/text-field/choice-pill"
 import { Explanation } from "@/components/ui/text-field/explanation"
-import { FieldLabel } from "@/components/ui/text-field/field-label"
 import { Input } from "@/components/ui/text-field/input"
 import { InputWithButton } from "@/components/ui/text-field/input-with-button"
+import { Title } from "@/components/ui/text-field/title"
 import { NationalitySelect } from "@/features/join/components/nationality-select"
 import { useJoinFlow } from "@/features/join/hooks/use-join-flow"
 import { getApiErrorMessage } from "@/lib/api/errors"
@@ -52,7 +52,7 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
     >
       <div className="flex w-full flex-col gap-3 px-4 pb-32 [&>[data-slot=explanation]]:-mt-3">
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.join.nicknameLabel} />
+          <Title text={messages.join.nicknameLabel} />
           <InputWithButton
             name="nickname"
             autoComplete="nickname"
@@ -82,7 +82,7 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
         </div>
 
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.join.birthDateLabel} />
+          <Title text={messages.join.birthDateLabel} />
           <Input
             inputMode="numeric"
             name="birthDate"
@@ -95,7 +95,7 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
         </div>
 
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.join.genderLabel} />
+          <Title text={messages.join.genderLabel} />
           <div className="flex w-full gap-3">
             <ChoicePill
               className="flex-1"
@@ -113,7 +113,7 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
         </div>
 
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.join.nationalityLabel} />
+          <Title text={messages.join.nationalityLabel} />
           <NationalitySelect value={nationality} onValueChange={onNationalityChange} />
         </div>
 

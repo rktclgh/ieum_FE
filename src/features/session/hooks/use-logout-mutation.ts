@@ -8,7 +8,7 @@ function useLogoutMutation() {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.setQueryData(["session"], null)
+      queryClient.setQueryData(["me"], null)
     },
   })
 }
