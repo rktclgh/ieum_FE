@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/text-field/input"
 import { PasswordInput } from "@/components/ui/text-field/password-input"
 import { LanguageToggle } from "@/features/language/components/language-toggle"
 import { useLoginFlow } from "@/features/login/hooks/use-login-flow"
+import { useSocialLogin } from "@/features/social-login/hooks/use-social-login"
 import { getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
@@ -23,6 +24,7 @@ export default function LoginPage() {
     onSubmit,
     loginMutation,
   } = useLoginFlow()
+  const socialLogin = useSocialLogin()
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -79,7 +81,16 @@ export default function LoginPage() {
       </div>
 
       <div className="flex w-full flex-col gap-3">
-        <Button type="button" variant="social" size="block">
+        {socialLogin.errorMessage && (
+          <Explanation variant="error" text={socialLogin.errorMessage} />
+        )}
+        <Button
+          type="button"
+          variant="social"
+          size="block"
+          disabled={socialLogin.isPending}
+          onClick={socialLogin.startGoogle}
+        >
           <Image
             src="/icons/social-login/google.svg"
             alt=""
@@ -89,7 +100,13 @@ export default function LoginPage() {
           />
           {messages.login.continueWithGoogle}
         </Button>
-        <Button type="button" variant="social" size="block">
+        <Button
+          type="button"
+          variant="social"
+          size="block"
+          disabled={socialLogin.isPending}
+          onClick={socialLogin.startKakao}
+        >
           <Image
             src="/icons/social-login/kakao.svg"
             alt=""

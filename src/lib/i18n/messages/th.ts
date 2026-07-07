@@ -16,6 +16,15 @@ export const th: Messages = {
     continueWithKakao: "เข้าสู่ระบบด้วย Kakao",
     loginErrorExplanation: "กรุณาตรวจสอบอีเมลหรือรหัสผ่านของคุณ",
   },
+  social: {
+    loading: "กำลังเข้าสู่ระบบ...",
+    invalidToken: "ยืนยันการเข้าสู่ระบบโซเชียลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    suspended: "บัญชีนี้ถูกจำกัดการใช้งาน",
+    tokenExpired: "เซสชันสมัครสมาชิกหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง",
+    googleFailed: "เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    kakaoFailed: "เข้าสู่ระบบด้วย Kakao ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    socialAlreadyRegistered: "บัญชีโซเชียลนี้ลงทะเบียนแล้ว กรุณาเข้าสู่ระบบ",
+  },
   languagePicker: {
     confirm: "ยืนยันการเลือก",
   },

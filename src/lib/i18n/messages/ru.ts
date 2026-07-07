@@ -16,6 +16,15 @@ export const ru: Messages = {
     continueWithKakao: "Войти через Kakao",
     loginErrorExplanation: "Проверьте email или пароль.",
   },
+  social: {
+    loading: "Выполняется вход...",
+    invalidToken: "Не удалось подтвердить социальный вход. Попробуйте снова.",
+    suspended: "Этот аккаунт заблокирован.",
+    tokenExpired: "Сессия регистрации истекла. Войдите снова.",
+    googleFailed: "Не удалось войти через Google. Попробуйте снова.",
+    kakaoFailed: "Не удалось войти через Kakao. Попробуйте снова.",
+    socialAlreadyRegistered: "Этот социальный аккаунт уже зарегистрирован. Войдите.",
+  },
   languagePicker: {
     confirm: "Подтвердить",
   },
