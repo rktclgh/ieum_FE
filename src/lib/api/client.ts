@@ -25,10 +25,12 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const { config, response } = error
-    const isRefreshOrLoginCall =
-      config?.url?.includes("/auth/refresh") || config?.url?.includes("/auth/login")
+    const isAuthBootstrapCall =
+      config?.url?.includes("/auth/refresh") ||
+      config?.url?.includes("/auth/login") ||
+      config?.url?.includes("/auth/social")
 
-    if (response?.status !== 401 || config._retried || isRefreshOrLoginCall) {
+    if (response?.status !== 401 || config._retried || isAuthBootstrapCall) {
       return Promise.reject(error)
     }
     config._retried = true

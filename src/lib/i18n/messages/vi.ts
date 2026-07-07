@@ -16,6 +16,14 @@ export const vi: Messages = {
     continueWithKakao: "Đăng nhập bằng Kakao",
     loginErrorExplanation: "Vui lòng kiểm tra email hoặc mật khẩu.",
   },
+  social: {
+    loading: "Đang đăng nhập...",
+    invalidToken: "Xác thực đăng nhập mạng xã hội thất bại. Vui lòng thử lại.",
+    suspended: "Tài khoản này đang bị hạn chế.",
+    tokenExpired: "Phiên đăng ký đã hết hạn. Vui lòng đăng nhập lại.",
+    googleFailed: "Đăng nhập Google thất bại. Vui lòng thử lại.",
+    kakaoFailed: "Đăng nhập Kakao thất bại. Vui lòng thử lại.",
+  },
   languagePicker: {
     confirm: "Xác nhận",
   },

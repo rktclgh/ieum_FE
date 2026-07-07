@@ -16,6 +16,14 @@ export const en: Messages = {
     continueWithKakao: "Continue with Kakao",
     loginErrorExplanation: "Please check your email or password.",
   },
+  social: {
+    loading: "Signing you in...",
+    invalidToken: "Social sign-in failed. Please try again.",
+    suspended: "This account is suspended.",
+    tokenExpired: "Your sign-up session expired. Please sign in again.",
+    googleFailed: "Google sign-in failed. Please try again.",
+    kakaoFailed: "Kakao sign-in failed. Please try again.",
+  },
   languagePicker: {
     confirm: "Confirm",
   },

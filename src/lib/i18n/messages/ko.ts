@@ -17,6 +17,14 @@ export interface Messages {
     continueWithKakao: string
     loginErrorExplanation: string
   }
+  social: {
+    loading: string
+    invalidToken: string
+    suspended: string
+    tokenExpired: string
+    googleFailed: string
+    kakaoFailed: string
+  }
   languagePicker: {
     confirm: string
   }
@@ -102,6 +110,14 @@ export const ko: Messages = {
     continueWithGoogle: "구글로 로그인",
     continueWithKakao: "카카오로 로그인",
     loginErrorExplanation: "이메일 또는 비밀번호를 확인해주세요.",
+  },
+  social: {
+    loading: "로그인 중...",
+    invalidToken: "소셜 로그인 인증에 실패했습니다. 다시 시도해주세요.",
+    suspended: "이용이 제한된 계정입니다.",
+    tokenExpired: "가입 시간이 만료되었습니다. 다시 로그인해주세요.",
+    googleFailed: "구글 로그인에 실패했습니다. 다시 시도해주세요.",
+    kakaoFailed: "카카오 로그인에 실패했습니다. 다시 시도해주세요.",
   },
   languagePicker: {
     confirm: "선택 완료",

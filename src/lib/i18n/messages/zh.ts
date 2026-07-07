@@ -16,6 +16,14 @@ export const zh: Messages = {
     continueWithKakao: "使用 Kakao 登录",
     loginErrorExplanation: "请确认邮箱或密码是否正确。",
   },
+  social: {
+    loading: "正在登录...",
+    invalidToken: "社交登录认证失败,请重试。",
+    suspended: "该账号已被限制使用。",
+    tokenExpired: "注册会话已过期,请重新登录。",
+    googleFailed: "Google 登录失败,请重试。",
+    kakaoFailed: "Kakao 登录失败,请重试。",
+  },
   languagePicker: {
     confirm: "选择完成",
   },
