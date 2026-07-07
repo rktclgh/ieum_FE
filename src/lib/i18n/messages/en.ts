@@ -6,6 +6,7 @@ export const en: Messages = {
     logout: "Log out",
     back: "Back",
     close: "Close",
+    more: "More",
   },
   login: {
     logoAlt: "Logo",

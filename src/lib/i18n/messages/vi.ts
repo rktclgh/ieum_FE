@@ -6,6 +6,7 @@ export const vi: Messages = {
     logout: "Đăng xuất",
     back: "Quay lại",
     close: "Đóng",
+    more: "Thêm",
   },
   login: {
     logoAlt: "Logo",

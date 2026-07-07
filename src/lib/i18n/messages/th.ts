@@ -6,6 +6,7 @@ export const th: Messages = {
     logout: "ออกจากระบบ",
     back: "ย้อนกลับ",
     close: "ปิด",
+    more: "เพิ่มเติม",
   },
   login: {
     logoAlt: "โลโก้",

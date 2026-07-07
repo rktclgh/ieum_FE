@@ -1,7 +1,10 @@
+"use client"
+
 import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n/use-translation"
 
 const TRAILING_ICON_SRC = {
   more: "/icons/app-bar/more.svg",
@@ -32,6 +35,8 @@ function AppBar({
   onTrailingClick,
   ...props
 }: AppBarProps) {
+  const { messages } = useTranslation()
+
   return (
     <div
       data-slot="app-bar"
@@ -43,7 +48,7 @@ function AppBar({
       ) : (
         <button
           type="button"
-          aria-label="뒤로 가기"
+          aria-label={messages.common.back}
           onClick={onLeadingClick}
           className="flex size-6 shrink-0 items-center justify-center"
         >
@@ -60,7 +65,7 @@ function AppBar({
       ) : (
         <button
           type="button"
-          aria-label={trailingVariant === "close" ? "닫기" : "더보기"}
+          aria-label={trailingVariant === "close" ? messages.common.close : messages.common.more}
           onClick={onTrailingClick}
           className="flex size-6 shrink-0 items-center justify-center"
         >

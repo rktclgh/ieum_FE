@@ -6,6 +6,7 @@ export const ru: Messages = {
     logout: "Выйти",
     back: "Назад",
     close: "Закрыть",
+    more: "Ещё",
   },
   login: {
     logoAlt: "Логотип",

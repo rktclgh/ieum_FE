@@ -6,6 +6,7 @@ export const zh: Messages = {
     logout: "退出登录",
     back: "返回",
     close: "关闭",
+    more: "更多",
   },
   login: {
     logoAlt: "标志",

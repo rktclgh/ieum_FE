@@ -7,6 +7,7 @@ export interface Messages {
     logout: string
     back: string
     close: string
+    more: string
   }
   login: {
     logoAlt: string
@@ -136,6 +137,7 @@ export const ko: Messages = {
     logout: "로그아웃",
     back: "뒤로 가기",
     close: "닫기",
+    more: "더보기",
   },
   login: {
     logoAlt: "로고",

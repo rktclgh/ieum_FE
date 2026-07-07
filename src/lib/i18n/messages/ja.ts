@@ -6,6 +6,7 @@ export const ja: Messages = {
     logout: "ログアウト",
     back: "戻る",
     close: "閉じる",
+    more: "その他",
   },
   login: {
     logoAlt: "ロゴ",
