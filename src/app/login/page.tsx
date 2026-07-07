@@ -10,13 +10,11 @@ import { Input } from "@/components/ui/text-field/input"
 import { PasswordInput } from "@/components/ui/text-field/password-input"
 import { LanguageToggle } from "@/features/language/components/language-toggle"
 import { useLoginFlow } from "@/features/login/hooks/use-login-flow"
-import { useGuestGuard } from "@/features/session/hooks/use-guest-guard"
 import { getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 export default function LoginPage() {
   const { messages } = useTranslation()
-  const { isChecking } = useGuestGuard()
   const {
     email,
     onEmailChange,
@@ -31,10 +29,8 @@ export default function LoginPage() {
     onSubmit()
   }
 
-  if (isChecking) return null
-
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center gap-6 px-4 py-4">
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center gap-6 px-4 pt-16 pb-4">
       <LanguageToggle />
 
       <div className="flex h-30 w-full items-center justify-center">
@@ -92,16 +88,6 @@ export default function LoginPage() {
             className="size-5"
           />
           {messages.login.continueWithGoogle}
-        </Button>
-        <Button type="button" variant="social" size="block">
-          <Image
-            src="/icons/social-login/apple.svg"
-            alt=""
-            width={20}
-            height={20}
-            className="size-5"
-          />
-          {messages.login.continueWithApple}
         </Button>
         <Button type="button" variant="social" size="block">
           <Image

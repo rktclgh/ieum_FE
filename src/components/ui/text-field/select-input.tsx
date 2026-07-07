@@ -31,6 +31,7 @@ interface SelectInputProps {
   onValueChange?: (value: string) => void
   placeholder?: string
   confirmLabel?: string
+  searchPlaceholder?: string
   error?: boolean
   disabled?: boolean
 }
@@ -43,6 +44,7 @@ function SelectInput({
   onValueChange,
   placeholder = "선택",
   confirmLabel = "확인",
+  searchPlaceholder,
   error,
   disabled,
 }: SelectInputProps) {
@@ -50,6 +52,13 @@ function SelectInput({
   const selectedValue = value ?? uncontrolledValue
   const [pendingValue, setPendingValue] = React.useState(selectedValue)
   const selectedOption = options.find((option) => option.value === selectedValue)
+
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const filteredOptions = searchQuery.trim()
+    ? options.filter((option) =>
+        option.label.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : options
 
   const [isScrolling, setIsScrolling] = React.useState(false)
   const scrollHideTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -70,7 +79,10 @@ function SelectInput({
   return (
     <Drawer
       onOpenChange={(open) => {
-        if (open) setPendingValue(selectedValue)
+        if (open) {
+          setPendingValue(selectedValue)
+          setSearchQuery("")
+        }
       }}
     >
       <DrawerTrigger
@@ -114,6 +126,23 @@ function SelectInput({
         <DrawerViewport>
           <DrawerPopup>
             <DrawerContent className="min-h-0">
+              {searchPlaceholder && (
+                <div className="flex h-[46px] w-full shrink-0 items-center gap-3 rounded-full bg-gray-50 px-4 py-3">
+                  <Image
+                    src="/icons/search-bar/search.svg"
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="size-5 shrink-0"
+                  />
+                  <input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="w-full bg-transparent text-body-regular-15 text-gray-900 caret-primary-600 outline-none placeholder:text-gray-400"
+                  />
+                </div>
+              )}
               <div
                 onScroll={handleOptionsScroll}
                 data-scrolling={isScrolling}
@@ -124,7 +153,7 @@ function SelectInput({
                   "data-[scrolling=true]:[&::-webkit-scrollbar-thumb]:bg-gray-200"
                 )}
               >
-                {options.map((option) => {
+                {filteredOptions.map((option) => {
                   const selected = option.value === pendingValue
                   return (
                     <button

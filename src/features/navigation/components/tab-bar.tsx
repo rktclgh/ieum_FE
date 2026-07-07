@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { TAB_ITEMS } from "@/features/navigation/constants/tab-items"
+import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface TabBarProps extends React.ComponentProps<"div"> {
   /** 실제 경로 대신 특정 탭을 활성 상태로 강제 표시 (미리보기/데모용) */
@@ -15,6 +16,7 @@ interface TabBarProps extends React.ComponentProps<"div"> {
 
 function TabBar({ className, activeHref, ...props }: TabBarProps) {
   const pathname = usePathname()
+  const { messages } = useTranslation()
 
   return (
     <div
@@ -52,7 +54,7 @@ function TabBar({ className, activeHref, ...props }: TabBarProps) {
                   active ? "text-primary-600" : "text-gray-900"
                 )}
               >
-                {item.label}
+                {messages.tabBar[item.labelKey]}
               </span>
             </Link>
           )

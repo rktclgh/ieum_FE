@@ -1,12 +1,20 @@
 import { apiClient } from "@/lib/api/client"
 
-interface RefreshSessionResponse {
+interface UserMeResponse {
   userId: number
-  role: string
+  email: string
+  nickname: string
+  birthDate: string
+  gender: "male" | "female" | "other"
+  nationality: string
+  profileImageUrl: string | null
+  grade: string
+  acceptedCount: number
+  settings: Record<string, unknown>
 }
 
-async function refreshSession() {
-  const { data } = await apiClient.post<RefreshSessionResponse>("/api/v1/auth/refresh")
+async function getMe() {
+  const { data } = await apiClient.get<UserMeResponse>("/api/v1/users/me")
   return data
 }
 
@@ -14,5 +22,5 @@ async function logout() {
   await apiClient.post("/api/v1/auth/logout")
 }
 
-export { refreshSession, logout }
-export type { RefreshSessionResponse }
+export { getMe, logout }
+export type { UserMeResponse }

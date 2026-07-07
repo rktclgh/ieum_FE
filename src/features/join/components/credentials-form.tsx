@@ -4,12 +4,14 @@ import type { FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Explanation } from "@/components/ui/text-field/explanation"
-import { FieldLabel } from "@/components/ui/text-field/field-label"
 import { Input } from "@/components/ui/text-field/input"
 import { InputWithButton } from "@/components/ui/text-field/input-with-button"
 import { PasswordInput } from "@/components/ui/text-field/password-input"
+import { SelectInput } from "@/components/ui/text-field/select-input"
+import { Title } from "@/components/ui/text-field/title"
 import { useJoinFlow } from "@/features/join/hooks/use-join-flow"
 import { getApiErrorMessage } from "@/lib/api/errors"
+import { LANGUAGE_CODES, LANGUAGE_NATIVE_NAMES, type LanguageCode } from "@/lib/i18n/languages"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -25,7 +27,7 @@ interface CredentialsFormProps {
 }
 
 function CredentialsForm({ className, flow }: CredentialsFormProps) {
-  const { messages } = useTranslation()
+  const { messages, language, setLanguage } = useTranslation()
 
   const {
     email,
@@ -63,7 +65,20 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
     <form onSubmit={handleSubmit} className={cn("flex w-full flex-1 flex-col items-center", className)}>
       <div className="flex w-full flex-col gap-3 px-4 pb-32">
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.join.emailLabel} />
+          <Title text={messages.join.languageLabel} />
+          <SelectInput
+            options={LANGUAGE_CODES.map((code) => ({
+              value: code,
+              label: LANGUAGE_NATIVE_NAMES[code],
+            }))}
+            value={language}
+            onValueChange={(value) => setLanguage(value as LanguageCode)}
+            confirmLabel={messages.languagePicker.confirm}
+          />
+        </div>
+
+        <div className="flex w-full flex-col items-start">
+          <Title text={messages.join.emailLabel} />
           <div className="flex w-full flex-col gap-3 [&>[data-slot=explanation]]:-mt-3">
             <InputWithButton
               type="email"
@@ -164,7 +179,7 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
         </div>
 
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.join.passwordLabel} />
+          <Title text={messages.join.passwordLabel} />
           <PasswordInput
             name="password"
             autoComplete="new-password"
@@ -180,7 +195,7 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
         </div>
 
         <div className="flex w-full flex-col items-start">
-          <FieldLabel text={messages.join.passwordConfirmLabel} />
+          <Title text={messages.join.passwordConfirmLabel} />
           <PasswordInput
             name="passwordConfirm"
             autoComplete="new-password"

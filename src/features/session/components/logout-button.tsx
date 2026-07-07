@@ -2,12 +2,12 @@
 
 import { Button } from "@/components/ui/button"
 import { useLogoutMutation } from "@/features/session/hooks/use-logout-mutation"
-import { useSessionCheck } from "@/features/session/hooks/use-session-check"
+import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 function LogoutButton() {
   const { messages } = useTranslation()
-  const { data } = useSessionCheck()
+  const { data } = useMe()
   const logoutMutation = useLogoutMutation()
 
   if (!data) return null
