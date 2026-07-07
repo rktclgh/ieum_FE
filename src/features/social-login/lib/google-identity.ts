@@ -24,7 +24,6 @@ declare global {
       accounts: {
         id: {
           initialize: (config: GoogleIdConfiguration) => void
-          prompt: () => void
           renderButton: (parent: HTMLElement, options: GoogleButtonConfiguration) => void
         }
       }
@@ -33,6 +32,18 @@ declare global {
 }
 
 let scriptPromise: Promise<void> | null = null
+let initializedClientId: string | null = null
+let initializedNonce: string | null = null
+let activeTokenRequest: Promise<{ idToken: string; nonce: string }> | null = null
+
+interface PendingTokenRequest {
+  container: HTMLElement
+  reject: (reason?: unknown) => void
+  resolve: (value: { idToken: string; nonce: string }) => void
+  timeoutId: number
+}
+
+let pendingTokenRequest: PendingTokenRequest | null = null
 
 function loadGsiScript(): Promise<void> {
   if (typeof window === "undefined") return Promise.reject(new Error("GSI requires a browser"))
@@ -84,57 +95,90 @@ function createHiddenButtonContainer() {
   return container
 }
 
-async function requestGoogleIdToken(): Promise<{ idToken: string; nonce: string }> {
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-  if (!clientId) throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured")
+function cleanupPendingRequest() {
+  if (!pendingTokenRequest) return
+  window.clearTimeout(pendingTokenRequest.timeoutId)
+  pendingTokenRequest.container.remove()
+  pendingTokenRequest = null
+}
 
-  await loadGsiScript()
+function initializeGoogleIdentity(clientId: string) {
+  if (initializedClientId === clientId && initializedNonce) return initializedNonce
+
+  if (initializedClientId && initializedClientId !== clientId) {
+    throw new Error("Google client ID changed after initialization")
+  }
 
   const nonce = generateNonce()
 
-  return new Promise((resolve, reject) => {
-    const container = createHiddenButtonContainer()
+  window.google?.accounts.id.initialize({
+    client_id: clientId,
+    nonce,
+    callback: (response) => {
+      const request = pendingTokenRequest
+      if (!request) return
 
-    const timeoutId = window.setTimeout(() => {
-      container.remove()
-      reject(new Error("Google sign-in was not completed"))
-    }, 120000)
+      if (!response.credential) {
+        cleanupPendingRequest()
+        request.reject(new Error("Google credential is empty"))
+        return
+      }
 
-    const cleanup = (container: HTMLElement) => {
-      window.clearTimeout(timeoutId)
-      container.remove()
-    }
-
-    window.google?.accounts.id.initialize({
-      client_id: clientId,
-      nonce,
-      callback: (response) => {
-        if (!response.credential) {
-          cleanup(container)
-          reject(new Error("Google credential is empty"))
-          return
-        }
-
-        cleanup(container)
-        resolve({ idToken: response.credential, nonce })
-      },
-    })
-
-    window.google?.accounts.id.renderButton(container, {
-      type: "standard",
-      theme: "outline",
-      size: "large",
-      text: "continue_with",
-      shape: "pill",
-    })
-
-    window.google?.accounts.id.prompt()
-    window.setTimeout(() => {
-      container
-        .querySelector<HTMLElement>('div[role="button"], iframe, button')
-        ?.click()
-    }, 0)
+      cleanupPendingRequest()
+      request.resolve({ idToken: response.credential, nonce })
+    },
   })
+
+  initializedClientId = clientId
+  initializedNonce = nonce
+  return nonce
+}
+
+async function requestGoogleIdToken(): Promise<{ idToken: string; nonce: string }> {
+  if (activeTokenRequest) return activeTokenRequest
+
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+  if (!clientId) throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured")
+
+  activeTokenRequest = loadGsiScript()
+    .then(
+      () =>
+        new Promise<{ idToken: string; nonce: string }>((resolve, reject) => {
+          initializeGoogleIdentity(clientId)
+
+          const container = createHiddenButtonContainer()
+          const timeoutId = window.setTimeout(() => {
+            cleanupPendingRequest()
+            reject(new Error("Google sign-in was not completed"))
+          }, 30000)
+
+          pendingTokenRequest = {
+            container,
+            reject,
+            resolve,
+            timeoutId,
+          }
+
+          window.google?.accounts.id.renderButton(container, {
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            text: "continue_with",
+            shape: "pill",
+          })
+
+          window.setTimeout(() => {
+            container
+              .querySelector<HTMLElement>('div[role="button"], iframe, button')
+              ?.click()
+          }, 0)
+        })
+    )
+    .finally(() => {
+      activeTokenRequest = null
+    })
+
+  return activeTokenRequest
 }
 
 export { generateNonce, loadGsiScript, requestGoogleIdToken }
