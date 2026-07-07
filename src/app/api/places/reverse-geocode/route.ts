@@ -24,9 +24,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "lat/lng is required" }, { status: 400 })
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY
+  const apiKey = process.env.KAKAO_REST_API_KEY
   if (!apiKey) {
-    return NextResponse.json({ error: "NEXT_PUBLIC_KAKAO_REST_API_KEY is not configured" }, { status: 500 })
+    return NextResponse.json({ error: "KAKAO_REST_API_KEY is not configured" }, { status: 500 })
   }
 
   const kakaoUrl = new URL(KAKAO_COORD_TO_ADDRESS_URL)
