@@ -19,13 +19,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vivisa+",
-  description: "Vivisa+",
+  title: "Ieum",
+  description: "이음",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Vivisa+",
+    title: "Ieum",
   },
   icons: {
     icon: [
@@ -35,8 +35,6 @@ export const metadata: Metadata = {
     apple: [{ url: "/icons/pwa/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   other: {
-    // Next.js only emits "mobile-web-app-capable" via appleWebApp.capable,
-    // but iOS Safari still requires this legacy tag for standalone (chrome-less) launch.
     "apple-mobile-web-app-capable": "yes",
   },
 };
