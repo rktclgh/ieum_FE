@@ -55,8 +55,18 @@ function MonthYearWheelPicker({ open, onOpenChange, year, month, onConfirm }: Mo
             <DrawerContent className="gap-6 pb-2">
               <div className="relative flex w-full items-center justify-center gap-4 py-1">
                 <div className="pointer-events-none absolute inset-x-6 top-1/2 h-10 -translate-y-1/2 rounded-xl bg-gray-50" />
-                <WheelPicker options={yearLabels} value={draftYear} onChange={setDraftYear} className="w-28" />
-                <WheelPicker options={MONTH_LABELS} value={draftMonth} onChange={setDraftMonth} className="w-16" />
+                <WheelPicker
+                  options={yearLabels}
+                  value={draftYear}
+                  onChange={setDraftYear}
+                  className="relative z-10 w-28"
+                />
+                <WheelPicker
+                  options={MONTH_LABELS}
+                  value={draftMonth}
+                  onChange={setDraftMonth}
+                  className="relative z-10 w-16"
+                />
               </div>
               <div className="flex w-full items-center gap-2">
                 <button
