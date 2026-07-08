@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { HighlightedText } from "@/components/ui/highlighted-text"
 import { ChatProfile } from "@/features/chat/components/chat-profile"
 import { CountryFlag } from "@/features/chat/components/country-flag"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -21,25 +22,6 @@ interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   onReject?: () => void
   onAdd?: () => void
   onStartChat?: () => void
-}
-
-function HighlightedName({ name, query }: { name: string; query?: string }) {
-  if (!query) return <>{name}</>
-
-  const index = name.toLowerCase().indexOf(query.toLowerCase())
-  if (index === -1) return <>{name}</>
-
-  const before = name.slice(0, index)
-  const match = name.slice(index, index + query.length)
-  const after = name.slice(index + query.length)
-
-  return (
-    <>
-      {before}
-      <span className="text-primary-400">{match}</span>
-      {after}
-    </>
-  )
 }
 
 function PillButton({
@@ -90,7 +72,7 @@ function FriendRequestItem({
         <ChatProfile src={avatarSrc} size={44} />
         <div className="flex flex-col items-start gap-0.5">
           <p className="text-title-semibold-16 text-gray-900">
-            <HighlightedName name={name} query={highlightQuery} />
+            <HighlightedText text={name} query={highlightQuery} />
           </p>
           <CountryFlag flagSrc={flagSrc} country={nation} />
         </div>

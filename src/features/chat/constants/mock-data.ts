@@ -13,10 +13,21 @@ export const MOCK_STORY_FRIENDS = [
   { id: "5", name: "Mason", online: false },
 ]
 
-export const MOCK_CHATS = [
+export const MOCK_CHATS: {
+  id: string
+  title: string
+  category: "friend" | "meetup" | "question"
+  memberCount?: number
+  lastMessage?: string
+  time?: string
+  unreadCount?: number
+  pinned?: boolean
+  online?: boolean
+}[] = [
   {
     id: "c1",
     title: "7시에 용산에서 볼 사람",
+    category: "meetup",
     memberCount: 5,
     lastMessage: "씨유 앞에서?",
     time: "12:11 PM",
@@ -27,6 +38,7 @@ export const MOCK_CHATS = [
   {
     id: "c2",
     title: "오이정",
+    category: "friend",
     lastMessage: "어디야",
     time: "12:19 PM",
     online: true,
@@ -34,11 +46,13 @@ export const MOCK_CHATS = [
   {
     id: "c3",
     title: "김연두",
+    category: "friend",
     online: false,
   },
   {
     id: "c4",
     title: "용산 독서 모임",
+    category: "meetup",
     memberCount: 17,
     lastMessage: "그러시죠",
     time: "12:00 PM",
@@ -47,6 +61,7 @@ export const MOCK_CHATS = [
   {
     id: "c5",
     title: "테니스 같이 치실 분!",
+    category: "meetup",
     memberCount: 3,
     lastMessage: "넵",
     time: "3일 전",
@@ -55,6 +70,7 @@ export const MOCK_CHATS = [
   {
     id: "c6",
     title: "이번 주 토요일에 한강공원에서 자전거 같이 타실 분 구합니다 (초보 환영)",
+    category: "meetup",
     memberCount: 128,
     lastMessage: "네 좋습니다! 그럼 토요일 오전 10시에 뵐게요",
     time: "어제",
