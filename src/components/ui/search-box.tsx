@@ -6,6 +6,11 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { ClearButton } from "@/components/ui/clear-button"
 
+interface SearchBoxProps extends React.ComponentProps<"input"> {
+  /** flat: 그림자·아웃라인 없이 Gray-50 배경으로 고정 (채팅목록 · 친구목록) */
+  tone?: "elevated" | "flat"
+}
+
 function SearchBox({
   className,
   defaultValue,
@@ -13,8 +18,9 @@ function SearchBox({
   onChange,
   onFocus,
   onBlur,
+  tone = "elevated",
   ...props
-}: React.ComponentProps<"input">) {
+}: SearchBoxProps) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isControlled = value !== undefined
   const [uncontrolledHasValue, setUncontrolledHasValue] = React.useState(Boolean(defaultValue ?? ""))
@@ -25,8 +31,10 @@ function SearchBox({
     <div
       data-slot="search-box"
       className={cn(
-        "flex h-[45px] w-full items-center gap-3 rounded-full px-4 py-3 shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)] outline outline-1 -outline-offset-1 outline-gray-50 transition-colors",
-        hasValue || isFocused ? "bg-gray-50" : "bg-white",
+        "flex h-[45px] w-full items-center gap-3 rounded-full px-4 py-3 transition-colors",
+        tone === "elevated"
+          ? cn("shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)] outline outline-1 -outline-offset-1 outline-gray-50", hasValue || isFocused ? "bg-gray-50" : "bg-white")
+          : "bg-gray-50",
         className
       )}
     >
