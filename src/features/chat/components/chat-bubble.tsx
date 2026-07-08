@@ -18,6 +18,11 @@ interface ChatBubbleProps extends React.ComponentProps<"div"> {
   replyLabel?: string
   replyQuote?: string
   replyText?: string
+  /** reply 전용: replyQuote 클릭 시 원본 메시지 위치로 이동 */
+  onReplyQuoteClick?: () => void
+  /** texts 중 답장 대상으로 스크롤된 한 줄의 index. 그룹 전체가 아니라 해당 줄에만 강조 애니메이션을 준다 */
+  highlightedIndex?: number
+  onHighlightAnimationEnd?: () => void
   time?: string
 }
 
@@ -52,6 +57,9 @@ function ChatBubble({
   replyLabel,
   replyQuote,
   replyText,
+  onReplyQuoteClick,
+  highlightedIndex,
+  onHighlightAnimationEnd,
   time,
   ...props
 }: ChatBubbleProps) {
@@ -81,14 +89,27 @@ function ChatBubble({
           >
             {replyLabel}
           </p>
-          <div
-            className={cn(
-              "bg-gray-200 px-4 py-3",
-              isMe ? "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl" : "rounded-tl-3xl rounded-tr-3xl rounded-br-3xl"
-            )}
-          >
-            <p className="text-body-regular-14 text-gray-700">{replyQuote}</p>
-          </div>
+          {onReplyQuoteClick ? (
+            <button
+              type="button"
+              onClick={onReplyQuoteClick}
+              className={cn(
+                "bg-gray-200 px-4 py-3 text-left",
+                isMe ? "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl" : "rounded-tl-3xl rounded-tr-3xl rounded-br-3xl"
+              )}
+            >
+              <p className="text-body-regular-14 text-gray-700">{replyQuote}</p>
+            </button>
+          ) : (
+            <div
+              className={cn(
+                "bg-gray-200 px-4 py-3",
+                isMe ? "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl" : "rounded-tl-3xl rounded-tr-3xl rounded-br-3xl"
+              )}
+            >
+              <p className="text-body-regular-14 text-gray-700">{replyQuote}</p>
+            </div>
+          )}
           <div
             className={cn(
               "px-4 py-3",
@@ -115,11 +136,13 @@ function ChatBubble({
         {texts.map((text, index) => (
           <div
             key={index}
+            onAnimationEnd={index === highlightedIndex ? onHighlightAnimationEnd : undefined}
             className={cn(
               "px-4 py-3",
               isMe ? "bg-primary-400" : "bg-gray-50",
               radiusMap[bubblePosition(index, texts.length)],
-              isLong && "w-[253px]"
+              isLong && "w-[253px]",
+              index === highlightedIndex && "relative z-10 animate-message-jump-highlight"
             )}
           >
             <p className={cn("text-body-regular-14", isMe ? "text-white" : "text-gray-900")}>{text}</p>

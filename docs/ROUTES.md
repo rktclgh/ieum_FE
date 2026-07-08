@@ -60,9 +60,10 @@ src/app/
 | URL | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
 |---|---|---|---|---|
 | `/chats` | 채팅 목록 (그룹 + 1:1 꼬리질문) | ⑤ 모임채팅 1) | `GET /chats` | O |
+| `/chats/[chatId]` | 채팅방 (그룹채팅 · 꼬리질문 채팅 공용) | ⑤ 5) / ⑦ 3) | `GET /chats/{id}/messages` (+ WebSocket) | O |
 | `/friends` | 친구 목록 (받은 요청 · 내 친구 · 닉네임 검색으로 친구 추가) | ⑤ 모임채팅 2) 3) | `GET /friends`, `GET /friend-requests`, `POST /friend-requests/{id}/accept`, `POST /friend-requests/{id}/reject`, `GET /users?nickname=`, `POST /friends` | O |
 
-> 채팅방·공지사항·캘린더·다른 사용자 프로필은 하위 화면이라 URL 미확정. [하위 화면](#하위-화면-url-미확정) 참고.
+> 공지사항·캘린더·다른 사용자 프로필은 하위 화면이라 URL 미확정. [하위 화면](#하위-화면-url-미확정) 참고.
 > 채팅방의 **더보기 드로어**(⑤ 8: 참여자·알림·나가기)는 URL 없이 채팅방 내부 상태로 처리한다.
 
 ### (main) — 마이페이지
@@ -84,8 +85,7 @@ src/app/
 | `/meetups` | 모임 만들기 | ⑥ 글쓰기 1) | `POST /meetups` | O |
 | `/questions` | 질문 상세 · 답변 목록 · 답변 채택 | ⑦ 질문 내역 2) | `GET /questions/{id}`, `POST /questions/{id}/answers`, `POST /answers/{id}/accept` | X (답변·채택은 O) |
 | `/questions` | 질문 작성 (비슷한 질문·답변 확인 단계 포함) | ⑥ 글쓰기 2) 3) | `POST /questions`, `GET /questions/similar?q=` | O |
-| `/chats` | 채팅방 (그룹채팅 · 꼬리질문 채팅 공용) | ⑤ 5) / ⑦ 3) | `GET /chats/{id}/messages` (+ WebSocket) | O |
-| `/chats` | 채팅방 공지사항 | ⑤ 모임채팅 7) | `GET /chats/{id}/notices` | O |
+| `/chats/[chatId]` | 채팅방 공지사항 | ⑤ 모임채팅 7) | `GET /chats/{id}/notices` | O |
 | `/chats` | 채팅방 캘린더 · 일정 | ⑤ 모임채팅 6) | `GET /chats/{id}/events` | O |
 | — | 다른 사용자 프로필 | ⑤ 모임채팅 4) | `GET /users/{id}` | O |
 | `/my` | 내 정보 수정 (닉네임·국적·비밀번호) | ③ 마이페이지 2) | `PATCH /users/me` | O |

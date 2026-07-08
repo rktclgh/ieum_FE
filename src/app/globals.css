@@ -234,3 +234,24 @@
     @apply font-sans;
   }
 }
+
+/* 답장 인용 클릭 등으로 특정 메시지 위치로 스크롤했을 때, 어떤 말풍선인지 눈에 띄도록 주는 1회성 강조 애니메이션 */
+@keyframes message-jump-highlight {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-3px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(2px);
+  }
+}
+
+@theme {
+  --animate-message-jump-highlight: message-jump-highlight 0.6s ease-in-out;
+}

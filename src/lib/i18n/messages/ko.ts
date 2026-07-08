@@ -118,9 +118,11 @@ export interface Messages {
     startChatButton: string
     pinAction: string
     muteAction: string
+    notificationLabel: string
     deleteAction: string
     replyAction: string
     reportAction: string
+    registerAsNoticeAction: string
     blockAction: string
     takePhotoAction: string
     chooseAlbumAction: string
@@ -131,6 +133,10 @@ export interface Messages {
     removeMemberButton: string
     leaveChatAction: string
     disbandChatAction: string
+    leaveChatConfirmTitle: string
+    leaveChatConfirmDescription: string
+    disbandChatConfirmTitle: string
+    disbandChatConfirmDescription: string
     messageInputPlaceholder: string
     sendButtonLabel: string
   }
@@ -255,9 +261,11 @@ export const ko: Messages = {
     startChatButton: "채팅 시작",
     pinAction: "고정",
     muteAction: "알림 해제",
+    notificationLabel: "알림",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     reportAction: "신고",
+    registerAsNoticeAction: "공지로 등록",
     blockAction: "차단",
     takePhotoAction: "사진 찍기",
     chooseAlbumAction: "앨범에서 고르기",
@@ -268,6 +276,10 @@ export const ko: Messages = {
     removeMemberButton: "내보내기",
     leaveChatAction: "채팅방 나가기",
     disbandChatAction: "채팅방 해체하기",
+    leaveChatConfirmTitle: "채팅방을 나갑니다",
+    leaveChatConfirmDescription: "정말로 나가시겠습니까?",
+    disbandChatConfirmTitle: "채팅방을 해체합니다",
+    disbandChatConfirmDescription: "채팅방을 해체하면 모든 대화 상대가 채팅방에서 나가게 되며, 되돌릴 수 없습니다.",
     messageInputPlaceholder: "메시지 입력",
     sendButtonLabel: "전송",
   },

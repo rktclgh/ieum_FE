@@ -23,6 +23,7 @@ export const MOCK_CHATS: {
   unreadCount?: number
   pinned?: boolean
   online?: boolean
+  notice?: string
 }[] = [
   {
     id: "c1",
@@ -34,6 +35,7 @@ export const MOCK_CHATS: {
     unreadCount: 9,
     pinned: true,
     online: true,
+    notice: "7월 3일 오후 7시 용산역 1번 출구!!!",
   },
   {
     id: "c2",
@@ -107,6 +109,10 @@ export const MOCK_MESSAGES: {
   replyLabel?: string
   replyQuote?: string
   replyText?: string
+  /** reply 전용: replyQuote가 인용하는 원본 메시지 id (클릭 시 해당 위치로 스크롤) */
+  replyToId?: string
+  /** reply 전용: 원본 메시지의 texts 중 실제로 인용된 문장의 index (여러 줄이 묶인 말풍선일 때 그중 한 줄만 강조하기 위함) */
+  replyToIndex?: number
   time?: string
 }[] = [
   {
@@ -141,6 +147,8 @@ export const MOCK_MESSAGES: {
     variant: "reply",
     replyLabel: "wakawak님이 김연두님에게 답장",
     replyQuote: "떡볶이 먹을까?",
+    replyToId: "msg3",
+    replyToIndex: 1,
     replyText: "떡볶이보다는 치킨이 땡기는 듯",
     time: "오전 8:23",
   },
@@ -150,6 +158,8 @@ export const MOCK_MESSAGES: {
     variant: "reply",
     replyLabel: "김연두님에게 답장",
     replyQuote: "떡볶이 먹을까?",
+    replyToId: "msg3",
+    replyToIndex: 1,
     replyText: "전 다 좋아요",
     time: "오전 8:24",
   },
