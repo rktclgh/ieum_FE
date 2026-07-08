@@ -1,0 +1,24 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="20" height="20" fill="#E6E6E6"/>
+<g id="&#236;&#187;&#180;&#237;&#143;&#172;&#235;&#132;&#140;&#237;&#138;&#184;">
+<path d="M-1622 -1072C-1622 -1073.1 -1621.1 -1074 -1620 -1074H531C532.105 -1074 533 -1073.1 533 -1072V1971C533 1972.1 532.104 1973 531 1973H-1620C-1621.1 1973 -1622 1972.1 -1622 1971V-1072Z" fill="white"/>
+<path d="M-1620 -1074V-1073H531V-1074V-1075H-1620V-1074ZM533 -1072H532V1971H533H534V-1072H533ZM531 1973V1972H-1620V1973V1974H531V1973ZM-1622 1971H-1621V-1072H-1622H-1623V1971H-1622ZM-1620 1973V1972C-1620.55 1972 -1621 1971.55 -1621 1971H-1622H-1623C-1623 1972.66 -1621.66 1974 -1620 1974V1973ZM533 1971H532C532 1971.55 531.552 1972 531 1972V1973V1974C532.657 1974 534 1972.66 534 1971H533ZM531 -1074V-1073C531.552 -1073 532 -1072.55 532 -1072H533H534C534 -1073.66 532.657 -1075 531 -1075V-1074ZM-1620 -1074V-1075C-1621.66 -1075 -1623 -1073.66 -1623 -1072H-1622H-1621C-1621 -1072.55 -1620.55 -1073 -1620 -1073V-1074Z" fill="black" fill-opacity="0.1"/>
+<g id="Schedule">
+<g id="Frame 1597880587">
+<rect x="-311" y="-12" width="343" height="94" rx="16" fill="#FAFAFA"/>
+<g id="Edit" clip-path="url(#clip0_51_145)">
+<g id="Icon Frame">
+<rect id="Rectangle 86" x="10.0083" y="9.99927" width="0.00833333" height="0.00833333" transform="rotate(90 10.0083 9.99927)" stroke="#9AA5A8" stroke-width="2.25" stroke-linejoin="round"/>
+<rect id="Rectangle 87" x="15.8418" y="9.99927" width="0.00833333" height="0.00833333" transform="rotate(90 15.8418 9.99927)" stroke="#9AA5A8" stroke-width="2.25" stroke-linejoin="round"/>
+<rect id="Rectangle 88" x="4.1748" y="9.99927" width="0.00833333" height="0.00833333" transform="rotate(90 4.1748 9.99927)" stroke="#9AA5A8" stroke-width="2.25" stroke-linejoin="round"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_51_145">
+<rect width="20" height="20" fill="white"/>
+</clipPath>
+</defs>
+</svg>

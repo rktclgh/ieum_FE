@@ -280,7 +280,11 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
               />
               <SidePanelContent className="items-center gap-3 px-4 pb-6">
                 <ChatRoomProfile title={chat.title} />
-                <ChatRoomInfoSection className="w-full" />
+                <ChatRoomInfoSection
+                className="w-full"
+                onNoticeClick={() => router.push(`/chats/${chat.id}/notices`)}
+                onScheduleClick={() => router.push(`/chats/${chat.id}/schedule`)}
+              />
                 <div className="flex w-full flex-col rounded-2xl bg-gray-50">
                   <SectionTitle title={messages.chat.membersTitle} count={MOCK_MEMBERS.length} padding="12" />
                   {MOCK_MEMBERS.map((member) => (

@@ -140,6 +140,16 @@ export interface Messages {
     messageInputPlaceholder: string
     sendButtonLabel: string
   }
+  schedule: {
+    addButtonLabel: string
+    previousMonthLabel: string
+    nextMonthLabel: string
+    selectMonthLabel: string
+    confirmButton: string
+    emptyStateLabel: string
+    deleteConfirmTitle: string
+    deleteConfirmDescription: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -282,6 +292,16 @@ export const ko: Messages = {
     disbandChatConfirmDescription: "채팅방을 해체하면 모든 대화 상대가 채팅방에서 나가게 되며, 되돌릴 수 없습니다.",
     messageInputPlaceholder: "메시지 입력",
     sendButtonLabel: "전송",
+  },
+  schedule: {
+    addButtonLabel: "일정 추가",
+    previousMonthLabel: "이전 달",
+    nextMonthLabel: "다음 달",
+    selectMonthLabel: "연도 및 월 선택",
+    confirmButton: "완료",
+    emptyStateLabel: "등록된 일정이 없어요",
+    deleteConfirmTitle: "일정을 삭제합니다",
+    deleteConfirmDescription: "정말로 삭제하시겠습니까?",
   },
   languages: {
     ko: "한국어",

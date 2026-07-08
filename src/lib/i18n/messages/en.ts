@@ -140,6 +140,16 @@ export const en: Messages = {
     messageInputPlaceholder: "Type a message",
     sendButtonLabel: "Send",
   },
+  schedule: {
+    addButtonLabel: "Add schedule",
+    previousMonthLabel: "Previous month",
+    nextMonthLabel: "Next month",
+    selectMonthLabel: "Select year and month",
+    confirmButton: "Done",
+    emptyStateLabel: "No schedules yet",
+    deleteConfirmTitle: "Delete this schedule",
+    deleteConfirmDescription: "Are you sure you want to delete it?",
+  },
   languages: {
     ko: "Korean",
     en: "English",
