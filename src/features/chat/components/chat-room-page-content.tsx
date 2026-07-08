@@ -189,7 +189,11 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
         icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
         label: messages.chat.reportAction,
         tone: "destructive",
-        onClick: () => setActiveMessageId(null),
+        onClick: () => {
+          setActiveMessageId(null)
+          const query = message.name ? `?target=${encodeURIComponent(message.name)}` : ""
+          router.push(`/chats/${chat.id}/report${query}`)
+        },
       },
     ]
   }
