@@ -153,6 +153,24 @@ export interface Messages {
     deleteConfirmTitle: string
     deleteConfirmDescription: string
   }
+  report: {
+    title: string
+    reasonSectionTitle: string
+    reasonDobae: string
+    reasonAd: string
+    reasonAbuse: string
+    reasonSexualHarassment: string
+    reasonPornography: string
+    reasonEtc: string
+    detailPlaceholder: string
+    guideEtc: string
+    guideReview: string
+    cancelButton: string
+    submitButton: string
+    confirmTitle: (name: string) => string
+    confirmTitleGeneric: string
+    confirmDescription: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -308,6 +326,24 @@ export const ko: Messages = {
     emptyStateLabel: "등록된 일정이 없어요",
     deleteConfirmTitle: "일정을 삭제합니다",
     deleteConfirmDescription: "정말로 삭제하시겠습니까?",
+  },
+  report: {
+    title: "신고하기",
+    reasonSectionTitle: "신고 사유",
+    reasonDobae: "도배",
+    reasonAd: "원치 않는 상업성 광고",
+    reasonAbuse: "욕설 및 혐오 발언",
+    reasonSexualHarassment: "성희롱 발언",
+    reasonPornography: "음란물 유포",
+    reasonEtc: "기타",
+    detailPlaceholder: "1,000자 이내로 신고 내용을 입력해 주세요.",
+    guideEtc: "신고 항목에 포함되지 않는 내용은 기타를 선택하여 신고 내용을 작성해주시기 바랍니다.",
+    guideReview: "신고해주신 내용은 관리자 검토 후 내부 정책에 의거 조치가 진행됩니다.",
+    cancelButton: "취소",
+    submitButton: "신고",
+    confirmTitle: (name) => `${name}님의 메시지를 신고합니다`,
+    confirmTitleGeneric: "메시지를 신고합니다",
+    confirmDescription: "정말로 신고하시겠습니까?",
   },
   languages: {
     ko: "한국어",
