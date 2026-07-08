@@ -5,6 +5,7 @@ interface HighlightedTextProps {
 }
 
 function HighlightedText({ text, query }: HighlightedTextProps) {
+  if (!text) return null
   if (!query) return <>{text}</>
 
   const index = text.toLowerCase().indexOf(query.toLowerCase())

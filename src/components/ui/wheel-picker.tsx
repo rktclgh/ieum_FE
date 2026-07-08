@@ -36,7 +36,7 @@ function WheelPicker({ className, options, value, onChange, ...props }: WheelPic
   React.useEffect(() => () => clearTimeout(settleTimeoutRef.current), [])
 
   const handleScroll = () => {
-    if (isSyncingRef.current) return
+    if (isSyncingRef.current || options.length === 0) return
 
     const top = containerRef.current?.scrollTop ?? 0
     const index = Math.min(Math.max(Math.round(top / ITEM_HEIGHT), 0), options.length - 1)
