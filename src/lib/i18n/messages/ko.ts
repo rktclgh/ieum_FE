@@ -106,14 +106,26 @@ export interface Messages {
     myFriendsSectionTitle: string
     acceptButton: string
     rejectButton: string
+    cancelButton: string
+    rejectConfirmTitle: (name: string) => string
+    rejectConfirmDescription: string
+    blockFriendConfirmTitle: (name: string) => string
+    blockFriendConfirmDescription: string
+    removeFriendConfirmTitle: (name: string) => string
+    removeFriendConfirmDescription: string
     addFriendButton: string
     requestedButton: string
     startChatButton: string
     pinAction: string
     muteAction: string
+    notificationLabel: string
     deleteAction: string
     replyAction: string
     reportAction: string
+    registerAsNoticeAction: string
+    setChatNoticeAction: string
+    unsetChatNoticeAction: string
+    noticeEmptyLabel: string
     blockAction: string
     takePhotoAction: string
     chooseAlbumAction: string
@@ -124,8 +136,22 @@ export interface Messages {
     removeMemberButton: string
     leaveChatAction: string
     disbandChatAction: string
+    leaveChatConfirmTitle: string
+    leaveChatConfirmDescription: string
+    disbandChatConfirmTitle: string
+    disbandChatConfirmDescription: string
     messageInputPlaceholder: string
     sendButtonLabel: string
+  }
+  schedule: {
+    addButtonLabel: string
+    previousMonthLabel: string
+    nextMonthLabel: string
+    selectMonthLabel: string
+    confirmButton: string
+    emptyStateLabel: string
+    deleteConfirmTitle: string
+    deleteConfirmDescription: string
   }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
@@ -230,20 +256,32 @@ export const ko: Messages = {
     listSearchPlaceholder: "채팅, 친구 검색",
     friendSearchPlaceholder: "닉네임 검색",
     addFriendTitle: "친구 추가",
-    myFriendsTitle: "친구 목록",
+    myFriendsTitle: "친구",
     receivedRequestsTitle: "받은 친구 요청",
     recommendedFriendsTitle: "추천 친구",
     myFriendsSectionTitle: "내 친구",
     acceptButton: "수락",
     rejectButton: "거절",
+    cancelButton: "취소",
+    rejectConfirmTitle: (name) => `${name}님의 친구 신청을 거절합니다`,
+    rejectConfirmDescription: "정말로 거절하시겠습니까?",
+    blockFriendConfirmTitle: (name) => `${name}님을 차단합니다`,
+    blockFriendConfirmDescription: "정말로 차단하시겠습니까?",
+    removeFriendConfirmTitle: (name) => `${name}님을 삭제합니다`,
+    removeFriendConfirmDescription: "정말로 삭제하시겠습니까?",
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
     startChatButton: "채팅 시작",
     pinAction: "고정",
     muteAction: "알림 해제",
+    notificationLabel: "알림",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     reportAction: "신고",
+    registerAsNoticeAction: "공지로 등록",
+    setChatNoticeAction: "채팅방 공지 등록하기",
+    unsetChatNoticeAction: "채팅방 공지 해지하기",
+    noticeEmptyLabel: "등록된 공지가 없어요",
     blockAction: "차단",
     takePhotoAction: "사진 찍기",
     chooseAlbumAction: "앨범에서 고르기",
@@ -254,8 +292,22 @@ export const ko: Messages = {
     removeMemberButton: "내보내기",
     leaveChatAction: "채팅방 나가기",
     disbandChatAction: "채팅방 해체하기",
+    leaveChatConfirmTitle: "채팅방을 나갑니다",
+    leaveChatConfirmDescription: "정말로 나가시겠습니까?",
+    disbandChatConfirmTitle: "채팅방을 해체합니다",
+    disbandChatConfirmDescription: "채팅방을 해체하면 모든 대화 상대가 채팅방에서 나가게 되며, 되돌릴 수 없습니다.",
     messageInputPlaceholder: "메시지 입력",
     sendButtonLabel: "전송",
+  },
+  schedule: {
+    addButtonLabel: "일정 추가",
+    previousMonthLabel: "이전 달",
+    nextMonthLabel: "다음 달",
+    selectMonthLabel: "연도 및 월 선택",
+    confirmButton: "완료",
+    emptyStateLabel: "등록된 일정이 없어요",
+    deleteConfirmTitle: "일정을 삭제합니다",
+    deleteConfirmDescription: "정말로 삭제하시겠습니까?",
   },
   languages: {
     ko: "한국어",

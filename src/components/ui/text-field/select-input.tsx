@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -60,21 +61,7 @@ function SelectInput({
       )
     : options
 
-  const [isScrolling, setIsScrolling] = React.useState(false)
-  const scrollHideTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const handleOptionsScroll = () => {
-    setIsScrolling(true)
-    if (scrollHideTimeoutRef.current) clearTimeout(scrollHideTimeoutRef.current)
-    scrollHideTimeoutRef.current = setTimeout(() => setIsScrolling(false), 800)
-  }
-
-  React.useEffect(
-    () => () => {
-      if (scrollHideTimeoutRef.current) clearTimeout(scrollHideTimeoutRef.current)
-    },
-    []
-  )
+  const { isScrolling, onScroll: handleOptionsScroll } = useFadeScrollbar()
 
   return (
     <Drawer
@@ -148,9 +135,7 @@ function SelectInput({
                 data-scrolling={isScrolling}
                 className={cn(
                   "flex w-full min-h-0 flex-1 flex-col items-start overflow-y-auto",
-                  "[scrollbar-width:thin] [scrollbar-color:transparent_transparent] data-[scrolling=true]:[scrollbar-color:var(--color-gray-200)_transparent]",
-                  "[&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb]:transition-colors",
-                  "data-[scrolling=true]:[&::-webkit-scrollbar-thumb]:bg-gray-200"
+                  FADE_SCROLLBAR_CLASSNAME
                 )}
               >
                 {filteredOptions.map((option) => {

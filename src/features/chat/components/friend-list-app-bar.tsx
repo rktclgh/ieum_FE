@@ -4,15 +4,13 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
-import { Circle } from "@/components/ui/circle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface FriendListAppBarProps extends React.ComponentProps<"div"> {
   onBack?: () => void
-  onAddFriend?: () => void
 }
 
-function FriendListAppBar({ className, onBack, onAddFriend, ...props }: FriendListAppBarProps) {
+function FriendListAppBar({ className, onBack, ...props }: FriendListAppBarProps) {
   const { messages } = useTranslation()
 
   return (
@@ -32,7 +30,7 @@ function FriendListAppBar({ className, onBack, onAddFriend, ...props }: FriendLi
       <p className="-translate-x-1/2 absolute left-1/2 text-title-semibold-18 text-gray-900">
         {messages.chat.myFriendsTitle}
       </p>
-      <Circle iconSrc="/icons/circle/add-friend.svg" onClick={onAddFriend} aria-label={messages.chat.addFriendTitle} />
+      <div className="size-6 shrink-0" aria-hidden />
     </div>
   )
 }

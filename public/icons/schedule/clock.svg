@@ -1,0 +1,27 @@
+<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="18" height="18" fill="#E6E6E6"/>
+<g id="&#236;&#187;&#180;&#237;&#143;&#172;&#235;&#132;&#140;&#237;&#138;&#184;">
+<path d="M-1391 -1099C-1391 -1100.1 -1390.1 -1101 -1389 -1101H762C763.105 -1101 764 -1100.1 764 -1099V1944C764 1945.1 763.104 1946 762 1946H-1389C-1390.1 1946 -1391 1945.1 -1391 1944V-1099Z" fill="white"/>
+<path d="M-1389 -1101V-1100H762V-1101V-1102H-1389V-1101ZM764 -1099H763V1944H764H765V-1099H764ZM762 1946V1945H-1389V1946V1947H762V1946ZM-1391 1944H-1390V-1099H-1391H-1392V1944H-1391ZM-1389 1946V1945C-1389.55 1945 -1390 1944.55 -1390 1944H-1391H-1392C-1392 1945.66 -1390.66 1947 -1389 1947V1946ZM764 1944H763C763 1944.55 762.552 1945 762 1945V1946V1947C763.657 1947 765 1945.66 765 1944H764ZM762 -1101V-1100C762.552 -1100 763 -1099.55 763 -1099H764H765C765 -1100.66 763.657 -1102 762 -1102V-1101ZM-1389 -1101V-1102C-1390.66 -1102 -1392 -1100.66 -1392 -1099H-1391H-1390C-1390 -1099.55 -1389.55 -1100 -1389 -1100V-1101Z" fill="black" fill-opacity="0.1"/>
+<g id="Schedule">
+<g id="Frame 1597880587">
+<rect x="-80" y="-39" width="343" height="94" rx="16" fill="#FAFAFA"/>
+<g id="Frame 1597880586">
+<g id="Frame 1597880584">
+<g id="Clock" clip-path="url(#clip0_51_145)">
+<g id="Icon Frame">
+<circle id="Ellipse 14" cx="9" cy="9" r="6.75" stroke="#B5BDBF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector" d="M8.25 6V9.75H12" stroke="#B5BDBF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_51_145">
+<rect width="18" height="18" fill="white"/>
+</clipPath>
+</defs>
+</svg>
