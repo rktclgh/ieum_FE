@@ -220,16 +220,17 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
           onTrailingClick={() => setMoreOpen(true)}
           className={!notice ? "border-b border-gray-50 bg-white" : undefined}
         />
-        {notice && (
-          <div className="px-4 pt-2">
-            <NoticeBanner text={notice} onClose={() => setNotice(null)} />
-          </div>
-        )}
         <div
           onScroll={handleMessagesScroll}
           data-scrolling={isScrolling}
           className={cn("flex flex-1 flex-col gap-3 overflow-y-auto px-4", FADE_SCROLLBAR_CLASSNAME)}
         >
+          {notice && (
+            // 스크롤 영역 최상단에 고정: 메시지는 이 불투명 바 뒤로 지나간다(-mx-4/bg-white로 전체 폭을 덮음).
+            <div className="sticky top-0 z-10 -mx-4 bg-white px-4 pt-2 pb-1">
+              <NoticeBanner text={notice} onClose={() => setNotice(null)} />
+            </div>
+          )}
           <div className="flex flex-col">
             <ChatDateDivider text="2026년 7월 3일" />
             {chatMessages.map((message) => (
