@@ -14,6 +14,7 @@ import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { FriendRequestItem } from "@/features/chat/components/friend-request-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { NoticeBanner } from "@/features/chat/components/notice-banner"
 import { ChatDateDivider } from "@/features/chat/components/chat-date-divider"
 import { ChatBubble } from "@/features/chat/components/chat-bubble"
@@ -46,6 +47,7 @@ export default function ChatComponentsTestPage() {
   const [showListMenu, setShowListMenu] = React.useState(false)
   const [showRoomMenus, setShowRoomMenus] = React.useState(false)
   const [noticeVisible, setNoticeVisible] = React.useState(true)
+  const [rejectTarget, setRejectTarget] = React.useState<(typeof MOCK_FRIEND_REQUESTS)[number] | null>(null)
 
   const listMenuItems: ChatContextMenuItem[] = [
     { icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />, label: messages.chat.pinAction },
@@ -131,6 +133,7 @@ export default function ChatComponentsTestPage() {
               flagSrc={friend.flagSrc}
               nation={messages.countries[friend.countryCode]}
               variant="request"
+              onReject={() => setRejectTarget(friend)}
             />
           ))}
           <SectionTitle title={messages.chat.myFriendsSectionTitle} count={MOCK_MY_FRIENDS.length} />
@@ -147,6 +150,17 @@ export default function ChatComponentsTestPage() {
             <p className="text-body-regular-13 text-gray-500">친구목록 롱프레스 메뉴(차단/삭제) 항상 표시:</p>
             <ChatContextMenu items={friendMenuItems} style={{ top: 24, left: 0 }} />
           </div>
+          {rejectTarget && (
+            <ConfirmDialog
+              open={Boolean(rejectTarget)}
+              onOpenChange={(open) => !open && setRejectTarget(null)}
+              title={messages.chat.rejectConfirmTitle(rejectTarget.name)}
+              description={messages.chat.rejectConfirmDescription}
+              cancelLabel={messages.chat.cancelButton}
+              confirmLabel={messages.chat.rejectButton}
+              onConfirm={() => setRejectTarget(null)}
+            />
+          )}
         </div>
       </TestSection>
 

@@ -106,6 +106,9 @@ export interface Messages {
     myFriendsSectionTitle: string
     acceptButton: string
     rejectButton: string
+    cancelButton: string
+    rejectConfirmTitle: (name: string) => string
+    rejectConfirmDescription: string
     addFriendButton: string
     requestedButton: string
     startChatButton: string
@@ -236,6 +239,9 @@ export const ko: Messages = {
     myFriendsSectionTitle: "내 친구",
     acceptButton: "수락",
     rejectButton: "거절",
+    cancelButton: "취소",
+    rejectConfirmTitle: (name) => `${name}님의 친구 신청을 거절합니다`,
+    rejectConfirmDescription: "정말로 거절하시겠습니까?",
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
     startChatButton: "채팅 시작",
