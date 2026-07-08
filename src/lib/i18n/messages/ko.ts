@@ -123,6 +123,9 @@ export interface Messages {
     replyAction: string
     reportAction: string
     registerAsNoticeAction: string
+    setChatNoticeAction: string
+    unsetChatNoticeAction: string
+    noticeEmptyLabel: string
     blockAction: string
     takePhotoAction: string
     chooseAlbumAction: string
@@ -276,6 +279,9 @@ export const ko: Messages = {
     replyAction: "답글 달기",
     reportAction: "신고",
     registerAsNoticeAction: "공지로 등록",
+    setChatNoticeAction: "채팅방 공지 등록하기",
+    unsetChatNoticeAction: "채팅방 공지 해지하기",
+    noticeEmptyLabel: "등록된 공지가 없어요",
     blockAction: "차단",
     takePhotoAction: "사진 찍기",
     chooseAlbumAction: "앨범에서 고르기",
