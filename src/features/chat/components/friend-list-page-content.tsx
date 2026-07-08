@@ -120,6 +120,7 @@ function FriendListPageContent() {
         <div className="flex flex-col gap-2 px-4 pb-10">
           <SearchBox
             placeholder={messages.chat.friendSearchPlaceholder}
+            tone="flat"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />

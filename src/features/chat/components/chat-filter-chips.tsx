@@ -30,6 +30,7 @@ function ChatFilterChips({ value, onChange }: ChatFilterChipsProps) {
       {CATEGORIES.map((category) => (
         <Chip
           key={category}
+          tone="flat"
           selected={selected === category}
           onClick={() => {
             setUncontrolled(category)

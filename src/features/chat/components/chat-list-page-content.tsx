@@ -113,12 +113,14 @@ function ChatListPageContent() {
           <SearchBox
             placeholder={messages.chat.listSearchPlaceholder}
             className="flex-1"
+            tone="flat"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
           <Circle
             iconSrc="/icons/circle/friend-list.svg"
             aria-label={messages.chat.myFriendsTitle}
+            tone="flat"
             onClick={() => router.push("/friends")}
           />
         </div>
