@@ -18,6 +18,8 @@ interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   flagSrc: string
   nation: string
   variant: FriendRequestVariant
+  /** 롱프레스 메뉴가 열려 있는 동안 딤 오버레이 위로 떠 보이도록 강조 */
+  active?: boolean
   onAccept?: () => void
   onReject?: () => void
   onAdd?: () => void
@@ -54,6 +56,7 @@ function FriendRequestItem({
   flagSrc,
   nation,
   variant,
+  active,
   onAccept,
   onReject,
   onAdd,
@@ -65,13 +68,24 @@ function FriendRequestItem({
   return (
     <div
       data-slot="friend-request-item"
-      className={cn("flex w-full items-center justify-between py-3", className)}
+      className={cn(
+        "flex w-full items-center justify-between py-3 transition-all duration-200 ease-out",
+        active
+          ? "relative z-50 -translate-y-1 scale-[1.02] gap-2 rounded-2xl bg-white px-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
+          : "translate-y-0 scale-100",
+        className
+      )}
       {...props}
     >
       <div className="flex items-center gap-3">
-        <ChatProfile src={avatarSrc} size={44} />
+        <ChatProfile src={avatarSrc} size={active ? 40 : 44} className="transition-all duration-200 ease-out" />
         <div className="flex flex-col items-start gap-0.5">
-          <p className="text-title-semibold-16 text-gray-900">
+          <p
+            className={cn(
+              "text-gray-900 transition-all duration-200 ease-out",
+              active ? "text-body-semibold-15" : "text-title-semibold-16"
+            )}
+          >
             <HighlightedText text={name} query={highlightQuery} />
           </p>
           <CountryFlag flagSrc={flagSrc} country={nation} />

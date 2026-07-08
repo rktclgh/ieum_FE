@@ -116,7 +116,11 @@ function ChatListPageContent() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          <Circle iconSrc="/icons/circle/friend-list.svg" />
+          <Circle
+            iconSrc="/icons/circle/friend-list.svg"
+            aria-label={messages.chat.myFriendsTitle}
+            onClick={() => router.push("/friends")}
+          />
         </div>
         <ChatFilterChips value={category} onChange={setCategory} />
         <div className="flex flex-col">

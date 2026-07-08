@@ -109,6 +109,10 @@ export interface Messages {
     cancelButton: string
     rejectConfirmTitle: (name: string) => string
     rejectConfirmDescription: string
+    blockFriendConfirmTitle: (name: string) => string
+    blockFriendConfirmDescription: string
+    removeFriendConfirmTitle: (name: string) => string
+    removeFriendConfirmDescription: string
     addFriendButton: string
     requestedButton: string
     startChatButton: string
@@ -233,7 +237,7 @@ export const ko: Messages = {
     listSearchPlaceholder: "채팅, 친구 검색",
     friendSearchPlaceholder: "닉네임 검색",
     addFriendTitle: "친구 추가",
-    myFriendsTitle: "친구 목록",
+    myFriendsTitle: "친구",
     receivedRequestsTitle: "받은 친구 요청",
     recommendedFriendsTitle: "추천 친구",
     myFriendsSectionTitle: "내 친구",
@@ -242,6 +246,10 @@ export const ko: Messages = {
     cancelButton: "취소",
     rejectConfirmTitle: (name) => `${name}님의 친구 신청을 거절합니다`,
     rejectConfirmDescription: "정말로 거절하시겠습니까?",
+    blockFriendConfirmTitle: (name) => `${name}님을 차단합니다`,
+    blockFriendConfirmDescription: "정말로 차단하시겠습니까?",
+    removeFriendConfirmTitle: (name) => `${name}님을 삭제합니다`,
+    removeFriendConfirmDescription: "정말로 삭제하시겠습니까?",
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
     startChatButton: "채팅 시작",
