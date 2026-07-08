@@ -28,7 +28,7 @@ function ChatRoomMoreHeader({
   return (
     <div
       data-slot="chat-room-more-header"
-      className={cn("flex w-full shrink-0 items-center justify-between p-4", className)}
+      className={cn("flex w-full shrink-0 items-center justify-between border-b border-gray-50 p-4", className)}
       {...props}
     >
       <button
