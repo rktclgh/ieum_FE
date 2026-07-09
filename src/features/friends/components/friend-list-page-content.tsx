@@ -218,7 +218,11 @@ function FriendListPageContent() {
 
           {isSearching && (
             <div className="flex flex-col items-start pt-3">
-              {searchResults.length === 0 && !searchQuery.isPending ? (
+              {searchQuery.isPending ? (
+                <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
+                  {messages.friends.searching}
+                </p>
+              ) : searchResults.length === 0 ? (
                 <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
                   {messages.friends.searchEmpty}
                 </p>

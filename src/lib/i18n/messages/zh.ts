@@ -189,6 +189,7 @@ export const zh: Messages = {
     emptyFriends: "还没有好友。",
     loadError: "无法加载好友列表。",
     searchEmpty: "没有搜索结果。",
+    searching: "搜索中...",
   },
   languages: {
     ko: "韩语",

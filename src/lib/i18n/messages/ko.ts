@@ -190,6 +190,7 @@ export interface Messages {
     emptyFriends: string
     loadError: string
     searchEmpty: string
+    searching: string
   }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
@@ -384,6 +385,7 @@ export const ko: Messages = {
     emptyFriends: "아직 친구가 없어요.",
     loadError: "친구 목록을 불러오지 못했어요.",
     searchEmpty: "검색 결과가 없어요.",
+    searching: "검색 중...",
   },
   languages: {
     ko: "한국어",

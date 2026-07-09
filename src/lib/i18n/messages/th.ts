@@ -189,6 +189,7 @@ export const th: Messages = {
     emptyFriends: "ยังไม่มีเพื่อน",
     loadError: "ไม่สามารถโหลดรายชื่อเพื่อนได้",
     searchEmpty: "ไม่พบผลลัพธ์",
+    searching: "กำลังค้นหา...",
   },
   languages: {
     ko: "เกาหลี",

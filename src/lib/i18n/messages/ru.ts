@@ -190,6 +190,7 @@ export const ru: Messages = {
     emptyFriends: "Пока нет друзей.",
     loadError: "Не удалось загрузить список друзей.",
     searchEmpty: "Ничего не найдено.",
+    searching: "Поиск...",
   },
   languages: {
     ko: "Корейский",

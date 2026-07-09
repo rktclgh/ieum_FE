@@ -189,6 +189,7 @@ export const ja: Messages = {
     emptyFriends: "まだ友達がいません。",
     loadError: "友達リストを読み込めませんでした。",
     searchEmpty: "検索結果がありません。",
+    searching: "検索中...",
   },
   languages: {
     ko: "韓国語",

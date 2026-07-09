@@ -190,6 +190,7 @@ export const en: Messages = {
     emptyFriends: "No friends yet.",
     loadError: "Couldn't load your friends.",
     searchEmpty: "No results found.",
+    searching: "Searching...",
   },
   languages: {
     ko: "Korean",

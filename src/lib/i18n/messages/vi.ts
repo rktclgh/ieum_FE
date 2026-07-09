@@ -190,6 +190,7 @@ export const vi: Messages = {
     emptyFriends: "Chưa có bạn bè nào.",
     loadError: "Không thể tải danh sách bạn bè.",
     searchEmpty: "Không có kết quả.",
+    searching: "Đang tìm kiếm...",
   },
   languages: {
     ko: "Tiếng Hàn",
