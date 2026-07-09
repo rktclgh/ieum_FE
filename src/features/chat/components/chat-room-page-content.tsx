@@ -185,6 +185,7 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
     const container = scrollContainerRef.current
     if (!container) return
     const { scrollTop, scrollHeight, clientHeight } = container
+    if (scrollHeight === 0) return
     const maxScrollTop = scrollHeight - clientHeight
     const scrollRatio = maxScrollTop > 0 ? scrollTop / maxScrollTop : 0
     const MIN_THUMB_HEIGHT = 32
