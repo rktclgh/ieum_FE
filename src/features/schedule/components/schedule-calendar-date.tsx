@@ -6,11 +6,19 @@ interface ScheduleCalendarDateProps {
   day: number
   isCurrentMonth: boolean
   isSelected: boolean
+  isToday: boolean
   hasMeeting: boolean
   onClick: () => void
 }
 
-function ScheduleCalendarDate({ day, isCurrentMonth, isSelected, hasMeeting, onClick }: ScheduleCalendarDateProps) {
+function ScheduleCalendarDate({
+  day,
+  isCurrentMonth,
+  isSelected,
+  isToday,
+  hasMeeting,
+  onClick,
+}: ScheduleCalendarDateProps) {
   return (
     <button
       type="button"
@@ -21,7 +29,13 @@ function ScheduleCalendarDate({ day, isCurrentMonth, isSelected, hasMeeting, onC
       <span
         className={cn(
           "flex h-7 w-full items-center justify-center rounded-full text-body-medium-14",
-          isSelected ? "bg-primary-400 text-white" : isCurrentMonth ? "text-gray-900" : "text-gray-400"
+          isSelected
+            ? "bg-primary-400 text-white"
+            : isToday
+              ? "text-primary-400 ring-1 ring-primary-400 ring-inset"
+              : isCurrentMonth
+                ? "text-gray-900"
+                : "text-gray-400"
         )}
       >
         {day}
