@@ -1,10 +1,6 @@
 import type { NextConfig } from "next";
 
-const apiBaseUrl = (
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://localhost:8080"
-).replace(/\/+$/, "")
+import { API_BASE_URL } from "./src/lib/api/config"
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -24,7 +20,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${apiBaseUrl}/api/v1/:path*`,
+        destination: `${API_BASE_URL}/api/v1/:path*`,
       },
     ]
   },
