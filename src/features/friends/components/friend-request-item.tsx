@@ -8,7 +8,7 @@ import { ChatProfile } from "@/features/chat/components/chat-profile"
 import { CountryFlag } from "@/features/chat/components/country-flag"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
-type FriendRequestVariant = "request" | "add" | "requested" | "friend"
+type FriendRequestVariant = "request" | "add" | "requested" | "friend" | "sent"
 
 interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   avatarSrc?: string
@@ -25,6 +25,7 @@ interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   onReject?: () => void
   onAdd?: () => void
   onStartChat?: () => void
+  onCancel?: () => void
 }
 
 function PillButton({
@@ -39,7 +40,6 @@ function PillButton({
       className={cn(
         "flex items-center justify-center rounded-lg px-3 py-2 text-body-regular-13",
         tone === "filled" ? "bg-primary-600 text-white" : "border border-primary-600 bg-white text-primary-600",
-        "disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400",
         className
       )}
       {...props}
@@ -62,6 +62,7 @@ function FriendRequestItem({
   onReject,
   onAdd,
   onStartChat,
+  onCancel,
   ...props
 }: FriendRequestItemProps) {
   const { messages } = useTranslation()
@@ -103,12 +104,17 @@ function FriendRequestItem({
       )}
       {variant === "add" && <PillButton onClick={onAdd}>{messages.chat.addFriendButton}</PillButton>}
       {variant === "requested" && (
-        <PillButton tone="outline" className="w-[73px]" disabled>
+        <PillButton tone="outline" className="w-[73px]">
           {messages.chat.requestedButton}
         </PillButton>
       )}
       {variant === "friend" && (
         <PillButton onClick={onStartChat}>{messages.chat.startChatButton}</PillButton>
+      )}
+      {variant === "sent" && (
+        <PillButton tone="outline" onClick={onCancel}>
+          {messages.chat.cancelRequestButton}
+        </PillButton>
       )}
     </div>
   )

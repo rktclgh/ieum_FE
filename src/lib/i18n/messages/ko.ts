@@ -102,13 +102,17 @@ export interface Messages {
     addFriendTitle: string
     myFriendsTitle: string
     receivedRequestsTitle: string
+    sentRequestsTitle: string
     recommendedFriendsTitle: string
     myFriendsSectionTitle: string
     acceptButton: string
     rejectButton: string
+    cancelRequestButton: string
     cancelButton: string
     rejectConfirmTitle: (name: string) => string
     rejectConfirmDescription: string
+    cancelRequestConfirmTitle: (name: string) => string
+    cancelRequestConfirmDescription: string
     blockFriendConfirmTitle: (name: string) => string
     blockFriendConfirmDescription: string
     removeFriendConfirmTitle: (name: string) => string
@@ -292,13 +296,17 @@ export const ko: Messages = {
     addFriendTitle: "친구 추가",
     myFriendsTitle: "친구",
     receivedRequestsTitle: "받은 친구 요청",
+    sentRequestsTitle: "보낸 친구 요청",
     recommendedFriendsTitle: "추천 친구",
     myFriendsSectionTitle: "내 친구",
     acceptButton: "수락",
     rejectButton: "거절",
+    cancelRequestButton: "요청 취소",
     cancelButton: "취소",
     rejectConfirmTitle: (name) => `${name}님의 친구 신청을 거절합니다`,
     rejectConfirmDescription: "정말로 거절하시겠습니까?",
+    cancelRequestConfirmTitle: (name) => `${name}님에게 보낸 친구 요청을 취소합니다`,
+    cancelRequestConfirmDescription: "정말로 취소하시겠습니까?",
     blockFriendConfirmTitle: (name) => `${name}님을 차단합니다`,
     blockFriendConfirmDescription: "정말로 차단하시겠습니까?",
     removeFriendConfirmTitle: (name) => `${name}님을 삭제합니다`,

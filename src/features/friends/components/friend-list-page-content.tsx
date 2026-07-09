@@ -31,6 +31,7 @@ type ConfirmAction =
   | { type: "reject"; target: FriendEntry }
   | { type: "block"; target: FriendEntry }
   | { type: "remove"; target: FriendEntry }
+  | { type: "cancelRequest"; target: FriendEntry }
 
 // 컨텍스트 메뉴(2개 항목) 높이 추정치 + 화면 하단(홈 인디케이터)과 겹치지 않기 위한 여유 공간
 const FRIEND_CONTEXT_MENU_HEIGHT_ESTIMATE = 130
@@ -46,6 +47,7 @@ function FriendListPageContent() {
 
   const friendsQuery = useFriends()
   const requestsQuery = useFriendRequests("received")
+  const sentRequestsQuery = useFriendRequests("sent")
   const searchQuery = useUserSearch(debouncedQuery)
 
   const sendRequest = useSendFriendRequest()
@@ -61,7 +63,15 @@ function FriendListPageContent() {
 
   const friends = friendsQuery.data ?? []
   const requests = requestsQuery.data ?? []
+  const sentRequests = sentRequestsQuery.data ?? []
   const searchResults = searchQuery.data ?? []
+
+  // 서버 기준 "이미 요청 보낸 유저" — 재검색·새로고침 후에도 유지되는 진실 공급원.
+  // requestedIds(로컬 Set)는 방금 요청을 보내 sentRequests 쿼리가 아직 갱신되지 않은 찰나의 텀만 보완한다.
+  const sentRequestUserIds = React.useMemo(
+    () => new Set(sentRequests.map((request) => request.userId)),
+    [sentRequests]
+  )
 
   React.useEffect(() => {
     if (!actionError) return
@@ -96,6 +106,10 @@ function FriendListPageContent() {
 
   const handleAccept = (request: FriendEntry) => {
     acceptRequest.mutate(request.userId, { onError: showError })
+  }
+
+  const handleCancelRequest = (request: FriendEntry) => {
+    setConfirmAction({ type: "cancelRequest", target: request })
   }
 
   const handleConfirmAction = () => {
@@ -160,6 +174,21 @@ function FriendListPageContent() {
                 </div>
               )}
 
+              {sentRequests.length > 0 && (
+                <div className="flex flex-col items-start pt-3">
+                  <SectionTitle title={messages.chat.sentRequestsTitle} count={sentRequests.length} />
+                  {sentRequests.map((request) => (
+                    <FriendRequestItem
+                      key={request.userId}
+                      name={request.nickname}
+                      avatarSrc={request.avatarSrc}
+                      variant="sent"
+                      onCancel={() => handleCancelRequest(request)}
+                    />
+                  ))}
+                </div>
+              )}
+
               <div className="flex flex-col items-start pt-3">
                 <SectionTitle title={messages.chat.myFriendsSectionTitle} count={friends.length} />
                 {friendsQuery.isError ? (
@@ -185,7 +214,7 @@ function FriendListPageContent() {
                 </p>
               ) : (
                 searchResults.map((user: SearchEntry) => {
-                  const requested = requestedIds.has(user.userId)
+                  const requested = requestedIds.has(user.userId) || sentRequestUserIds.has(user.userId)
                   return (
                     <FriendRequestItem
                       key={user.userId}
@@ -223,14 +252,18 @@ function FriendListPageContent() {
               ? messages.chat.rejectConfirmTitle(confirmAction.target.nickname)
               : confirmAction.type === "block"
                 ? messages.chat.blockFriendConfirmTitle(confirmAction.target.nickname)
-                : messages.chat.removeFriendConfirmTitle(confirmAction.target.nickname)
+                : confirmAction.type === "cancelRequest"
+                  ? messages.chat.cancelRequestConfirmTitle(confirmAction.target.nickname)
+                  : messages.chat.removeFriendConfirmTitle(confirmAction.target.nickname)
           }
           description={
             confirmAction.type === "reject"
               ? messages.chat.rejectConfirmDescription
               : confirmAction.type === "block"
                 ? messages.chat.blockFriendConfirmDescription
-                : messages.chat.removeFriendConfirmDescription
+                : confirmAction.type === "cancelRequest"
+                  ? messages.chat.cancelRequestConfirmDescription
+                  : messages.chat.removeFriendConfirmDescription
           }
           cancelLabel={messages.chat.cancelButton}
           confirmLabel={
@@ -238,7 +271,9 @@ function FriendListPageContent() {
               ? messages.chat.rejectButton
               : confirmAction.type === "block"
                 ? messages.chat.blockAction
-                : messages.chat.deleteAction
+                : confirmAction.type === "cancelRequest"
+                  ? messages.chat.cancelRequestButton
+                  : messages.chat.deleteAction
           }
           onConfirm={handleConfirmAction}
         />
