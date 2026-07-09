@@ -1,3 +1,5 @@
+import axios from "axios"
+
 import { apiClient } from "@/lib/api/client"
 
 interface UserMeResponse {
@@ -14,8 +16,15 @@ interface UserMeResponse {
 }
 
 async function getMe() {
-  const { data } = await apiClient.get<UserMeResponse>("/api/v1/users/me")
-  return data
+  try {
+    const { data } = await apiClient.get<UserMeResponse>("/api/v1/users/me")
+    return data
+  } catch (error) {
+    if (axios.isAxiosError(error) && [401, 403].includes(error.response?.status ?? 0)) {
+      return null
+    }
+    throw error
+  }
 }
 
 async function logout() {
