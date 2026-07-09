@@ -20,5 +20,10 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
-export { getApiErrorMessage }
+function getApiErrorCode(error: unknown): string | undefined {
+  if (axios.isAxiosError<ApiErrorResponse>(error)) return error.response?.data?.code
+  return undefined
+}
+
+export { getApiErrorMessage, getApiErrorCode }
 export type { ApiErrorResponse, ApiFieldError }

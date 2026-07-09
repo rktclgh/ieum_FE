@@ -204,8 +204,19 @@ const NATIONALITY_ISO2_MAP: Record<CountryCode, string> = {
   afghanistan: "AF",
 }
 
+// 백엔드가 내려주는 ISO2 코드를 UI slug로 되돌리기 위한 역맵. 검색/프로필/친구 응답의
+// nationality("KR")를 국기/국가명 표시에 쓰는 CountryCode("south-korea")로 변환한다.
+const ISO2_NATIONALITY_MAP = Object.fromEntries(
+  Object.entries(NATIONALITY_ISO2_MAP).map(([slug, iso2]) => [iso2, slug])
+) as Record<string, CountryCode>
+
 function toIso2(nationality: CountryCode): string {
   return NATIONALITY_ISO2_MAP[nationality]
 }
 
-export { NATIONALITY_ISO2_MAP, toIso2 }
+function fromIso2(iso2: string | null | undefined): CountryCode | undefined {
+  if (!iso2) return undefined
+  return ISO2_NATIONALITY_MAP[iso2.toUpperCase()]
+}
+
+export { NATIONALITY_ISO2_MAP, ISO2_NATIONALITY_MAP, toIso2, fromIso2 }
