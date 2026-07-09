@@ -65,7 +65,7 @@ function InputWithButton({
           onClick={onButtonClick}
           className={cn(
             "rounded-lg px-3 py-2.5 text-body-regular-13 text-white transition-colors",
-            isButtonActive ? "bg-primary-600" : "bg-gray-200"
+            isButtonActive ? "bg-primary-600" : "bg-gray-400"
           )}
         >
           {buttonLabel}

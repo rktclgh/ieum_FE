@@ -35,6 +35,8 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const [secondsLeft, setSecondsLeft] = React.useState(0)
   const [emailVerificationToken, setEmailVerificationToken] = React.useState("")
   const [isEmailDuplicate, setIsEmailDuplicate] = React.useState(false)
+  // 이메일 형식 에러는 타이핑 중이 아니라 "인증하기" 버튼을 눌렀을 때만 표출한다.
+  const [showEmailError, setShowEmailError] = React.useState(false)
 
   const checkEmailMutation = useCheckEmailDuplicate()
   const sendCodeMutation = useSendEmailVerificationCode()
@@ -51,7 +53,7 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   }, [verificationStatus, secondsLeft])
 
   const isEmailValid = EMAIL_REGEX.test(email)
-  const isEmailInvalid = email.length > 0 && !isEmailValid
+  const isEmailInvalid = showEmailError && !isEmailValid
   const isPasswordValid =
     password.length >= PASSWORD_MIN_LENGTH && PASSWORD_SPECIAL_CHAR_REGEX.test(password)
   const isPasswordInvalid = password.length > 0 && !isPasswordValid
@@ -66,6 +68,7 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const handleEmailChange = (rawValue: string) => {
     setEmail(rawValue)
     setIsEmailDuplicate(false)
+    setShowEmailError(false)
     if (checkEmailMutation.isError) checkEmailMutation.reset()
     if (sendCodeMutation.isError) sendCodeMutation.reset()
     if (verificationStatus !== "idle") {
@@ -78,7 +81,13 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   }
 
   const handleSendVerification = () => {
-    if (!isEmailValid || isVerified) return
+    if (isVerified) return
+    // 인증하기 클릭 시점에 형식 검사 → 실패하면 이 시점에만 에러를 표출한다.
+    if (!isEmailValid) {
+      setShowEmailError(true)
+      return
+    }
+    setShowEmailError(false)
     verifyCodeMutation.reset()
     checkEmailMutation.mutate(
       { email },

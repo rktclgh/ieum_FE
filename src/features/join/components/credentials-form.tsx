@@ -94,7 +94,6 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
                   : messages.join.resendButton
               }
               buttonDisabled={
-                isEmailInvalid ||
                 !email ||
                 isVerified ||
                 checkEmailMutation.isPending ||
