@@ -80,10 +80,29 @@ export interface Messages {
     categoryQuestion: string
     locateMeLabel: string
     listViewLabel: string
-    createLabel: string
     loginLabel: string
     selectedLocationPrefix: string
     clearSelectedLocationLabel: string
+    createMeetupAction: string
+    createQuestionAction: string
+    createMenuOpenLabel: string
+    createMenuCloseLabel: string
+    meetupMarkerLabel: string
+    questionMarkerLabel: string
+    clusterMarkerLabel: (count: number) => string
+  }
+  meetup: {
+    joinButton: string
+    participantCount: (count: number) => string
+    closeLabel: string
+    imageAlt: string
+  }
+  question: {
+    answerPlaceholder: string
+    sendLabel: string
+    closeLabel: string
+    imageAlt: string
+    flagAlt: string
   }
   my: {
     emailLabel: string
@@ -275,10 +294,29 @@ export const ko: Messages = {
     categoryQuestion: "질문",
     locateMeLabel: "내 위치로 이동",
     listViewLabel: "목록 보기",
-    createLabel: "만들기",
     loginLabel: "로그인",
     selectedLocationPrefix: "선택한 위치",
     clearSelectedLocationLabel: "선택 해제",
+    createMeetupAction: "모임 만들기",
+    createQuestionAction: "질문하기",
+    createMenuOpenLabel: "만들기 메뉴 열기",
+    createMenuCloseLabel: "만들기 메뉴 닫기",
+    meetupMarkerLabel: "모임",
+    questionMarkerLabel: "질문",
+    clusterMarkerLabel: (count) => `이 지역 ${count}개`,
+  },
+  meetup: {
+    joinButton: "참여하기",
+    participantCount: (count) => `현재 ${count}명 참여 중`,
+    closeLabel: "닫기",
+    imageAlt: "모임 이미지",
+  },
+  question: {
+    answerPlaceholder: "답변 입력",
+    sendLabel: "전송",
+    closeLabel: "닫기",
+    imageAlt: "질문 이미지",
+    flagAlt: "국기",
   },
   my: {
     emailLabel: "이메일",
