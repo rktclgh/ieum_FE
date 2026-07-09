@@ -72,6 +72,16 @@ function FriendListPageContent() {
     () => new Set(sentRequests.map((request) => request.userId)),
     [sentRequests]
   )
+  // "나에게" 요청을 보낸 유저 — 검색 결과에서도 [친구요청]이 아니라 [수락/거절]을 띄워야 한다.
+  const receivedRequestUserIds = React.useMemo(
+    () => new Set(requests.map((request) => request.userId)),
+    [requests]
+  )
+  // search의 isFriend가 아직 반영되지 않은 경우를 대비해 로컬 friends 목록으로 한 번 더 검증한다.
+  const friendUserIds = React.useMemo(
+    () => new Set(friends.map((friend) => friend.userId)),
+    [friends]
+  )
 
   React.useEffect(() => {
     if (!actionError) return
@@ -214,7 +224,16 @@ function FriendListPageContent() {
                 </p>
               ) : (
                 searchResults.map((user: SearchEntry) => {
+                  const isFriend = user.isFriend || friendUserIds.has(user.userId)
+                  const hasReceivedRequest = receivedRequestUserIds.has(user.userId)
                   const requested = requestedIds.has(user.userId) || sentRequestUserIds.has(user.userId)
+                  const variant = isFriend
+                    ? "friend"
+                    : hasReceivedRequest
+                      ? "request"
+                      : requested
+                        ? "requested"
+                        : "add"
                   return (
                     <FriendRequestItem
                       key={user.userId}
@@ -223,8 +242,10 @@ function FriendListPageContent() {
                       highlightQuery={query}
                       flagSrc={user.flagSrc}
                       nation={nationOf(user)}
-                      variant={user.isFriend ? "friend" : requested ? "requested" : "add"}
+                      variant={variant}
                       onAdd={() => handleAddFriend(user.userId)}
+                      onAccept={() => handleAccept(user)}
+                      onReject={() => setConfirmAction({ type: "reject", target: user })}
                       onStartChat={() => router.push(`/chats/${user.userId}`)}
                     />
                   )

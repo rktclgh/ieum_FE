@@ -5,8 +5,9 @@
 function resolveFileUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined
   if (/^https?:\/\//.test(url)) return url
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
-  return `${base}${url}`
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/+$/, "")
+  const path = url.startsWith("/") ? url : `/${url}`
+  return `${base}${path}`
 }
 
 export { resolveFileUrl }

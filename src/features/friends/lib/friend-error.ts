@@ -5,7 +5,7 @@ import type { Messages } from "@/lib/i18n/messages"
 function getFriendErrorMessage(error: unknown, messages: Messages): string {
   const code = getApiErrorCode(error)
   const errors = messages.friends.errors
-  if (code && code in errors) {
+  if (code && Object.prototype.hasOwnProperty.call(errors, code)) {
     return errors[code as keyof typeof errors]
   }
   return errors.default
