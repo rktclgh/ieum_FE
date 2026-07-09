@@ -80,7 +80,6 @@ export const vi: Messages = {
     categoryQuestion: "Câu hỏi",
     locateMeLabel: "Di chuyển đến vị trí của tôi",
     listViewLabel: "Xem danh sách",
-    createLabel: "Tạo",
     loginLabel: "Đăng nhập",
     selectedLocationPrefix: "Vị trí đã chọn",
     clearSelectedLocationLabel: "Bỏ chọn",

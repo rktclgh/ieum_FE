@@ -57,6 +57,7 @@ function HomeMapScreen() {
         <CategoryChipGroup />
       </div>
 
+      {/* 모임 만들기/질문하기 화면은 URL 미확정(docs/ROUTES.md 하위 화면 참고)이라 메뉴 토글까지만 연결 */}
       <MapControls
         onLocateMe={() => {
           setFocusedPlace(null)

@@ -1,15 +1,18 @@
 "use client"
 
 import { Circle } from "@/components/ui/circle"
+import { MapFab } from "@/features/map/components/map-fab"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
 interface MapControlsProps {
   onLocateMe: () => void
+  onCreateMeetup?: () => void
+  onCreateQuestion?: () => void
   className?: string
 }
 
-function MapControls({ onLocateMe, className }: MapControlsProps) {
+function MapControls({ onLocateMe, onCreateMeetup, onCreateQuestion, className }: MapControlsProps) {
   const { messages } = useTranslation()
 
   return (
@@ -20,11 +23,7 @@ function MapControls({ onLocateMe, className }: MapControlsProps) {
         onClick={onLocateMe}
       />
       <Circle iconSrc="/icons/circle/list.svg" aria-label={messages.home.listViewLabel} />
-      <Circle
-        background="primary"
-        iconSrc="/icons/circle/plus-white.svg"
-        aria-label={messages.home.createLabel}
-      />
+      <MapFab onCreateMeetup={onCreateMeetup} onCreateQuestion={onCreateQuestion} />
     </div>
   )
 }

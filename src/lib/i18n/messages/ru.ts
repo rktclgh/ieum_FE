@@ -80,7 +80,6 @@ export const ru: Messages = {
     categoryQuestion: "Вопросы",
     locateMeLabel: "Перейти к моему местоположению",
     listViewLabel: "Смотреть список",
-    createLabel: "Создать",
     loginLabel: "Войти",
     selectedLocationPrefix: "Выбранное место",
     clearSelectedLocationLabel: "Снять выбор",

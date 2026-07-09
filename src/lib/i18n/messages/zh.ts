@@ -79,7 +79,6 @@ export const zh: Messages = {
     categoryQuestion: "提问",
     locateMeLabel: "移动到我的位置",
     listViewLabel: "查看列表",
-    createLabel: "创建",
     loginLabel: "登录",
     selectedLocationPrefix: "已选位置",
     clearSelectedLocationLabel: "取消选择",

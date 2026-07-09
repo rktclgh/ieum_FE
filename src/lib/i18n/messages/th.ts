@@ -79,7 +79,6 @@ export const th: Messages = {
     categoryQuestion: "คำถาม",
     locateMeLabel: "ไปที่ตำแหน่งของฉัน",
     listViewLabel: "ดูรายการ",
-    createLabel: "สร้าง",
     loginLabel: "เข้าสู่ระบบ",
     selectedLocationPrefix: "ตำแหน่งที่เลือก",
     clearSelectedLocationLabel: "ยกเลิกการเลือก",

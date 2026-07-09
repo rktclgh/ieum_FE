@@ -79,7 +79,6 @@ export const ja: Messages = {
     categoryQuestion: "質問",
     locateMeLabel: "現在地に移動",
     listViewLabel: "リストで見る",
-    createLabel: "作成",
     loginLabel: "ログイン",
     selectedLocationPrefix: "選択した位置",
     clearSelectedLocationLabel: "選択解除",

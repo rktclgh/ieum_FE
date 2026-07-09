@@ -80,7 +80,6 @@ export interface Messages {
     categoryQuestion: string
     locateMeLabel: string
     listViewLabel: string
-    createLabel: string
     loginLabel: string
     selectedLocationPrefix: string
     clearSelectedLocationLabel: string
@@ -295,7 +294,6 @@ export const ko: Messages = {
     categoryQuestion: "질문",
     locateMeLabel: "내 위치로 이동",
     listViewLabel: "목록 보기",
-    createLabel: "만들기",
     loginLabel: "로그인",
     selectedLocationPrefix: "선택한 위치",
     clearSelectedLocationLabel: "선택 해제",

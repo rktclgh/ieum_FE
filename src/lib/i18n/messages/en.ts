@@ -80,7 +80,6 @@ export const en: Messages = {
     categoryQuestion: "Question",
     locateMeLabel: "Move to my location",
     listViewLabel: "View list",
-    createLabel: "Create",
     loginLabel: "Log in",
     selectedLocationPrefix: "Selected location",
     clearSelectedLocationLabel: "Clear selection",
