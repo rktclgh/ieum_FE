@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 interface MeetupDetailSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  meetup: MeetupSummary
+  meetup: MeetupSummary | null
   onJoin?: () => void
 }
 
@@ -26,14 +26,22 @@ function InfoRow({ iconSrc, children }: { iconSrc: string; children: React.React
 
 function MeetupDetailSheet({ open, onOpenChange, meetup, onJoin }: MeetupDetailSheetProps) {
   const { messages } = useTranslation()
-  const hasImage = Boolean(meetup.imageUrl)
+  // 닫힘 애니메이션 중 부모가 meetup을 null로 먼저 비워도 마지막 내용을 유지해 렌더링한다.
+  const [lastMeetup, setLastMeetup] = React.useState(meetup)
+  React.useEffect(() => {
+    if (meetup) setLastMeetup(meetup)
+  }, [meetup])
+  const display = meetup ?? lastMeetup
+
+  if (!display) return null
+  const hasImage = Boolean(display.imageUrl)
 
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
       {hasImage ? (
         <div className="relative h-40 w-full overflow-hidden rounded-3xl bg-gray-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={meetup.imageUrl} alt={messages.meetup.imageAlt} className="size-full object-cover" />
+          <img src={display.imageUrl} alt={messages.meetup.imageAlt} className="size-full object-cover" />
           <BottomSheetClose
             aria-label={messages.meetup.closeLabel}
             className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-black/50"
@@ -45,7 +53,7 @@ function MeetupDetailSheet({ open, onOpenChange, meetup, onJoin }: MeetupDetailS
 
       <div className="flex w-full flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="text-title-semibold-18 text-gray-900">{meetup.title}</h2>
+          <h2 className="text-title-semibold-18 text-gray-900">{display.title}</h2>
           {!hasImage ? (
             <BottomSheetClose
               aria-label={messages.meetup.closeLabel}
@@ -58,16 +66,16 @@ function MeetupDetailSheet({ open, onOpenChange, meetup, onJoin }: MeetupDetailS
 
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1">
-            <InfoRow iconSrc="/icons/meetup/time.svg">{meetup.dateLabel}</InfoRow>
-            <InfoRow iconSrc="/icons/meetup/location.svg">{meetup.locationLabel}</InfoRow>
+            <InfoRow iconSrc="/icons/meetup/time.svg">{display.dateLabel}</InfoRow>
+            <InfoRow iconSrc="/icons/meetup/location.svg">{display.locationLabel}</InfoRow>
           </div>
           <InfoRow iconSrc="/icons/meetup/people.svg">
-            {messages.meetup.participantCount(meetup.participantCount)}
+            {messages.meetup.participantCount(display.participantCount)}
           </InfoRow>
         </div>
       </div>
 
-      <p className="w-full text-body-regular-14 whitespace-pre-line text-gray-600">{meetup.description}</p>
+      <p className="w-full text-body-regular-14 whitespace-pre-line text-gray-600">{display.description}</p>
 
       <Button variant="primary" size="block" onClick={onJoin}>
         {messages.meetup.joinButton}

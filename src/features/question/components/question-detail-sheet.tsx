@@ -10,14 +10,19 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 interface QuestionDetailSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  question: QuestionSummary
+  question: QuestionSummary | null
   onSend?: (value: string) => void
 }
 
 function QuestionDetailSheet({ open, onOpenChange, question, onSend }: QuestionDetailSheetProps) {
   const { messages } = useTranslation()
   const [reply, setReply] = React.useState("")
-  const hasImage = Boolean(question.imageUrl)
+  // 닫힘 애니메이션 중 부모가 question을 null로 먼저 비워도 마지막 내용을 유지해 렌더링한다.
+  const [lastQuestion, setLastQuestion] = React.useState(question)
+  React.useEffect(() => {
+    if (question) setLastQuestion(question)
+  }, [question])
+  const display = question ?? lastQuestion
 
   const handleSend = () => {
     const value = reply.trim()
@@ -26,12 +31,15 @@ function QuestionDetailSheet({ open, onOpenChange, question, onSend }: QuestionD
     setReply("")
   }
 
+  if (!display) return null
+  const hasImage = Boolean(display.imageUrl)
+
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
       {hasImage ? (
         <div className="relative h-40 w-full overflow-hidden rounded-3xl bg-gray-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={question.imageUrl} alt={messages.question.imageAlt} className="size-full object-cover" />
+          <img src={display.imageUrl} alt={messages.question.imageAlt} className="size-full object-cover" />
           <BottomSheetClose
             aria-label={messages.question.closeLabel}
             className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-black/50"
@@ -45,21 +53,21 @@ function QuestionDetailSheet({ open, onOpenChange, question, onSend }: QuestionD
         <div className="flex w-full items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="size-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
-              {question.authorAvatarUrl ? (
+              {display.authorAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={question.authorAvatarUrl} alt="" className="size-full object-cover" />
+                <img src={display.authorAvatarUrl} alt="" className="size-full object-cover" />
               ) : null}
             </div>
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
-                <span className="text-title-semibold-16 text-gray-900">{question.authorName}</span>
-                {question.countryFlagSrc ? (
+                <span className="text-title-semibold-16 text-gray-900">{display.authorName}</span>
+                {display.countryFlagSrc ? (
                   <span className="relative h-4 w-[22px] shrink-0 overflow-hidden rounded-[3px] border border-gray-100">
-                    <Image src={question.countryFlagSrc} alt={messages.question.flagAlt} fill className="object-cover" />
+                    <Image src={display.countryFlagSrc} alt={messages.question.flagAlt} fill className="object-cover" />
                   </span>
                 ) : null}
               </div>
-              <span className="text-body-regular-14 text-gray-600">{question.timeLabel}</span>
+              <span className="text-body-regular-14 text-gray-600">{display.timeLabel}</span>
             </div>
           </div>
           {!hasImage ? (
@@ -73,13 +81,14 @@ function QuestionDetailSheet({ open, onOpenChange, question, onSend }: QuestionD
         </div>
 
         <div className="flex w-full flex-col gap-1">
-          <h2 className="text-title-semibold-18 text-gray-900">{question.title}</h2>
-          <p className="text-body-regular-14 whitespace-pre-line text-gray-600">{question.body}</p>
+          <h2 className="text-title-semibold-18 text-gray-900">{display.title}</h2>
+          <p className="text-body-regular-14 whitespace-pre-line text-gray-600">{display.body}</p>
         </div>
       </div>
 
       <div className="flex w-full items-center justify-between gap-2 rounded-full border border-gray-50 bg-gray-50/95 py-2 pr-2 pl-4">
         <input
+          aria-label={messages.question.answerPlaceholder}
           value={reply}
           onChange={(event) => setReply(event.target.value)}
           onKeyDown={(event) => {

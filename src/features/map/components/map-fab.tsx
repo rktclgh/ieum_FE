@@ -37,7 +37,7 @@ function MapFab({ onCreateMeetup, onCreateQuestion, className }: MapFabProps) {
 
       <div className={cn("relative z-50", className)}>
         {open ? (
-          <div className="absolute right-0 bottom-[calc(100%+8px)] flex w-[180px] flex-col gap-1 rounded-3xl bg-white/80 px-6 py-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)] backdrop-blur">
+          <div className="absolute right-0 bottom-[calc(100%_+_8px)] flex w-[180px] flex-col gap-1 rounded-3xl bg-white/80 px-6 py-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)] backdrop-blur">
             <button
               type="button"
               onClick={() => {
