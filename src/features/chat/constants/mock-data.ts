@@ -114,6 +114,8 @@ export const MOCK_MESSAGES: {
   /** reply 전용: 원본 메시지의 texts 중 실제로 인용된 문장의 index (여러 줄이 묶인 말풍선일 때 그중 한 줄만 강조하기 위함) */
   replyToIndex?: number
   time?: string
+  /** 날짜별 구분선/스크롤 날짜 뱃지 계산에 사용되는 실제 발신 시각 (ISO) */
+  createdAt: string
 }[] = [
   {
     id: "msg1",
@@ -122,8 +124,16 @@ export const MOCK_MESSAGES: {
     name: "오이정",
     texts: ["이따 진짜 맛있는거 먹으러 가자. 나 배고파 죽겠음"],
     time: "오전 8:17",
+    createdAt: "2026-07-03T08:17:00+09:00",
   },
-  { id: "msg2", sender: "me", variant: "short", texts: ["좋아요"], time: "오전 8:20" },
+  {
+    id: "msg2",
+    sender: "me",
+    variant: "short",
+    texts: ["좋아요"],
+    time: "오전 8:20",
+    createdAt: "2026-07-03T08:20:00+09:00",
+  },
   {
     id: "msg3",
     sender: "others",
@@ -131,6 +141,7 @@ export const MOCK_MESSAGES: {
     name: "김연두",
     texts: ["맛있는거?", "떡볶이 먹을까?", "어떡할래"],
     time: "오전 8:21",
+    createdAt: "2026-07-03T08:21:00+09:00",
   },
   {
     id: "msg4",
@@ -139,8 +150,16 @@ export const MOCK_MESSAGES: {
     name: "wakawak",
     texts: ["떡볶이보다는 치킨이 땡기는 듯"],
     time: "오전 8:22",
+    createdAt: "2026-07-03T08:22:00+09:00",
   },
-  { id: "msg5", sender: "me", variant: "short", texts: ["전 다 좋아요. 어디서 보죠"], time: "오전 8:22" },
+  {
+    id: "msg5",
+    sender: "me",
+    variant: "short",
+    texts: ["전 다 좋아요. 어디서 보죠"],
+    time: "오전 8:22",
+    createdAt: "2026-07-03T08:22:30+09:00",
+  },
   {
     id: "msg6",
     sender: "others",
@@ -151,6 +170,7 @@ export const MOCK_MESSAGES: {
     replyToIndex: 1,
     replyText: "떡볶이보다는 치킨이 땡기는 듯",
     time: "오전 8:23",
+    createdAt: "2026-07-03T08:23:00+09:00",
   },
   {
     id: "msg7",
@@ -162,6 +182,7 @@ export const MOCK_MESSAGES: {
     replyToIndex: 1,
     replyText: "전 다 좋아요",
     time: "오전 8:24",
+    createdAt: "2026-07-03T08:24:00+09:00",
   },
 ]
 
