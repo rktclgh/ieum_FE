@@ -28,7 +28,7 @@ function ClearButton({ className, inputRef, ...props }: ClearButtonProps) {
       aria-label="지우기"
       onClick={handleClear}
       className={cn(
-        "flex size-4 shrink-0 items-center justify-center rounded-full bg-gray-200",
+        "flex size-4 shrink-0 items-center justify-center rounded-full bg-gray-400",
         className
       )}
       {...props}
