@@ -170,6 +170,22 @@ export const zh: Messages = {
     confirmTitleGeneric: "举报该消息",
     confirmDescription: "确定要举报吗？",
   },
+  friends: {
+    errors: {
+      SELF_FRIEND_REQUEST: "无法向自己发送好友请求。",
+      REQUEST_EXISTS: "已经发送过好友请求了。",
+      ALREADY_FRIENDS: "你们已经是好友了。",
+      BLOCKED: "由于存在拉黑关系，无法进行此操作。",
+      USER_NOT_FOUND: "找不到该用户。",
+      FRIENDSHIP_NOT_FOUND: "该请求已被处理。",
+      CANNOT_ACCEPT_OWN_REQUEST: "无法接受自己发送的请求。",
+      VALIDATION_FAILED: "无法处理该请求。",
+      default: "请稍后再试。",
+    },
+    emptyFriends: "还没有好友。",
+    loadError: "无法加载好友列表。",
+    searchEmpty: "没有搜索结果。",
+  },
   languages: {
     ko: "韩语",
     en: "英语",

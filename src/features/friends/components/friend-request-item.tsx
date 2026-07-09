@@ -15,8 +15,9 @@ interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   name: string
   /** 이름 중 이 문자열과 일치하는 부분을 강조 표시 (친구 검색 화면) */
   highlightQuery?: string
-  flagSrc: string
-  nation: string
+  /** 국적(검색 결과에만 존재). 친구/요청 목록 응답에는 없으므로 선택값이다. */
+  flagSrc?: string
+  nation?: string
   variant: FriendRequestVariant
   /** 롱프레스 메뉴가 열려 있는 동안 딤 오버레이 위로 떠 보이도록 강조 */
   active?: boolean
@@ -88,7 +89,7 @@ function FriendRequestItem({
           >
             <HighlightedText text={name} query={highlightQuery} />
           </p>
-          <CountryFlag flagSrc={flagSrc} country={nation} />
+          {flagSrc && nation && <CountryFlag flagSrc={flagSrc} country={nation} />}
         </div>
       </div>
 

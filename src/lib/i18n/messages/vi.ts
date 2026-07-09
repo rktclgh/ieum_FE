@@ -171,6 +171,22 @@ export const vi: Messages = {
     confirmTitleGeneric: "Báo cáo tin nhắn này",
     confirmDescription: "Bạn có chắc chắn muốn báo cáo không?",
   },
+  friends: {
+    errors: {
+      SELF_FRIEND_REQUEST: "Bạn không thể gửi lời mời kết bạn cho chính mình.",
+      REQUEST_EXISTS: "Bạn đã gửi lời mời kết bạn rồi.",
+      ALREADY_FRIENDS: "Hai bạn đã là bạn bè.",
+      BLOCKED: "Không thể thực hiện do đang chặn nhau.",
+      USER_NOT_FOUND: "Không tìm thấy người dùng.",
+      FRIENDSHIP_NOT_FOUND: "Lời mời này đã được xử lý.",
+      CANNOT_ACCEPT_OWN_REQUEST: "Bạn không thể chấp nhận lời mời do chính mình gửi.",
+      VALIDATION_FAILED: "Không thể xử lý yêu cầu.",
+      default: "Đã xảy ra lỗi. Vui lòng thử lại.",
+    },
+    emptyFriends: "Chưa có bạn bè nào.",
+    loadError: "Không thể tải danh sách bạn bè.",
+    searchEmpty: "Không có kết quả.",
+  },
   languages: {
     ko: "Tiếng Hàn",
     en: "Tiếng Anh",

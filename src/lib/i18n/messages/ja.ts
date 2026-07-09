@@ -170,6 +170,22 @@ export const ja: Messages = {
     confirmTitleGeneric: "メッセージを通報します",
     confirmDescription: "本当に通報しますか？",
   },
+  friends: {
+    errors: {
+      SELF_FRIEND_REQUEST: "自分自身には友達申請を送れません。",
+      REQUEST_EXISTS: "すでに友達申請を送っています。",
+      ALREADY_FRIENDS: "すでに友達です。",
+      BLOCKED: "ブロック関係のため実行できません。",
+      USER_NOT_FOUND: "ユーザーが見つかりません。",
+      FRIENDSHIP_NOT_FOUND: "すでに処理された申請です。",
+      CANNOT_ACCEPT_OWN_REQUEST: "自分が送った申請は承認できません。",
+      VALIDATION_FAILED: "リクエストを処理できませんでした。",
+      default: "しばらくしてからもう一度お試しください。",
+    },
+    emptyFriends: "まだ友達がいません。",
+    loadError: "友達リストを読み込めませんでした。",
+    searchEmpty: "検索結果がありません。",
+  },
   languages: {
     ko: "韓国語",
     en: "英語",

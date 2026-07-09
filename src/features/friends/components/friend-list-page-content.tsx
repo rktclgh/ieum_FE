@@ -6,26 +6,31 @@ import { useRouter } from "next/navigation"
 
 import { SearchBox } from "@/components/ui/search-box"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { FriendListAppBar } from "@/features/chat/components/friend-list-app-bar"
+import { FriendListAppBar } from "@/features/friends/components/friend-list-app-bar"
 import { SectionTitle } from "@/features/chat/components/section-title"
-import { FriendRequestItem } from "@/features/chat/components/friend-request-item"
+import { FriendRequestItem } from "@/features/friends/components/friend-request-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { hangulIncludes } from "@/lib/hangul-includes"
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value"
 import {
-  MOCK_FRIEND_REQUESTS,
-  MOCK_MY_FRIENDS,
-  MOCK_RECOMMENDED_FRIENDS,
-} from "@/features/chat/constants/mock-data"
-type FriendRequest = (typeof MOCK_FRIEND_REQUESTS)[number]
-type Friend = (typeof MOCK_MY_FRIENDS)[number]
-type RecommendedFriend = (typeof MOCK_RECOMMENDED_FRIENDS)[number]
+  useFriendRequests,
+  useFriends,
+  useUserSearch,
+} from "@/features/friends/hooks/use-friends-queries"
+import {
+  useAcceptFriendRequest,
+  useBlockUser,
+  useRemoveFriend,
+  useSendFriendRequest,
+} from "@/features/friends/hooks/use-friend-mutations"
+import { getFriendErrorMessage } from "@/features/friends/lib/friend-error"
+import type { FriendEntry, SearchEntry } from "@/features/friends/lib/friend-adapter"
 
 type ConfirmAction =
-  | { type: "reject"; target: FriendRequest }
-  | { type: "block"; target: Friend }
-  | { type: "remove"; target: Friend }
+  | { type: "reject"; target: FriendEntry }
+  | { type: "block"; target: FriendEntry }
+  | { type: "remove"; target: FriendEntry }
 
 // 컨텍스트 메뉴(2개 항목) 높이 추정치 + 화면 하단(홈 인디케이터)과 겹치지 않기 위한 여유 공간
 const FRIEND_CONTEXT_MENU_HEIGHT_ESTIMATE = 130
@@ -36,28 +41,37 @@ function FriendListPageContent() {
   const { messages } = useTranslation()
 
   const [query, setQuery] = React.useState("")
-  const [requests, setRequests] = React.useState<FriendRequest[]>(MOCK_FRIEND_REQUESTS)
-  const [friends, setFriends] = React.useState<Friend[]>(MOCK_MY_FRIENDS)
-  const [recommended, setRecommended] = React.useState<RecommendedFriend[]>(MOCK_RECOMMENDED_FRIENDS)
-  const [confirmAction, setConfirmAction] = React.useState<ConfirmAction | null>(null)
-  const [openMenuFriendId, setOpenMenuFriendId] = React.useState<string | null>(null)
-
+  const debouncedQuery = useDebouncedValue(query.trim())
   const isSearching = query.trim().length > 0
 
-  const filteredRequests = React.useMemo(
-    () => requests.filter((request) => hangulIncludes(request.name, query)),
-    [requests, query]
-  )
-  const filteredFriends = React.useMemo(
-    () => friends.filter((friend) => hangulIncludes(friend.name, query)),
-    [friends, query]
-  )
-  const filteredRecommended = React.useMemo(
-    () => recommended.filter((friend) => hangulIncludes(friend.name, query)),
-    [recommended, query]
-  )
+  const friendsQuery = useFriends()
+  const requestsQuery = useFriendRequests("received")
+  const searchQuery = useUserSearch(debouncedQuery)
 
-  const activeFriend = friends.find((friend) => friend.id === openMenuFriendId) ?? null
+  const sendRequest = useSendFriendRequest()
+  const acceptRequest = useAcceptFriendRequest()
+  const removeFriend = useRemoveFriend()
+  const blockUser = useBlockUser()
+
+  const [confirmAction, setConfirmAction] = React.useState<ConfirmAction | null>(null)
+  const [openMenuFriendId, setOpenMenuFriendId] = React.useState<number | null>(null)
+  // 검색 결과에서 방금 요청 보낸 유저 — 서버가 isFriend를 즉시 반영하지 않으므로 버튼 상태를 로컬로 유지
+  const [requestedIds, setRequestedIds] = React.useState<Set<number>>(new Set())
+  const [actionError, setActionError] = React.useState<string | null>(null)
+
+  const friends = friendsQuery.data ?? []
+  const requests = requestsQuery.data ?? []
+  const searchResults = searchQuery.data ?? []
+
+  React.useEffect(() => {
+    if (!actionError) return
+    const timeoutId = window.setTimeout(() => setActionError(null), 2500)
+    return () => window.clearTimeout(timeoutId)
+  }, [actionError])
+
+  const showError = (error: unknown) => setActionError(getFriendErrorMessage(error, messages))
+
+  const activeFriend = friends.find((friend) => friend.userId === openMenuFriendId) ?? null
 
   const friendMenuItems: ChatContextMenuItem[] = [
     {
@@ -80,36 +94,39 @@ function FriendListPageContent() {
     },
   ]
 
-  const handleAccept = (request: FriendRequest) => {
-    setRequests((prev) => prev.filter((item) => item.id !== request.id))
-    setFriends((prev) => [{ id: request.id, name: request.name, countryCode: request.countryCode, flagSrc: request.flagSrc }, ...prev])
+  const handleAccept = (request: FriendEntry) => {
+    acceptRequest.mutate(request.userId, { onError: showError })
   }
 
   const handleConfirmAction = () => {
     if (!confirmAction) return
-    if (confirmAction.type === "reject") {
-      setRequests((prev) => prev.filter((item) => item.id !== confirmAction.target.id))
-    } else {
-      setFriends((prev) => prev.filter((friend) => friend.id !== confirmAction.target.id))
-    }
+    const { type, target } = confirmAction
+    const mutation = type === "block" ? blockUser : removeFriend
+    mutation.mutate(target.userId, { onError: showError })
     setConfirmAction(null)
   }
 
-  const handleAddFriend = (friendId: string) => {
-    setRecommended((prev) => prev.map((friend) => (friend.id === friendId ? { ...friend, requested: true } : friend)))
+  const handleAddFriend = (userId: number) => {
+    sendRequest.mutate(userId, {
+      onSuccess: () => setRequestedIds((prev) => new Set(prev).add(userId)),
+      onError: showError,
+    })
   }
 
-  const renderFriendItem = (friend: Friend) => (
+  const nationOf = (entry: FriendEntry) =>
+    entry.countryCode ? messages.countries[entry.countryCode] : undefined
+
+  const renderFriendItem = (friend: FriendEntry) => (
     <FriendRequestItemWithLongPress
-      key={friend.id}
+      key={friend.userId}
       friend={friend}
       highlightQuery={query}
-      nation={messages.countries[friend.countryCode]}
-      menuOpen={openMenuFriendId === friend.id}
+      nation={nationOf(friend)}
+      menuOpen={openMenuFriendId === friend.userId}
       menuItems={friendMenuItems}
-      onOpenMenu={() => setOpenMenuFriendId(friend.id)}
+      onOpenMenu={() => setOpenMenuFriendId(friend.userId)}
       onCloseMenu={() => setOpenMenuFriendId(null)}
-      onStartChat={() => router.push(`/chats/${friend.id}`)}
+      onStartChat={() => router.push(`/chats/${friend.userId}`)}
     />
   )
 
@@ -132,10 +149,9 @@ function FriendListPageContent() {
                   <SectionTitle title={messages.chat.receivedRequestsTitle} count={requests.length} />
                   {requests.map((request) => (
                     <FriendRequestItem
-                      key={request.id}
-                      name={request.name}
-                      flagSrc={request.flagSrc}
-                      nation={messages.countries[request.countryCode]}
+                      key={request.userId}
+                      name={request.nickname}
+                      avatarSrc={request.avatarSrc}
                       variant="request"
                       onAccept={() => handleAccept(request)}
                       onReject={() => setConfirmAction({ type: "reject", target: request })}
@@ -146,58 +162,57 @@ function FriendListPageContent() {
 
               <div className="flex flex-col items-start pt-3">
                 <SectionTitle title={messages.chat.myFriendsSectionTitle} count={friends.length} />
-                {friends.map(renderFriendItem)}
+                {friendsQuery.isError ? (
+                  <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
+                    {messages.friends.loadError}
+                  </p>
+                ) : friends.length === 0 && !friendsQuery.isPending ? (
+                  <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
+                    {messages.friends.emptyFriends}
+                  </p>
+                ) : (
+                  friends.map(renderFriendItem)
+                )}
               </div>
             </>
           )}
 
           {isSearching && (
-            <>
-              {filteredRequests.length > 0 && (
-                <div className="flex flex-col items-start pt-3">
-                  <SectionTitle title={messages.chat.receivedRequestsTitle} />
-                  {filteredRequests.map((request) => (
+            <div className="flex flex-col items-start pt-3">
+              {searchResults.length === 0 && !searchQuery.isPending ? (
+                <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
+                  {messages.friends.searchEmpty}
+                </p>
+              ) : (
+                searchResults.map((user: SearchEntry) => {
+                  const requested = requestedIds.has(user.userId)
+                  return (
                     <FriendRequestItem
-                      key={request.id}
-                      name={request.name}
+                      key={user.userId}
+                      name={user.nickname}
+                      avatarSrc={user.avatarSrc}
                       highlightQuery={query}
-                      flagSrc={request.flagSrc}
-                      nation={messages.countries[request.countryCode]}
-                      variant="request"
-                      onAccept={() => handleAccept(request)}
-                      onReject={() => setConfirmAction({ type: "reject", target: request })}
+                      flagSrc={user.flagSrc}
+                      nation={nationOf(user)}
+                      variant={user.isFriend ? "friend" : requested ? "requested" : "add"}
+                      onAdd={() => handleAddFriend(user.userId)}
+                      onStartChat={() => router.push(`/chats/${user.userId}`)}
                     />
-                  ))}
-                </div>
+                  )
+                })
               )}
-
-              {filteredFriends.length > 0 && (
-                <div className="flex flex-col items-start pt-3">
-                  <SectionTitle title={messages.chat.myFriendsSectionTitle} />
-                  {filteredFriends.map(renderFriendItem)}
-                </div>
-              )}
-
-              {filteredRecommended.length > 0 && (
-                <div className="flex flex-col items-start pt-3">
-                  <SectionTitle title={messages.chat.recommendedFriendsTitle} />
-                  {filteredRecommended.map((friend) => (
-                    <FriendRequestItem
-                      key={friend.id}
-                      name={friend.name}
-                      highlightQuery={query}
-                      flagSrc={friend.flagSrc}
-                      nation={messages.countries[friend.countryCode]}
-                      variant={friend.requested ? "requested" : "add"}
-                      onAdd={() => handleAddFriend(friend.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
+            </div>
           )}
         </div>
       </main>
+
+      {actionError && (
+        <div className="fixed inset-x-0 bottom-6 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
+            {actionError}
+          </div>
+        </div>
+      )}
 
       {confirmAction && (
         <ConfirmDialog
@@ -205,10 +220,10 @@ function FriendListPageContent() {
           onOpenChange={(open) => !open && setConfirmAction(null)}
           title={
             confirmAction.type === "reject"
-              ? messages.chat.rejectConfirmTitle(confirmAction.target.name)
+              ? messages.chat.rejectConfirmTitle(confirmAction.target.nickname)
               : confirmAction.type === "block"
-                ? messages.chat.blockFriendConfirmTitle(confirmAction.target.name)
-                : messages.chat.removeFriendConfirmTitle(confirmAction.target.name)
+                ? messages.chat.blockFriendConfirmTitle(confirmAction.target.nickname)
+                : messages.chat.removeFriendConfirmTitle(confirmAction.target.nickname)
           }
           description={
             confirmAction.type === "reject"
@@ -233,9 +248,9 @@ function FriendListPageContent() {
 }
 
 interface FriendRequestItemWithLongPressProps {
-  friend: Friend
+  friend: FriendEntry
   highlightQuery: string
-  nation: string
+  nation?: string
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
   onOpenMenu: () => void
@@ -272,9 +287,9 @@ function FriendRequestItemWithLongPress({
   return (
     <div ref={rowRef} className="relative w-full">
       <FriendRequestItem
-        name={friend.name}
+        name={friend.nickname}
+        avatarSrc={friend.avatarSrc}
         highlightQuery={highlightQuery}
-        flagSrc={friend.flagSrc}
         nation={nation}
         variant="friend"
         active={menuOpen}

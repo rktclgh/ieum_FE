@@ -171,6 +171,22 @@ export interface Messages {
     confirmTitleGeneric: string
     confirmDescription: string
   }
+  friends: {
+    errors: {
+      SELF_FRIEND_REQUEST: string
+      REQUEST_EXISTS: string
+      ALREADY_FRIENDS: string
+      BLOCKED: string
+      USER_NOT_FOUND: string
+      FRIENDSHIP_NOT_FOUND: string
+      CANNOT_ACCEPT_OWN_REQUEST: string
+      VALIDATION_FAILED: string
+      default: string
+    }
+    emptyFriends: string
+    loadError: string
+    searchEmpty: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -344,6 +360,22 @@ export const ko: Messages = {
     confirmTitle: (name) => `${name}님의 메시지를 신고합니다`,
     confirmTitleGeneric: "메시지를 신고합니다",
     confirmDescription: "정말로 신고하시겠습니까?",
+  },
+  friends: {
+    errors: {
+      SELF_FRIEND_REQUEST: "자기 자신에게는 친구 요청을 보낼 수 없어요.",
+      REQUEST_EXISTS: "이미 친구 요청을 보냈어요.",
+      ALREADY_FRIENDS: "이미 친구예요.",
+      BLOCKED: "차단 관계라 진행할 수 없어요.",
+      USER_NOT_FOUND: "사용자를 찾을 수 없어요.",
+      FRIENDSHIP_NOT_FOUND: "이미 처리된 요청이에요.",
+      CANNOT_ACCEPT_OWN_REQUEST: "내가 보낸 요청은 수락할 수 없어요.",
+      VALIDATION_FAILED: "요청을 처리할 수 없어요.",
+      default: "잠시 후 다시 시도해 주세요.",
+    },
+    emptyFriends: "아직 친구가 없어요.",
+    loadError: "친구 목록을 불러오지 못했어요.",
+    searchEmpty: "검색 결과가 없어요.",
   },
   languages: {
     ko: "한국어",

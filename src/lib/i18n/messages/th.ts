@@ -170,6 +170,22 @@ export const th: Messages = {
     confirmTitleGeneric: "รายงานข้อความนี้",
     confirmDescription: "คุณแน่ใจหรือไม่ว่าต้องการรายงาน?",
   },
+  friends: {
+    errors: {
+      SELF_FRIEND_REQUEST: "ไม่สามารถส่งคำขอเป็นเพื่อนถึงตัวเองได้",
+      REQUEST_EXISTS: "คุณส่งคำขอเป็นเพื่อนไปแล้ว",
+      ALREADY_FRIENDS: "เป็นเพื่อนกันอยู่แล้ว",
+      BLOCKED: "ไม่สามารถดำเนินการได้เนื่องจากมีการบล็อก",
+      USER_NOT_FOUND: "ไม่พบผู้ใช้",
+      FRIENDSHIP_NOT_FOUND: "คำขอนี้ได้รับการดำเนินการแล้ว",
+      CANNOT_ACCEPT_OWN_REQUEST: "ไม่สามารถยอมรับคำขอที่คุณส่งเองได้",
+      VALIDATION_FAILED: "ไม่สามารถดำเนินการคำขอได้",
+      default: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+    },
+    emptyFriends: "ยังไม่มีเพื่อน",
+    loadError: "ไม่สามารถโหลดรายชื่อเพื่อนได้",
+    searchEmpty: "ไม่พบผลลัพธ์",
+  },
   languages: {
     ko: "เกาหลี",
     en: "อังกฤษ",

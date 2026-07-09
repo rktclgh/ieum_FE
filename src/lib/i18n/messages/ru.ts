@@ -171,6 +171,22 @@ export const ru: Messages = {
     confirmTitleGeneric: "Пожаловаться на это сообщение",
     confirmDescription: "Вы уверены, что хотите пожаловаться?",
   },
+  friends: {
+    errors: {
+      SELF_FRIEND_REQUEST: "Нельзя отправить заявку в друзья самому себе.",
+      REQUEST_EXISTS: "Вы уже отправили заявку в друзья.",
+      ALREADY_FRIENDS: "Вы уже друзья.",
+      BLOCKED: "Действие невозможно из-за блокировки.",
+      USER_NOT_FOUND: "Пользователь не найден.",
+      FRIENDSHIP_NOT_FOUND: "Эта заявка уже обработана.",
+      CANNOT_ACCEPT_OWN_REQUEST: "Нельзя принять собственную заявку.",
+      VALIDATION_FAILED: "Не удалось обработать запрос.",
+      default: "Что-то пошло не так. Попробуйте ещё раз.",
+    },
+    emptyFriends: "Пока нет друзей.",
+    loadError: "Не удалось загрузить список друзей.",
+    searchEmpty: "Ничего не найдено.",
+  },
   languages: {
     ko: "Корейский",
     en: "Английский",

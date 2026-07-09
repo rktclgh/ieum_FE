@@ -171,6 +171,22 @@ export const en: Messages = {
     confirmTitleGeneric: "Report this message",
     confirmDescription: "Are you sure you want to report?",
   },
+  friends: {
+    errors: {
+      SELF_FRIEND_REQUEST: "You can't send a friend request to yourself.",
+      REQUEST_EXISTS: "You've already sent a friend request.",
+      ALREADY_FRIENDS: "You're already friends.",
+      BLOCKED: "This can't be done due to a block.",
+      USER_NOT_FOUND: "User not found.",
+      FRIENDSHIP_NOT_FOUND: "This request has already been handled.",
+      CANNOT_ACCEPT_OWN_REQUEST: "You can't accept a request you sent.",
+      VALIDATION_FAILED: "The request couldn't be processed.",
+      default: "Something went wrong. Please try again.",
+    },
+    emptyFriends: "No friends yet.",
+    loadError: "Couldn't load your friends.",
+    searchEmpty: "No results found.",
+  },
   languages: {
     ko: "Korean",
     en: "English",
