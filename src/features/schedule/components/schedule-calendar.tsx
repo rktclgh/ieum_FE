@@ -11,6 +11,7 @@ interface ScheduleCalendarProps extends React.ComponentProps<"div"> {
   year: number
   month: number
   selectedDate: string
+  todayDate: string
   onSelectDate: (dateKey: string) => void
   eventDateKeys: Set<string>
 }
@@ -20,6 +21,7 @@ function ScheduleCalendar({
   year,
   month,
   selectedDate,
+  todayDate,
   onSelectDate,
   eventDateKeys,
   ...props
@@ -51,6 +53,7 @@ function ScheduleCalendar({
                 day={cell.day}
                 isCurrentMonth={cell.isCurrentMonth}
                 isSelected={cell.dateKey === selectedDate}
+                isToday={cell.dateKey === todayDate}
                 hasMeeting={eventDateKeys.has(cell.dateKey)}
                 onClick={() => onSelectDate(cell.dateKey)}
               />

@@ -13,19 +13,18 @@ import { ScheduleListItem } from "@/features/schedule/components/schedule-list-i
 import { MonthYearWheelPicker } from "@/features/schedule/components/month-year-wheel-picker"
 import { MOCK_SCHEDULES } from "@/features/schedule/constants/mock-data"
 import { formatYearMonth, toDateKey } from "@/features/schedule/lib/calendar"
+import { getKstDateKey } from "@/lib/date/kst"
 import { useTranslation } from "@/lib/i18n/use-translation"
-
-const INITIAL_YEAR = 2026
-const INITIAL_MONTH = 7
-const INITIAL_DATE = "2026-07-10"
 
 function SchedulePageContent() {
   const router = useRouter()
   const { language, messages } = useTranslation()
 
-  const [year, setYear] = React.useState(INITIAL_YEAR)
-  const [month, setMonth] = React.useState(INITIAL_MONTH)
-  const [selectedDate, setSelectedDate] = React.useState(INITIAL_DATE)
+  // KST(Asia/Seoul) 기준 오늘 날짜를 초기 선택값/하이라이트 기준으로 사용한다.
+  const [today] = React.useState(getKstDateKey)
+  const [year, setYear] = React.useState(() => Number(today.slice(0, 4)))
+  const [month, setMonth] = React.useState(() => Number(today.slice(5, 7)))
+  const [selectedDate, setSelectedDate] = React.useState(today)
   const [schedules, setSchedules] = React.useState(MOCK_SCHEDULES)
   const [pickerOpen, setPickerOpen] = React.useState(false)
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null)
@@ -87,6 +86,7 @@ function SchedulePageContent() {
             year={year}
             month={month}
             selectedDate={selectedDate}
+            todayDate={today}
             onSelectDate={setSelectedDate}
             eventDateKeys={eventDateKeys}
           />
