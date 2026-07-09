@@ -194,10 +194,18 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
     setScrollThumbCenter(thumbHeight / 2 + scrollRatio * thumbTravel)
   }, [])
 
+  const scrollTicking = React.useRef(false)
+
   const handleMessagesAreaScroll = () => {
     handleMessagesScroll()
-    updateActiveDateKey()
-    updateScrollThumbCenter()
+    if (!scrollTicking.current) {
+      requestAnimationFrame(() => {
+        updateActiveDateKey()
+        updateScrollThumbCenter()
+        scrollTicking.current = false
+      })
+      scrollTicking.current = true
+    }
   }
 
   React.useEffect(() => {
