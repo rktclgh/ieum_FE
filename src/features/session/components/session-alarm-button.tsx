@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 function SessionAlarmButton() {
   const router = useRouter()
   const { messages } = useTranslation()
-  const { data } = useMe({ requireSessionHint: true })
+  const { data, isPending } = useMe()
   const logoutMutation = useLogoutMutation()
   const isLoggedIn = Boolean(data)
 
@@ -19,8 +19,9 @@ function SessionAlarmButton() {
     <Circle
       iconSrc={isLoggedIn ? "/icons/circle/alarm-on.svg" : "/icons/circle/alarm.svg"}
       aria-label={isLoggedIn ? messages.common.logout : messages.home.loginLabel}
-      disabled={logoutMutation.isPending}
+      disabled={isPending || logoutMutation.isPending}
       onClick={() => {
+        if (isPending) return
         if (isLoggedIn) {
           logoutMutation.mutate()
         } else {

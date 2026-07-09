@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 
 import type { UserMeResponse } from "@/features/session/api/session-api"
+import { API_BASE_URL } from "@/lib/api/config"
 
 // 2층: 미들웨어가 넘긴 요청에 대해 실제로 users/me를 호출해 인증을 확정한다.
 // 참고: Server Component 렌더링 중에는 쿠키를 다시 쓸 수 없어(Next.js 제약),
@@ -12,7 +13,7 @@ async function getMeServer(): Promise<UserMeResponse | null> {
   if (!cookieHeader) return null
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/users/me`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
       headers: { Cookie: cookieHeader },
       cache: "no-store",
     })
