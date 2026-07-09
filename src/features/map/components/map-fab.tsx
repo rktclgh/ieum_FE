@@ -46,7 +46,7 @@ function MapFab({ onCreateMeetup, onCreateQuestion, className }: MapFabProps) {
               }}
               className="flex items-center gap-2 py-2"
             >
-              <Image src="/icons/map/pencil.svg" alt="" width={24} height={24} className="size-6" />
+              <Image src="/icons/map/group.svg" alt="" width={24} height={24} className="size-6" />
               <span className="text-body-medium-15 text-gray-900">{messages.home.createMeetupAction}</span>
             </button>
             <button
@@ -57,7 +57,7 @@ function MapFab({ onCreateMeetup, onCreateQuestion, className }: MapFabProps) {
               }}
               className="flex items-center gap-2 py-2"
             >
-              <Image src="/icons/map/message-square.svg" alt="" width={24} height={24} className="size-6" />
+              <Image src="/icons/map/question.svg" alt="" width={24} height={24} className="size-6" />
               <span className="text-body-medium-15 text-gray-900">{messages.home.createQuestionAction}</span>
             </button>
           </div>

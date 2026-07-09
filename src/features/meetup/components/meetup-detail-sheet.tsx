@@ -58,10 +58,10 @@ function MeetupDetailSheet({ open, onOpenChange, meetup, onJoin }: MeetupDetailS
 
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1">
-            <InfoRow iconSrc="/icons/schedule/clock.svg">{meetup.dateLabel}</InfoRow>
-            <InfoRow iconSrc="/icons/schedule/map-pin.svg">{meetup.locationLabel}</InfoRow>
+            <InfoRow iconSrc="/icons/meetup/time.svg">{meetup.dateLabel}</InfoRow>
+            <InfoRow iconSrc="/icons/meetup/location.svg">{meetup.locationLabel}</InfoRow>
           </div>
-          <InfoRow iconSrc="/icons/tab-bar/my-line.svg">
+          <InfoRow iconSrc="/icons/meetup/people.svg">
             {messages.meetup.participantCount(meetup.participantCount)}
           </InfoRow>
         </div>
