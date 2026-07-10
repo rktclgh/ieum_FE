@@ -89,6 +89,7 @@ export const th: Messages = {
     meetupMarkerLabel: "พบปะ",
     questionMarkerLabel: "คำถาม",
     clusterMarkerLabel: (count) => `${count} รายการในพื้นที่นี้`,
+    attributionButtonLabel: "ข้อมูลลิขสิทธิ์แผนที่",
   },
   meetup: {
     joinButton: "เข้าร่วม",

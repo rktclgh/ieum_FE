@@ -89,6 +89,7 @@ export const zh: Messages = {
     meetupMarkerLabel: "聚会",
     questionMarkerLabel: "提问",
     clusterMarkerLabel: (count) => `本地区${count}个`,
+    attributionButtonLabel: "地图版权信息",
   },
   meetup: {
     joinButton: "参加",

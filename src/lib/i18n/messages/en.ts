@@ -90,6 +90,7 @@ export const en: Messages = {
     meetupMarkerLabel: "Meetup",
     questionMarkerLabel: "Question",
     clusterMarkerLabel: (count) => `${count} nearby`,
+    attributionButtonLabel: "Map attribution",
   },
   meetup: {
     joinButton: "Join",
