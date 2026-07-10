@@ -91,6 +91,7 @@ export const ru: Messages = {
     questionMarkerLabel: "Вопрос",
     clusterMarkerLabel: (count) => `${count} рядом`,
     attributionButtonLabel: "Атрибуция карты",
+    pinsTruncatedNotice: "Здесь много меток. Увеличьте масштаб, чтобы увидеть все",
   },
   meetup: {
     joinButton: "Участвовать",

@@ -91,6 +91,7 @@ export interface Messages {
     questionMarkerLabel: string
     clusterMarkerLabel: (count: number) => string
     attributionButtonLabel: string
+    pinsTruncatedNotice: string
   }
   meetup: {
     joinButton: string
@@ -404,6 +405,7 @@ export const ko: Messages = {
     questionMarkerLabel: "질문",
     clusterMarkerLabel: (count) => `이 지역 ${count}개`,
     attributionButtonLabel: "지도 저작권 정보",
+    pinsTruncatedNotice: "이 지역에 핀이 많아요. 확대해서 보세요",
   },
   meetup: {
     joinButton: "참여하기",

@@ -90,6 +90,7 @@ export const ja: Messages = {
     questionMarkerLabel: "質問",
     clusterMarkerLabel: (count) => `この地域に${count}件`,
     attributionButtonLabel: "地図の著作権情報",
+    pinsTruncatedNotice: "このエリアはピンが多いです。拡大してご覧ください",
   },
   meetup: {
     joinButton: "参加する",
