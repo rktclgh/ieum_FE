@@ -68,7 +68,7 @@ function HomeMapScreen() {
         className="absolute right-4 bottom-28 z-10 flex flex-col gap-2"
       />
 
-      <MapAttribution className="absolute bottom-20 left-3 z-10" />
+      <MapAttribution className="absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3 z-10" />
 
       <div className="absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-sm">
         <TabBar />
