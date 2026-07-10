@@ -5,6 +5,7 @@ import * as React from "react"
 
 import type { Place } from "@/features/map/api/place-search-api"
 import { CategoryChipGroup } from "@/features/map/components/category-chip-group"
+import { MapAttribution } from "@/features/map/components/map-attribution"
 import { MapControls } from "@/features/map/components/map-controls"
 import { MapSearchBar } from "@/features/map/components/map-search-bar"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
@@ -66,6 +67,8 @@ function HomeMapScreen() {
         }}
         className="absolute right-4 bottom-28 z-10 flex flex-col gap-2"
       />
+
+      <MapAttribution className="absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3 z-10" />
 
       <div className="absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-sm">
         <TabBar />

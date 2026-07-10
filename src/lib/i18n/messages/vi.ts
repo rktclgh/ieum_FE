@@ -90,6 +90,7 @@ export const vi: Messages = {
     meetupMarkerLabel: "Gặp mặt",
     questionMarkerLabel: "Câu hỏi",
     clusterMarkerLabel: (count) => `${count} ở khu vực này`,
+    attributionButtonLabel: "Bản quyền bản đồ",
   },
   meetup: {
     joinButton: "Tham gia",

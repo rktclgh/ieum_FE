@@ -1,14 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { AttributionControl, MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet"
+import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import {
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
-  MAP_TILE_ATTRIBUTION,
   MAP_TILE_MAX_ZOOM,
   MAP_TILE_SUBDOMAINS,
   MAP_TILE_URL,
@@ -53,11 +52,9 @@ function MapCanvas({ center, className, onMapClick }: MapCanvasProps) {
     >
       <TileLayer
         url={MAP_TILE_URL}
-        attribution={MAP_TILE_ATTRIBUTION}
         subdomains={MAP_TILE_SUBDOMAINS}
         maxZoom={MAP_TILE_MAX_ZOOM}
       />
-      <AttributionControl position="topleft" prefix={false} />
       {center && <MapCenterUpdater center={center} />}
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
     </MapContainer>
