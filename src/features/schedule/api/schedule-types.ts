@@ -1,6 +1,10 @@
 // 백엔드 모임(Meeting) 캘린더/일정 API 응답 타입. api-reference.md §10 (10-2/10-5/10-7/10-8) 기준.
 
-type ScheduleStatus = "open" | "closed" | "cancelled"
+// 일정(schedule) status는 모임(meeting) status와 다른 집합이다.
+// 실 백엔드는 생성 직후 "scheduled"를 내려준다(2026-07-12 실측). 문서 §10 enum엔
+// 모임 status(open/closed/cancelled)만 있고 일정 status는 미기재라, 확인된 "scheduled"를
+// 포함하고 종료 상태는 완만하게 열어둔다. (백엔드 문서에 일정 status enum 명시 요청 필요)
+type ScheduleStatus = "scheduled" | "closed" | "cancelled" | (string & {})
 
 // Question/Meeting 공용 위치 값객체. address 필수, 나머지는 선택.
 interface LocationSnapshot {
