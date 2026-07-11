@@ -263,8 +263,17 @@ export interface Messages {
     selectMonthLabel: string
     confirmButton: string
     emptyStateLabel: string
-    deleteConfirmTitle: string
-    deleteConfirmDescription: string
+    loadError: string
+    cancelAction: string
+    cancelConfirmTitle: string
+    cancelConfirmDescription: string
+    errors: {
+      SCHEDULE_ALREADY_EXISTS: string
+      SCHEDULE_NOT_FOUND: string
+      SCHEDULE_NOT_CANCELLABLE: string
+      VALIDATION_FAILED: string
+      default: string
+    }
   }
   report: {
     title: string
@@ -567,8 +576,17 @@ export const ko: Messages = {
     selectMonthLabel: "연도 및 월 선택",
     confirmButton: "완료",
     emptyStateLabel: "등록된 일정이 없어요",
-    deleteConfirmTitle: "일정을 삭제합니다",
-    deleteConfirmDescription: "정말로 삭제하시겠습니까?",
+    loadError: "일정을 불러오지 못했어요.",
+    cancelAction: "일정 취소",
+    cancelConfirmTitle: "일정을 취소할까요?",
+    cancelConfirmDescription: "취소한 일정은 되돌릴 수 없어요.",
+    errors: {
+      SCHEDULE_ALREADY_EXISTS: "이미 같은 일정이 있어요.",
+      SCHEDULE_NOT_FOUND: "일정을 찾을 수 없어요.",
+      SCHEDULE_NOT_CANCELLABLE: "취소할 수 없는 일정이에요.",
+      VALIDATION_FAILED: "요청을 처리할 수 없어요.",
+      default: "잠시 후 다시 시도해 주세요.",
+    },
   },
   report: {
     title: "신고하기",

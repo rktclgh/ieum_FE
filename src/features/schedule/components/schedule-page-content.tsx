@@ -5,13 +5,15 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
-import { Circle } from "@/components/ui/circle"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { ScheduleCalendar } from "@/features/schedule/components/schedule-calendar"
 import { ScheduleListItem } from "@/features/schedule/components/schedule-list-item"
 import { MonthYearWheelPicker } from "@/features/schedule/components/month-year-wheel-picker"
-import { MOCK_SCHEDULES } from "@/features/schedule/constants/mock-data"
+import { useCalendar } from "@/features/schedule/hooks/use-schedule-queries"
+import { useCancelSchedule } from "@/features/schedule/hooks/use-schedule-mutations"
+import { getScheduleErrorMessage } from "@/features/schedule/lib/schedule-error"
+import type { ScheduleEntry } from "@/features/schedule/lib/schedule-adapter"
 import { formatYearMonth, toDateKey } from "@/features/schedule/lib/calendar"
 import { getKstDateKey } from "@/lib/date/kst"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -25,16 +27,32 @@ function SchedulePageContent() {
   const [year, setYear] = React.useState(() => Number(today.slice(0, 4)))
   const [month, setMonth] = React.useState(() => Number(today.slice(5, 7)))
   const [selectedDate, setSelectedDate] = React.useState(today)
-  const [schedules, setSchedules] = React.useState(MOCK_SCHEDULES)
   const [pickerOpen, setPickerOpen] = React.useState(false)
-  const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null)
-  const [deleteTargetId, setDeleteTargetId] = React.useState<string | null>(null)
+  const [activeMenuId, setActiveMenuId] = React.useState<number | null>(null)
+  const [cancelTarget, setCancelTarget] = React.useState<ScheduleEntry | null>(null)
+  const [actionError, setActionError] = React.useState<string | null>(null)
 
-  const eventDateKeys = React.useMemo(() => new Set(schedules.map((event) => event.date)), [schedules])
+  // 보이는 달의 1일~말일을 캘린더 조회 기간으로 사용한다.
+  const range = React.useMemo(() => {
+    const lastDay = new Date(year, month, 0).getDate()
+    return { from: toDateKey(year, month, 1), to: toDateKey(year, month, lastDay) }
+  }, [year, month])
+
+  const calendarQuery = useCalendar(range)
+  const cancelSchedule = useCancelSchedule()
+  const entries = React.useMemo(() => calendarQuery.data ?? [], [calendarQuery.data])
+
+  const eventDateKeys = React.useMemo(() => new Set(entries.map((event) => event.date)), [entries])
   const eventsForSelectedDate = React.useMemo(
-    () => schedules.filter((event) => event.date === selectedDate),
-    [schedules, selectedDate]
+    () => entries.filter((event) => event.date === selectedDate),
+    [entries, selectedDate]
   )
+
+  React.useEffect(() => {
+    if (!actionError) return
+    const timeoutId = window.setTimeout(() => setActionError(null), 2500)
+    return () => window.clearTimeout(timeoutId)
+  }, [actionError])
 
   const goToMonth = (nextYear: number, nextMonth: number) => {
     setYear(nextYear)
@@ -42,23 +60,44 @@ function SchedulePageContent() {
     setSelectedDate(toDateKey(nextYear, nextMonth, 1))
   }
 
-  const menuItemsFor = (eventId: string): ChatContextMenuItem[] => [
-    {
-      icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
-      label: messages.chat.reportAction,
-      tone: "destructive",
-      onClick: () => setActiveMenuId(null),
-    },
+  const cancelMenuItems = (event: ScheduleEntry): ChatContextMenuItem[] => [
     {
       icon: <Image src="/icons/chat/trash.svg" alt="" width={24} height={24} />,
-      label: messages.chat.deleteAction,
+      label: messages.schedule.cancelAction,
       tone: "destructive",
       onClick: () => {
         setActiveMenuId(null)
-        setDeleteTargetId(eventId)
+        setCancelTarget(event)
       },
     },
   ]
+
+  const renderList = () => {
+    if (calendarQuery.isPending) return null
+    if (calendarQuery.isError) {
+      return <p className="py-6 text-center text-body-regular-14 text-gray-400">{messages.schedule.loadError}</p>
+    }
+    if (eventsForSelectedDate.length === 0) {
+      return <p className="py-6 text-center text-body-regular-14 text-gray-400">{messages.schedule.emptyStateLabel}</p>
+    }
+    return eventsForSelectedDate.map((event) => (
+      <div key={event.scheduleId} className="relative w-full">
+        <ScheduleListItem
+          event={event}
+          onSelect={() => router.push(`/chats/${event.roomId}`)}
+          onMoreClick={event.isHost ? () => setActiveMenuId(event.scheduleId) : undefined}
+        />
+        {activeMenuId === event.scheduleId && (
+          <ChatContextMenu
+            items={cancelMenuItems(event)}
+            dimmed
+            onDismiss={() => setActiveMenuId(null)}
+            className="top-full right-0 mt-2"
+          />
+        )}
+      </div>
+    ))
+  }
 
   return (
     <div className="relative mx-auto flex h-dvh w-full max-w-sm flex-col overflow-hidden bg-white">
@@ -91,36 +130,9 @@ function SchedulePageContent() {
             eventDateKeys={eventDateKeys}
           />
 
-          <div className="flex flex-col gap-3 px-4">
-            {eventsForSelectedDate.length === 0 ? (
-              <p className="py-6 text-center text-body-regular-14 text-gray-400">
-                {messages.schedule.emptyStateLabel}
-              </p>
-            ) : (
-              eventsForSelectedDate.map((event) => (
-                <div key={event.id} className="relative w-full">
-                  <ScheduleListItem event={event} onMoreClick={() => setActiveMenuId(event.id)} />
-                  {activeMenuId === event.id && (
-                    <ChatContextMenu
-                      items={menuItemsFor(event.id)}
-                      dimmed
-                      onDismiss={() => setActiveMenuId(null)}
-                      className="top-full right-0 mt-2"
-                    />
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+          <div className="flex flex-col gap-3 px-4">{renderList()}</div>
         </div>
       </div>
-
-      <Circle
-        background="primary"
-        iconSrc="/icons/circle/plus-white.svg"
-        aria-label={messages.schedule.addButtonLabel}
-        className="absolute right-4 bottom-6 z-10"
-      />
 
       <MonthYearWheelPicker
         open={pickerOpen}
@@ -131,17 +143,27 @@ function SchedulePageContent() {
       />
 
       <ConfirmDialog
-        open={deleteTargetId !== null}
-        onOpenChange={(open) => !open && setDeleteTargetId(null)}
-        title={messages.schedule.deleteConfirmTitle}
-        description={messages.schedule.deleteConfirmDescription}
+        open={cancelTarget !== null}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+        title={messages.schedule.cancelConfirmTitle}
+        description={messages.schedule.cancelConfirmDescription}
         cancelLabel={messages.chat.cancelButton}
-        confirmLabel={messages.chat.deleteAction}
+        confirmLabel={messages.schedule.cancelAction}
         onConfirm={() => {
-          setSchedules((prev) => prev.filter((event) => event.id !== deleteTargetId))
-          setDeleteTargetId(null)
+          if (!cancelTarget) return
+          cancelSchedule.mutate(
+            { meetingId: cancelTarget.meetingId, scheduleId: cancelTarget.scheduleId },
+            { onError: (error) => setActionError(getScheduleErrorMessage(error, messages)) }
+          )
+          setCancelTarget(null)
         }}
       />
+
+      {actionError && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center px-4">
+          <p className="rounded-full bg-gray-900/90 px-4 py-2 text-body-regular-13 text-white">{actionError}</p>
+        </div>
+      )}
     </div>
   )
 }
