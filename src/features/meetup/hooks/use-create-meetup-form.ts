@@ -5,17 +5,24 @@ import * as React from "react"
 import {
   TITLE_MAX_LENGTH,
   type MeetupDateValue,
+  type MeetupPlaceValue,
   type MeetupTimeValue,
 } from "@/features/meetup/constants/create-meetup"
 
-/** 새 모임 작성 폼의 로컬 상태·검증 로직. 제출(모임 생성) API 연동은 #47. */
+// 사진 첨부 상태: 미리보기용 data URL 과 실제 업로드용 File 을 함께 보관한다.
+interface MeetupImageValue {
+  preview: string
+  file: File
+}
+
+/** 새 모임 작성 폼의 로컬 상태·검증 로직. 제출(모임 생성) API 연동은 useCreateMeeting 에서. */
 function useCreateMeetupForm() {
   const [title, setTitle] = React.useState("")
   const [date, setDate] = React.useState<MeetupDateValue | null>(null)
   const [time, setTime] = React.useState<MeetupTimeValue | null>(null)
-  const [address, setAddress] = React.useState<string | null>(null)
+  const [place, setPlace] = React.useState<MeetupPlaceValue | null>(null)
   const [description, setDescription] = React.useState("")
-  const [image, setImage] = React.useState<string | null>(null)
+  const [image, setImage] = React.useState<MeetupImageValue | null>(null)
 
   const titleTooLong = title.length > TITLE_MAX_LENGTH
 
@@ -25,7 +32,7 @@ function useCreateMeetupForm() {
     !titleTooLong &&
     date !== null &&
     time !== null &&
-    Boolean(address) &&
+    place !== null &&
     description.trim().length > 0
 
   return {
@@ -35,8 +42,8 @@ function useCreateMeetupForm() {
     setDate,
     time,
     setTime,
-    address,
-    setAddress,
+    place,
+    setPlace,
     description,
     setDescription,
     image,
@@ -47,3 +54,4 @@ function useCreateMeetupForm() {
 }
 
 export { useCreateMeetupForm }
+export type { MeetupImageValue }
