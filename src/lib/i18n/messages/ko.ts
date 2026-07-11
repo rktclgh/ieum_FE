@@ -98,6 +98,31 @@ export interface Messages {
     closeLabel: string
     imageAlt: string
   }
+  createMeetup: {
+    appBarTitle: string
+    titlePlaceholder: string
+    titleCounter: (current: number, max: number) => string
+    titleTooLongExplanation: (max: number) => string
+    datePlaceholder: string
+    timePlaceholder: string
+    addressPlaceholder: string
+    descriptionPlaceholder: string
+    imagePickerLabel: string
+    imageAlt: string
+    removeImageLabel: string
+    submitButton: string
+    cancelButton: string
+    confirmButton: string
+    takePhotoAction: string
+    chooseAlbumAction: string
+    amLabel: string
+    pmLabel: string
+    yearLabel: (year: number) => string
+    monthLabel: (month: number) => string
+    dayLabel: (day: number) => string
+    hourLabel: (hour: number) => string
+    minuteLabel: (minute: string) => string
+  }
   question: {
     answerPlaceholder: string
     sendLabel: string
@@ -312,6 +337,31 @@ export const ko: Messages = {
     participantCount: (count) => `현재 ${count}명 참여 중`,
     closeLabel: "닫기",
     imageAlt: "모임 이미지",
+  },
+  createMeetup: {
+    appBarTitle: "새 모임 작성",
+    titlePlaceholder: "모임 제목 (15자 이하)",
+    titleCounter: (current, max) => `(${current}/${max})`,
+    titleTooLongExplanation: (max) => `모임 제목을 ${max}글자 이내로 적어주세요.`,
+    datePlaceholder: "날짜 선택",
+    timePlaceholder: "시간 선택",
+    addressPlaceholder: "주소 선택",
+    descriptionPlaceholder: "모임 내용을 입력해주세요.",
+    imagePickerLabel: "사진 (선택)",
+    imageAlt: "첨부한 사진",
+    removeImageLabel: "사진 삭제",
+    submitButton: "모임 올리기",
+    cancelButton: "취소",
+    confirmButton: "완료",
+    takePhotoAction: "사진 찍기",
+    chooseAlbumAction: "앨범에서 고르기",
+    amLabel: "오전",
+    pmLabel: "오후",
+    yearLabel: (year) => `${year}년`,
+    monthLabel: (month) => `${month}월`,
+    dayLabel: (day) => `${day}일`,
+    hourLabel: (hour) => `${hour}시`,
+    minuteLabel: (minute) => `${minute}분`,
   },
   question: {
     answerPlaceholder: "답변 입력",
