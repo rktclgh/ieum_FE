@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 
 import { ReportPageContent } from "@/features/report/components/report-page-content"
-import { MOCK_CHATS } from "@/features/chat/constants/mock-data"
 
 interface ChatReportPageProps {
   params: Promise<{ chatId: string }>
@@ -11,9 +10,9 @@ interface ChatReportPageProps {
 export default async function ChatReportPage({ params, searchParams }: ChatReportPageProps) {
   const { chatId } = await params
   const { target } = await searchParams
-  const chat = MOCK_CHATS.find((item) => item.id === chatId)
+  const roomId = Number(chatId)
 
-  if (!chat) notFound()
+  if (!Number.isInteger(roomId) || roomId <= 0) notFound()
 
   return <ReportPageContent targetName={target} />
 }

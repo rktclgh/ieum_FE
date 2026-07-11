@@ -24,6 +24,7 @@ import {
   useRemoveFriend,
   useSendFriendRequest,
 } from "@/features/friends/hooks/use-friend-mutations"
+import { useCreateDirectRoom } from "@/features/chat/hooks/use-chat-mutations"
 import { getFriendErrorMessage } from "@/features/friends/lib/friend-error"
 import type { FriendEntry, SearchEntry } from "@/features/friends/lib/friend-adapter"
 
@@ -54,6 +55,15 @@ function FriendListPageContent() {
   const acceptRequest = useAcceptFriendRequest()
   const removeFriend = useRemoveFriend()
   const blockUser = useBlockUser()
+  const createDirectRoom = useCreateDirectRoom()
+
+  // 친구와의 1:1 방을 (없으면) 생성한 뒤 그 roomId로 이동한다. userId ≠ roomId.
+  const handleStartChat = (friendId: number) => {
+    createDirectRoom.mutate(friendId, {
+      onSuccess: (room) => router.push(`/chats/${room.roomId}`),
+      onError: showError,
+    })
+  }
 
   const [confirmAction, setConfirmAction] = React.useState<ConfirmAction | null>(null)
   const [openMenuFriendId, setOpenMenuFriendId] = React.useState<number | null>(null)
@@ -150,7 +160,7 @@ function FriendListPageContent() {
       menuItems={friendMenuItems}
       onOpenMenu={() => setOpenMenuFriendId(friend.userId)}
       onCloseMenu={() => setOpenMenuFriendId(null)}
-      onStartChat={() => router.push(`/chats/${friend.userId}`)}
+      onStartChat={() => handleStartChat(friend.userId)}
     />
   )
 
@@ -250,7 +260,7 @@ function FriendListPageContent() {
                       onAdd={() => handleAddFriend(user.userId)}
                       onAccept={() => handleAccept(user)}
                       onReject={() => setConfirmAction({ type: "reject", target: user })}
-                      onStartChat={() => router.push(`/chats/${user.userId}`)}
+                      onStartChat={() => handleStartChat(user.userId)}
                     />
                   )
                 })
