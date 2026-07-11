@@ -104,6 +104,33 @@ export interface Messages {
     closeLabel: string
     imageAlt: string
     flagAlt: string
+    detailTitle: string
+    resolvedBadge: string
+    answersTitle: (count: number) => string
+    emptyAnswers: string
+    loadError: string
+    aiBadge: string
+    acceptedBadge: string
+    acceptButton: string
+    acceptConfirmTitle: string
+    acceptConfirmDescription: string
+    acceptConfirmCancel: string
+    createTitle: string
+    titlePlaceholder: string
+    contentPlaceholder: string
+    locationLabel: string
+    locationMissing: string
+    addImageLabel: string
+    submitButton: string
+    errors: {
+      FORBIDDEN: string
+      QUESTION_NOT_FOUND: string
+      ANSWER_NOT_FOUND: string
+      SELF_ACCEPT_NOT_ALLOWED: string
+      QUESTION_ALREADY_RESOLVED: string
+      VALIDATION_FAILED: string
+      default: string
+    }
   }
   my: {
     emailLabel: string
@@ -319,6 +346,33 @@ export const ko: Messages = {
     closeLabel: "닫기",
     imageAlt: "질문 이미지",
     flagAlt: "국기",
+    detailTitle: "질문",
+    resolvedBadge: "해결됨",
+    answersTitle: (count) => `답변 ${count}`,
+    emptyAnswers: "아직 답변이 없어요.",
+    loadError: "질문을 불러오지 못했어요.",
+    aiBadge: "AI",
+    acceptedBadge: "채택됨",
+    acceptButton: "채택",
+    acceptConfirmTitle: "이 답변을 채택할까요?",
+    acceptConfirmDescription: "채택하면 질문이 해결 상태로 바뀌며 되돌릴 수 없어요.",
+    acceptConfirmCancel: "취소",
+    createTitle: "질문하기",
+    titlePlaceholder: "제목",
+    contentPlaceholder: "궁금한 내용을 입력해 주세요",
+    locationLabel: "위치",
+    locationMissing: "지도에서 위치를 먼저 선택해 주세요.",
+    addImageLabel: "사진 첨부",
+    submitButton: "등록",
+    errors: {
+      FORBIDDEN: "권한이 없어요.",
+      QUESTION_NOT_FOUND: "질문을 찾을 수 없어요.",
+      ANSWER_NOT_FOUND: "답변을 찾을 수 없어요.",
+      SELF_ACCEPT_NOT_ALLOWED: "내 답변은 채택할 수 없어요.",
+      QUESTION_ALREADY_RESOLVED: "이미 채택된 질문이에요.",
+      VALIDATION_FAILED: "입력값을 확인해 주세요.",
+      default: "잠시 후 다시 시도해 주세요.",
+    },
   },
   my: {
     emailLabel: "이메일",
