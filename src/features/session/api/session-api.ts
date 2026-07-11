@@ -1,18 +1,32 @@
 import axios from "axios"
 
 import { apiClient } from "@/lib/api/client"
+import type { LanguageCode } from "@/lib/i18n/languages"
+
+type Gender = "male" | "female" | "other"
+type NotifyRadiusKm = 3 | 5 | 10
+
+interface UserSettings {
+  language: LanguageCode
+  cameraPermission: boolean
+  pushPermission: boolean
+  notifyAll: boolean
+  notifyMeeting: boolean
+  notifyQuestion: boolean
+  notifyRadiusKm: NotifyRadiusKm
+}
 
 interface UserMeResponse {
   userId: number
   email: string
   nickname: string
-  birthDate: string
-  gender: "male" | "female" | "other"
-  nationality: string
+  birthDate: string | null
+  gender: Gender | null
+  nationality: string | null
   profileImageUrl: string | null
   grade: string
   acceptedCount: number
-  settings: Record<string, unknown>
+  settings: UserSettings
 }
 
 async function getMe() {
@@ -32,4 +46,4 @@ async function logout() {
 }
 
 export { getMe, logout }
-export type { UserMeResponse }
+export type { UserMeResponse, UserSettings, Gender, NotifyRadiusKm }
