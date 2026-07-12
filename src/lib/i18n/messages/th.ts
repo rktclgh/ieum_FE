@@ -197,6 +197,12 @@ export const th: Messages = {
     confirmTitle: (name) => `รายงานข้อความของ ${name}`,
     confirmTitleGeneric: "รายงานข้อความนี้",
     confirmDescription: "คุณแน่ใจหรือไม่ว่าต้องการรายงาน?",
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: "ข้อความนี้ถูกลบหรือไม่มีอยู่แล้ว",
+      NOT_ROOM_MEMBER: "คุณไม่สามารถรายงานได้เนื่องจากไม่ใช่สมาชิกของแชทนี้",
+      VALIDATION_FAILED: "ไม่สามารถดำเนินการตามคำขอได้",
+      default: "โปรดลองอีกครั้งในภายหลัง",
+    },
   },
   friends: {
     errors: {

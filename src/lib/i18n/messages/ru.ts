@@ -198,6 +198,12 @@ export const ru: Messages = {
     confirmTitle: (name) => `Пожаловаться на сообщение ${name}`,
     confirmTitleGeneric: "Пожаловаться на это сообщение",
     confirmDescription: "Вы уверены, что хотите пожаловаться?",
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: "Сообщение удалено или не существует.",
+      NOT_ROOM_MEMBER: "Вы не можете пожаловаться, так как не являетесь участником этого чата.",
+      VALIDATION_FAILED: "Не удалось обработать запрос.",
+      default: "Повторите попытку позже.",
+    },
   },
   friends: {
     errors: {

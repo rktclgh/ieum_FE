@@ -198,6 +198,12 @@ export const vi: Messages = {
     confirmTitle: (name) => `Báo cáo tin nhắn của ${name}`,
     confirmTitleGeneric: "Báo cáo tin nhắn này",
     confirmDescription: "Bạn có chắc chắn muốn báo cáo không?",
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: "Tin nhắn này đã bị xóa hoặc không còn tồn tại.",
+      NOT_ROOM_MEMBER: "Bạn không thể báo cáo vì không phải thành viên của phòng chat này.",
+      VALIDATION_FAILED: "Không thể xử lý yêu cầu.",
+      default: "Vui lòng thử lại sau.",
+    },
   },
   friends: {
     errors: {

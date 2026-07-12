@@ -198,6 +198,12 @@ export const en: Messages = {
     confirmTitle: (name) => `Report ${name}'s message`,
     confirmTitleGeneric: "Report this message",
     confirmDescription: "Are you sure you want to report?",
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: "This message was deleted or no longer exists.",
+      NOT_ROOM_MEMBER: "You can't report this because you're not a member of this chat.",
+      VALIDATION_FAILED: "Couldn't process the request.",
+      default: "Please try again shortly.",
+    },
   },
   friends: {
     errors: {
