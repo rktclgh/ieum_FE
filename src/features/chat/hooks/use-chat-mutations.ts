@@ -12,57 +12,76 @@ import {
 } from "@/features/chat/api/chat-api"
 import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
 
-// 상태 변경 성공 시 채팅 관련 쿼리를 무효화해 목록/방을 갱신한다.
-function useInvalidateChat() {
-  const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: chatKeys.all })
-}
+// 방 목록 요약 쿼리는 type별(chatKeys.rooms(type))로 나뉘어 있어 접두사 키로 한 번에 무효화한다.
+// 목록 요약(getRooms)에 unreadCount·pinned·notifyEnabled가 모두 담겨 있고,
+// 각 방 상세(chatKeys.room)는 staleTime으로 유지되므로 목록만 무효화해도 N+1 상세 재조회가 일어나지 않는다.
+const roomsListKey = [...chatKeys.all, "rooms"] as const
 
 function useCreateDirectRoom() {
-  const invalidate = useInvalidateChat()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (friendId: number) => createDirectRoom(friendId),
-    onSuccess: invalidate,
+    // 새 방이 목록에 등장 → 목록만 갱신
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: roomsListKey }),
   })
 }
 
 function useMarkRead() {
-  const invalidate = useInvalidateChat()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (roomId: number) => markRead(roomId),
-    onSuccess: invalidate,
+    // unreadCount는 목록 요약에만 반영 → 메시지/방 상세는 건드리지 않는다
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: roomsListKey }),
   })
 }
 
 function useSetPinned() {
-  const invalidate = useInvalidateChat()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ roomId, pinned }: { roomId: number; pinned: boolean }) => setPinned(roomId, pinned),
-    onSuccess: invalidate,
+    // 고정 여부는 목록(정렬/플래그)과 해당 방 상세에 반영 → 메시지는 불필요
+    onSuccess: (_data, { roomId }) => {
+      queryClient.invalidateQueries({ queryKey: roomsListKey })
+      queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
+    },
   })
 }
 
 function useSetNotify() {
-  const invalidate = useInvalidateChat()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ roomId, enabled }: { roomId: number; enabled: boolean }) => setNotify(roomId, enabled),
-    onSuccess: invalidate,
+    // 알림 설정은 목록(뮤트 표시)과 해당 방 상세에 반영 → 메시지는 불필요
+    onSuccess: (_data, { roomId }) => {
+      queryClient.invalidateQueries({ queryKey: roomsListKey })
+      queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
+    },
   })
 }
 
 function useLeaveRoom() {
-  const invalidate = useInvalidateChat()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (roomId: number) => leaveRoom(roomId),
-    onSuccess: invalidate,
+    // 방이 목록에서 사라짐 → 목록 갱신 + 해당 방의 상세·메시지 캐시 제거
+    onSuccess: (_data, roomId) => {
+      queryClient.invalidateQueries({ queryKey: roomsListKey })
+      queryClient.removeQueries({ queryKey: chatKeys.room(roomId) })
+      queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
+    },
   })
 }
 
 function useDisbandRoom() {
-  const invalidate = useInvalidateChat()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (roomId: number) => disbandRoom(roomId),
-    onSuccess: invalidate,
+    // 방 해체 → 목록 갱신 + 해당 방의 상세·메시지 캐시 제거
+    onSuccess: (_data, roomId) => {
+      queryClient.invalidateQueries({ queryKey: roomsListKey })
+      queryClient.removeQueries({ queryKey: chatKeys.room(roomId) })
+      queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
+    },
   })
 }
 
