@@ -12,5 +12,5 @@ export default async function ChatRoomPage({ params }: ChatRoomPageProps) {
 
   if (!Number.isInteger(roomId) || roomId <= 0) notFound()
 
-  return <ChatRoomPageContent roomId={roomId} />
+  return <ChatRoomPageContent key={roomId} roomId={roomId} />
 }
