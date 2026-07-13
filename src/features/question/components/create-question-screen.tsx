@@ -59,7 +59,11 @@ function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
     const file = event.target.files?.[0]
     event.target.value = "" // 같은 파일 재선택 허용
     if (!file) return
-    if (file.size > MAX_IMAGE_SIZE) return
+    if (file.size > MAX_IMAGE_SIZE) {
+      setError(t.imageTooLarge)
+      return
+    }
+    setError(null)
     const reader = new FileReader()
     reader.onload = () => setImage({ preview: reader.result as string, file })
     reader.readAsDataURL(file)

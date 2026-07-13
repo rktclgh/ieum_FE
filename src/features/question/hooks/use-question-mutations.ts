@@ -21,6 +21,8 @@ function useCreateQuestion() {
     mutationFn: (body: CreateQuestionRequest) => createQuestion(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: questionKeys.myList() })
+      // 새 질문 핀이 지도에 바로 뜨도록 지도 핀 쿼리도 무효화한다(모임 생성과 동일).
+      queryClient.invalidateQueries({ queryKey: ["pins"] })
     },
   })
 }

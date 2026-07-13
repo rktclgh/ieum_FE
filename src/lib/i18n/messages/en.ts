@@ -192,6 +192,7 @@ export const en: Messages = {
     submitButton: "Post question",
     submittingButton: "Posting…",
     imageUploadFailed: "Failed to upload the image. Please try again.",
+    imageTooLarge: "You can only attach images up to 5MB.",
     similarTitle: "Similar questions",
     timeJustNow: "Just now",
     timeMinutesAgo: (minutes) => `${minutes}m ago`,

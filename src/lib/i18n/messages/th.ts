@@ -191,6 +191,7 @@ export const th: Messages = {
     submitButton: "โพสต์คำถาม",
     submittingButton: "กำลังโพสต์…",
     imageUploadFailed: "อัปโหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่",
+    imageTooLarge: "แนบรูปภาพได้ไม่เกิน 5MB เท่านั้น",
     similarTitle: "คำถามที่คล้ายกัน",
     timeJustNow: "เมื่อสักครู่",
     timeMinutesAgo: (minutes) => `${minutes} นาทีที่แล้ว`,

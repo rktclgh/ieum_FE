@@ -192,6 +192,7 @@ export const vi: Messages = {
     submitButton: "Đăng câu hỏi",
     submittingButton: "Đang đăng…",
     imageUploadFailed: "Tải ảnh lên thất bại. Vui lòng thử lại.",
+    imageTooLarge: "Chỉ có thể đính kèm ảnh tối đa 5MB.",
     similarTitle: "Câu hỏi tương tự",
     timeJustNow: "Vừa xong",
     timeMinutesAgo: (minutes) => `${minutes} phút trước`,

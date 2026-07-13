@@ -191,6 +191,7 @@ export const zh: Messages = {
     submitButton: "发布问题",
     submittingButton: "发布中…",
     imageUploadFailed: "图片上传失败，请重试。",
+    imageTooLarge: "只能添加5MB以内的图片。",
     similarTitle: "相似问题",
     timeJustNow: "刚刚",
     timeMinutesAgo: (minutes) => `${minutes}分钟前`,

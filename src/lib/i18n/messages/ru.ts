@@ -192,6 +192,7 @@ export const ru: Messages = {
     submitButton: "Опубликовать вопрос",
     submittingButton: "Публикация…",
     imageUploadFailed: "Не удалось загрузить изображение. Попробуйте ещё раз.",
+    imageTooLarge: "Можно прикрепить изображение размером не более 5 МБ.",
     similarTitle: "Похожие вопросы",
     timeJustNow: "Только что",
     timeMinutesAgo: (minutes) => `${minutes} мин назад`,

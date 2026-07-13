@@ -192,6 +192,7 @@ export interface Messages {
     submitButton: string
     submittingButton: string
     imageUploadFailed: string
+    imageTooLarge: string
     similarTitle: string
     timeJustNow: string
     timeMinutesAgo: (minutes: number) => string
@@ -562,6 +563,7 @@ export const ko: Messages = {
     submitButton: "질문 올리기",
     submittingButton: "올리는 중…",
     imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
+    imageTooLarge: "이미지는 5MB 이하만 첨부할 수 있어요.",
     similarTitle: "비슷한 질문",
     timeJustNow: "방금 전",
     timeMinutesAgo: (minutes) => `${minutes}분 전`,

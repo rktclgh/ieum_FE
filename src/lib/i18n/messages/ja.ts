@@ -191,6 +191,7 @@ export const ja: Messages = {
     submitButton: "質問を投稿",
     submittingButton: "投稿中…",
     imageUploadFailed: "画像のアップロードに失敗しました。もう一度お試しください。",
+    imageTooLarge: "画像は5MB以下のみ添付できます。",
     similarTitle: "似ている質問",
     timeJustNow: "たった今",
     timeMinutesAgo: (minutes) => `${minutes}分前`,

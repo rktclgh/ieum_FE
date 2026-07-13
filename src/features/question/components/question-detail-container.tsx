@@ -30,14 +30,18 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
   const meQuery = useMe()
 
   // 하단 영역 결정: 내가 쓴 질문 → "답변 보기", 내가 이미 답변 → "답변 완료", 그 외 → 답변 입력.
+  // 내 정보(useMe)가 아직 로딩 중이면 판별을 보류("pending")해, 내 질문/이미 답변한 질문에
+  // 답변 입력창이 잠깐 잘못 노출되고 자기 질문·중복 답변이 제출되는 것을 막는다.
   const summary = summaryQuery.data ?? null
   const myUserId = meQuery.data?.userId ?? null
-  const bottomVariant: "answer" | "view-answers" | "answered" =
-    myUserId != null && summary != null && myUserId === summary.authorUserId
-      ? "view-answers"
-      : myUserId != null && summary != null && summary.answeredUserIds.includes(myUserId)
-        ? "answered"
-        : "answer"
+  const bottomVariant: "answer" | "view-answers" | "answered" | "pending" =
+    meQuery.isPending
+      ? "pending"
+      : myUserId != null && summary != null && myUserId === summary.authorUserId
+        ? "view-answers"
+        : myUserId != null && summary != null && summary.answeredUserIds.includes(myUserId)
+          ? "answered"
+          : "answer"
 
   const [actionError, setActionError] = React.useState<string | null>(null)
 
@@ -78,6 +82,7 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
         bottomVariant={bottomVariant}
         onSend={handleSend}
         onViewAnswers={() => router.push(`/questions/${questionId}`)}
+        onImageTooLarge={() => setActionError(messages.question.imageTooLarge)}
       />
 
       {actionError && (

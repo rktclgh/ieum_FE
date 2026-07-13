@@ -8,6 +8,8 @@ import { formatRelativeTime } from "@/features/question/lib/question-time"
 import type { QuestionSummary } from "@/features/question/types"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
 interface QuestionDetailSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -17,12 +19,15 @@ interface QuestionDetailSheetProps {
    * - "answer": 답변 입력창(기본)
    * - "view-answers": 내가 쓴 질문 → "답변 보기" 버튼
    * - "answered": 내가 이미 답변한 질문 → "답변 완료" 비활성 버튼
+   * - "pending": 내 정보 로딩 중 판별 보류 → 하단 영역 미노출
    */
-  bottomVariant?: "answer" | "view-answers" | "answered"
+  bottomVariant?: "answer" | "view-answers" | "answered" | "pending"
   /** 답변 전송. 사진을 첨부하면 imageFile 로 함께 넘어간다. */
   onSend?: (value: string, imageFile?: File | null) => void
   /** "답변 보기" 버튼 클릭(내가 쓴 질문일 때만 노출). */
   onViewAnswers?: () => void
+  /** 첨부 이미지가 최대 크기를 초과했을 때(안내는 부모 토스트에서 처리). */
+  onImageTooLarge?: () => void
 }
 
 function QuestionDetailSheet({
@@ -32,6 +37,7 @@ function QuestionDetailSheet({
   bottomVariant = "answer",
   onSend,
   onViewAnswers,
+  onImageTooLarge,
 }: QuestionDetailSheetProps) {
   const { messages } = useTranslation()
   const t = messages.question
@@ -50,6 +56,10 @@ function QuestionDetailSheet({
     const file = event.target.files?.[0]
     event.target.value = "" // 같은 파일 재선택 허용
     if (!file) return
+    if (file.size > MAX_IMAGE_SIZE) {
+      onImageTooLarge?.()
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => setImage({ preview: reader.result as string, file })
     reader.readAsDataURL(file)
@@ -85,14 +95,14 @@ function QuestionDetailSheet({
 
       <div className="flex w-full flex-col gap-3">
         <div className="flex w-full items-start justify-between gap-2">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="size-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
               {display.authorAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={display.authorAvatarUrl} alt="" className="size-full object-cover" />
               ) : null}
             </div>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex min-w-0 flex-col gap-0.5">
               <div className="flex items-center gap-2">
                 <span className="text-title-semibold-16 text-gray-900">{display.authorName}</span>
                 {display.countryFlagSrc ? (
@@ -102,8 +112,8 @@ function QuestionDetailSheet({
                 ) : null}
               </div>
               {timeLabel || location ? (
-                <div className="flex items-center gap-1 text-body-regular-14 text-gray-600">
-                  {timeLabel ? <span>{timeLabel}</span> : null}
+                <div className="flex min-w-0 items-center gap-1 text-body-regular-14 text-gray-600">
+                  {timeLabel ? <span className="shrink-0">{timeLabel}</span> : null}
                   {timeLabel && location ? (
                     <span className="size-[3px] shrink-0 rounded-full bg-gray-400" />
                   ) : null}
@@ -183,11 +193,11 @@ function QuestionDetailSheet({
         >
           {t.viewAnswersLabel}
         </button>
-      ) : (
+      ) : bottomVariant === "answered" ? (
         <div className="flex w-full items-center justify-center rounded-full bg-gray-200 px-4 py-3 text-body-medium-14 text-white">
           {t.answeredLabel}
         </div>
-      )}
+      ) : null}
     </BottomSheet>
   )
 }
