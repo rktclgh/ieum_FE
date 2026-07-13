@@ -53,6 +53,7 @@ function MeetupLocationPicker({ value, onConfirm, onClose }: MeetupLocationPicke
           near={position}
           onBack={() => setStep({ name: "map" })}
           onSelectPlace={confirm}
+          onCreateName={(address) => setStep({ name: "create", address })}
         />
       )}
 
