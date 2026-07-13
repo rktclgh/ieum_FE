@@ -118,7 +118,7 @@ function HomeMapScreen() {
       </div>
 
       {createMeetupOpen ? (
-        <CreateMeetupScreen near={position} onClose={() => setCreateMeetupOpen(false)} />
+        <CreateMeetupScreen onClose={() => setCreateMeetupOpen(false)} />
       ) : null}
     </div>
   )

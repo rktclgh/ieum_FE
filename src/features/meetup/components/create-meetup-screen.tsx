@@ -12,31 +12,28 @@ import {
   formatTimeValue,
   toKstIso,
 } from "@/features/meetup/constants/create-meetup"
-import { MeetupAddressPicker } from "@/features/meetup/components/meetup-address-picker"
 import { MeetupDatePicker } from "@/features/meetup/components/meetup-date-picker"
 import { MeetupImagePicker } from "@/features/meetup/components/meetup-image-picker"
+import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
 import { MeetupSelectField } from "@/features/meetup/components/meetup-select-field"
 import { MeetupTimePicker } from "@/features/meetup/components/meetup-time-picker"
 import { useCreateMeetupForm } from "@/features/meetup/hooks/use-create-meetup-form"
 import { useCreateMeeting } from "@/features/meetup/hooks/use-meetup-mutations"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
-import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
 interface CreateMeetupScreenProps {
   /** 닫기(X) 또는 제출 완료 시 호출 — 오버레이 언마운트는 부모가 담당 */
   onClose: () => void
-  /** 장소 검색 시 근접 정렬 기준(내 위치). 없으면 전국 검색. */
-  near?: Coordinates | null
 }
 
 /**
  * 새 모임 작성 풀스크린 오버레이. 지도 홈 FAB의 "모임 만들기"에서 열린다.
- * 라우트가 미확정(depth-2, docs/ROUTES.md)이라 별도 페이지 대신 상태 기반 오버레이로 구현.
- * 제목·날짜·시간·장소·내용을 모두 채우면 제출 버튼이 활성화되고, 제출 시 POST /meetings 로 생성한다.
+ * 제목·날짜·시간·장소·내용을 채우면 제출 버튼이 활성화되고, 제출 시 POST /meetings 로 생성한다.
+ * 장소는 Figma 지도 기반 MeetupLocationPicker에서 좌표(lat/lng)·주소·라벨까지 확보한다.
  */
-function CreateMeetupScreen({ onClose, near = null }: CreateMeetupScreenProps) {
+function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
   const { messages } = useTranslation()
   const t = messages.createMeetup
   const form = useCreateMeetupForm()
@@ -44,7 +41,8 @@ function CreateMeetupScreen({ onClose, near = null }: CreateMeetupScreenProps) {
 
   const [datePickerOpen, setDatePickerOpen] = React.useState(false)
   const [timePickerOpen, setTimePickerOpen] = React.useState(false)
-  const [addressPickerOpen, setAddressPickerOpen] = React.useState(false)
+  const [locationPickerOpen, setLocationPickerOpen] = React.useState(false)
+  const [titleFocused, setTitleFocused] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
   const cameraInputRef = React.useRef<HTMLInputElement>(null)
@@ -121,47 +119,40 @@ function CreateMeetupScreen({ onClose, near = null }: CreateMeetupScreenProps) {
       />
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3">
-        {/* 제목 — 15자 초과 시 빨간 테두리 + 카운터/설명 */}
+        {/* 제목 — 15자(공백 포함)까지만 입력 가능, 포커스 시 카운터 표시 */}
         <div className="shrink-0">
-          <div
-            className={cn(
-              "flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-600",
-              form.titleTooLong && "border-red focus-within:border-red"
-            )}
-          >
+          <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-600">
             <input
               value={form.title}
-              onChange={(event) => form.setTitle(event.target.value)}
+              // maxLength만으로는 한글(IME) 조합 중 16번째 글자가 새어 들어가므로 상태에서 직접 자름
+              onChange={(event) => form.setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
+              onFocus={() => setTitleFocused(true)}
+              onBlur={() => setTitleFocused(false)}
+              maxLength={TITLE_MAX_LENGTH}
               placeholder={t.titlePlaceholder}
               className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary-600 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
             />
-            {form.title.length > 0 ? (
-              <span
-                className={cn(
-                  "shrink-0 text-body-regular-14",
-                  form.titleTooLong ? "text-red" : "text-gray-400"
-                )}
-              >
+            {titleFocused ? (
+              <span className="shrink-0 text-body-regular-14 text-gray-400">
                 {t.titleCounter(form.title.length, TITLE_MAX_LENGTH)}
               </span>
             ) : null}
           </div>
-          {form.titleTooLong ? (
-            <Explanation variant="error" text={t.titleTooLongExplanation(TITLE_MAX_LENGTH)} className="px-1" />
-          ) : null}
         </div>
 
         {/* 날짜 · 시간 */}
         <div className="flex shrink-0 items-center gap-3">
           <MeetupSelectField
-            iconSrc="/icons/chat/calender.svg"
+            iconSrc="/icons/write/calendar-200.svg"
+            selectedIconSrc="/icons/write/calendar-700.svg"
             placeholder={t.datePlaceholder}
             value={dateValue}
             active={datePickerOpen}
             onClick={() => setDatePickerOpen(true)}
           />
           <MeetupSelectField
-            iconSrc="/icons/schedule/clock.svg"
+            iconSrc="/icons/write/clock-200.svg"
+            selectedIconSrc="/icons/write/clock-700.svg"
             placeholder={t.timePlaceholder}
             value={timeValue}
             active={timePickerOpen}
@@ -171,11 +162,12 @@ function CreateMeetupScreen({ onClose, near = null }: CreateMeetupScreenProps) {
 
         {/* 장소 */}
         <MeetupSelectField
-          iconSrc="/icons/schedule/map-pin.svg"
+          iconSrc="/icons/write/location-200.svg"
+          selectedIconSrc="/icons/write/location-700.svg"
           placeholder={t.addressPlaceholder}
           value={form.place?.label ?? null}
-          active={addressPickerOpen}
-          onClick={() => setAddressPickerOpen(true)}
+          active={locationPickerOpen}
+          onClick={() => setLocationPickerOpen(true)}
           className="shrink-0"
         />
 
@@ -242,12 +234,13 @@ function CreateMeetupScreen({ onClose, near = null }: CreateMeetupScreenProps) {
         value={form.time}
         onConfirm={form.setTime}
       />
-      <MeetupAddressPicker
-        open={addressPickerOpen}
-        onOpenChange={setAddressPickerOpen}
-        near={near}
-        onConfirm={form.setPlace}
-      />
+      {locationPickerOpen ? (
+        <MeetupLocationPicker
+          value={form.place?.label ?? null}
+          onConfirm={form.setPlace}
+          onClose={() => setLocationPickerOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }

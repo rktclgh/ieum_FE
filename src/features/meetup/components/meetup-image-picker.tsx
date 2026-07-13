@@ -74,7 +74,7 @@ function MeetupImagePicker({ image, onTakePhoto, onChooseAlbum, onRemove, classN
         onClick={() => setMenuOpen(true)}
         className="flex size-16 flex-col items-center justify-center rounded-xl border border-gray-100"
       >
-        <Image src="/icons/chat/camera-line.svg" alt="" width={20} height={20} className="size-5 opacity-60" />
+        <Image src="/icons/write/photo.svg" alt="" width={20} height={20} className="size-5" />
         <span className="text-body-regular-12 text-gray-400">{t.imagePickerLabel}</span>
       </button>
     </div>

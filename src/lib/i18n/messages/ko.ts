@@ -159,6 +159,20 @@ export interface Messages {
     hourLabel: (hour: number) => string
     minuteLabel: (minute: string) => string
   }
+  selectLocation: {
+    title: string
+    nameTitle: string
+    searchPlaceholder: string
+    createPlaceTitle: string
+    createPlaceButton: string
+    selectButton: string
+    namePlaceholder: string
+    doneButton: string
+    currentLocationLabel: string
+    loadingAddress: string
+    searchEmpty: string
+    clearLabel: string
+  }
   question: {
     answerPlaceholder: string
     sendLabel: string
@@ -513,6 +527,20 @@ export const ko: Messages = {
     dayLabel: (day) => `${day}일`,
     hourLabel: (hour) => `${hour}시`,
     minuteLabel: (minute) => `${minute}분`,
+  },
+  selectLocation: {
+    title: "장소 선택",
+    nameTitle: "장소명 입력",
+    searchPlaceholder: "장소명 검색",
+    createPlaceTitle: "이 주소에 대한 장소명 입력하기",
+    createPlaceButton: "입력",
+    selectButton: "선택",
+    namePlaceholder: "장소명 입력",
+    doneButton: "완료",
+    currentLocationLabel: "내 위치",
+    loadingAddress: "주소를 불러오는 중…",
+    searchEmpty: "검색 결과가 없어요.",
+    clearLabel: "지우기",
   },
   question: {
     answerPlaceholder: "답변 입력",
