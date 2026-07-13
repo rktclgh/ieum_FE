@@ -17,7 +17,7 @@ export const vi: Messages = {
     signUp: "Đăng ký",
     continueWithGoogle: "Đăng nhập bằng Google",
     continueWithKakao: "Đăng nhập bằng Kakao",
-    loginErrorExplanation: "Vui lòng kiểm tra email hoặc mật khẩu.",
+    loginErrorExplanation: "Email hoặc mật khẩu không chính xác.",
   },
   social: {
     loading: "Đang đăng nhập...",

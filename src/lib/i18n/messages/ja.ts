@@ -17,7 +17,7 @@ export const ja: Messages = {
     signUp: "会員登録",
     continueWithGoogle: "Googleでログイン",
     continueWithKakao: "Kakaoでログイン",
-    loginErrorExplanation: "メールアドレスまたはパスワードをご確認ください。",
+    loginErrorExplanation: "メールアドレスまたはパスワードが正しくありません。",
   },
   social: {
     loading: "ログイン中...",

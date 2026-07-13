@@ -17,7 +17,7 @@ export const ru: Messages = {
     signUp: "Регистрация",
     continueWithGoogle: "Войти через Google",
     continueWithKakao: "Войти через Kakao",
-    loginErrorExplanation: "Проверьте email или пароль.",
+    loginErrorExplanation: "Неверный email или пароль.",
   },
   social: {
     loading: "Выполняется вход...",
