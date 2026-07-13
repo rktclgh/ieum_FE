@@ -2,6 +2,7 @@
 
 import axios from "axios"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 
@@ -63,22 +64,20 @@ function MyPageContent() {
         </dl>
 
         <nav className="flex flex-col">
-          <button
-            type="button"
-            onClick={() => router.push("/my/edit")}
+          <Link
+            href="/my/edit"
             className="flex w-full items-center justify-between py-3.5 text-body-medium-16 text-gray-900 transition-colors active:bg-gray-50"
           >
             {messages.my.editInfoLabel}
             <Image src="/icons/arrow/left.svg" alt="" width={20} height={20} className="size-5 -rotate-180" />
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/my/settings")}
+          </Link>
+          <Link
+            href="/my/settings"
             className="flex w-full items-center justify-between py-3.5 text-body-medium-16 text-gray-900 transition-colors active:bg-gray-50"
           >
             {messages.my.settingsLabel}
             <Image src="/icons/arrow/left.svg" alt="" width={20} height={20} className="size-5 -rotate-180" />
-          </button>
+          </Link>
         </nav>
 
         <LogoutButton />

@@ -30,29 +30,28 @@ function formatBirthDate(digits: string) {
   return `${digits.slice(0, 4)}.${digits.slice(4, 6)}.${digits.slice(6, 8)}`
 }
 
+type MeUser = NonNullable<ReturnType<typeof useMe>["data"]>
+
+// 컨테이너: user가 로드된 뒤에만 폼을 마운트해, 프리필용 렌더 중 setState 없이 초기값을 확정한다.
 function EditProfileContent() {
+  const { data: user } = useMe()
+  if (!user) return null
+  return <EditProfileForm user={user} />
+}
+
+function EditProfileForm({ user }: { user: MeUser }) {
   const router = useRouter()
   const { messages } = useTranslation()
-  const { data: user } = useMe()
   const updateMe = useUpdateMe()
 
-  const [nickname, setNickname] = React.useState("")
-  const [birthDateDigits, setBirthDateDigits] = React.useState("")
-  const [gender, setGender] = React.useState<Gender | null>(null)
-  const [nationality, setNationality] = React.useState<CountryCode | "">("")
-  const [prefilled, setPrefilled] = React.useState(false)
-
-  // useMe 데이터가 도착하면 폼을 최초 1회 프리필한다.
-  // 이펙트 대신 렌더 중 파생 상태를 조정하는 React 권장 패턴을 쓴다.
-  if (user && !prefilled) {
-    setPrefilled(true)
-    setNickname(user.nickname)
-    setBirthDateDigits((user.birthDate ?? "").replaceAll("-", ""))
-    setGender(user.gender)
-    setNationality(fromIso2(user.nationality) ?? "")
-  }
-
-  if (!user) return null
+  const [nickname, setNickname] = React.useState(user.nickname)
+  const [birthDateDigits, setBirthDateDigits] = React.useState(
+    (user.birthDate ?? "").replaceAll("-", "")
+  )
+  const [gender, setGender] = React.useState<Gender | null>(user.gender)
+  const [nationality, setNationality] = React.useState<CountryCode | "">(
+    fromIso2(user.nationality) ?? ""
+  )
 
   const genderLabels: Record<Gender, string> = {
     female: messages.join.genderFemale,

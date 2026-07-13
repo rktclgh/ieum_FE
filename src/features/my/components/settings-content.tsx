@@ -16,6 +16,18 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 
 const RADIUS_OPTIONS: NotifyRadiusKm[] = [3, 5, 10]
 
+// user.settings 미도착 시 넘길 기본값. 렌더마다 새 객체가 생기면 useSettingsForm의 참조 비교가
+// 매번 갱신을 유발(무한 렌더)하므로, 컴포넌트 밖 상수로 참조를 고정한다.
+const DEFAULT_SETTINGS = {
+  language: "ko" as LanguageCode,
+  cameraPermission: false,
+  pushPermission: false,
+  notifyAll: false,
+  notifyMeeting: false,
+  notifyQuestion: false,
+  notifyRadiusKm: 3 as NotifyRadiusKm,
+}
+
 interface ToggleRowProps {
   label: string
   checked: boolean
@@ -39,17 +51,7 @@ function SettingsContent() {
 
   // useMe 데이터는 상위 서버 컴포넌트에서 하이드레이트되므로 이 화면 진입 시 항상 존재한다.
   // (훅 규칙상 조건부 호출을 피하려 항상 호출하되, settings 미도착 시 안전한 기본값을 넘긴다.)
-  const form = useSettingsForm(
-    user?.settings ?? {
-      language: "ko",
-      cameraPermission: false,
-      pushPermission: false,
-      notifyAll: false,
-      notifyMeeting: false,
-      notifyQuestion: false,
-      notifyRadiusKm: 3,
-    }
-  )
+  const form = useSettingsForm(user?.settings ?? DEFAULT_SETTINGS)
 
   if (!user) return null
 
