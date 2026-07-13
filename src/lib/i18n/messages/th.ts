@@ -168,6 +168,8 @@ export const th: Messages = {
   question: {
     answerPlaceholder: "เขียนคำตอบ",
     sendLabel: "ส่ง",
+    viewAnswersLabel: "ดูคำตอบ",
+    answeredLabel: "ตอบแล้ว",
     closeLabel: "ปิด",
     imageAlt: "รูปคำถาม",
     flagAlt: "ธง",

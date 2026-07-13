@@ -3,6 +3,10 @@
 // 상세 화면(question-detail-screen)은 더 풍부한 QuestionDetailView 를 직접 사용한다.
 export interface QuestionSummary {
   id: string
+  /** 작성자 userId — 내가 쓴 질문인지 판별해 답변 입력을 막는 데 쓴다 */
+  authorUserId: number
+  /** 답변 단 사용자 userId 목록(AI 제외) — 내가 이미 답변했는지 판별해 "답변 완료" 표시에 쓴다 */
+  answeredUserIds: number[]
   authorName: string
   authorAvatarUrl?: string
   /** 국기 SVG 경로 (예: "/icons/flag/flag-1.svg") — 작성자 국적(ISO2)에서 파생, 없으면 생략 */

@@ -8,6 +8,7 @@ import { QuestionDetailSheet } from "@/features/question/components/question-det
 import { usePostAnswer } from "@/features/question/hooks/use-question-mutations"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
+import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface QuestionDetailContainerProps {
@@ -26,6 +27,17 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
 
   const summaryQuery = useQuestionSummary(questionId)
   const postAnswer = usePostAnswer(questionId)
+  const meQuery = useMe()
+
+  // 하단 영역 결정: 내가 쓴 질문 → "답변 보기", 내가 이미 답변 → "답변 완료", 그 외 → 답변 입력.
+  const summary = summaryQuery.data ?? null
+  const myUserId = meQuery.data?.userId ?? null
+  const bottomVariant: "answer" | "view-answers" | "answered" =
+    myUserId != null && summary != null && myUserId === summary.authorUserId
+      ? "view-answers"
+      : myUserId != null && summary != null && summary.answeredUserIds.includes(myUserId)
+        ? "answered"
+        : "answer"
 
   const [actionError, setActionError] = React.useState<string | null>(null)
 
@@ -62,8 +74,10 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
         onOpenChange={(next) => {
           if (!next) close()
         }}
-        question={summaryQuery.data ?? null}
+        question={summary}
+        bottomVariant={bottomVariant}
         onSend={handleSend}
+        onViewAnswers={() => router.push(`/questions/${questionId}`)}
       />
 
       {actionError && (

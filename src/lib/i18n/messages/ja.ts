@@ -168,6 +168,8 @@ export const ja: Messages = {
   question: {
     answerPlaceholder: "返信を入力",
     sendLabel: "送信",
+    viewAnswersLabel: "回答を見る",
+    answeredLabel: "回答済み",
     closeLabel: "閉じる",
     imageAlt: "質問の画像",
     flagAlt: "国旗",

@@ -70,6 +70,10 @@ function adaptQuestionDetail(detail: QuestionDetailResponse): QuestionDetailView
 function adaptQuestionSummary(detail: QuestionDetailResponse): QuestionSummary {
   return {
     id: String(detail.questionId),
+    authorUserId: detail.author.userId,
+    answeredUserIds: detail.answers
+      .filter((answer) => !answer.isAi)
+      .map((answer) => answer.author.userId),
     authorName: detail.author.nickname,
     authorAvatarUrl: resolveFileUrl(detail.author.profileImageUrl),
     countryFlagSrc: flagFromIso2(detail.author.nationality),

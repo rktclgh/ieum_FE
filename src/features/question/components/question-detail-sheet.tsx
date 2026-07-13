@@ -12,11 +12,27 @@ interface QuestionDetailSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   question: QuestionSummary | null
+  /**
+   * 시트 하단 영역 종류.
+   * - "answer": 답변 입력창(기본)
+   * - "view-answers": 내가 쓴 질문 → "답변 보기" 버튼
+   * - "answered": 내가 이미 답변한 질문 → "답변 완료" 비활성 버튼
+   */
+  bottomVariant?: "answer" | "view-answers" | "answered"
   /** 답변 전송. 사진을 첨부하면 imageFile 로 함께 넘어간다. */
   onSend?: (value: string, imageFile?: File | null) => void
+  /** "답변 보기" 버튼 클릭(내가 쓴 질문일 때만 노출). */
+  onViewAnswers?: () => void
 }
 
-function QuestionDetailSheet({ open, onOpenChange, question, onSend }: QuestionDetailSheetProps) {
+function QuestionDetailSheet({
+  open,
+  onOpenChange,
+  question,
+  bottomVariant = "answer",
+  onSend,
+  onViewAnswers,
+}: QuestionDetailSheetProps) {
   const { messages } = useTranslation()
   const t = messages.question
   const [reply, setReply] = React.useState("")
@@ -112,6 +128,8 @@ function QuestionDetailSheet({ open, onOpenChange, question, onSend }: QuestionD
         </div>
       </div>
 
+      {bottomVariant === "answer" ? (
+      <>
       <div className="flex w-full items-center justify-between gap-2 rounded-full border border-gray-50 bg-gray-50/95 p-2 shadow-[0px_2px_4px_0px_rgba(0,0,0,0.1)]">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <button
@@ -156,6 +174,20 @@ function QuestionDetailSheet({ open, onOpenChange, question, onSend }: QuestionD
         onChange={handlePickImage}
         className="hidden"
       />
+      </>
+      ) : bottomVariant === "view-answers" ? (
+        <button
+          type="button"
+          onClick={onViewAnswers}
+          className="flex w-full items-center justify-center rounded-full bg-primary-600 px-4 py-3 text-body-medium-14 text-white"
+        >
+          {t.viewAnswersLabel}
+        </button>
+      ) : (
+        <div className="flex w-full items-center justify-center rounded-full bg-gray-200 px-4 py-3 text-body-medium-14 text-white">
+          {t.answeredLabel}
+        </div>
+      )}
     </BottomSheet>
   )
 }

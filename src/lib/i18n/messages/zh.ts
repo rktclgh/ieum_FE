@@ -168,6 +168,8 @@ export const zh: Messages = {
   question: {
     answerPlaceholder: "输入回复",
     sendLabel: "发送",
+    viewAnswersLabel: "查看回答",
+    answeredLabel: "已回答",
     closeLabel: "关闭",
     imageAlt: "提问图片",
     flagAlt: "国旗",

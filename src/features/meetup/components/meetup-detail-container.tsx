@@ -5,16 +5,12 @@ import { useRouter } from "next/navigation"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { MeetupDetailSheet } from "@/features/meetup/components/meetup-detail-sheet"
-import {
-  useMeeting,
-  useMeetingParticipants,
-} from "@/features/meetup/hooks/use-meetup-queries"
+import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
 import {
   useJoinMeeting,
-  useKickMember,
   useLeaveMeeting,
 } from "@/features/meetup/hooks/use-meetup-mutations"
-import { adaptMeetingDetail, adaptParticipant } from "@/features/meetup/lib/meetup-adapter"
+import { adaptMeetingDetail } from "@/features/meetup/lib/meetup-adapter"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
@@ -34,17 +30,9 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
 
   const meetingQuery = useMeeting(meetingId)
   const detail = meetingQuery.data ? adaptMeetingDetail(meetingQuery.data, language) : null
-  const isHost = detail?.isHost ?? false
-
-  const participantsQuery = useMeetingParticipants(meetingId, isHost)
-  const participants = React.useMemo(
-    () => (participantsQuery.data ?? []).map(adaptParticipant),
-    [participantsQuery.data]
-  )
 
   const join = useJoinMeeting(meetingId)
   const leave = useLeaveMeeting(meetingId)
-  const kick = useKickMember(meetingId)
 
   const [error, setError] = React.useState<string | null>(null)
   // 되돌리기 어려운 파괴적 액션(나가기/내보내기/마감/취소)은 실행 전 확인 다이얼로그를 거친다.
@@ -56,7 +44,7 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
   } | null>(null)
   const m = messages.meetup
 
-  const pending = join.isPending || leave.isPending || kick.isPending
+  const pending = join.isPending || leave.isPending
 
   const run = async (action: () => Promise<void>) => {
     setError(null)
@@ -81,13 +69,6 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
       confirmLabel: m.leaveButton,
       onConfirm: () => run(async () => { await leave.mutateAsync(); close() }),
     })
-  const handleKick = (userId: number) =>
-    setConfirm({
-      title: m.kickConfirmTitle,
-      description: m.kickConfirmDescription,
-      confirmLabel: m.kickButton,
-      onConfirm: () => run(() => kick.mutateAsync(userId)),
-    })
   const handleEnterRoom = () => {
     if (detail) router.push(`/chats/${detail.roomId}`)
   }
@@ -110,12 +91,10 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
           if (!next) close()
         }}
         detail={detail}
-        participants={participants}
         pending={pending}
         error={error}
         onJoin={handleJoin}
         onLeave={handleLeave}
-        onKick={handleKick}
         onEnterRoom={handleEnterRoom}
       />
       <ConfirmDialog

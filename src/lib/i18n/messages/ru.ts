@@ -169,6 +169,8 @@ export const ru: Messages = {
   question: {
     answerPlaceholder: "Написать ответ",
     sendLabel: "Отправить",
+    viewAnswersLabel: "Посмотреть ответы",
+    answeredLabel: "Отвечено",
     closeLabel: "Закрыть",
     imageAlt: "Изображение вопроса",
     flagAlt: "Флаг",

@@ -170,6 +170,7 @@ export interface Messages {
     answerPlaceholder: string
     sendLabel: string
     viewAnswersLabel: string
+    answeredLabel: string
     closeLabel: string
     imageAlt: string
     flagAlt: string
@@ -539,6 +540,7 @@ export const ko: Messages = {
     answerPlaceholder: "답변 입력",
     sendLabel: "전송",
     viewAnswersLabel: "답변 보기",
+    answeredLabel: "답변 완료",
     closeLabel: "닫기",
     imageAlt: "질문 이미지",
     flagAlt: "국기",

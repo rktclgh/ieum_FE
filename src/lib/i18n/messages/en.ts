@@ -169,6 +169,8 @@ export const en: Messages = {
   question: {
     answerPlaceholder: "Write a reply",
     sendLabel: "Send",
+    viewAnswersLabel: "View answers",
+    answeredLabel: "Answered",
     closeLabel: "Close",
     imageAlt: "Question image",
     flagAlt: "Flag",

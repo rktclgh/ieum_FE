@@ -169,6 +169,8 @@ export const vi: Messages = {
   question: {
     answerPlaceholder: "Nhập câu trả lời",
     sendLabel: "Gửi",
+    viewAnswersLabel: "Xem câu trả lời",
+    answeredLabel: "Đã trả lời",
     closeLabel: "Đóng",
     imageAlt: "Ảnh câu hỏi",
     flagAlt: "Cờ",
