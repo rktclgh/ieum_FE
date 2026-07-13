@@ -96,11 +96,43 @@ export interface Messages {
   meetup: {
     joinButton: string
     participantCount: (count: number) => string
+    participantOfMax: (count: number, max: number) => string
     closeLabel: string
     imageAlt: string
+    noSchedule: string
+    statusClosed: string
+    statusCancelled: string
+    participantsTitle: string
+    hostBadge: string
+    kickButton: string
+    enterRoomButton: string
+    closeMeetingButton: string
+    cancelMeetingButton: string
+    leaveButton: string
+    confirmCancelLabel: string
+    leaveConfirmTitle: string
+    leaveConfirmDescription: string
+    kickConfirmTitle: string
+    kickConfirmDescription: string
+    closeConfirmTitle: string
+    closeConfirmDescription: string
+    cancelConfirmTitle: string
+    cancelConfirmDescription: string
+    errors: {
+      MEETING_NOT_FOUND: string
+      MEETING_NOT_OPEN: string
+      MEETING_FULL: string
+      KICKED_MEMBER: string
+      HOST_CANNOT_LEAVE: string
+      NOT_HOST: string
+      NOT_MEETING_MEMBER: string
+      VALIDATION_FAILED: string
+      default: string
+    }
   }
   createMeetup: {
     appBarTitle: string
+    imageUploadFailed: string
     titlePlaceholder: string
     titleCounter: (current: number, max: number) => string
     titleTooLongExplanation: (max: number) => string
@@ -111,7 +143,10 @@ export interface Messages {
     imagePickerLabel: string
     imageAlt: string
     removeImageLabel: string
+    addressSearchPlaceholder: string
+    addressNoResults: string
     submitButton: string
+    submittingButton: string
     cancelButton: string
     confirmButton: string
     takePhotoAction: string
@@ -123,6 +158,20 @@ export interface Messages {
     dayLabel: (day: number) => string
     hourLabel: (hour: number) => string
     minuteLabel: (minute: string) => string
+  }
+  selectLocation: {
+    title: string
+    nameTitle: string
+    searchPlaceholder: string
+    createPlaceTitle: string
+    createPlaceButton: string
+    selectButton: string
+    namePlaceholder: string
+    doneButton: string
+    currentLocationLabel: string
+    loadingAddress: string
+    searchEmpty: string
+    clearLabel: string
   }
   question: {
     answerPlaceholder: string
@@ -293,6 +342,12 @@ export interface Messages {
     confirmTitle: (name: string) => string
     confirmTitleGeneric: string
     confirmDescription: string
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: string
+      NOT_ROOM_MEMBER: string
+      VALIDATION_FAILED: string
+      default: string
+    }
   }
   friends: {
     errors: {
@@ -410,11 +465,43 @@ export const ko: Messages = {
   meetup: {
     joinButton: "참여하기",
     participantCount: (count) => `현재 ${count}명 참여 중`,
+    participantOfMax: (count, max) => `${count}/${max}명 참여 중`,
     closeLabel: "닫기",
     imageAlt: "모임 이미지",
+    noSchedule: "일정 미정",
+    statusClosed: "모집 마감",
+    statusCancelled: "취소된 모임",
+    participantsTitle: "참여자",
+    hostBadge: "호스트",
+    kickButton: "내보내기",
+    enterRoomButton: "채팅방 입장",
+    closeMeetingButton: "모집 마감",
+    cancelMeetingButton: "모임 취소",
+    leaveButton: "모임 나가기",
+    confirmCancelLabel: "취소",
+    leaveConfirmTitle: "모임에서 나갈까요?",
+    leaveConfirmDescription: "나가면 이 모임의 채팅방에서도 나가게 돼요.",
+    kickConfirmTitle: "이 멤버를 내보낼까요?",
+    kickConfirmDescription: "내보낸 멤버는 다시 참여할 수 없어요.",
+    closeConfirmTitle: "모집을 마감할까요?",
+    closeConfirmDescription: "마감하면 더 이상 새로운 참여를 받지 않아요.",
+    cancelConfirmTitle: "모임을 취소할까요?",
+    cancelConfirmDescription: "취소하면 되돌릴 수 없어요.",
+    errors: {
+      MEETING_NOT_FOUND: "모임을 찾을 수 없어요.",
+      MEETING_NOT_OPEN: "모집이 마감된 모임이에요.",
+      MEETING_FULL: "정원이 가득 찼어요.",
+      KICKED_MEMBER: "내보내진 모임에는 다시 참여할 수 없어요.",
+      HOST_CANNOT_LEAVE: "호스트는 모임을 나갈 수 없어요.",
+      NOT_HOST: "호스트만 할 수 있는 작업이에요.",
+      NOT_MEETING_MEMBER: "모임 참여자가 아니에요.",
+      VALIDATION_FAILED: "입력한 내용을 다시 확인해 주세요.",
+      default: "잠시 후 다시 시도해 주세요.",
+    },
   },
   createMeetup: {
     appBarTitle: "새 모임 작성",
+    imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
     titlePlaceholder: "모임 제목 (15자 이하)",
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `모임 제목을 ${max}글자 이내로 적어주세요.`,
@@ -425,7 +512,10 @@ export const ko: Messages = {
     imagePickerLabel: "사진 (선택)",
     imageAlt: "첨부한 사진",
     removeImageLabel: "사진 삭제",
+    addressSearchPlaceholder: "장소 검색",
+    addressNoResults: "검색 결과가 없어요.",
     submitButton: "모임 올리기",
+    submittingButton: "올리는 중…",
     cancelButton: "취소",
     confirmButton: "완료",
     takePhotoAction: "사진 찍기",
@@ -437,6 +527,20 @@ export const ko: Messages = {
     dayLabel: (day) => `${day}일`,
     hourLabel: (hour) => `${hour}시`,
     minuteLabel: (minute) => `${minute}분`,
+  },
+  selectLocation: {
+    title: "장소 선택",
+    nameTitle: "장소명 입력",
+    searchPlaceholder: "장소명 검색",
+    createPlaceTitle: "이 주소에 대한 장소명 입력하기",
+    createPlaceButton: "입력",
+    selectButton: "선택",
+    namePlaceholder: "장소명 입력",
+    doneButton: "완료",
+    currentLocationLabel: "내 위치",
+    loadingAddress: "주소를 불러오는 중…",
+    searchEmpty: "검색 결과가 없어요.",
+    clearLabel: "지우기",
   },
   question: {
     answerPlaceholder: "답변 입력",
@@ -607,6 +711,12 @@ export const ko: Messages = {
     confirmTitle: (name) => `${name}님의 메시지를 신고합니다`,
     confirmTitleGeneric: "메시지를 신고합니다",
     confirmDescription: "정말로 신고하시겠습니까?",
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: "삭제되었거나 존재하지 않는 메시지예요.",
+      NOT_ROOM_MEMBER: "채팅방 멤버가 아니어서 신고할 수 없어요.",
+      VALIDATION_FAILED: "요청을 처리할 수 없어요.",
+      default: "잠시 후 다시 시도해 주세요.",
+    },
   },
   friends: {
     errors: {

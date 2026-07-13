@@ -273,8 +273,9 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
         tone: "destructive",
         onClick: () => {
           setActiveMessageId(null)
-          const query = message.name ? `?target=${encodeURIComponent(message.name)}` : ""
-          router.push(`/chats/${roomId}/report${query}`)
+          const params = new URLSearchParams({ messageId: String(message.messageId) })
+          if (message.name) params.set("target", message.name)
+          router.push(`/chats/${roomId}/report?${params.toString()}`)
         },
       },
     ]

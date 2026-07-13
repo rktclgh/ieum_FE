@@ -117,7 +117,9 @@ function HomeMapScreen() {
         <TabBar />
       </div>
 
-      {createMeetupOpen ? <CreateMeetupScreen onClose={() => setCreateMeetupOpen(false)} /> : null}
+      {createMeetupOpen ? (
+        <CreateMeetupScreen onClose={() => setCreateMeetupOpen(false)} />
+      ) : null}
     </div>
   )
 }

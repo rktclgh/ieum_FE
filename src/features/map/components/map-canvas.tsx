@@ -18,6 +18,14 @@ import {
 
 interface MapCanvasProps {
   center: Coordinates | null
+  /** center 변경 시 맞출 확대 단계. 없으면 현재 zoom 유지 */
+  centerZoom?: number
+  /** center 변경 시 flyTo로 부드럽게 이동할지 여부 */
+  animateCenter?: boolean
+  /** 상단 오버레이(헤더 등)에 가려지는 높이(px). 보이는 영역 정중앙 계산에 사용 */
+  topInset?: number
+  /** 하단 오버레이(시트 등)에 가려지는 높이(px). 보이는 영역 정중앙 계산에 사용 */
+  bottomInset?: number
   className?: string
   onMapClick?: (position: Coordinates) => void
   onBoundsChange?: (bounds: MapBounds) => void
@@ -26,9 +34,24 @@ interface MapCanvasProps {
   livePosition?: Coordinates | null
   liveAccuracy?: number | null
   onUserPan?: () => void
+  /** 사용자가 지도에서 고른 지점 — Figma Location/XL 핀으로 표시 */
+  selectedPosition?: Coordinates | null
 }
 
-const LIVE_ACCENT = "#316CED" 
+const LIVE_ACCENT = "#316CED"
+
+// Figma Location/XL (node 1716:12220): 파란 물방울 핀 + 흰 구멍 + 회색 그림자 타원. 팁이 좌표를 가리킨다.
+const selectedLocationIcon = L.divIcon({
+  html: `<svg width="40" height="47" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="12" cy="24.3" rx="4.5" ry="1.5" fill="#9AA5A8" fill-opacity="0.5"/>
+    <path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.02 6.44 12.02 8.28 13.62.41.36 1.03.36 1.44 0C14.56 22.52 21 16.52 21 10.5 21 5.53 16.97 1.5 12 1.5Z" fill="${LIVE_ACCENT}"/>
+    <circle cx="12" cy="10.5" r="3.25" fill="#ffffff"/>
+  </svg>`,
+  className: "",
+  iconSize: [40, 47],
+  iconAnchor: [20, 41],
+})
+
 const userLocationIcon = L.divIcon({
   html: `<div style="position:relative;width:48px;height:48px">
     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" style="position:absolute;inset:0">
@@ -42,12 +65,42 @@ const userLocationIcon = L.divIcon({
   iconAnchor: [24, 24], 
 })
 
-function MapCenterUpdater({ center }: { center: Coordinates }) {
+function MapCenterUpdater({
+  center,
+  zoom,
+  animate,
+  topInset = 0,
+  bottomInset = 0,
+}: {
+  center: Coordinates
+  zoom?: number
+  animate?: boolean
+  topInset?: number
+  bottomInset?: number
+}) {
   const map = useMap()
+  const lastCenterRef = React.useRef<Coordinates | null>(null)
 
   React.useEffect(() => {
-    map.setView([center.lat, center.lng], map.getZoom())
-  }, [center, map])
+    // 인셋만 바뀐 경우(예: 하단 시트 높이 변화)엔 재중심하지 않고 center 변경 시에만 이동한다.
+    if (lastCenterRef.current === center) return
+    lastCenterRef.current = center
+
+    const targetZoom = zoom ?? map.getZoom()
+
+    // 헤더·하단 시트가 지도를 가리면 그만큼 패딩을 줘, 보이는 영역의 정중앙에 오도록 flyToBounds로 이동.
+    if (topInset > 0 || bottomInset > 0) {
+      map.flyToBounds(L.latLngBounds([center.lat, center.lng], [center.lat, center.lng]), {
+        paddingTopLeft: [0, topInset],
+        paddingBottomRight: [0, bottomInset],
+        maxZoom: targetZoom,
+      })
+    } else if (animate) {
+      map.flyTo([center.lat, center.lng], targetZoom)
+    } else {
+      map.setView([center.lat, center.lng], targetZoom)
+    }
+  }, [center, zoom, animate, topInset, bottomInset, map])
 
   return null
 }
@@ -106,6 +159,10 @@ function MapDragListener({ onUserPan }: { onUserPan: () => void }) {
 
 function MapCanvas({
   center,
+  centerZoom,
+  animateCenter,
+  topInset,
+  bottomInset,
   className,
   onMapClick,
   onBoundsChange,
@@ -114,6 +171,7 @@ function MapCanvas({
   livePosition,
   liveAccuracy,
   onUserPan,
+  selectedPosition,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
 
@@ -130,13 +188,24 @@ function MapCanvas({
         subdomains={MAP_TILE_SUBDOMAINS}
         maxZoom={MAP_TILE_MAX_ZOOM}
       />
-      {center && <MapCenterUpdater center={center} />}
+      {center && (
+        <MapCenterUpdater
+          center={center}
+          zoom={centerZoom}
+          animate={animateCenter}
+          topInset={topInset}
+          bottomInset={bottomInset}
+        />
+      )}
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
       {onUserPan && <MapDragListener onUserPan={onUserPan} />}
       {pins?.map((pin) => (
         <PinMarker key={pin.pinId} pin={pin} onClick={onPinClick} />
       ))}
+      {selectedPosition && (
+        <Marker position={[selectedPosition.lat, selectedPosition.lng]} icon={selectedLocationIcon} />
+      )}
       {livePosition && (
         <>
           {liveAccuracy ? (
