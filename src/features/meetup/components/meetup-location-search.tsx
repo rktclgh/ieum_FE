@@ -101,7 +101,7 @@ function MeetupLocationSearch({
         {places?.map((place: Place) => (
           <LocationListItem
             key={`place-${place.id}`}
-            iconSrc="/icons/schedule/map-pin.svg"
+            iconSrc="/icons/write/location-list.svg"
             title={<HighlightedText text={place.name} query={apiQuery} />}
             subtitle={place.address}
             actionLabel={t.selectButton}
@@ -115,7 +115,7 @@ function MeetupLocationSearch({
           return (
             <LocationListItem
               key={`addr-${primary}-${index}`}
-              iconSrc="/icons/schedule/map-pin.svg"
+              iconSrc="/icons/write/location-plus.svg"
               title={<HighlightedText text={primary} query={apiQuery} />}
               subtitle={secondary}
               actionLabel={t.createPlaceButton}

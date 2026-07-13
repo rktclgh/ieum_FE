@@ -102,14 +102,16 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
         {/* 날짜 · 시간 */}
         <div className="flex shrink-0 items-center gap-3">
           <MeetupSelectField
-            iconSrc="/icons/chat/calender.svg"
+            iconSrc="/icons/write/calendar-200.svg"
+            selectedIconSrc="/icons/write/calendar-700.svg"
             placeholder={t.datePlaceholder}
             value={dateValue}
             active={datePickerOpen}
             onClick={() => setDatePickerOpen(true)}
           />
           <MeetupSelectField
-            iconSrc="/icons/schedule/clock.svg"
+            iconSrc="/icons/write/clock-200.svg"
+            selectedIconSrc="/icons/write/clock-700.svg"
             placeholder={t.timePlaceholder}
             value={timeValue}
             active={timePickerOpen}
@@ -119,7 +121,8 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
 
         {/* 주소 */}
         <MeetupSelectField
-          iconSrc="/icons/schedule/map-pin.svg"
+          iconSrc="/icons/write/location-200.svg"
+          selectedIconSrc="/icons/write/location-700.svg"
           placeholder={t.addressPlaceholder}
           value={form.address}
           active={addressPickerOpen}

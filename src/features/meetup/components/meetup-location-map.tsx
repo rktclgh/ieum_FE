@@ -143,7 +143,7 @@ function MeetupLocationMap({
         >
           <div className="flex max-h-72 flex-col gap-4 overflow-y-auto px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
             <LocationListItem
-              iconSrc="/icons/circle/plus.svg"
+              iconSrc="/icons/write/location-plus.svg"
               title={t.createPlaceTitle}
               subtitle={currentAddress ?? t.loadingAddress}
               actionLabel={t.createPlaceButton}
@@ -154,7 +154,7 @@ function MeetupLocationMap({
             {nearbyPlaces?.map((place) => (
               <LocationListItem
                 key={place.id}
-                iconSrc="/icons/schedule/map-pin.svg"
+                iconSrc="/icons/write/location-list.svg"
                 title={place.name}
                 subtitle={place.address}
                 actionLabel={t.selectButton}
