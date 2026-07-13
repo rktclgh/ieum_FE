@@ -20,8 +20,6 @@ interface MeetupDetailSheetProps {
   error?: string | null
   onJoin: () => void
   onLeave: () => void
-  onCloseMeeting: () => void
-  onCancel: () => void
   onKick: (userId: number) => void
   onEnterRoom: () => void
 }
@@ -44,8 +42,6 @@ function MeetupDetailSheet({
   error,
   onJoin,
   onLeave,
-  onCloseMeeting,
-  onCancel,
   onKick,
   onEnterRoom,
 }: MeetupDetailSheetProps) {
@@ -147,21 +143,9 @@ function MeetupDetailSheet({
       {/* 액션: myStatus 에 따라 분기 */}
       <div className="flex w-full flex-col gap-2">
         {isHost ? (
-          <>
-            <Button variant="primary" size="block" disabled={pending} onClick={onEnterRoom}>
-              {t.enterRoomButton}
-            </Button>
-            <div className="flex w-full items-center gap-2">
-              {isOpen ? (
-                <Button variant="secondary" size="block" disabled={pending} onClick={onCloseMeeting}>
-                  {t.closeMeetingButton}
-                </Button>
-              ) : null}
-              <Button variant="destructive" size="block" disabled={pending} onClick={onCancel}>
-                {t.cancelMeetingButton}
-              </Button>
-            </div>
-          </>
+          <Button variant="primary" size="block" disabled={pending} onClick={onEnterRoom}>
+            {t.enterRoomButton}
+          </Button>
         ) : isMember ? (
           <>
             <Button variant="primary" size="block" disabled={pending} onClick={onEnterRoom}>

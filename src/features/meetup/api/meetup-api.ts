@@ -43,14 +43,6 @@ async function kickMember(meetingId: number, userId: number) {
   await apiClient.post(`/api/v1/meetings/${meetingId}/kick`, { userId })
 }
 
-async function closeMeeting(meetingId: number) {
-  await apiClient.post(`/api/v1/meetings/${meetingId}/close`)
-}
-
-async function cancelMeeting(meetingId: number) {
-  await apiClient.delete(`/api/v1/meetings/${meetingId}`)
-}
-
 export {
   getMeeting,
   getParticipants,
@@ -58,6 +50,4 @@ export {
   joinMeeting,
   leaveMeeting,
   kickMember,
-  closeMeeting,
-  cancelMeeting,
 }

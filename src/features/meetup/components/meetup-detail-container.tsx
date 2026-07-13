@@ -10,8 +10,6 @@ import {
   useMeetingParticipants,
 } from "@/features/meetup/hooks/use-meetup-queries"
 import {
-  useCancelMeeting,
-  useCloseMeeting,
   useJoinMeeting,
   useKickMember,
   useLeaveMeeting,
@@ -47,8 +45,6 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
   const join = useJoinMeeting(meetingId)
   const leave = useLeaveMeeting(meetingId)
   const kick = useKickMember(meetingId)
-  const closeMeeting = useCloseMeeting(meetingId)
-  const cancel = useCancelMeeting(meetingId)
 
   const [error, setError] = React.useState<string | null>(null)
   // 되돌리기 어려운 파괴적 액션(나가기/내보내기/마감/취소)은 실행 전 확인 다이얼로그를 거친다.
@@ -60,12 +56,7 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
   } | null>(null)
   const m = messages.meetup
 
-  const pending =
-    join.isPending ||
-    leave.isPending ||
-    kick.isPending ||
-    closeMeeting.isPending ||
-    cancel.isPending
+  const pending = join.isPending || leave.isPending || kick.isPending
 
   const run = async (action: () => Promise<void>) => {
     setError(null)
@@ -97,20 +88,6 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
       confirmLabel: m.kickButton,
       onConfirm: () => run(() => kick.mutateAsync(userId)),
     })
-  const handleCloseMeeting = () =>
-    setConfirm({
-      title: m.closeConfirmTitle,
-      description: m.closeConfirmDescription,
-      confirmLabel: m.closeMeetingButton,
-      onConfirm: () => run(() => closeMeeting.mutateAsync()),
-    })
-  const handleCancel = () =>
-    setConfirm({
-      title: m.cancelConfirmTitle,
-      description: m.cancelConfirmDescription,
-      confirmLabel: m.cancelMeetingButton,
-      onConfirm: () => run(async () => { await cancel.mutateAsync(); close() }),
-    })
   const handleEnterRoom = () => {
     if (detail) router.push(`/chats/${detail.roomId}`)
   }
@@ -138,8 +115,6 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
         error={error}
         onJoin={handleJoin}
         onLeave={handleLeave}
-        onCloseMeeting={handleCloseMeeting}
-        onCancel={handleCancel}
         onKick={handleKick}
         onEnterRoom={handleEnterRoom}
       />
