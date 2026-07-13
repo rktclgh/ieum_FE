@@ -169,6 +169,7 @@ export interface Messages {
   question: {
     answerPlaceholder: string
     sendLabel: string
+    viewAnswersLabel: string
     closeLabel: string
     imageAlt: string
     flagAlt: string
@@ -472,7 +473,7 @@ export const ko: Messages = {
     participantsTitle: "참여자",
     hostBadge: "호스트",
     kickButton: "내보내기",
-    enterRoomButton: "채팅방 입장",
+    enterRoomButton: "채팅방 가기",
     leaveButton: "모임 나가기",
     confirmCancelLabel: "취소",
     leaveConfirmTitle: "모임에서 나갈까요?",
@@ -537,6 +538,7 @@ export const ko: Messages = {
   question: {
     answerPlaceholder: "답변 입력",
     sendLabel: "전송",
+    viewAnswersLabel: "답변 보기",
     closeLabel: "닫기",
     imageAlt: "질문 이미지",
     flagAlt: "국기",
