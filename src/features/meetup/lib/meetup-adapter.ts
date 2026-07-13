@@ -23,7 +23,6 @@ interface MeetupDetailView {
   status: MeetingStatus
   myStatus: MeetingMyStatus
   isHost: boolean
-  hostNickname: string
 }
 
 interface MeetupParticipantView {
@@ -48,7 +47,6 @@ function adaptMeetingDetail(detail: MeetingDetailResponse, locale: string): Meet
     status: detail.status,
     myStatus: detail.myStatus,
     isHost: detail.myStatus === "host",
-    hostNickname: detail.host.nickname,
   }
 }
 
