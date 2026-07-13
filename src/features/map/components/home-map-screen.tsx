@@ -16,6 +16,7 @@ import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
+import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -40,6 +41,7 @@ function HomeMapScreen() {
   const [createMeetupOpen, setCreateMeetupOpen] = React.useState(false)
   const [createQuestionOpen, setCreateQuestionOpen] = React.useState(false)
   const [selectedMeetingId, setSelectedMeetingId] = React.useState<number | null>(null)
+  const [selectedQuestionId, setSelectedQuestionId] = React.useState<number | null>(null)
   const [category, setCategory] = React.useState<Category>("all")
   const [bounds, setBounds] = React.useState<MapBounds | null>(null)
 
@@ -52,9 +54,9 @@ function HomeMapScreen() {
   const pins = pinData?.pins
 
   const handlePinClick = React.useCallback((pin: MapPin) => {
-    // 모임 핀 → 그 모임(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.
-    // 질문 핀(pinType==="question") 상세 연결은 후속(#46 상세 시트 재사용).
+    // 핀 종류별로 그 대상(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.
     if (pin.pinType === "meeting") setSelectedMeetingId(pin.targetId)
+    else if (pin.pinType === "question") setSelectedQuestionId(pin.targetId)
   }, [])
 
   // follow-me 토글: 켤 때는 검색/클릭 선택을 비워 지도가 내 위치를 따라가게 한다.
@@ -134,6 +136,13 @@ function HomeMapScreen() {
         <MeetupDetailContainer
           meetingId={selectedMeetingId}
           onClose={() => setSelectedMeetingId(null)}
+        />
+      ) : null}
+
+      {selectedQuestionId !== null ? (
+        <QuestionDetailContainer
+          questionId={selectedQuestionId}
+          onClose={() => setSelectedQuestionId(null)}
         />
       ) : null}
     </div>
