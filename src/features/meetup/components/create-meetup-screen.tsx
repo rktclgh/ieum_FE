@@ -3,7 +3,6 @@
 import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
-import { Explanation } from "@/components/ui/text-field/explanation"
 import {
   TITLE_MAX_LENGTH,
   formatDateValue,
@@ -79,36 +78,24 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
       />
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3">
-        {/* 제목 — 15자 초과 시 빨간 테두리 + 카운터/설명 */}
+        {/* 제목 — 15자(공백 포함)까지만 입력 가능, 포커스 시 카운터 표시 */}
         <div className="shrink-0">
-          <div
-            className={cn(
-              "flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-600",
-              form.titleTooLong && "border-red focus-within:border-red"
-            )}
-          >
+          <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-600">
             <input
               value={form.title}
               onChange={(event) => form.setTitle(event.target.value)}
               onFocus={() => setTitleFocused(true)}
               onBlur={() => setTitleFocused(false)}
+              maxLength={TITLE_MAX_LENGTH}
               placeholder={t.titlePlaceholder}
               className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary-600 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
             />
             {titleFocused ? (
-              <span
-                className={cn(
-                  "shrink-0 text-body-regular-14",
-                  form.titleTooLong ? "text-red" : "text-gray-400"
-                )}
-              >
+              <span className="shrink-0 text-body-regular-14 text-gray-400">
                 {t.titleCounter(form.title.length, TITLE_MAX_LENGTH)}
               </span>
             ) : null}
           </div>
-          {form.titleTooLong ? (
-            <Explanation variant="error" text={t.titleTooLongExplanation(TITLE_MAX_LENGTH)} className="px-1" />
-          ) : null}
         </div>
 
         {/* 날짜 · 시간 */}

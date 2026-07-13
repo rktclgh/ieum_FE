@@ -41,4 +41,33 @@ function formatKstTime(input: Date | string | number): string {
   }).format(date)
 }
 
-export { getKstDateKey, formatKstFullDate, formatKstShortDate, isKstToday, formatKstTime }
+/**
+ * 현재(또는 주어진) 시각을 KST 기준 12시간제 조각으로 반환한다: { period, hour(1–12), minute(0–59) }.
+ * 기기 로컬 타임존과 무관하게 Asia/Seoul로 계산한다.
+ */
+function getKstTimeParts(
+  input: Date | string | number = new Date()
+): { period: "am" | "pm"; hour: number; minute: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: KST_TIME_ZONE,
+    hourCycle: "h23",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(new Date(input))
+
+  const hour24 = Number(parts.find((part) => part.type === "hour")?.value)
+  const minute = Number(parts.find((part) => part.type === "minute")?.value)
+  const period = hour24 < 12 ? "am" : "pm"
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
+
+  return { period, hour: hour12, minute }
+}
+
+export {
+  getKstDateKey,
+  formatKstFullDate,
+  formatKstShortDate,
+  isKstToday,
+  formatKstTime,
+  getKstTimeParts,
+}

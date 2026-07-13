@@ -8,7 +8,7 @@ const titleVariants = cva("flex w-full items-center gap-1 py-1", {
     variant: {
       default: "px-2",
       withoutPadding: "",
-      withPadding: "px-3",
+      withPadding: "px-4",
     },
   },
   defaultVariants: {

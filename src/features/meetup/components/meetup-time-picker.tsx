@@ -12,14 +12,12 @@ import {
 } from "@/components/ui/drawer"
 import { WheelPicker } from "@/components/ui/wheel-picker"
 import type { MeetupTimeValue } from "@/features/meetup/constants/create-meetup"
+import { getKstTimeParts } from "@/lib/date/kst"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 const PERIODS = ["am", "pm"] as const
 const HOURS = Array.from({ length: 12 }, (_, index) => index + 1)
 const MINUTES = Array.from({ length: 60 }, (_, index) => index)
-
-/** 값이 없을 때 기본 선택값: 오후 7:00 (와이어프레임 기본값) */
-const DEFAULT_TIME: MeetupTimeValue = { period: "pm", hour: 7, minute: 0 }
 
 interface MeetupTimePickerProps {
   open: boolean
@@ -33,11 +31,12 @@ function MeetupTimePicker({ open, onOpenChange, value, onConfirm }: MeetupTimePi
   const { messages } = useTranslation()
   const t = messages.createMeetup
 
-  const [draft, setDraft] = React.useState<MeetupTimeValue>(value ?? DEFAULT_TIME)
+  const [draft, setDraft] = React.useState<MeetupTimeValue>(() => value ?? getKstTimeParts())
 
+  // 시트를 열 때마다 현재 값(없으면 KST 현재 시각)으로 draft 초기화
   React.useEffect(() => {
     if (!open) return
-    setDraft(value ?? DEFAULT_TIME)
+    setDraft(value ?? getKstTimeParts())
   }, [open, value])
 
   const periodLabels = PERIODS.map((period) => (period === "am" ? t.amLabel : t.pmLabel))
