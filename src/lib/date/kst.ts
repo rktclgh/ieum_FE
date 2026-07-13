@@ -41,4 +41,23 @@ function formatKstTime(input: Date | string | number): string {
   }).format(date)
 }
 
-export { getKstDateKey, formatKstFullDate, formatKstShortDate, isKstToday, formatKstTime }
+/** 모임 상세용 일시 라벨: "2026.07.07" + 로케일별 시각(예 ko "오후 7:00", en "7:00 PM"). */
+function formatKstDateTimeLabel(input: Date | string | number, locale: string): string {
+  const [year, month, day] = getKstDateKey(input).split("-")
+  const time = new Intl.DateTimeFormat(locale, {
+    timeZone: KST_TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(input))
+  return `${year}.${month}.${day} ${time}`
+}
+
+export {
+  getKstDateKey,
+  formatKstFullDate,
+  formatKstShortDate,
+  isKstToday,
+  formatKstTime,
+  formatKstDateTimeLabel,
+}
