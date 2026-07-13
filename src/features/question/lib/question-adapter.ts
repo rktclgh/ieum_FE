@@ -1,4 +1,5 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
+import { flagFromIso2 } from "@/features/join/lib/nationality-map"
 import type {
   AnswerResponse,
   QuestionDetailResponse,
@@ -64,15 +65,18 @@ function adaptQuestionDetail(detail: QuestionDetailResponse): QuestionDetailView
   }
 }
 
-// 홈 지도 상세 시트(#31 연동 예정)가 쓰는 요약 모델. 상세 응답과 타입 호환.
+// 홈 지도 상세 시트가 쓰는 요약 모델. 국적(ISO2)→국기, 장소는 라벨 우선.
+// 시각 라벨은 i18n이 필요해 컴포넌트에서 createdAt으로 포매팅한다.
 function adaptQuestionSummary(detail: QuestionDetailResponse): QuestionSummary {
   return {
     id: String(detail.questionId),
     authorName: detail.author.nickname,
     authorAvatarUrl: resolveFileUrl(detail.author.profileImageUrl),
+    countryFlagSrc: flagFromIso2(detail.author.nationality),
+    createdAt: detail.createdAt ?? undefined,
+    location: detail.location.label ?? detail.location.address,
     title: detail.title,
     body: detail.content,
-    timeLabel: "",
     imageUrl: resolveFileUrl(detail.imageUrls[0]),
   }
 }

@@ -191,6 +191,11 @@ export const ru: Messages = {
     submittingButton: "Публикация…",
     imageUploadFailed: "Не удалось загрузить изображение. Попробуйте ещё раз.",
     similarTitle: "Похожие вопросы",
+    timeJustNow: "Только что",
+    timeMinutesAgo: (minutes) => `${minutes} мин назад`,
+    timeHoursAgo: (hours) => `${hours} ч назад`,
+    timeDaysAgo: (days) => `${days} дн назад`,
+    addImageLabel: "Добавить фото",
     errors: {
       FORBIDDEN: "У вас нет прав.",
       QUESTION_NOT_FOUND: "Вопрос не найден.",

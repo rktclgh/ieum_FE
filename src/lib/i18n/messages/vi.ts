@@ -191,6 +191,11 @@ export const vi: Messages = {
     submittingButton: "Đang đăng…",
     imageUploadFailed: "Tải ảnh lên thất bại. Vui lòng thử lại.",
     similarTitle: "Câu hỏi tương tự",
+    timeJustNow: "Vừa xong",
+    timeMinutesAgo: (minutes) => `${minutes} phút trước`,
+    timeHoursAgo: (hours) => `${hours} giờ trước`,
+    timeDaysAgo: (days) => `${days} ngày trước`,
+    addImageLabel: "Thêm ảnh",
     errors: {
       FORBIDDEN: "Bạn không có quyền.",
       QUESTION_NOT_FOUND: "Không tìm thấy câu hỏi.",

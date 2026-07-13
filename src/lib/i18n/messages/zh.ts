@@ -190,6 +190,11 @@ export const zh: Messages = {
     submittingButton: "发布中…",
     imageUploadFailed: "图片上传失败，请重试。",
     similarTitle: "相似问题",
+    timeJustNow: "刚刚",
+    timeMinutesAgo: (minutes) => `${minutes}分钟前`,
+    timeHoursAgo: (hours) => `${hours}小时前`,
+    timeDaysAgo: (days) => `${days}天前`,
+    addImageLabel: "添加照片",
     errors: {
       FORBIDDEN: "没有权限。",
       QUESTION_NOT_FOUND: "找不到问题。",

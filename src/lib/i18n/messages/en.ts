@@ -191,6 +191,11 @@ export const en: Messages = {
     submittingButton: "Posting…",
     imageUploadFailed: "Failed to upload the image. Please try again.",
     similarTitle: "Similar questions",
+    timeJustNow: "Just now",
+    timeMinutesAgo: (minutes) => `${minutes}m ago`,
+    timeHoursAgo: (hours) => `${hours}h ago`,
+    timeDaysAgo: (days) => `${days}d ago`,
+    addImageLabel: "Add photo",
     errors: {
       FORBIDDEN: "You don't have permission.",
       QUESTION_NOT_FOUND: "Question not found.",

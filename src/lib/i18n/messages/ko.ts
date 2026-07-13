@@ -191,6 +191,11 @@ export interface Messages {
     submittingButton: string
     imageUploadFailed: string
     similarTitle: string
+    timeJustNow: string
+    timeMinutesAgo: (minutes: number) => string
+    timeHoursAgo: (hours: number) => string
+    timeDaysAgo: (days: number) => string
+    addImageLabel: string
     errors: {
       FORBIDDEN: string
       QUESTION_NOT_FOUND: string
@@ -554,6 +559,11 @@ export const ko: Messages = {
     submittingButton: "올리는 중…",
     imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
     similarTitle: "비슷한 질문",
+    timeJustNow: "방금 전",
+    timeMinutesAgo: (minutes) => `${minutes}분 전`,
+    timeHoursAgo: (hours) => `${hours}시간 전`,
+    timeDaysAgo: (days) => `${days}일 전`,
+    addImageLabel: "사진 첨부",
     errors: {
       FORBIDDEN: "권한이 없어요.",
       QUESTION_NOT_FOUND: "질문을 찾을 수 없어요.",

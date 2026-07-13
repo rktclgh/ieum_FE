@@ -190,6 +190,11 @@ export const th: Messages = {
     submittingButton: "กำลังโพสต์…",
     imageUploadFailed: "อัปโหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่",
     similarTitle: "คำถามที่คล้ายกัน",
+    timeJustNow: "เมื่อสักครู่",
+    timeMinutesAgo: (minutes) => `${minutes} นาทีที่แล้ว`,
+    timeHoursAgo: (hours) => `${hours} ชั่วโมงที่แล้ว`,
+    timeDaysAgo: (days) => `${days} วันที่แล้ว`,
+    addImageLabel: "เพิ่มรูปภาพ",
     errors: {
       FORBIDDEN: "คุณไม่มีสิทธิ์",
       QUESTION_NOT_FOUND: "ไม่พบคำถาม",

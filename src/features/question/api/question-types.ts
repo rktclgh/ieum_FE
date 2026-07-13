@@ -15,6 +15,8 @@ interface QuestionAuthor {
   userId: number
   nickname: string
   profileImageUrl: string | null
+  // 국적(ISO 3166-1 alpha-2, 예: "KR"). 상세 시트에서 국기로 표시. 백엔드가 없으면 국기 생략.
+  nationality?: string | null
 }
 
 interface AnswerResponse {
@@ -36,6 +38,8 @@ interface QuestionDetailResponse {
   location: LocationSnapshot
   imageUrls: string[]
   answers: AnswerResponse[]
+  // 작성 시각(ISO-8601). 상세 시트의 "N분 전" 상대시각 표시용. 백엔드가 없으면 시각 생략.
+  createdAt?: string | null
 }
 
 interface MyQuestionItem {

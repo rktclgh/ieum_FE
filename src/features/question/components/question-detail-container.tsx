@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import { uploadImage } from "@/features/question/api/question-file-api"
 import { QuestionDetailSheet } from "@/features/question/components/question-detail-sheet"
 import { usePostAnswer } from "@/features/question/hooks/use-question-mutations"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
@@ -36,10 +37,20 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
 
   const close = () => (onClose ? onClose() : router.back())
 
-  const handleSend = (value: string) => {
+  const handleSend = async (value: string, imageFile?: File | null) => {
     if (postAnswer.isPending) return
+    // 사진 첨부 실패와 답변 등록 실패를 구분해 원인에 맞는 메시지를 노출한다.
+    let imageFileIds: number[] | undefined
+    if (imageFile) {
+      try {
+        imageFileIds = [await uploadImage(imageFile)]
+      } catch {
+        setActionError(messages.question.imageUploadFailed)
+        return
+      }
+    }
     postAnswer.mutate(
-      { content: value },
+      { content: value || undefined, imageFileIds },
       { onError: (error) => setActionError(getQuestionErrorMessage(error, messages)) }
     )
   }

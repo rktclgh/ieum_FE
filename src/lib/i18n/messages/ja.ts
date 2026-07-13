@@ -190,6 +190,11 @@ export const ja: Messages = {
     submittingButton: "投稿中…",
     imageUploadFailed: "画像のアップロードに失敗しました。もう一度お試しください。",
     similarTitle: "似ている質問",
+    timeJustNow: "たった今",
+    timeMinutesAgo: (minutes) => `${minutes}分前`,
+    timeHoursAgo: (hours) => `${hours}時間前`,
+    timeDaysAgo: (days) => `${days}日前`,
+    addImageLabel: "写真を追加",
     errors: {
       FORBIDDEN: "権限がありません。",
       QUESTION_NOT_FOUND: "質問が見つかりません。",
