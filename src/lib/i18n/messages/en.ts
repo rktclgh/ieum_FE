@@ -108,6 +108,15 @@ export const en: Messages = {
     closeMeetingButton: "Close signups",
     cancelMeetingButton: "Cancel meetup",
     leaveButton: "Leave meetup",
+    confirmCancelLabel: "Cancel",
+    leaveConfirmTitle: "Leave this meetup?",
+    leaveConfirmDescription: "You'll also leave this meetup's chat room.",
+    kickConfirmTitle: "Remove this member?",
+    kickConfirmDescription: "A removed member can't join again.",
+    closeConfirmTitle: "Close recruitment?",
+    closeConfirmDescription: "No new participants can join once it's closed.",
+    cancelConfirmTitle: "Cancel this meetup?",
+    cancelConfirmDescription: "This can't be undone.",
     errors: {
       MEETING_NOT_FOUND: "This meetup could not be found.",
       MEETING_NOT_OPEN: "Signups for this meetup are closed.",
@@ -122,6 +131,7 @@ export const en: Messages = {
   },
   createMeetup: {
     appBarTitle: "New meetup",
+    imageUploadFailed: "Couldn't upload the image. Please try again.",
     titlePlaceholder: "Meetup title (15 characters or less)",
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `Please keep the title within ${max} characters.`,

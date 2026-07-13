@@ -108,6 +108,15 @@ export interface Messages {
     closeMeetingButton: string
     cancelMeetingButton: string
     leaveButton: string
+    confirmCancelLabel: string
+    leaveConfirmTitle: string
+    leaveConfirmDescription: string
+    kickConfirmTitle: string
+    kickConfirmDescription: string
+    closeConfirmTitle: string
+    closeConfirmDescription: string
+    cancelConfirmTitle: string
+    cancelConfirmDescription: string
     errors: {
       MEETING_NOT_FOUND: string
       MEETING_NOT_OPEN: string
@@ -122,6 +131,7 @@ export interface Messages {
   }
   createMeetup: {
     appBarTitle: string
+    imageUploadFailed: string
     titlePlaceholder: string
     titleCounter: (current: number, max: number) => string
     titleTooLongExplanation: (max: number) => string
@@ -373,6 +383,15 @@ export const ko: Messages = {
     closeMeetingButton: "모집 마감",
     cancelMeetingButton: "모임 취소",
     leaveButton: "모임 나가기",
+    confirmCancelLabel: "취소",
+    leaveConfirmTitle: "모임에서 나갈까요?",
+    leaveConfirmDescription: "나가면 이 모임의 채팅방에서도 나가게 돼요.",
+    kickConfirmTitle: "이 멤버를 내보낼까요?",
+    kickConfirmDescription: "내보낸 멤버는 다시 참여할 수 없어요.",
+    closeConfirmTitle: "모집을 마감할까요?",
+    closeConfirmDescription: "마감하면 더 이상 새로운 참여를 받지 않아요.",
+    cancelConfirmTitle: "모임을 취소할까요?",
+    cancelConfirmDescription: "취소하면 되돌릴 수 없어요.",
     errors: {
       MEETING_NOT_FOUND: "모임을 찾을 수 없어요.",
       MEETING_NOT_OPEN: "모집이 마감된 모임이에요.",
@@ -387,6 +406,7 @@ export const ko: Messages = {
   },
   createMeetup: {
     appBarTitle: "새 모임 작성",
+    imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
     titlePlaceholder: "모임 제목 (15자 이하)",
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `모임 제목을 ${max}글자 이내로 적어주세요.`,

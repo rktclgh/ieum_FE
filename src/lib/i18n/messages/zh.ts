@@ -107,6 +107,15 @@ export const zh: Messages = {
     closeMeetingButton: "结束报名",
     cancelMeetingButton: "取消聚会",
     leaveButton: "退出聚会",
+    confirmCancelLabel: "取消",
+    leaveConfirmTitle: "要退出该聚会吗？",
+    leaveConfirmDescription: "退出后也会离开该聚会的聊天室。",
+    kickConfirmTitle: "要移除该成员吗？",
+    kickConfirmDescription: "被移除的成员将无法再次加入。",
+    closeConfirmTitle: "要结束招募吗？",
+    closeConfirmDescription: "结束后将不再接受新的参与。",
+    cancelConfirmTitle: "要取消该聚会吗？",
+    cancelConfirmDescription: "取消后无法撤销。",
     errors: {
       MEETING_NOT_FOUND: "找不到该聚会。",
       MEETING_NOT_OPEN: "该聚会已结束报名。",
@@ -121,6 +130,7 @@ export const zh: Messages = {
   },
   createMeetup: {
     appBarTitle: "新建聚会",
+    imageUploadFailed: "图片上传失败，请重试。",
     titlePlaceholder: "聚会标题（15字以内）",
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `聚会标题请控制在${max}个字以内。`,

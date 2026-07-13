@@ -10,9 +10,11 @@ interface PresignResponse {
 
 // 업로드 완료 후 imageFileId 로 쓸 fileId(number)를 반환한다.
 async function uploadMeetingImage(file: File): Promise<number> {
+  // file.type이 빈 문자열이면 fetch가 임의 Content-Type을 붙여 presign 서명과 불일치(403)할 수 있어 폴백을 둔다.
+  const contentType = file.type || "image/jpeg"
   const { data: presigned } = await apiClient.post<PresignResponse>("/api/v1/files/presign", {
     purpose: "meeting",
-    contentType: file.type,
+    contentType,
     sizeBytes: file.size,
   })
 
@@ -20,7 +22,7 @@ async function uploadMeetingImage(file: File): Promise<number> {
   const uploadResponse = await fetch(presigned.uploadUrl, {
     method: "PUT",
     body: file,
-    headers: { "Content-Type": file.type },
+    headers: { "Content-Type": contentType },
   })
   if (!uploadResponse.ok) throw new Error("Failed to upload image to storage")
 

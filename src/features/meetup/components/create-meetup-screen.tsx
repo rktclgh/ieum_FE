@@ -77,8 +77,19 @@ function CreateMeetupScreen({ onClose, near = null }: CreateMeetupScreenProps) {
     if (!form.canSubmit || submitting) return
     if (!form.date || !form.time || !form.place) return
     setError(null)
+
+    // 이미지 업로드 실패와 모임 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
+    let imageFileId: number | undefined
+    if (form.image) {
+      try {
+        imageFileId = await uploadMeetingImage(form.image.file)
+      } catch {
+        setError(t.imageUploadFailed)
+        return
+      }
+    }
+
     try {
-      const imageFileId = form.image ? await uploadMeetingImage(form.image.file) : undefined
       await createMeeting.mutateAsync({
         title: form.title.trim(),
         content: form.description.trim() || undefined,

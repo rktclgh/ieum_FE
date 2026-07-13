@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { MeetupDetailSheet } from "@/features/meetup/components/meetup-detail-sheet"
 import {
   useMeeting,
@@ -48,6 +49,14 @@ function MeetupDetailContainer({ meetingId }: MeetupDetailContainerProps) {
   const cancel = useCancelMeeting(meetingId)
 
   const [error, setError] = React.useState<string | null>(null)
+  // 되돌리기 어려운 파괴적 액션(나가기/내보내기/마감/취소)은 실행 전 확인 다이얼로그를 거친다.
+  const [confirm, setConfirm] = React.useState<{
+    title: string
+    description: string
+    confirmLabel: string
+    onConfirm: () => void
+  } | null>(null)
+  const m = messages.meetup
 
   const pending =
     join.isPending ||
@@ -72,10 +81,34 @@ function MeetupDetailContainer({ meetingId }: MeetupDetailContainerProps) {
       const { roomId } = await join.mutateAsync()
       router.replace(`/chats/${roomId}`)
     })
-  const handleLeave = () => run(async () => { await leave.mutateAsync(); close() })
-  const handleKick = (userId: number) => run(() => kick.mutateAsync(userId))
-  const handleCloseMeeting = () => run(() => closeMeeting.mutateAsync())
-  const handleCancel = () => run(async () => { await cancel.mutateAsync(); close() })
+  const handleLeave = () =>
+    setConfirm({
+      title: m.leaveConfirmTitle,
+      description: m.leaveConfirmDescription,
+      confirmLabel: m.leaveButton,
+      onConfirm: () => run(async () => { await leave.mutateAsync(); close() }),
+    })
+  const handleKick = (userId: number) =>
+    setConfirm({
+      title: m.kickConfirmTitle,
+      description: m.kickConfirmDescription,
+      confirmLabel: m.kickButton,
+      onConfirm: () => run(() => kick.mutateAsync(userId)),
+    })
+  const handleCloseMeeting = () =>
+    setConfirm({
+      title: m.closeConfirmTitle,
+      description: m.closeConfirmDescription,
+      confirmLabel: m.closeMeetingButton,
+      onConfirm: () => run(() => closeMeeting.mutateAsync()),
+    })
+  const handleCancel = () =>
+    setConfirm({
+      title: m.cancelConfirmTitle,
+      description: m.cancelConfirmDescription,
+      confirmLabel: m.cancelMeetingButton,
+      onConfirm: () => run(async () => { await cancel.mutateAsync(); close() }),
+    })
   const handleEnterRoom = () => {
     if (detail) router.push(`/chats/${detail.roomId}`)
   }
@@ -91,22 +124,38 @@ function MeetupDetailContainer({ meetingId }: MeetupDetailContainerProps) {
   }
 
   return (
-    <MeetupDetailSheet
-      open
-      onOpenChange={(next) => {
-        if (!next) close()
-      }}
-      detail={detail}
-      participants={participants}
-      pending={pending}
-      error={error}
-      onJoin={handleJoin}
-      onLeave={handleLeave}
-      onCloseMeeting={handleCloseMeeting}
-      onCancel={handleCancel}
-      onKick={handleKick}
-      onEnterRoom={handleEnterRoom}
-    />
+    <>
+      <MeetupDetailSheet
+        open
+        onOpenChange={(next) => {
+          if (!next) close()
+        }}
+        detail={detail}
+        participants={participants}
+        pending={pending}
+        error={error}
+        onJoin={handleJoin}
+        onLeave={handleLeave}
+        onCloseMeeting={handleCloseMeeting}
+        onCancel={handleCancel}
+        onKick={handleKick}
+        onEnterRoom={handleEnterRoom}
+      />
+      <ConfirmDialog
+        open={confirm !== null}
+        onOpenChange={(next) => {
+          if (!next) setConfirm(null)
+        }}
+        title={confirm?.title ?? ""}
+        description={confirm?.description ?? ""}
+        cancelLabel={m.confirmCancelLabel}
+        confirmLabel={confirm?.confirmLabel ?? ""}
+        onConfirm={() => {
+          confirm?.onConfirm()
+          setConfirm(null)
+        }}
+      />
+    </>
   )
 }
 

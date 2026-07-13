@@ -107,6 +107,15 @@ export const th: Messages = {
     closeMeetingButton: "ปิดรับสมัคร",
     cancelMeetingButton: "ยกเลิกกลุ่ม",
     leaveButton: "ออกจากกลุ่ม",
+    confirmCancelLabel: "ยกเลิก",
+    leaveConfirmTitle: "ออกจากกลุ่มนี้หรือไม่?",
+    leaveConfirmDescription: "เมื่อออกแล้ว คุณจะออกจากห้องแชทของกลุ่มนี้ด้วย",
+    kickConfirmTitle: "นำสมาชิกคนนี้ออกหรือไม่?",
+    kickConfirmDescription: "สมาชิกที่ถูกนำออกจะไม่สามารถเข้าร่วมได้อีก",
+    closeConfirmTitle: "ปิดรับสมาชิกหรือไม่?",
+    closeConfirmDescription: "เมื่อปิดแล้วจะไม่รับผู้เข้าร่วมใหม่",
+    cancelConfirmTitle: "ยกเลิกกลุ่มนี้หรือไม่?",
+    cancelConfirmDescription: "เมื่อยกเลิกแล้วไม่สามารถย้อนกลับได้",
     errors: {
       MEETING_NOT_FOUND: "ไม่พบกลุ่มพบปะนี้",
       MEETING_NOT_OPEN: "กลุ่มนี้ปิดรับสมัครแล้ว",
@@ -121,6 +130,7 @@ export const th: Messages = {
   },
   createMeetup: {
     appBarTitle: "สร้างกลุ่มพบปะ",
+    imageUploadFailed: "อัปโหลดรูปภาพไม่สำเร็จ โปรดลองอีกครั้ง",
     titlePlaceholder: "ชื่อกลุ่ม (ไม่เกิน 15 ตัวอักษร)",
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `กรุณาตั้งชื่อไม่เกิน ${max} ตัวอักษร`,

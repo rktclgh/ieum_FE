@@ -108,6 +108,15 @@ export const vi: Messages = {
     closeMeetingButton: "Đóng đăng ký",
     cancelMeetingButton: "Hủy buổi gặp",
     leaveButton: "Rời buổi gặp",
+    confirmCancelLabel: "Hủy",
+    leaveConfirmTitle: "Rời khỏi buổi gặp mặt này?",
+    leaveConfirmDescription: "Bạn cũng sẽ rời khỏi phòng chat của buổi gặp mặt này.",
+    kickConfirmTitle: "Xóa thành viên này?",
+    kickConfirmDescription: "Thành viên bị xóa không thể tham gia lại.",
+    closeConfirmTitle: "Đóng tuyển thành viên?",
+    closeConfirmDescription: "Sau khi đóng sẽ không nhận thêm người tham gia.",
+    cancelConfirmTitle: "Hủy buổi gặp mặt này?",
+    cancelConfirmDescription: "Không thể hoàn tác sau khi hủy.",
     errors: {
       MEETING_NOT_FOUND: "Không tìm thấy buổi gặp mặt.",
       MEETING_NOT_OPEN: "Buổi gặp đã đóng đăng ký.",
@@ -122,6 +131,7 @@ export const vi: Messages = {
   },
   createMeetup: {
     appBarTitle: "Tạo buổi gặp mặt",
+    imageUploadFailed: "Không thể tải ảnh lên. Vui lòng thử lại.",
     titlePlaceholder: "Tiêu đề buổi gặp (tối đa 15 ký tự)",
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `Vui lòng nhập tiêu đề trong ${max} ký tự.`,

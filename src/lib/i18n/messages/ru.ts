@@ -108,6 +108,15 @@ export const ru: Messages = {
     closeMeetingButton: "Закрыть набор",
     cancelMeetingButton: "Отменить встречу",
     leaveButton: "Покинуть встречу",
+    confirmCancelLabel: "Отмена",
+    leaveConfirmTitle: "Покинуть эту встречу?",
+    leaveConfirmDescription: "Вы также выйдете из чата этой встречи.",
+    kickConfirmTitle: "Удалить этого участника?",
+    kickConfirmDescription: "Удалённый участник не сможет присоединиться снова.",
+    closeConfirmTitle: "Закрыть набор?",
+    closeConfirmDescription: "После закрытия новые участники не смогут присоединиться.",
+    cancelConfirmTitle: "Отменить эту встречу?",
+    cancelConfirmDescription: "Это действие нельзя отменить.",
     errors: {
       MEETING_NOT_FOUND: "Встреча не найдена.",
       MEETING_NOT_OPEN: "Набор на встречу закрыт.",
@@ -122,6 +131,7 @@ export const ru: Messages = {
   },
   createMeetup: {
     appBarTitle: "Новая встреча",
+    imageUploadFailed: "Не удалось загрузить изображение. Попробуйте ещё раз.",
     titlePlaceholder: "Название встречи (до 15 символов)",
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `Название должно быть не длиннее ${max} символов.`,
