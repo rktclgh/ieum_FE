@@ -22,6 +22,10 @@ interface MapCanvasProps {
   centerZoom?: number
   /** center 변경 시 flyTo로 부드럽게 이동할지 여부 */
   animateCenter?: boolean
+  /** 상단 오버레이(헤더 등)에 가려지는 높이(px). 보이는 영역 정중앙 계산에 사용 */
+  topInset?: number
+  /** 하단 오버레이(시트 등)에 가려지는 높이(px). 보이는 영역 정중앙 계산에 사용 */
+  bottomInset?: number
   className?: string
   onMapClick?: (position: Coordinates) => void
   onBoundsChange?: (bounds: MapBounds) => void
@@ -65,22 +69,38 @@ function MapCenterUpdater({
   center,
   zoom,
   animate,
+  topInset = 0,
+  bottomInset = 0,
 }: {
   center: Coordinates
   zoom?: number
   animate?: boolean
+  topInset?: number
+  bottomInset?: number
 }) {
   const map = useMap()
+  const lastCenterRef = React.useRef<Coordinates | null>(null)
 
   React.useEffect(() => {
+    // 인셋만 바뀐 경우(예: 하단 시트 높이 변화)엔 재중심하지 않고 center 변경 시에만 이동한다.
+    if (lastCenterRef.current === center) return
+    lastCenterRef.current = center
+
     const targetZoom = zoom ?? map.getZoom()
-    // animate=true면 flyTo로 부드럽게 이동(+확대 단계 복귀), 아니면 즉시 이동.
-    if (animate) {
+
+    // 헤더·하단 시트가 지도를 가리면 그만큼 패딩을 줘, 보이는 영역의 정중앙에 오도록 flyToBounds로 이동.
+    if (topInset > 0 || bottomInset > 0) {
+      map.flyToBounds(L.latLngBounds([center.lat, center.lng], [center.lat, center.lng]), {
+        paddingTopLeft: [0, topInset],
+        paddingBottomRight: [0, bottomInset],
+        maxZoom: targetZoom,
+      })
+    } else if (animate) {
       map.flyTo([center.lat, center.lng], targetZoom)
     } else {
       map.setView([center.lat, center.lng], targetZoom)
     }
-  }, [center, zoom, animate, map])
+  }, [center, zoom, animate, topInset, bottomInset, map])
 
   return null
 }
@@ -141,6 +161,8 @@ function MapCanvas({
   center,
   centerZoom,
   animateCenter,
+  topInset,
+  bottomInset,
   className,
   onMapClick,
   onBoundsChange,
@@ -166,7 +188,15 @@ function MapCanvas({
         subdomains={MAP_TILE_SUBDOMAINS}
         maxZoom={MAP_TILE_MAX_ZOOM}
       />
-      {center && <MapCenterUpdater center={center} zoom={centerZoom} animate={animateCenter} />}
+      {center && (
+        <MapCenterUpdater
+          center={center}
+          zoom={centerZoom}
+          animate={animateCenter}
+          topInset={topInset}
+          bottomInset={bottomInset}
+        />
+      )}
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
       {onUserPan && <MapDragListener onUserPan={onUserPan} />}
