@@ -91,6 +91,7 @@ export const en: Messages = {
     questionMarkerLabel: "Question",
     clusterMarkerLabel: (count) => `${count} nearby`,
     attributionButtonLabel: "Map attribution",
+    pinsTruncatedNotice: "Many pins here. Zoom in to see them all",
   },
   meetup: {
     joinButton: "Join",

@@ -6,13 +6,20 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
 interface MapControlsProps {
-  onLocateMe: () => void
+  onToggleFollow: () => void
+  isFollowing?: boolean
   onCreateMeetup?: () => void
   onCreateQuestion?: () => void
   className?: string
 }
 
-function MapControls({ onLocateMe, onCreateMeetup, onCreateQuestion, className }: MapControlsProps) {
+function MapControls({
+  onToggleFollow,
+  isFollowing = false,
+  onCreateMeetup,
+  onCreateQuestion,
+  className,
+}: MapControlsProps) {
   const { messages } = useTranslation()
 
   return (
@@ -20,7 +27,9 @@ function MapControls({ onLocateMe, onCreateMeetup, onCreateQuestion, className }
       <Circle
         iconSrc="/icons/circle/location.svg"
         aria-label={messages.home.locateMeLabel}
-        onClick={onLocateMe}
+        aria-pressed={isFollowing}
+        className={isFollowing ? "outline-2 outline-primary-600" : undefined}
+        onClick={onToggleFollow}
       />
       <Circle iconSrc="/icons/circle/list.svg" aria-label={messages.home.listViewLabel} />
       <MapFab onCreateMeetup={onCreateMeetup} onCreateQuestion={onCreateQuestion} />

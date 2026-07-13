@@ -1,16 +1,18 @@
 "use client"
 
-import * as React from "react"
-
 import { Chip } from "@/components/ui/chip"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 const CATEGORIES = ["all", "meetup", "question"] as const
 type Category = (typeof CATEGORIES)[number]
 
-function CategoryChipGroup() {
+interface CategoryChipGroupProps {
+  value: Category
+  onChange: (category: Category) => void
+}
+
+function CategoryChipGroup({ value, onChange }: CategoryChipGroupProps) {
   const { messages } = useTranslation()
-  const [selected, setSelected] = React.useState<Category>("all")
 
   const labels: Record<Category, string> = {
     all: messages.home.categoryAll,
@@ -21,7 +23,7 @@ function CategoryChipGroup() {
   return (
     <div className="flex items-center gap-2">
       {CATEGORIES.map((category) => (
-        <Chip key={category} selected={selected === category} onClick={() => setSelected(category)}>
+        <Chip key={category} selected={value === category} onClick={() => onChange(category)}>
           {labels[category]}
         </Chip>
       ))}
@@ -30,3 +32,4 @@ function CategoryChipGroup() {
 }
 
 export { CategoryChipGroup }
+export type { Category }

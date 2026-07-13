@@ -90,6 +90,7 @@ export const zh: Messages = {
     questionMarkerLabel: "提问",
     clusterMarkerLabel: (count) => `本地区${count}个`,
     attributionButtonLabel: "地图版权信息",
+    pinsTruncatedNotice: "该区域标记较多，请放大查看",
   },
   meetup: {
     joinButton: "参加",

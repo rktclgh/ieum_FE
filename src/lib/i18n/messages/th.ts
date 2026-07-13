@@ -90,6 +90,7 @@ export const th: Messages = {
     questionMarkerLabel: "คำถาม",
     clusterMarkerLabel: (count) => `${count} รายการในพื้นที่นี้`,
     attributionButtonLabel: "ข้อมูลลิขสิทธิ์แผนที่",
+    pinsTruncatedNotice: "บริเวณนี้มีหมุดจำนวนมาก ซูมเข้าเพื่อดูทั้งหมด",
   },
   meetup: {
     joinButton: "เข้าร่วม",
