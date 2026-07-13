@@ -9,9 +9,9 @@ import {
   formatDateValue,
   formatTimeValue,
 } from "@/features/meetup/constants/create-meetup"
-import { MeetupAddressPicker } from "@/features/meetup/components/meetup-address-picker"
 import { MeetupDatePicker } from "@/features/meetup/components/meetup-date-picker"
 import { MeetupImagePicker } from "@/features/meetup/components/meetup-image-picker"
+import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
 import { MeetupSelectField } from "@/features/meetup/components/meetup-select-field"
 import { MeetupTimePicker } from "@/features/meetup/components/meetup-time-picker"
 import { useCreateMeetupForm } from "@/features/meetup/hooks/use-create-meetup-form"
@@ -198,12 +198,13 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
         value={form.time}
         onConfirm={form.setTime}
       />
-      <MeetupAddressPicker
-        open={addressPickerOpen}
-        onOpenChange={setAddressPickerOpen}
-        value={form.address}
-        onConfirm={form.setAddress}
-      />
+      {addressPickerOpen ? (
+        <MeetupLocationPicker
+          value={form.address}
+          onConfirm={form.setAddress}
+          onClose={() => setAddressPickerOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }
