@@ -35,9 +35,10 @@ async function getMapPins({ swLat, swLng, neLat, neLng, type }: GetMapPinsParams
   const { data } = await apiClient.get<RawMapPinsResponse>("/api/v1/pins", {
     params: { swLat, swLng, neLat, neLng, ...(type ? { type } : {}) },
   })
+  // 방어: 응답/좌표 누락 시 크래시·(0,0) 유령 핀을 막기 위해 좌표 있는 핀만 매핑한다.
   return {
-    pins: (data.items ?? []).map(adaptPin),
-    truncated: data.truncated,
+    pins: (data?.items ?? []).filter((item) => item.location).map(adaptPin),
+    truncated: data?.truncated ?? false,
   }
 }
 
