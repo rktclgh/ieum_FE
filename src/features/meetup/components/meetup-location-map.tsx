@@ -114,8 +114,8 @@ function MeetupLocationMap({
           </button>
         </div>
 
-        {/* 하단 시트: 직접입력 진입 행 + 주변 장소 */}
-        <div className="pointer-events-auto flex shrink-0 flex-col gap-4 rounded-t-2xl bg-white px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0px_-2px_20px_0px_rgba(0,0,0,0.08)]">
+        {/* 하단 시트: 직접입력 진입 행 + 주변 장소 (전체가 함께 스크롤) */}
+        <div className="pointer-events-auto flex max-h-72 shrink-0 flex-col gap-4 overflow-y-auto rounded-t-2xl bg-white px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0px_-2px_20px_0px_rgba(0,0,0,0.08)]">
           <LocationListItem
             iconSrc="/icons/circle/plus.svg"
             title={t.createPlaceTitle}
@@ -125,18 +125,16 @@ function MeetupLocationMap({
             onAction={() => currentAddress && onCreateName(currentAddress)}
           />
 
-          <div className="flex max-h-56 flex-col gap-4 overflow-y-auto">
-            {nearbyPlaces?.map((place) => (
-              <LocationListItem
-                key={place.id}
-                iconSrc="/icons/schedule/map-pin.svg"
-                title={place.name}
-                subtitle={place.address}
-                actionLabel={t.selectButton}
-                onAction={() => onSelectPlace(place.name)}
-              />
-            ))}
-          </div>
+          {nearbyPlaces?.map((place) => (
+            <LocationListItem
+              key={place.id}
+              iconSrc="/icons/schedule/map-pin.svg"
+              title={place.name}
+              subtitle={place.address}
+              actionLabel={t.selectButton}
+              onAction={() => onSelectPlace(place.name)}
+            />
+          ))}
         </div>
       </div>
     </div>
