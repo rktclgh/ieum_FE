@@ -5,7 +5,6 @@ import * as React from "react"
 import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
-import type { MapBounds } from "@/features/map/api/pin-types"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { usePlaceSearch } from "@/features/map/hooks/use-place-search"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
@@ -31,17 +30,9 @@ interface MeetupLocationMapProps {
   onSelectPlace: (name: string) => void
 }
 
-// 지도 bounds의 중심을 소수 5자리로 반올림해 역지오코딩 재조회를 줄인다(약 1m 격자).
-function boundsCenter(bounds: MapBounds): Coordinates {
-  return {
-    lat: Number(((bounds.swLat + bounds.neLat) / 2).toFixed(5)),
-    lng: Number(((bounds.swLng + bounds.neLng) / 2).toFixed(5)),
-  }
-}
-
 /**
- * 장소 선택 - 지도 화면. 지도를 움직여 중앙 핀이 가리키는 지점의 주소를 역지오코딩하고,
- * 그 주소를 직접 입력하거나 주변 장소를 검색해 고른다. GPS 버튼으로 내 위치로 재중심.
+ * 장소 선택 - 지도 화면. 지도에서 지점을 클릭하면 Figma 핀을 찍고 그 지점을 역지오코딩하며,
+ * 내 위치는 항상 표시된다. GPS 버튼으로 내 위치로 재중심. 클릭 전에는 내 위치를 기준으로 안내한다.
  */
 function MeetupLocationMap({
   position,
@@ -57,18 +48,15 @@ function MeetupLocationMap({
   // recenter: GPS 탭 시에만 새 객체로 갱신(→ 재중심). 평소엔 null이라 center는 최초 내 위치로 고정,
   // 사용자가 지도를 팬해도 center prop 식별자가 그대로여서 되돌아가지 않는다.
   const [recenter, setRecenter] = React.useState<Coordinates | null>(null)
-  const [target, setTarget] = React.useState<Coordinates | null>(null)
+  // clicked: 지도에서 직접 고른 지점(Figma 핀 표시). 없으면 내 위치를 기준으로 역지오코딩한다.
+  const [clicked, setClicked] = React.useState<Coordinates | null>(null)
   const center = recenter ?? position
+  const target = clicked ?? position
 
   const handleGps = () => {
     onRequestLocation()
     if (position) setRecenter({ ...position })
   }
-
-  const handleBounds = React.useCallback((bounds: MapBounds) => {
-    const next = boundsCenter(bounds)
-    setTarget((prev) => (prev && prev.lat === next.lat && prev.lng === next.lng ? prev : next))
-  }, [])
 
   const { data: reverseGeocoded } = useReverseGeocode(target)
   const currentAddress = reverseGeocoded?.fullAddress ?? reverseGeocoded?.shortLabel ?? null
@@ -81,20 +69,10 @@ function MeetupLocationMap({
       <MapCanvas
         center={center}
         className="absolute inset-0 z-0 size-full"
-        onBoundsChange={handleBounds}
+        onMapClick={setClicked}
         livePosition={position}
+        selectedPosition={clicked}
       />
-
-      {/* 화면 중앙 고정 핀 — 지도를 움직이면 이 지점의 주소가 갱신된다 */}
-      <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-full">
-        <Image
-          src="/icons/map/pin-teardrop.svg"
-          alt=""
-          width={44}
-          height={54}
-          className="drop-shadow-[0px_2px_4px_rgba(0,0,0,0.2)]"
-        />
-      </div>
 
       {/* 전경 레이아웃 — 가운데 스페이서는 지도 드래그를 통과시킨다(pointer-events-none) */}
       <div className="relative z-20 flex size-full flex-col">

@@ -36,8 +36,8 @@ function LocationListItem({
       </span>
 
       <div className="flex min-w-0 flex-1 flex-col items-start">
-        <p className="truncate text-title-semibold-16 text-gray-900">{title}</p>
-        <p className="text-body-regular-14 text-gray-600">{subtitle}</p>
+        <p className="line-clamp-2 text-title-semibold-16 text-gray-900">{title}</p>
+        <p className="line-clamp-2 text-body-regular-14 text-gray-600">{subtitle}</p>
       </div>
 
       <button

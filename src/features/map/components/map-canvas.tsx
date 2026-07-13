@@ -26,9 +26,24 @@ interface MapCanvasProps {
   livePosition?: Coordinates | null
   liveAccuracy?: number | null
   onUserPan?: () => void
+  /** 사용자가 지도에서 고른 지점 — Figma Location/XL 핀으로 표시 */
+  selectedPosition?: Coordinates | null
 }
 
-const LIVE_ACCENT = "#316CED" 
+const LIVE_ACCENT = "#316CED"
+
+// Figma Location/XL (node 1716:12220): 파란 물방울 핀 + 흰 구멍 + 회색 그림자 타원. 팁이 좌표를 가리킨다.
+const selectedLocationIcon = L.divIcon({
+  html: `<svg width="40" height="47" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="12" cy="24.3" rx="4.5" ry="1.5" fill="#9AA5A8" fill-opacity="0.5"/>
+    <path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.02 6.44 12.02 8.28 13.62.41.36 1.03.36 1.44 0C14.56 22.52 21 16.52 21 10.5 21 5.53 16.97 1.5 12 1.5Z" fill="${LIVE_ACCENT}"/>
+    <circle cx="12" cy="10.5" r="3.25" fill="#ffffff"/>
+  </svg>`,
+  className: "",
+  iconSize: [40, 47],
+  iconAnchor: [20, 41],
+})
+
 const userLocationIcon = L.divIcon({
   html: `<div style="position:relative;width:48px;height:48px">
     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" style="position:absolute;inset:0">
@@ -114,6 +129,7 @@ function MapCanvas({
   livePosition,
   liveAccuracy,
   onUserPan,
+  selectedPosition,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
 
@@ -137,6 +153,9 @@ function MapCanvas({
       {pins?.map((pin) => (
         <PinMarker key={pin.pinId} pin={pin} onClick={onPinClick} />
       ))}
+      {selectedPosition && (
+        <Marker position={[selectedPosition.lat, selectedPosition.lng]} icon={selectedLocationIcon} />
+      )}
       {livePosition && (
         <>
           {liveAccuracy ? (
