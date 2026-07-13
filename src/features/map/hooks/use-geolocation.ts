@@ -58,7 +58,13 @@ function useGeolocation() {
     if (watchIdRef.current !== null) return
 
     setIsFollowing(true)
-    watchIdRef.current = navigator.geolocation.watchPosition(
+
+    // watchPosition은 권한 거부/GPS 꺼짐 시 에러 콜백을 동기 실행할 수 있다. 그 시점엔 아직
+    // watchIdRef에 id가 없어 stopFollow의 clearWatch가 누락되므로, 반환 id를 직접 정리한다.
+    let isSync = true
+    let syncErrored = false
+
+    const id = navigator.geolocation.watchPosition(
       (result) => {
         setPosition({ lat: result.coords.latitude, lng: result.coords.longitude })
         setAccuracy(result.coords.accuracy)
@@ -66,10 +72,19 @@ function useGeolocation() {
       },
       () => {
         setStatus("error")
-        stopFollow()
+        if (isSync) syncErrored = true
+        else stopFollow()
       },
       { ...GEOLOCATION_OPTIONS, maximumAge: 1_000 }
     )
+
+    isSync = false
+    if (syncErrored) {
+      navigator.geolocation.clearWatch(id)
+      setIsFollowing(false)
+    } else {
+      watchIdRef.current = id
+    }
   }, [isSupported, stopFollow])
 
   const toggleFollow = React.useCallback(() => {
