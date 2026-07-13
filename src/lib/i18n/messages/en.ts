@@ -96,7 +96,6 @@ export const en: Messages = {
   meetup: {
     joinButton: "Join",
     participantCount: (count) => `${count} joined`,
-    participantOfMax: (count, max) => `${count}/${max} joined`,
     closeLabel: "Close",
     imageAlt: "Meetup image",
     noSchedule: "Date TBD",

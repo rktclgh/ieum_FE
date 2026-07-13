@@ -95,7 +95,6 @@ export const ja: Messages = {
   meetup: {
     joinButton: "参加する",
     participantCount: (count) => `現在${count}人が参加中`,
-    participantOfMax: (count, max) => `${count}/${max}人が参加中`,
     closeLabel: "閉じる",
     imageAlt: "集まりの画像",
     noSchedule: "日程未定",

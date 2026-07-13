@@ -95,7 +95,6 @@ export const zh: Messages = {
   meetup: {
     joinButton: "参加",
     participantCount: (count) => `当前${count}人参加中`,
-    participantOfMax: (count, max) => `${count}/${max}人参加中`,
     closeLabel: "关闭",
     imageAlt: "聚会图片",
     noSchedule: "时间待定",
