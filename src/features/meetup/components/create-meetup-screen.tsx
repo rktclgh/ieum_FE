@@ -83,7 +83,8 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
           <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-600">
             <input
               value={form.title}
-              onChange={(event) => form.setTitle(event.target.value)}
+              // maxLength만으로는 한글(IME) 조합 중 16번째 글자가 새어 들어가므로 상태에서 직접 자름
+              onChange={(event) => form.setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
               onFocus={() => setTitleFocused(true)}
               onBlur={() => setTitleFocused(false)}
               maxLength={TITLE_MAX_LENGTH}
