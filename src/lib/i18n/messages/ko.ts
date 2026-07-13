@@ -161,6 +161,39 @@ export interface Messages {
     emailLabel: string
     gradeLabel: string
     acceptedCountLabel: string
+    editInfoLabel: string
+    settingsLabel: string
+    edit: {
+      title: string
+      genderOther: string
+      saveButton: string
+    }
+    settings: {
+      title: string
+      languageLabel: string
+      permissionsSectionTitle: string
+      cameraPermissionLabel: string
+      pushPermissionLabel: string
+      notificationsSectionTitle: string
+      notifyAllLabel: string
+      notifyMeetingLabel: string
+      notifyQuestionLabel: string
+      notifyRadiusLabel: string
+      radiusOption: (km: number) => string
+      locationLabel: string
+      locationUpdateAction: string
+      locationSublabel: string
+      locationUpdating: string
+      locationUpdated: string
+      locationDenied: string
+      locationUnavailable: string
+      saveError: string
+    }
+    errors: {
+      NICKNAME_TAKEN: string
+      VALIDATION_FAILED: string
+      default: string
+    }
   }
   tabBar: {
     home: string
@@ -432,6 +465,39 @@ export const ko: Messages = {
     emailLabel: "이메일",
     gradeLabel: "등급",
     acceptedCountLabel: "채택 수",
+    editInfoLabel: "내 정보 수정",
+    settingsLabel: "설정",
+    edit: {
+      title: "내 정보 수정",
+      genderOther: "기타",
+      saveButton: "저장",
+    },
+    settings: {
+      title: "설정",
+      languageLabel: "언어",
+      permissionsSectionTitle: "권한",
+      cameraPermissionLabel: "카메라 권한",
+      pushPermissionLabel: "푸시 알림 권한",
+      notificationsSectionTitle: "알림",
+      notifyAllLabel: "전체 알림",
+      notifyMeetingLabel: "모임 알림",
+      notifyQuestionLabel: "질문 알림",
+      notifyRadiusLabel: "알림 반경",
+      radiusOption: (km) => `${km}km`,
+      locationLabel: "위치",
+      locationUpdateAction: "내 위치 업데이트",
+      locationSublabel: "지도에서 내 위치를 최신으로 갱신해요.",
+      locationUpdating: "위치 업데이트 중...",
+      locationUpdated: "위치가 업데이트되었어요.",
+      locationDenied: "위치 권한이 필요해요.",
+      locationUnavailable: "위치를 가져오지 못했어요.",
+      saveError: "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    },
+    errors: {
+      NICKNAME_TAKEN: "이미 사용중인 닉네임이에요.",
+      VALIDATION_FAILED: "입력값을 다시 확인해 주세요.",
+      default: "잠시 후 다시 시도해 주세요.",
+    },
   },
   tabBar: {
     home: "홈",
