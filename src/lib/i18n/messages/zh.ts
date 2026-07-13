@@ -327,6 +327,12 @@ export const zh: Messages = {
     confirmTitle: (name) => `举报${name}的消息`,
     confirmTitleGeneric: "举报该消息",
     confirmDescription: "确定要举报吗？",
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: "该消息已被删除或不存在。",
+      NOT_ROOM_MEMBER: "您不是该聊天室的成员，无法举报。",
+      VALIDATION_FAILED: "无法处理该请求。",
+      default: "请稍后再试。",
+    },
   },
   friends: {
     errors: {

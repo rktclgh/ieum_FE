@@ -328,6 +328,12 @@ export interface Messages {
     confirmTitle: (name: string) => string
     confirmTitleGeneric: string
     confirmDescription: string
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: string
+      NOT_ROOM_MEMBER: string
+      VALIDATION_FAILED: string
+      default: string
+    }
   }
   friends: {
     errors: {
@@ -677,6 +683,12 @@ export const ko: Messages = {
     confirmTitle: (name) => `${name}님의 메시지를 신고합니다`,
     confirmTitleGeneric: "메시지를 신고합니다",
     confirmDescription: "정말로 신고하시겠습니까?",
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: "삭제되었거나 존재하지 않는 메시지예요.",
+      NOT_ROOM_MEMBER: "채팅방 멤버가 아니어서 신고할 수 없어요.",
+      VALIDATION_FAILED: "요청을 처리할 수 없어요.",
+      default: "잠시 후 다시 시도해 주세요.",
+    },
   },
   friends: {
     errors: {

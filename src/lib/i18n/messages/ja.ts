@@ -327,6 +327,12 @@ export const ja: Messages = {
     confirmTitle: (name) => `${name}さんのメッセージを通報します`,
     confirmTitleGeneric: "メッセージを通報します",
     confirmDescription: "本当に通報しますか？",
+    errors: {
+      REPORT_MESSAGE_NOT_FOUND: "削除された、または存在しないメッセージです。",
+      NOT_ROOM_MEMBER: "このチャットのメンバーではないため通報できません。",
+      VALIDATION_FAILED: "リクエストを処理できませんでした。",
+      default: "しばらくしてからもう一度お試しください。",
+    },
   },
   friends: {
     errors: {

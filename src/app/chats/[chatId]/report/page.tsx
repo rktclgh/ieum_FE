@@ -4,15 +4,17 @@ import { ReportPageContent } from "@/features/report/components/report-page-cont
 
 interface ChatReportPageProps {
   params: Promise<{ chatId: string }>
-  searchParams: Promise<{ target?: string }>
+  searchParams: Promise<{ target?: string; messageId?: string }>
 }
 
 export default async function ChatReportPage({ params, searchParams }: ChatReportPageProps) {
   const { chatId } = await params
-  const { target } = await searchParams
+  const { target, messageId } = await searchParams
   const roomId = Number(chatId)
+  const parsedMessageId = Number(messageId)
 
   if (!Number.isInteger(roomId) || roomId <= 0) notFound()
+  if (!Number.isInteger(parsedMessageId) || parsedMessageId <= 0) notFound()
 
-  return <ReportPageContent targetName={target} />
+  return <ReportPageContent messageId={parsedMessageId} targetName={target} />
 }
