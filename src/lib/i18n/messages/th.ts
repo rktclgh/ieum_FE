@@ -95,7 +95,6 @@ export const th: Messages = {
   meetup: {
     joinButton: "เข้าร่วม",
     participantCount: (count) => `กำลังเข้าร่วม ${count} คน`,
-    participantOfMax: (count, max) => `เข้าร่วม ${count}/${max} คน`,
     closeLabel: "ปิด",
     imageAlt: "รูปกลุ่มพบปะ",
     noSchedule: "ยังไม่กำหนดวัน",

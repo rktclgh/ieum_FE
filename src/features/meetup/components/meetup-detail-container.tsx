@@ -22,13 +22,15 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface MeetupDetailContainerProps {
   meetingId: number
+  /** 시트를 닫을 때 호출. 없으면 라우트 뒤로가기(router.back). 지도 핀 오버레이에선 콜백으로 닫는다. */
+  onClose?: () => void
 }
 
 /**
  * 모임 상세 컨테이너. 상세/참가자 조회 + 참가·탈퇴·강퇴·마감·취소 mutation 을 시트에 연결한다.
- * 지도 핀 클릭 진입(#31)은 아직 미연동이라, 직접 라우트(/meetups/[meetingId])로 진입해 검증한다.
+ * 라우트(/meetups/[meetingId])와 지도 핀 클릭 오버레이 양쪽에서 재사용한다.
  */
-function MeetupDetailContainer({ meetingId }: MeetupDetailContainerProps) {
+function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProps) {
   const router = useRouter()
   const { messages, language } = useTranslation()
 
@@ -74,7 +76,7 @@ function MeetupDetailContainer({ meetingId }: MeetupDetailContainerProps) {
     }
   }
 
-  const close = () => router.back()
+  const close = () => (onClose ? onClose() : router.back())
 
   const handleJoin = () =>
     run(async () => {

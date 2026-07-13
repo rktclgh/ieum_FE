@@ -96,7 +96,6 @@ export const vi: Messages = {
   meetup: {
     joinButton: "Tham gia",
     participantCount: (count) => `${count} người đang tham gia`,
-    participantOfMax: (count, max) => `${count}/${max} người tham gia`,
     closeLabel: "Đóng",
     imageAlt: "Ảnh buổi gặp mặt",
     noSchedule: "Chưa có lịch",

@@ -11,9 +11,12 @@ interface MapBounds {
   neLng: number
 }
 
+// FE에서 다루는 핀 뷰모델. BE raw 응답을 pin-api 어댑터로 이 형태에 맞춘다.
 interface MapPin {
   pinId: number
   pinType: PinType
+  /** 핀이 가리키는 원본 엔티티(모임/질문) ID — 핀 클릭 → 상세 이동에 사용 */
+  targetId: number
   title: string
   thumbnailUrl: string | null
   location: { lat: number; lng: number }
@@ -27,4 +30,21 @@ interface MapPinsResponse {
   truncated: boolean
 }
 
-export type { PinType, MapBounds, MapPin, MapPinsResponse }
+// BE §7 원본 응답 형태: 배열 래퍼가 `items`, 좌표가 `latitude/longitude`.
+interface RawMapPin {
+  pinId: number
+  pinType: PinType
+  targetId: number
+  title: string
+  thumbnailUrl: string | null
+  location: { latitude: number; longitude: number }
+  mine: boolean
+  createdAt: string
+}
+
+interface RawMapPinsResponse {
+  items: RawMapPin[]
+  truncated: boolean
+}
+
+export type { PinType, MapBounds, MapPin, MapPinsResponse, RawMapPin, RawMapPinsResponse }

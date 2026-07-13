@@ -96,7 +96,6 @@ export const ru: Messages = {
   meetup: {
     joinButton: "Участвовать",
     participantCount: (count) => `Сейчас участвует: ${count}`,
-    participantOfMax: (count, max) => `Участников: ${count}/${max}`,
     closeLabel: "Закрыть",
     imageAlt: "Изображение встречи",
     noSchedule: "Дата не назначена",

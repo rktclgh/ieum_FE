@@ -96,7 +96,6 @@ export interface Messages {
   meetup: {
     joinButton: string
     participantCount: (count: number) => string
-    participantOfMax: (count: number, max: number) => string
     closeLabel: string
     imageAlt: string
     noSchedule: string
@@ -465,7 +464,6 @@ export const ko: Messages = {
   meetup: {
     joinButton: "참여하기",
     participantCount: (count) => `현재 ${count}명 참여 중`,
-    participantOfMax: (count, max) => `${count}/${max}명 참여 중`,
     closeLabel: "닫기",
     imageAlt: "모임 이미지",
     noSchedule: "일정 미정",

@@ -94,7 +94,7 @@ function MeetupDetailSheet({
             <InfoRow iconSrc="/icons/meetup/location.svg">{display.locationLabel}</InfoRow>
           </div>
           <InfoRow iconSrc="/icons/meetup/people.svg">
-            {t.participantOfMax(display.participantCount, display.maxMembers)}
+            {t.participantCount(display.participantCount)}
           </InfoRow>
         </div>
       </div>
