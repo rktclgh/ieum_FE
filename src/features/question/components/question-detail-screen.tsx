@@ -1,0 +1,188 @@
+"use client"
+
+import * as React from "react"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+
+import { AppBar } from "@/components/ui/app-bar"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { QuestionAnswerItem } from "@/features/question/components/question-answer-item"
+import {
+  useAcceptAnswer,
+  usePostAnswer,
+} from "@/features/question/hooks/use-question-mutations"
+import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
+import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
+import { useTranslation } from "@/lib/i18n/use-translation"
+
+interface QuestionDetailScreenProps {
+  questionId: number
+}
+
+function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
+  const router = useRouter()
+  const { messages } = useTranslation()
+
+  const detailQuery = useQuestionDetail(questionId)
+  const postAnswer = usePostAnswer(questionId)
+  const acceptAnswer = useAcceptAnswer(questionId)
+
+  const [reply, setReply] = React.useState("")
+  const [actionError, setActionError] = React.useState<string | null>(null)
+  const [pendingAcceptId, setPendingAcceptId] = React.useState<number | null>(null)
+
+  React.useEffect(() => {
+    if (!actionError) return
+    const timeoutId = window.setTimeout(() => setActionError(null), 2500)
+    return () => window.clearTimeout(timeoutId)
+  }, [actionError])
+
+  const showError = (error: unknown) =>
+    setActionError(getQuestionErrorMessage(error, messages))
+
+  const question = detailQuery.data
+
+  const handleSend = () => {
+    const value = reply.trim()
+    if (!value || postAnswer.isPending) return
+    postAnswer.mutate(
+      { content: value },
+      {
+        onSuccess: () => setReply(""),
+        onError: showError,
+      }
+    )
+  }
+
+  const handleConfirmAccept = () => {
+    if (pendingAcceptId == null) return
+    acceptAnswer.mutate(pendingAcceptId, { onError: showError })
+    setPendingAcceptId(null)
+  }
+
+  return (
+    <>
+      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col">
+        <AppBar
+          title={messages.question.detailTitle}
+          trailingIcon={null}
+          onLeadingClick={() => router.back()}
+        />
+
+        {detailQuery.isError ? (
+          <p className="w-full px-4 pt-10 text-center text-body-regular-14 text-gray-400">
+            {getQuestionErrorMessage(detailQuery.error, messages) || messages.question.loadError}
+          </p>
+        ) : question ? (
+          <div className="flex flex-1 flex-col gap-4 px-4 pb-24">
+            <div className="flex w-full flex-col gap-3 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="size-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
+                  {question.authorAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={question.authorAvatarUrl} alt="" className="size-full object-cover" />
+                  ) : null}
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-title-semibold-16 text-gray-900">{question.authorName}</span>
+                  <span className="text-body-regular-14 text-gray-500">{question.address}</span>
+                </div>
+                {question.isResolved ? (
+                  <span className="ml-auto rounded-full bg-primary-600 px-2.5 py-1 text-body-medium-14 text-white">
+                    {messages.question.resolvedBadge}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="flex w-full flex-col gap-1">
+                <h1 className="text-title-semibold-18 text-gray-900">{question.title}</h1>
+                <p className="text-body-regular-14 whitespace-pre-line text-gray-700">
+                  {question.content}
+                </p>
+              </div>
+
+              {question.imageUrls.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {question.imageUrls.map((url) => (
+                    <div key={url} className="relative h-40 w-full overflow-hidden rounded-2xl bg-gray-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={messages.question.imageAlt} className="size-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex w-full flex-col">
+              <span className="text-title-semibold-16 text-gray-900">
+                {messages.question.answersTitle(question.answers.length)}
+              </span>
+              {question.answers.length === 0 ? (
+                <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
+                  {messages.question.emptyAnswers}
+                </p>
+              ) : (
+                question.answers.map((answer) => (
+                  <QuestionAnswerItem
+                    key={answer.answerId}
+                    answer={answer}
+                    canAccept={!question.isResolved && !answer.isAccepted}
+                    onAccept={() => setPendingAcceptId(answer.answerId)}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1" />
+        )}
+
+        {question ? (
+          <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm bg-white px-4 pt-2 pb-6">
+            <div className="flex w-full items-center justify-between gap-2 rounded-full border border-gray-50 bg-gray-50/95 py-2 pr-2 pl-4">
+              <input
+                aria-label={messages.question.answerPlaceholder}
+                value={reply}
+                onChange={(event) => setReply(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.nativeEvent.isComposing) handleSend()
+                }}
+                placeholder={messages.question.answerPlaceholder}
+                className="min-w-0 flex-1 bg-transparent text-body-regular-14 text-gray-900 outline-none placeholder:text-gray-400"
+              />
+              <button
+                type="button"
+                aria-label={messages.question.sendLabel}
+                onClick={handleSend}
+                disabled={postAnswer.isPending}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-400 disabled:opacity-50"
+              >
+                <Image src="/icons/chat/send.svg" alt="" width={16} height={16} className="size-4" />
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </main>
+
+      {actionError && (
+        <div className="fixed inset-x-0 bottom-24 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
+            {actionError}
+          </div>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={pendingAcceptId != null}
+        onOpenChange={(open) => !open && setPendingAcceptId(null)}
+        title={messages.question.acceptConfirmTitle}
+        description={messages.question.acceptConfirmDescription}
+        cancelLabel={messages.question.acceptConfirmCancel}
+        confirmLabel={messages.question.acceptButton}
+        onConfirm={handleConfirmAccept}
+      />
+    </>
+  )
+}
+
+export { QuestionDetailScreen }

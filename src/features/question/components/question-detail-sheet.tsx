@@ -18,10 +18,9 @@ function QuestionDetailSheet({ open, onOpenChange, question, onSend }: QuestionD
   const { messages } = useTranslation()
   const [reply, setReply] = React.useState("")
   // 닫힘 애니메이션 중 부모가 question을 null로 먼저 비워도 마지막 내용을 유지해 렌더링한다.
+  // 렌더 중 상태 조정(React 권장 패턴) — question이 바뀌면 즉시 반영해 effect 없이 동기화한다.
   const [lastQuestion, setLastQuestion] = React.useState(question)
-  React.useEffect(() => {
-    if (question) setLastQuestion(question)
-  }, [question])
+  if (question && question !== lastQuestion) setLastQuestion(question)
   const display = question ?? lastQuestion
 
   const handleSend = () => {
