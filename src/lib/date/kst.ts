@@ -30,4 +30,15 @@ function isKstToday(input: Date | string | number): boolean {
   return getKstDateKey(input) === getKstDateKey(new Date())
 }
 
-export { getKstDateKey, formatKstFullDate, formatKstShortDate, isKstToday }
+/** 말풍선 시각용: "오전 8:17" (KST 기준) */
+function formatKstTime(input: Date | string | number): string {
+  const date = new Date(input)
+  if (isNaN(date.getTime())) return ""
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: KST_TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date)
+}
+
+export { getKstDateKey, formatKstFullDate, formatKstShortDate, isKstToday, formatKstTime }

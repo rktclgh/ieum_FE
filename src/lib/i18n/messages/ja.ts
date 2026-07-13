@@ -117,6 +117,7 @@ export const ja: Messages = {
   },
   chat: {
     listSearchPlaceholder: "チャット・友達を検索",
+    emptyList: "まだチャットがありません",
     friendSearchPlaceholder: "ニックネーム検索",
     addFriendTitle: "友達追加",
     myFriendsTitle: "友達",
@@ -159,6 +160,9 @@ export const ja: Messages = {
     removeMemberButton: "追い出す",
     leaveChatAction: "チャットルームを退出",
     disbandChatAction: "チャットルームを解散",
+    sendFailed: "メッセージを送信できません。接続を確認してください。",
+    leaveFailed: "チャットルームの退出に失敗しました。",
+    disbandFailed: "チャットルームの解散に失敗しました。",
     leaveChatConfirmTitle: "チャットルームを退出します",
     leaveChatConfirmDescription: "本当に退出しますか?",
     disbandChatConfirmTitle: "チャットルームを解散します",

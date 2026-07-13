@@ -117,6 +117,7 @@ export const th: Messages = {
   },
   chat: {
     listSearchPlaceholder: "ค้นหาแชท เพื่อน",
+    emptyList: "ยังไม่มีแชท",
     friendSearchPlaceholder: "ค้นหาชื่อเล่น",
     addFriendTitle: "เพิ่มเพื่อน",
     myFriendsTitle: "เพื่อน",
@@ -159,6 +160,9 @@ export const th: Messages = {
     removeMemberButton: "นำออก",
     leaveChatAction: "ออกจากห้องแชท",
     disbandChatAction: "ยุบห้องแชท",
+    sendFailed: "ไม่สามารถส่งข้อความได้ กรุณาตรวจสอบการเชื่อมต่อ",
+    leaveFailed: "ออกจากห้องแชทไม่สำเร็จ",
+    disbandFailed: "ยุบห้องแชทไม่สำเร็จ",
     leaveChatConfirmTitle: "ออกจากห้องแชทนี้",
     leaveChatConfirmDescription: "คุณแน่ใจหรือไม่ว่าต้องการออก?",
     disbandChatConfirmTitle: "ยุบห้องแชทนี้",

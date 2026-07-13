@@ -1,0 +1,107 @@
+"use client"
+
+import * as React from "react"
+import { Client, type IMessage } from "@stomp/stompjs"
+
+import { API_BASE_URL } from "@/lib/api/config"
+import type {
+  ChatWebSocketErrorResponse,
+  SendChatMessageRequest,
+  WsMessageEvent,
+} from "@/features/chat/api/chat-types"
+
+// STOMP 엔드포인트는 rewrite 대상이 아니므로 백엔드(8080)로 직접 연결한다.
+// 인증은 handshake 시 함께 전송되는 access_token 쿠키(host=localhost, 포트 무관)로 처리된다.
+function resolveBrokerUrl() {
+  const wsBase = API_BASE_URL.replace(/^http/, "ws")
+  return `${wsBase}/ws`
+}
+
+interface ChatSocketHandlers {
+  onMessage?: (event: WsMessageEvent) => void
+  onError?: (error: ChatWebSocketErrorResponse) => void
+  onConnectedChange?: (connected: boolean) => void
+}
+
+// 방 하나에 대한 STOMP 연결을 관리하는 훅.
+// - /topic/rooms/{roomId} 구독 → 메시지 수신
+// - /user/queue/errors 구독 → 검증/세션 에러 수신
+// - send()로 /app/rooms/{roomId}/send 발행
+function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) {
+  const clientRef = React.useRef<Client | null>(null)
+  const [connected, setConnected] = React.useState(false)
+
+  // 핸들러는 매 렌더 새로 생성될 수 있어 ref에 담아 최신값을 구독 콜백이 참조하게 한다.
+  // 렌더 중 ref 쓰기(react-hooks/refs 위반)를 피하려 커밋 이후 effect에서 갱신한다.
+  const handlersRef = React.useRef(handlers)
+  React.useEffect(() => {
+    handlersRef.current = handlers
+  }, [handlers])
+
+  React.useEffect(() => {
+    if (roomId == null) return
+
+    const client = new Client({
+      brokerURL: resolveBrokerUrl(),
+      reconnectDelay: 3000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
+      onConnect: () => {
+        setConnected(true)
+        handlersRef.current.onConnectedChange?.(true)
+
+        client.subscribe(`/topic/rooms/${roomId}`, (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as WsMessageEvent
+            handlersRef.current.onMessage?.(event)
+          } catch {
+            // malformed payload는 무시한다.
+          }
+        })
+
+        client.subscribe("/user/queue/errors", (message: IMessage) => {
+          try {
+            const error = JSON.parse(message.body) as ChatWebSocketErrorResponse
+            handlersRef.current.onError?.(error)
+          } catch {
+            // ignore
+          }
+        })
+      },
+      onDisconnect: () => {
+        setConnected(false)
+        handlersRef.current.onConnectedChange?.(false)
+      },
+      onWebSocketClose: () => {
+        setConnected(false)
+        handlersRef.current.onConnectedChange?.(false)
+      },
+    })
+
+    client.activate()
+    clientRef.current = client
+
+    return () => {
+      clientRef.current = null
+      void client.deactivate()
+    }
+  }, [roomId])
+
+  const send = React.useCallback(
+    (payload: SendChatMessageRequest) => {
+      const client = clientRef.current
+      if (!client || !client.connected || roomId == null) return false
+      client.publish({
+        destination: `/app/rooms/${roomId}/send`,
+        body: JSON.stringify(payload),
+      })
+      return true
+    },
+    [roomId]
+  )
+
+  return { connected, send }
+}
+
+export { useChatRoomSocket }
+export type { ChatSocketHandlers }

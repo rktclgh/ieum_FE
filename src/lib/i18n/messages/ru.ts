@@ -118,6 +118,7 @@ export const ru: Messages = {
   },
   chat: {
     listSearchPlaceholder: "Поиск чатов, друзей",
+    emptyList: "Пока нет чатов",
     friendSearchPlaceholder: "Поиск по нику",
     addFriendTitle: "Добавить друга",
     myFriendsTitle: "Друзья",
@@ -160,6 +161,9 @@ export const ru: Messages = {
     removeMemberButton: "Удалить",
     leaveChatAction: "Покинуть чат",
     disbandChatAction: "Распустить чат",
+    sendFailed: "Не удалось отправить сообщение. Проверьте подключение.",
+    leaveFailed: "Не удалось выйти из чата.",
+    disbandFailed: "Не удалось распустить чат.",
     leaveChatConfirmTitle: "Покинуть этот чат",
     leaveChatConfirmDescription: "Вы уверены, что хотите выйти?",
     disbandChatConfirmTitle: "Распустить этот чат",

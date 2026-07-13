@@ -13,8 +13,8 @@ interface ChatRoomMemberItemProps extends React.ComponentProps<"div"> {
   name: string
   isMe?: boolean
   isOwner?: boolean
-  flagSrc: string
-  nation: string
+  flagSrc?: string
+  nation?: string
   onRemove?: () => void
 }
 
@@ -51,7 +51,9 @@ function ChatRoomMemberItem({
               <Image src="/icons/chat/crown.svg" alt="" width={20} height={20} className="size-5" />
             )}
           </div>
-          <CountryFlag flagSrc={flagSrc} country={nation} className="[&_span]:text-body-regular-13" />
+          {flagSrc && (
+            <CountryFlag flagSrc={flagSrc} country={nation ?? ""} className="[&_span]:text-body-regular-13" />
+          )}
         </div>
       </div>
       {onRemove && !isMe && (

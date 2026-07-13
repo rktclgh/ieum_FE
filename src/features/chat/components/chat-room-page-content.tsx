@@ -27,42 +27,40 @@ import { ChatRoomMemberItem } from "@/features/chat/components/chat-room-member-
 import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-danger-actions"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useChatMessages, useChatRoom } from "@/features/chat/hooks/use-chat-queries"
+import {
+  useDisbandRoom,
+  useLeaveRoom,
+  useMarkRead,
+  useSetNotify,
+  useSetPinned,
+} from "@/features/chat/hooks/use-chat-mutations"
+import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
+import {
+  adaptMember,
+  adaptMessage,
+  resolveRoomTitle,
+  type ChatBubbleMessage,
+} from "@/features/chat/lib/chat-adapter"
+import { useMe } from "@/features/session/hooks/use-me"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { getKstDateKey, formatKstFullDate, formatKstShortDate } from "@/lib/date/kst"
 import { cn } from "@/lib/utils"
-import { MOCK_CHATS, MOCK_MEMBERS, MOCK_MESSAGES } from "@/features/chat/constants/mock-data"
-
-type Chat = (typeof MOCK_CHATS)[number]
-type Message = (typeof MOCK_MESSAGES)[number]
 
 // 롱프레스 메뉴(최대 3개 항목) 높이 추정치 + 하단 입력창과 겹치지 않기 위한 여유 공간
 const MESSAGE_MENU_HEIGHT_ESTIMATE = 180
 const MESSAGE_BOTTOM_SAFE_AREA = 96
 
 interface MessageRowProps {
-  message: Message
+  message: ChatBubbleMessage
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
   onOpenMenu: () => void
   onCloseMenu: () => void
-  onRegisterRef: (id: string, el: HTMLDivElement | null) => void
-  onReplyQuoteClick?: () => void
-  highlightedIndex?: number
-  onHighlightAnimationEnd?: () => void
 }
 
-function MessageRow({
-  message,
-  menuOpen,
-  menuItems,
-  onOpenMenu,
-  onCloseMenu,
-  onRegisterRef,
-  onReplyQuoteClick,
-  highlightedIndex,
-  onHighlightAnimationEnd,
-}: MessageRowProps) {
+function MessageRow({ message, menuOpen, menuItems, onOpenMenu, onCloseMenu }: MessageRowProps) {
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const isMe = message.sender === "me"
@@ -79,25 +77,12 @@ function MessageRow({
   const longPress = useLongPress({ onLongPress: handleOpenMenu })
 
   return (
-    <div
-      ref={(el) => {
-        rowRef.current = el
-        onRegisterRef(message.id, el)
-      }}
-      className="relative"
-      {...longPress}
-    >
+    <div ref={rowRef} className="relative" {...longPress}>
       <ChatBubble
         sender={message.sender}
         variant={message.variant}
         name={message.name}
         texts={message.texts}
-        replyLabel={message.replyLabel}
-        replyQuote={message.replyQuote}
-        replyText={message.replyText}
-        onReplyQuoteClick={onReplyQuoteClick}
-        highlightedIndex={highlightedIndex}
-        onHighlightAnimationEnd={onHighlightAnimationEnd}
         time={message.time}
         className={cn(menuOpen && "relative z-50")}
       />
@@ -107,7 +92,6 @@ function MessageRow({
           dimmed
           onDismiss={onCloseMenu}
           className={cn(
-            // others 말풍선은 아바타(26px) + gap(8px)만큼 오른쪽으로 밀어 말풍선 좌측 라인에 맞춘다.
             isMe ? "right-0" : "left-[34px]",
             placement === "top" ? "bottom-full mb-3" : "top-full mt-2"
           )}
@@ -118,35 +102,81 @@ function MessageRow({
 }
 
 interface ChatRoomPageContentProps {
-  chat: Chat
+  roomId: number
 }
 
-function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
+// createdAt + messageId 기준으로 중복 제거 후 오래된→최신 정렬한다(초기 로드 + 실시간 수신 병합).
+function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): ChatBubbleMessage[] {
+  const byId = new Map<number, ChatBubbleMessage>()
+  for (const message of [...base, ...live]) {
+    byId.set(message.messageId, message)
+  }
+  return [...byId.values()].sort((a, b) => {
+    if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? -1 : 1
+    return a.messageId - b.messageId
+  })
+}
+
+function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
   const router = useRouter()
   const { messages } = useTranslation()
+  const { data: me } = useMe()
+  const myUserId = me?.userId ?? -1
 
-  const [notice, setNotice] = React.useState<string | null>(chat.notice ?? null)
+  const { data: room } = useChatRoom(roomId)
+  const { messages: initialMessages } = useChatMessages(roomId)
+
+  const [liveMessages, setLiveMessages] = React.useState<ChatBubbleMessage[]>([])
+  const [notice, setNotice] = React.useState<string | null>(null)
   const [moreOpen, setMoreOpen] = React.useState(false)
-  const [notificationOn, setNotificationOn] = React.useState(true)
-  const [roomPinned, setRoomPinned] = React.useState(chat.pinned ?? false)
   const [cameraMenuOpen, setCameraMenuOpen] = React.useState(false)
   const [activeMessageId, setActiveMessageId] = React.useState<string | null>(null)
   const [confirmLeaveOpen, setConfirmLeaveOpen] = React.useState(false)
   const [confirmDisbandOpen, setConfirmDisbandOpen] = React.useState(false)
-  const [chatMessages, setChatMessages] = React.useState<Message[]>(MOCK_MESSAGES)
-  const [jumpHighlight, setJumpHighlight] = React.useState<{ id: string; index: number } | null>(null)
+  const [socketError, setSocketError] = React.useState<string | null>(null)
+
   const bottomRef = React.useRef<HTMLDivElement>(null)
-  const messageRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const dateGroupRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
-  const jumpHighlightTimerRef = React.useRef<ReturnType<typeof setTimeout>>(undefined)
   const { isScrolling, onScroll: handleMessagesScroll } = useFadeScrollbar()
 
-  const isOwner = MOCK_MEMBERS.find((member) => member.isMe)?.isOwner ?? false
+  const markReadMutation = useMarkRead()
+  const setPinnedMutation = useSetPinned()
+  const setNotifyMutation = useSetNotify()
+  const leaveRoomMutation = useLeaveRoom()
+  const disbandRoomMutation = useDisbandRoom()
+
+  const chatMessages = React.useMemo(
+    () => mergeMessages(initialMessages, liveMessages),
+    [initialMessages, liveMessages]
+  )
+
+  const { connected, send } = useChatRoomSocket(roomId, {
+    onMessage: (event) => {
+      if (myUserId < 0) return
+      setLiveMessages((prev) => [...prev, adaptMessage(event, myUserId)])
+    },
+    onError: (error) => setSocketError(error.message),
+    onConnectedChange: (isConnected) => {
+      if (isConnected) setSocketError(null)
+    },
+  })
+
+  // 방 진입 시 읽음 처리.
+  React.useEffect(() => {
+    if (myUserId > 0) markReadMutation.mutate(roomId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, myUserId])
+
+  const roomTitle = room ? resolveRoomTitle(room.members, myUserId, room.roomType) : ""
+  const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
+  const notificationOn = room?.notifyEnabled ?? true
+  const roomPinned = room?.pinned ?? false
+  const isGroup = room?.roomType === "group"
 
   // 메시지를 한국 날짜(KST) 단위로 묶어서 날짜가 바뀔 때마다 구분선을 표시한다.
   const dateGroups = React.useMemo(() => {
-    const groups: { dateKey: string; label: string; messages: Message[] }[] = []
+    const groups: { dateKey: string; label: string; messages: ChatBubbleMessage[] }[] = []
     for (const message of chatMessages) {
       const dateKey = getKstDateKey(message.createdAt)
       const lastGroup = groups[groups.length - 1]
@@ -159,7 +189,7 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
     return groups
   }, [chatMessages])
 
-  const [activeDateKey, setActiveDateKey] = React.useState<string | undefined>(dateGroups[0]?.dateKey)
+  const [activeDateKey, setActiveDateKey] = React.useState<string | undefined>(undefined)
 
   const updateActiveDateKey = React.useCallback(() => {
     const container = scrollContainerRef.current
@@ -178,7 +208,6 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
     setActiveDateKey(current)
   }, [dateGroups])
 
-  // 네이티브 스크롤바 thumb 위치(비율)를 계산해, 날짜 뱃지가 화면 중앙이 아니라 스크롤 thumb과 같은 높이에 붙도록 한다.
   const [scrollThumbCenter, setScrollThumbCenter] = React.useState(0)
 
   const updateScrollThumbCenter = React.useCallback(() => {
@@ -215,45 +244,21 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
 
   const activeDateBadgeText = activeDateKey ? formatKstShortDate(activeDateKey) : undefined
 
-  // index: 원본 메시지의 texts 중 실제로 인용된 한 줄만 강조하기 위한 위치 (미지정 시 첫 줄)
-  const scrollToMessage = (id: string, index = 0) => {
-    const el = messageRefs.current[id]
-    if (!el) return
-    el.scrollIntoView({ behavior: "smooth", block: "center" })
-    // smooth 스크롤이 끝난 뒤에 하이라이트가 시작되도록 스크롤 예상 소요 시간만큼 지연시킨다.
-    clearTimeout(jumpHighlightTimerRef.current)
-    jumpHighlightTimerRef.current = setTimeout(() => setJumpHighlight({ id, index }), 400)
-  }
-
-  React.useEffect(() => () => clearTimeout(jumpHighlightTimerRef.current), [])
-
   const handleSend = (value: string) => {
-    const now = new Date()
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        id: `local-${Date.now()}`,
-        sender: "me",
-        variant: "short",
-        texts: [value],
-        time: new Intl.DateTimeFormat("ko-KR", { hour: "numeric", minute: "2-digit" }).format(now),
-        createdAt: now.toISOString(),
-      },
-    ])
+    const text = value.trim()
+    if (!text) return
+    if (!send({ content: text })) {
+      setSocketError(messages.chat.sendFailed)
+    }
   }
 
   React.useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" })
   }, [chatMessages])
 
-  const messageMenuItems = (message: Message): ChatContextMenuItem[] => {
-    const text = message.variant === "reply" ? message.replyText : message.texts?.[0]
+  const messageMenuItems = (message: ChatBubbleMessage): ChatContextMenuItem[] => {
+    const text = message.texts?.[0]
     return [
-      {
-        icon: <Image src="/icons/chat/respond.svg" alt="" width={24} height={24} />,
-        label: messages.chat.replyAction,
-        onClick: () => setActiveMessageId(null),
-      },
       {
         icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
         label: messages.chat.registerAsNoticeAction,
@@ -269,7 +274,7 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
         onClick: () => {
           setActiveMessageId(null)
           const query = message.name ? `?target=${encodeURIComponent(message.name)}` : ""
-          router.push(`/chats/${chat.id}/report${query}`)
+          router.push(`/chats/${roomId}/report${query}`)
         },
       },
     ]
@@ -292,11 +297,21 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
     <>
       <main className="mx-auto flex h-dvh w-full max-w-sm flex-col">
         <AppBar
-          title={chat.title}
+          title={roomTitle}
           onLeadingClick={() => router.back()}
           onTrailingClick={() => setMoreOpen(true)}
           className={!notice ? "border-b border-gray-50 bg-white" : undefined}
         />
+        {!connected && (
+          <div className="bg-amber-50 py-1 text-center text-body-regular-12 text-amber-600">
+            연결 중…
+          </div>
+        )}
+        {socketError && (
+          <div className="bg-red-50 py-1 text-center text-body-regular-12 text-red-500">
+            {socketError}
+          </div>
+        )}
         <div className="relative min-h-0 flex-1">
           <div
             ref={scrollContainerRef}
@@ -305,7 +320,6 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
             className={cn("absolute inset-0 flex flex-col gap-3 overflow-y-auto px-4", FADE_SCROLLBAR_CLASSNAME)}
           >
             {notice && (
-              // 스크롤 영역 최상단에 고정: 메시지는 이 불투명 바 뒤로 지나간다(-mx-4/bg-white로 전체 폭을 덮음).
               <div className="sticky top-0 z-10 -mx-4 bg-white px-4 pt-2 pb-1">
                 <NoticeBanner text={notice} onClose={() => setNotice(null)} />
               </div>
@@ -328,16 +342,6 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
                       menuItems={messageMenuItems(message)}
                       onOpenMenu={() => setActiveMessageId(message.id)}
                       onCloseMenu={() => setActiveMessageId(null)}
-                      onRegisterRef={(id, el) => {
-                        messageRefs.current[id] = el
-                      }}
-                      onReplyQuoteClick={
-                        message.replyToId
-                          ? () => scrollToMessage(message.replyToId!, message.replyToIndex)
-                          : undefined
-                      }
-                      highlightedIndex={jumpHighlight?.id === message.id ? jumpHighlight.index : undefined}
-                      onHighlightAnimationEnd={() => setJumpHighlight(null)}
                     />
                   ))}
                 </div>
@@ -378,35 +382,34 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
               <ChatRoomMoreHeader
                 onBack={() => setMoreOpen(false)}
                 notificationOn={notificationOn}
-                onToggleNotification={() => setNotificationOn((prev) => !prev)}
+                onToggleNotification={() =>
+                  setNotifyMutation.mutate({ roomId, enabled: !notificationOn })
+                }
                 pinned={roomPinned}
-                onTogglePin={() => setRoomPinned((prev) => !prev)}
+                onTogglePin={() => setPinnedMutation.mutate({ roomId, pinned: !roomPinned })}
               />
               <SidePanelContent className="items-center gap-3 px-4 pb-6">
-                <ChatRoomProfile title={chat.title} />
+                <ChatRoomProfile title={roomTitle} />
                 <ChatRoomInfoSection
-                className="w-full"
-                onNoticeClick={() => router.push(`/chats/${chat.id}/notices`)}
-                onScheduleClick={() => router.push(`/chats/${chat.id}/schedule`)}
-              />
+                  className="w-full"
+                  onNoticeClick={() => router.push(`/chats/${roomId}/notices`)}
+                  onScheduleClick={() => router.push(`/chats/${roomId}/schedule`)}
+                />
                 <div className="flex w-full flex-col rounded-2xl bg-gray-50">
-                  <SectionTitle title={messages.chat.membersTitle} count={MOCK_MEMBERS.length} padding="12" />
-                  {MOCK_MEMBERS.map((member) => (
+                  <SectionTitle title={messages.chat.membersTitle} count={roomMembers.length} padding="12" />
+                  {roomMembers.map((member) => (
                     <ChatRoomMemberItem
-                      key={member.id}
+                      key={member.userId}
                       name={member.name}
+                      avatarSrc={member.avatarSrc}
                       isMe={member.isMe}
-                      isOwner={member.isOwner}
-                      flagSrc={member.flagSrc}
-                      nation={messages.countries[member.countryCode]}
-                      onRemove={isOwner && !member.isMe ? () => console.log("remove", member.id) : undefined}
                     />
                   ))}
                 </div>
                 <ChatRoomDangerActions
                   className="w-full"
                   onLeave={() => setConfirmLeaveOpen(true)}
-                  onDisband={isOwner ? () => setConfirmDisbandOpen(true) : undefined}
+                  onDisband={isGroup ? () => setConfirmDisbandOpen(true) : undefined}
                 />
               </SidePanelContent>
             </SidePanelPopup>
@@ -421,7 +424,12 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
         description={messages.chat.leaveChatConfirmDescription}
         cancelLabel={messages.chat.cancelButton}
         confirmLabel={messages.chat.leaveChatAction}
-        onConfirm={() => router.push("/chats")}
+        onConfirm={() =>
+          leaveRoomMutation.mutate(roomId, {
+            onSuccess: () => router.push("/chats"),
+            onError: () => setSocketError(messages.chat.leaveFailed),
+          })
+        }
       />
       <ConfirmDialog
         open={confirmDisbandOpen}
@@ -430,7 +438,12 @@ function ChatRoomPageContent({ chat }: ChatRoomPageContentProps) {
         description={messages.chat.disbandChatConfirmDescription}
         cancelLabel={messages.chat.cancelButton}
         confirmLabel={messages.chat.disbandChatAction}
-        onConfirm={() => router.push("/chats")}
+        onConfirm={() =>
+          disbandRoomMutation.mutate(roomId, {
+            onSuccess: () => router.push("/chats"),
+            onError: () => setSocketError(messages.chat.disbandFailed),
+          })
+        }
       />
     </>
   )

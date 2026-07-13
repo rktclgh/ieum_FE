@@ -117,6 +117,7 @@ export const zh: Messages = {
   },
   chat: {
     listSearchPlaceholder: "搜索聊天、好友",
+    emptyList: "还没有聊天",
     friendSearchPlaceholder: "搜索昵称",
     addFriendTitle: "添加好友",
     myFriendsTitle: "好友",
@@ -159,6 +160,9 @@ export const zh: Messages = {
     removeMemberButton: "移出",
     leaveChatAction: "退出聊天室",
     disbandChatAction: "解散聊天室",
+    sendFailed: "无法发送消息，请检查网络连接。",
+    leaveFailed: "退出聊天室失败。",
+    disbandFailed: "解散聊天室失败。",
     leaveChatConfirmTitle: "退出聊天室",
     leaveChatConfirmDescription: "确定要退出吗?",
     disbandChatConfirmTitle: "解散聊天室",

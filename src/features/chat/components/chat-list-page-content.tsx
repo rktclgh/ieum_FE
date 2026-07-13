@@ -11,18 +11,22 @@ import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/compon
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useChatRoomsView } from "@/features/chat/hooks/use-chat-queries"
+import {
+  useLeaveRoom,
+  useSetNotify,
+  useSetPinned,
+} from "@/features/chat/hooks/use-chat-mutations"
+import type { ChatListEntry } from "@/features/chat/lib/chat-adapter"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { hangulIncludes } from "@/lib/hangul-includes"
-import { MOCK_CHATS } from "@/features/chat/constants/mock-data"
-
-type Chat = (typeof MOCK_CHATS)[number]
 
 // 컨텍스트 메뉴(3개 항목) 높이 추정치 + 하단 고정 TabBar와 겹치지 않기 위한 여유 공간
 const CONTEXT_MENU_HEIGHT_ESTIMATE = 180
 const BOTTOM_SAFE_AREA = 96
 
 interface ChatRowProps {
-  chat: Chat
+  chat: ChatListEntry
   highlightQuery: string
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
@@ -50,7 +54,7 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
     <div ref={rowRef} className="relative">
       <ChatListItem
         title={chat.title}
-        online={chat.online}
+        avatarSrc={chat.avatarSrc}
         memberCount={chat.memberCount}
         lastMessage={chat.lastMessage}
         time={chat.time}
@@ -78,31 +82,46 @@ function ChatListPageContent() {
   const { messages } = useTranslation()
   const [query, setQuery] = React.useState("")
   const [category, setCategory] = React.useState<ChatFilterCategory>("all")
-  const [openMenuChatId, setOpenMenuChatId] = React.useState<string | null>(null)
+  const [openMenuRoomId, setOpenMenuRoomId] = React.useState<number | null>(null)
+
+  const { entries, isLoading } = useChatRoomsView()
+  const setPinnedMutation = useSetPinned()
+  const setNotifyMutation = useSetNotify()
+  const leaveRoomMutation = useLeaveRoom()
 
   const filteredChats = React.useMemo(() => {
     const normalizedQuery = query.trim()
-    return MOCK_CHATS.filter((chat) => category === "all" || chat.category === category)
+    return entries
+      .filter((chat) => category === "all" || chat.category === category)
       .filter((chat) => !normalizedQuery || hangulIncludes(chat.title, normalizedQuery))
-      .sort((a, b) => Number(b.pinned ?? false) - Number(a.pinned ?? false))
-  }, [query, category])
+      .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+  }, [entries, query, category])
 
-  const menuItems: ChatContextMenuItem[] = [
+  const menuItemsFor = (chat: ChatListEntry): ChatContextMenuItem[] => [
     {
       icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
       label: messages.chat.pinAction,
-      onClick: () => setOpenMenuChatId(null),
+      onClick: () => {
+        setPinnedMutation.mutate({ roomId: chat.roomId, pinned: !chat.pinned })
+        setOpenMenuRoomId(null)
+      },
     },
     {
       icon: <Image src="/icons/chat/alarm-off.svg" alt="" width={24} height={24} />,
       label: messages.chat.muteAction,
-      onClick: () => setOpenMenuChatId(null),
+      onClick: () => {
+        setNotifyMutation.mutate({ roomId: chat.roomId, enabled: !chat.notifyEnabled })
+        setOpenMenuRoomId(null)
+      },
     },
     {
       icon: <Image src="/icons/chat/trash.svg" alt="" width={24} height={24} />,
       label: messages.chat.deleteAction,
       tone: "destructive",
-      onClick: () => setOpenMenuChatId(null),
+      onClick: () => {
+        leaveRoomMutation.mutate(chat.roomId)
+        setOpenMenuRoomId(null)
+      },
     },
   ]
 
@@ -128,16 +147,21 @@ function ChatListPageContent() {
         <div className="flex flex-col">
           {filteredChats.map((chat) => (
             <ChatRow
-              key={chat.id}
+              key={chat.roomId}
               chat={chat}
               highlightQuery={query}
-              menuOpen={openMenuChatId === chat.id}
-              menuItems={menuItems}
-              onOpenMenu={() => setOpenMenuChatId(chat.id)}
-              onCloseMenu={() => setOpenMenuChatId(null)}
-              onNavigate={() => router.push(`/chats/${chat.id}`)}
+              menuOpen={openMenuRoomId === chat.roomId}
+              menuItems={menuItemsFor(chat)}
+              onOpenMenu={() => setOpenMenuRoomId(chat.roomId)}
+              onCloseMenu={() => setOpenMenuRoomId(null)}
+              onNavigate={() => router.push(`/chats/${chat.roomId}`)}
             />
           ))}
+          {!isLoading && filteredChats.length === 0 && (
+            <p className="py-16 text-center text-body-medium-14 text-gray-400">
+              {messages.chat.emptyList}
+            </p>
+          )}
         </div>
       </main>
 
