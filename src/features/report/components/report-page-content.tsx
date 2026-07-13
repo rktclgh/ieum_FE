@@ -40,17 +40,12 @@ function ReportPageContent({ messageId, targetName }: ReportPageContentProps) {
 
   const handleSubmit = () => {
     if (!selectedReason || submitReport.isPending) return
+    setConfirmOpen(false)
     submitReport.mutate(
       { messageId, reason: toReportReason(selectedReason), detail: detail.trim() || undefined },
       {
-        onSuccess: () => {
-          setConfirmOpen(false)
-          router.back()
-        },
-        onError: (error) => {
-          setConfirmOpen(false)
-          setSubmitError(getReportErrorMessage(error, messages))
-        },
+        onSuccess: () => router.back(),
+        onError: (error) => setSubmitError(getReportErrorMessage(error, messages)),
       }
     )
   }

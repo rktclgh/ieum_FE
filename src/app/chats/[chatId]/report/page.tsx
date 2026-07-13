@@ -13,8 +13,8 @@ export default async function ChatReportPage({ params, searchParams }: ChatRepor
   const roomId = Number(chatId)
   const parsedMessageId = Number(messageId)
 
-  if (!Number.isFinite(roomId) || roomId <= 0) notFound()
-  if (!Number.isFinite(parsedMessageId) || parsedMessageId <= 0) notFound()
+  if (!Number.isInteger(roomId) || roomId <= 0) notFound()
+  if (!Number.isInteger(parsedMessageId) || parsedMessageId <= 0) notFound()
 
   return <ReportPageContent messageId={parsedMessageId} targetName={target} />
 }
