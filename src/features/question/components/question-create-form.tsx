@@ -135,12 +135,7 @@ function QuestionCreateForm() {
                   key={`${file.name}-${index}`}
                   className="relative size-20 overflow-hidden rounded-xl bg-gray-100"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={messages.question.imageAlt}
-                    className="size-full object-cover"
-                  />
+                  <ImagePreview file={file} alt={messages.question.imageAlt} />
                 </div>
               ))}
             </div>
@@ -163,6 +158,27 @@ function QuestionCreateForm() {
       )}
     </>
   )
+}
+
+interface ImagePreviewProps {
+  file: File
+  alt: string
+}
+
+// 파일 객체 URL을 마운트 시 생성하고 언마운트/파일 변경 시 해제해 메모리 누수를 막는다.
+function ImagePreview({ file, alt }: ImagePreviewProps) {
+  const [src, setSrc] = React.useState("")
+
+  React.useEffect(() => {
+    const url = URL.createObjectURL(file)
+    setSrc(url)
+    return () => URL.revokeObjectURL(url)
+  }, [file])
+
+  if (!src) return null
+
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt={alt} className="size-full object-cover" />
 }
 
 export { QuestionCreateForm }

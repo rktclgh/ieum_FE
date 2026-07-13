@@ -41,13 +41,9 @@ async function uploadImage(file: File): Promise<number> {
   return fileId
 }
 
-// 여러 파일을 순차 업로드하고 fileId 배열을 돌려준다(질문/답변 imageFileIds용).
+// 여러 파일을 병렬 업로드하고 입력 순서대로 fileId 배열을 돌려준다(질문/답변 imageFileIds용).
 async function uploadImages(files: File[]): Promise<number[]> {
-  const fileIds: number[] = []
-  for (const file of files) {
-    fileIds.push(await uploadImage(file))
-  }
-  return fileIds
+  return Promise.all(files.map((file) => uploadImage(file)))
 }
 
 export { uploadImage, uploadImages }
