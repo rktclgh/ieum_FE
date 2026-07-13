@@ -8,7 +8,6 @@ import {
   postAnswer,
   updateQuestion,
 } from "@/features/question/api/question-api"
-import { uploadImages } from "@/features/question/api/question-file-api"
 import type {
   CreateQuestionRequest,
   PostAnswerRequest,
@@ -59,17 +58,9 @@ function useAcceptAnswer(questionId: number) {
   })
 }
 
-// 파일 선택 → presign/S3/complete 업로드 → fileId 배열 반환.
-function useUploadQuestionImages() {
-  return useMutation({
-    mutationFn: (files: File[]) => uploadImages(files),
-  })
-}
-
 export {
   useCreateQuestion,
   useUpdateQuestion,
   usePostAnswer,
   useAcceptAnswer,
-  useUploadQuestionImages,
 }

@@ -59,6 +59,15 @@ interface CreateQuestionRequest {
   imageFileIds?: number[]
 }
 
+// 비슷한 질문 제안(작성 중 노출). 채택된 답변이 있는 질문만 내려올 예정.
+// 백엔드 GET /api/v1/questions/similar 는 아직 없어, 지금은 UI 계약만 정의한다.
+interface SimilarQuestion {
+  questionId: number
+  title: string
+  /** 채택된 답변 요약(제안 문구). 백엔드 확정 전까지 선택값. */
+  acceptedAnswer?: string | null
+}
+
 interface UpdateQuestionRequest {
   title?: string
   content?: string
@@ -82,6 +91,7 @@ export type {
   MyQuestionItem,
   MyQuestionsPage,
   CreateQuestionRequest,
+  SimilarQuestion,
   UpdateQuestionRequest,
   PostAnswerRequest,
   PostAnswerResponse,

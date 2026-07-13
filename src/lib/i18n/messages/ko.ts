@@ -192,10 +192,11 @@ export interface Messages {
     createTitle: string
     titlePlaceholder: string
     contentPlaceholder: string
-    locationLabel: string
-    locationMissing: string
-    addImageLabel: string
+    locationPlaceholder: string
     submitButton: string
+    submittingButton: string
+    imageUploadFailed: string
+    similarTitle: string
     errors: {
       FORBIDDEN: string
       QUESTION_NOT_FOUND: string
@@ -558,12 +559,13 @@ export const ko: Messages = {
     acceptConfirmDescription: "채택하면 질문이 해결 상태로 바뀌며 되돌릴 수 없어요.",
     acceptConfirmCancel: "취소",
     createTitle: "질문하기",
-    titlePlaceholder: "제목",
-    contentPlaceholder: "궁금한 내용을 입력해 주세요",
-    locationLabel: "위치",
-    locationMissing: "지도에서 위치를 먼저 선택해 주세요.",
-    addImageLabel: "사진 첨부",
-    submitButton: "등록",
+    titlePlaceholder: "질문 제목",
+    contentPlaceholder: "질문 내용을 입력해주세요.",
+    locationPlaceholder: "장소 선택",
+    submitButton: "질문 올리기",
+    submittingButton: "올리는 중…",
+    imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
+    similarTitle: "비슷한 질문",
     errors: {
       FORBIDDEN: "권한이 없어요.",
       QUESTION_NOT_FOUND: "질문을 찾을 수 없어요.",
