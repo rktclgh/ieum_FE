@@ -1,7 +1,8 @@
 "use client"
 
+import L from "leaflet"
 import * as React from "react"
-import { Circle, CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet"
+import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
@@ -27,7 +28,19 @@ interface MapCanvasProps {
   onUserPan?: () => void
 }
 
-const LIVE_PRIMARY = "#0f40ab" // --color-primary-600
+const LIVE_ACCENT = "#316CED" 
+const userLocationIcon = L.divIcon({
+  html: `<div style="position:relative;width:48px;height:48px">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" style="position:absolute;inset:0">
+      <g filter="url(#user_loc_halo_blur)"><circle cx="24" cy="24" r="22" fill="${LIVE_ACCENT}" fill-opacity="0.2"/></g>
+      <defs><filter id="user_loc_halo_blur" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/></filter></defs>
+    </svg>
+    <div style="position:absolute;left:18px;top:18px;width:12px;height:12px;border-radius:9999px;background:${LIVE_ACCENT};outline:3px solid #ffffff;box-shadow:0 0 8px 0 rgba(49,108,237,0.6),0 0 4px 0 rgba(0,0,0,0.25)"></div>
+  </div>`,
+  className: "",
+  iconSize: [48, 48],
+  iconAnchor: [24, 24], 
+})
 
 function MapCenterUpdater({ center }: { center: Coordinates }) {
   const map = useMap()
@@ -130,14 +143,10 @@ function MapCanvas({
             <Circle
               center={[livePosition.lat, livePosition.lng]}
               radius={liveAccuracy}
-              pathOptions={{ color: LIVE_PRIMARY, weight: 1, fillColor: LIVE_PRIMARY, fillOpacity: 0.1 }}
+              pathOptions={{ stroke: false, fillColor: LIVE_ACCENT, fillOpacity: 0.1 }}
             />
           ) : null}
-          <CircleMarker
-            center={[livePosition.lat, livePosition.lng]}
-            radius={7}
-            pathOptions={{ color: "#ffffff", weight: 2, fillColor: LIVE_PRIMARY, fillOpacity: 1 }}
-          />
+          <Marker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
         </>
       )}
     </MapContainer>
