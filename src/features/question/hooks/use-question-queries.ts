@@ -3,7 +3,7 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 
 import { getMyQuestions, getQuestion } from "@/features/question/api/question-api"
-import { adaptQuestionDetail } from "@/features/question/lib/question-adapter"
+import { adaptQuestionDetail, adaptQuestionSummary } from "@/features/question/lib/question-adapter"
 
 const questionKeys = {
   all: ["questions"] as const,
@@ -20,6 +20,16 @@ function useQuestionDetail(questionId: number, enabled = true) {
   })
 }
 
+// 지도 핀 상세 시트용 요약 뷰. detail 과 같은 queryKey 라 fetch 는 공유되고 select 만 다르다.
+function useQuestionSummary(questionId: number, enabled = true) {
+  return useQuery({
+    queryKey: questionKeys.detail(questionId),
+    queryFn: () => getQuestion(questionId),
+    enabled: enabled && Number.isFinite(questionId),
+    select: adaptQuestionSummary,
+  })
+}
+
 // 내 질문 목록 무한스크롤(커서 기반). nextCursor가 null이면 마지막 페이지.
 function useMyQuestions(size = 20) {
   return useInfiniteQuery({
@@ -30,4 +40,4 @@ function useMyQuestions(size = 20) {
   })
 }
 
-export { questionKeys, useQuestionDetail, useMyQuestions }
+export { questionKeys, useQuestionDetail, useQuestionSummary, useMyQuestions }

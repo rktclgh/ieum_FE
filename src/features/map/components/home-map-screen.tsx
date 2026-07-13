@@ -15,6 +15,8 @@ import { useMapPins } from "@/features/map/hooks/use-map-pins"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
+import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
+import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -37,7 +39,9 @@ function HomeMapScreen() {
   const [focusedPlace, setFocusedPlace] = React.useState<Place | null>(null)
   const [clickedPosition, setClickedPosition] = React.useState<Coordinates | null>(null)
   const [createMeetupOpen, setCreateMeetupOpen] = React.useState(false)
+  const [createQuestionOpen, setCreateQuestionOpen] = React.useState(false)
   const [selectedMeetingId, setSelectedMeetingId] = React.useState<number | null>(null)
+  const [selectedQuestionId, setSelectedQuestionId] = React.useState<number | null>(null)
   const [category, setCategory] = React.useState<Category>("all")
   const [bounds, setBounds] = React.useState<MapBounds | null>(null)
 
@@ -50,9 +54,9 @@ function HomeMapScreen() {
   const pins = pinData?.pins
 
   const handlePinClick = React.useCallback((pin: MapPin) => {
-    // 모임 핀 → 그 모임(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.
-    // 질문 핀(pinType==="question") 상세 연결은 후속(#46 상세 시트 재사용).
+    // 핀 종류별로 그 대상(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.
     if (pin.pinType === "meeting") setSelectedMeetingId(pin.targetId)
+    else if (pin.pinType === "question") setSelectedQuestionId(pin.targetId)
   }, [])
 
   // follow-me 토글: 켤 때는 검색/클릭 선택을 비워 지도가 내 위치를 따라가게 한다.
@@ -105,12 +109,12 @@ function HomeMapScreen() {
         )}
       </div>
 
-      {/* 질문하기 화면은 URL 미확정(docs/ROUTES.md 하위 화면 참고)이라 메뉴 토글까지만 연결.
-          모임 만들기는 상태 기반 풀스크린 오버레이로 연결한다. */}
+      {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
       <MapControls
         onToggleFollow={handleToggleFollow}
         isFollowing={isFollowing}
         onCreateMeetup={() => setCreateMeetupOpen(true)}
+        onCreateQuestion={() => setCreateQuestionOpen(true)}
         className="absolute right-4 bottom-28 z-10 flex flex-col gap-2"
       />
 
@@ -124,10 +128,21 @@ function HomeMapScreen() {
         <CreateMeetupScreen onClose={() => setCreateMeetupOpen(false)} />
       ) : null}
 
+      {createQuestionOpen ? (
+        <CreateQuestionScreen onClose={() => setCreateQuestionOpen(false)} />
+      ) : null}
+
       {selectedMeetingId !== null ? (
         <MeetupDetailContainer
           meetingId={selectedMeetingId}
           onClose={() => setSelectedMeetingId(null)}
+        />
+      ) : null}
+
+      {selectedQuestionId !== null ? (
+        <QuestionDetailContainer
+          questionId={selectedQuestionId}
+          onClose={() => setSelectedQuestionId(null)}
         />
       ) : null}
     </div>

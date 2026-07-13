@@ -15,6 +15,8 @@ interface QuestionAuthor {
   userId: number
   nickname: string
   profileImageUrl: string | null
+  // 국적(ISO 3166-1 alpha-2, 예: "KR"). 상세 시트에서 국기로 표시. 백엔드가 없으면 국기 생략.
+  nationality?: string | null
 }
 
 interface AnswerResponse {
@@ -36,6 +38,8 @@ interface QuestionDetailResponse {
   location: LocationSnapshot
   imageUrls: string[]
   answers: AnswerResponse[]
+  // 작성 시각(ISO-8601). 상세 시트의 "N분 전" 상대시각 표시용. 백엔드가 없으면 시각 생략.
+  createdAt?: string | null
 }
 
 interface MyQuestionItem {
@@ -57,6 +61,15 @@ interface CreateQuestionRequest {
   content: string
   location: LocationSnapshot
   imageFileIds?: number[]
+}
+
+// 비슷한 질문 제안(작성 중 노출). 채택된 답변이 있는 질문만 내려올 예정.
+// 백엔드 GET /api/v1/questions/similar 는 아직 없어, 지금은 UI 계약만 정의한다.
+interface SimilarQuestion {
+  questionId: number
+  title: string
+  /** 채택된 답변 요약(제안 문구). 백엔드 확정 전까지 선택값. */
+  acceptedAnswer?: string | null
 }
 
 interface UpdateQuestionRequest {
@@ -82,6 +95,7 @@ export type {
   MyQuestionItem,
   MyQuestionsPage,
   CreateQuestionRequest,
+  SimilarQuestion,
   UpdateQuestionRequest,
   PostAnswerRequest,
   PostAnswerResponse,

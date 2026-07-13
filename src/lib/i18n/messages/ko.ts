@@ -105,18 +105,12 @@ export interface Messages {
     hostBadge: string
     kickButton: string
     enterRoomButton: string
-    closeMeetingButton: string
-    cancelMeetingButton: string
     leaveButton: string
     confirmCancelLabel: string
     leaveConfirmTitle: string
     leaveConfirmDescription: string
     kickConfirmTitle: string
     kickConfirmDescription: string
-    closeConfirmTitle: string
-    closeConfirmDescription: string
-    cancelConfirmTitle: string
-    cancelConfirmDescription: string
     errors: {
       MEETING_NOT_FOUND: string
       MEETING_NOT_OPEN: string
@@ -175,6 +169,8 @@ export interface Messages {
   question: {
     answerPlaceholder: string
     sendLabel: string
+    viewAnswersLabel: string
+    answeredLabel: string
     closeLabel: string
     imageAlt: string
     flagAlt: string
@@ -192,10 +188,17 @@ export interface Messages {
     createTitle: string
     titlePlaceholder: string
     contentPlaceholder: string
-    locationLabel: string
-    locationMissing: string
-    addImageLabel: string
+    locationPlaceholder: string
     submitButton: string
+    submittingButton: string
+    imageUploadFailed: string
+    imageTooLarge: string
+    similarTitle: string
+    timeJustNow: string
+    timeMinutesAgo: (minutes: number) => string
+    timeHoursAgo: (hours: number) => string
+    timeDaysAgo: (days: number) => string
+    addImageLabel: string
     errors: {
       FORBIDDEN: string
       QUESTION_NOT_FOUND: string
@@ -472,19 +475,13 @@ export const ko: Messages = {
     participantsTitle: "참여자",
     hostBadge: "호스트",
     kickButton: "내보내기",
-    enterRoomButton: "채팅방 입장",
-    closeMeetingButton: "모집 마감",
-    cancelMeetingButton: "모임 취소",
+    enterRoomButton: "채팅방 가기",
     leaveButton: "모임 나가기",
     confirmCancelLabel: "취소",
     leaveConfirmTitle: "모임에서 나갈까요?",
     leaveConfirmDescription: "나가면 이 모임의 채팅방에서도 나가게 돼요.",
     kickConfirmTitle: "이 멤버를 내보낼까요?",
     kickConfirmDescription: "내보낸 멤버는 다시 참여할 수 없어요.",
-    closeConfirmTitle: "모집을 마감할까요?",
-    closeConfirmDescription: "마감하면 더 이상 새로운 참여를 받지 않아요.",
-    cancelConfirmTitle: "모임을 취소할까요?",
-    cancelConfirmDescription: "취소하면 되돌릴 수 없어요.",
     errors: {
       MEETING_NOT_FOUND: "모임을 찾을 수 없어요.",
       MEETING_NOT_OPEN: "모집이 마감된 모임이에요.",
@@ -543,6 +540,8 @@ export const ko: Messages = {
   question: {
     answerPlaceholder: "답변 입력",
     sendLabel: "전송",
+    viewAnswersLabel: "답변 보기",
+    answeredLabel: "답변 완료",
     closeLabel: "닫기",
     imageAlt: "질문 이미지",
     flagAlt: "국기",
@@ -558,12 +557,19 @@ export const ko: Messages = {
     acceptConfirmDescription: "채택하면 질문이 해결 상태로 바뀌며 되돌릴 수 없어요.",
     acceptConfirmCancel: "취소",
     createTitle: "질문하기",
-    titlePlaceholder: "제목",
-    contentPlaceholder: "궁금한 내용을 입력해 주세요",
-    locationLabel: "위치",
-    locationMissing: "지도에서 위치를 먼저 선택해 주세요.",
+    titlePlaceholder: "질문 제목",
+    contentPlaceholder: "질문 내용을 입력해주세요.",
+    locationPlaceholder: "장소 선택",
+    submitButton: "질문 올리기",
+    submittingButton: "올리는 중…",
+    imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
+    imageTooLarge: "이미지는 5MB 이하만 첨부할 수 있어요.",
+    similarTitle: "비슷한 질문",
+    timeJustNow: "방금 전",
+    timeMinutesAgo: (minutes) => `${minutes}분 전`,
+    timeHoursAgo: (hours) => `${hours}시간 전`,
+    timeDaysAgo: (days) => `${days}일 전`,
     addImageLabel: "사진 첨부",
-    submitButton: "등록",
     errors: {
       FORBIDDEN: "권한이 없어요.",
       QUESTION_NOT_FOUND: "질문을 찾을 수 없어요.",

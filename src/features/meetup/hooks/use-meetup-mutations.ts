@@ -3,8 +3,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
-  cancelMeeting,
-  closeMeeting,
   createMeeting,
   joinMeeting,
   kickMember,
@@ -61,27 +59,9 @@ function useKickMember(meetingId: number) {
   })
 }
 
-function useCloseMeeting(meetingId: number) {
-  const invalidate = useMeetupInvalidate()
-  return useMutation({
-    mutationFn: () => closeMeeting(meetingId),
-    onSuccess: () => invalidate(meetingId),
-  })
-}
-
-function useCancelMeeting(meetingId: number) {
-  const invalidate = useMeetupInvalidate()
-  return useMutation({
-    mutationFn: () => cancelMeeting(meetingId),
-    onSuccess: () => invalidate(meetingId),
-  })
-}
-
 export {
   useCreateMeeting,
   useJoinMeeting,
   useLeaveMeeting,
   useKickMember,
-  useCloseMeeting,
-  useCancelMeeting,
 }
