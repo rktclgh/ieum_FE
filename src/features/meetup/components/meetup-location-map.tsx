@@ -5,6 +5,7 @@ import * as React from "react"
 import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { usePlaceSearch } from "@/features/map/hooks/use-place-search"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
@@ -45,18 +46,14 @@ function MeetupLocationMap({
   const { messages } = useTranslation()
   const t = messages.selectLocation
 
-  // recenter: GPS 탭 시에만 새 객체로 갱신(→ 재중심). 평소엔 null이라 center는 최초 내 위치로 고정,
-  // 사용자가 지도를 팬해도 center prop 식별자가 그대로여서 되돌아가지 않는다.
-  const [recenter, setRecenter] = React.useState<Coordinates | null>(null)
   // clicked: 지도에서 직접 고른 지점(Figma 핀 표시). 없으면 내 위치를 기준으로 역지오코딩한다.
   const [clicked, setClicked] = React.useState<Coordinates | null>(null)
-  const center = recenter ?? position
+  // 내 위치가 지도 중심. 사용자가 팬해도 position 식별자가 그대로라 되돌아가지 않고,
+  // GPS 탭(위치 재조회) 시에만 position이 새 객체로 바뀌어 flyTo 애니메이션이 실행된다.
+  const center = position
   const target = clicked ?? position
 
-  const handleGps = () => {
-    onRequestLocation()
-    if (position) setRecenter({ ...position })
-  }
+  const handleGps = () => onRequestLocation()
 
   const { data: reverseGeocoded } = useReverseGeocode(target)
   const currentAddress = reverseGeocoded?.fullAddress ?? reverseGeocoded?.shortLabel ?? null
@@ -68,6 +65,8 @@ function MeetupLocationMap({
     <div className="relative flex size-full flex-col overflow-hidden bg-white">
       <MapCanvas
         center={center}
+        centerZoom={DEFAULT_MAP_ZOOM}
+        animateCenter
         className="absolute inset-0 z-0 size-full"
         onMapClick={setClicked}
         livePosition={position}

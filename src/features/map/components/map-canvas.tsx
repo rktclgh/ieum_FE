@@ -18,6 +18,10 @@ import {
 
 interface MapCanvasProps {
   center: Coordinates | null
+  /** center 변경 시 맞출 확대 단계. 없으면 현재 zoom 유지 */
+  centerZoom?: number
+  /** center 변경 시 flyTo로 부드럽게 이동할지 여부 */
+  animateCenter?: boolean
   className?: string
   onMapClick?: (position: Coordinates) => void
   onBoundsChange?: (bounds: MapBounds) => void
@@ -57,12 +61,26 @@ const userLocationIcon = L.divIcon({
   iconAnchor: [24, 24], 
 })
 
-function MapCenterUpdater({ center }: { center: Coordinates }) {
+function MapCenterUpdater({
+  center,
+  zoom,
+  animate,
+}: {
+  center: Coordinates
+  zoom?: number
+  animate?: boolean
+}) {
   const map = useMap()
 
   React.useEffect(() => {
-    map.setView([center.lat, center.lng], map.getZoom())
-  }, [center, map])
+    const targetZoom = zoom ?? map.getZoom()
+    // animate=true면 flyTo로 부드럽게 이동(+확대 단계 복귀), 아니면 즉시 이동.
+    if (animate) {
+      map.flyTo([center.lat, center.lng], targetZoom)
+    } else {
+      map.setView([center.lat, center.lng], targetZoom)
+    }
+  }, [center, zoom, animate, map])
 
   return null
 }
@@ -121,6 +139,8 @@ function MapDragListener({ onUserPan }: { onUserPan: () => void }) {
 
 function MapCanvas({
   center,
+  centerZoom,
+  animateCenter,
   className,
   onMapClick,
   onBoundsChange,
@@ -146,7 +166,7 @@ function MapCanvas({
         subdomains={MAP_TILE_SUBDOMAINS}
         maxZoom={MAP_TILE_MAX_ZOOM}
       />
-      {center && <MapCenterUpdater center={center} />}
+      {center && <MapCenterUpdater center={center} zoom={centerZoom} animate={animateCenter} />}
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
       {onUserPan && <MapDragListener onUserPan={onUserPan} />}
