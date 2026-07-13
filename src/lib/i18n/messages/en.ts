@@ -118,6 +118,7 @@ export const en: Messages = {
   },
   chat: {
     listSearchPlaceholder: "Search chats, friends",
+    emptyList: "No chats yet",
     friendSearchPlaceholder: "Search nickname",
     addFriendTitle: "Add friend",
     myFriendsTitle: "Friends",
@@ -160,6 +161,9 @@ export const en: Messages = {
     removeMemberButton: "Remove",
     leaveChatAction: "Leave chat",
     disbandChatAction: "Disband chat",
+    sendFailed: "Couldn't send the message. Check your connection.",
+    leaveFailed: "Failed to leave the chat.",
+    disbandFailed: "Failed to disband the chat.",
     leaveChatConfirmTitle: "Leave this chat",
     leaveChatConfirmDescription: "Are you sure you want to leave?",
     disbandChatConfirmTitle: "Disband this chat",

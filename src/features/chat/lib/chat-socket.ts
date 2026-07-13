@@ -32,8 +32,11 @@ function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) 
   const [connected, setConnected] = React.useState(false)
 
   // 핸들러는 매 렌더 새로 생성될 수 있어 ref에 담아 최신값을 구독 콜백이 참조하게 한다.
+  // 렌더 중 ref 쓰기(react-hooks/refs 위반)를 피하려 커밋 이후 effect에서 갱신한다.
   const handlersRef = React.useRef(handlers)
-  handlersRef.current = handlers
+  React.useEffect(() => {
+    handlersRef.current = handlers
+  }, [handlers])
 
   React.useEffect(() => {
     if (roomId == null) return

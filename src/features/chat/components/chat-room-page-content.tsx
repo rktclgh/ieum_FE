@@ -157,6 +157,9 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
       setLiveMessages((prev) => [...prev, adaptMessage(event, myUserId)])
     },
     onError: (error) => setSocketError(error.message),
+    onConnectedChange: (isConnected) => {
+      if (isConnected) setSocketError(null)
+    },
   })
 
   // 방 진입 시 읽음 처리.
@@ -244,7 +247,9 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
   const handleSend = (value: string) => {
     const text = value.trim()
     if (!text) return
-    send({ content: text })
+    if (!send({ content: text })) {
+      setSocketError(messages.chat.sendFailed)
+    }
   }
 
   React.useEffect(() => {
@@ -420,7 +425,10 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
         cancelLabel={messages.chat.cancelButton}
         confirmLabel={messages.chat.leaveChatAction}
         onConfirm={() =>
-          leaveRoomMutation.mutate(roomId, { onSuccess: () => router.push("/chats") })
+          leaveRoomMutation.mutate(roomId, {
+            onSuccess: () => router.push("/chats"),
+            onError: () => setSocketError(messages.chat.leaveFailed),
+          })
         }
       />
       <ConfirmDialog
@@ -431,7 +439,10 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
         cancelLabel={messages.chat.cancelButton}
         confirmLabel={messages.chat.disbandChatAction}
         onConfirm={() =>
-          disbandRoomMutation.mutate(roomId, { onSuccess: () => router.push("/chats") })
+          disbandRoomMutation.mutate(roomId, {
+            onSuccess: () => router.push("/chats"),
+            onError: () => setSocketError(messages.chat.disbandFailed),
+          })
         }
       />
     </>

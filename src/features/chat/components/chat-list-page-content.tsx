@@ -159,7 +159,7 @@ function ChatListPageContent() {
           ))}
           {!isLoading && filteredChats.length === 0 && (
             <p className="py-16 text-center text-body-medium-14 text-gray-400">
-              아직 채팅방이 없어요
+              {messages.chat.emptyList}
             </p>
           )}
         </div>

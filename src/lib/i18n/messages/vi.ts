@@ -118,6 +118,7 @@ export const vi: Messages = {
   },
   chat: {
     listSearchPlaceholder: "Tìm trò chuyện, bạn bè",
+    emptyList: "Chưa có cuộc trò chuyện",
     friendSearchPlaceholder: "Tìm biệt danh",
     addFriendTitle: "Thêm bạn bè",
     myFriendsTitle: "Bạn bè",
@@ -160,6 +161,9 @@ export const vi: Messages = {
     removeMemberButton: "Xóa khỏi nhóm",
     leaveChatAction: "Rời khỏi phòng chat",
     disbandChatAction: "Giải tán phòng chat",
+    sendFailed: "Không thể gửi tin nhắn. Vui lòng kiểm tra kết nối.",
+    leaveFailed: "Rời phòng chat thất bại.",
+    disbandFailed: "Giải tán phòng chat thất bại.",
     leaveChatConfirmTitle: "Rời khỏi phòng chat",
     leaveChatConfirmDescription: "Bạn có chắc chắn muốn rời khỏi không?",
     disbandChatConfirmTitle: "Giải tán phòng chat",

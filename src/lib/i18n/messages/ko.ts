@@ -118,6 +118,7 @@ export interface Messages {
   }
   chat: {
     listSearchPlaceholder: string
+    emptyList: string
     friendSearchPlaceholder: string
     addFriendTitle: string
     myFriendsTitle: string
@@ -160,6 +161,9 @@ export interface Messages {
     removeMemberButton: string
     leaveChatAction: string
     disbandChatAction: string
+    sendFailed: string
+    leaveFailed: string
+    disbandFailed: string
     leaveChatConfirmTitle: string
     leaveChatConfirmDescription: string
     disbandChatConfirmTitle: string
@@ -333,6 +337,7 @@ export const ko: Messages = {
   },
   chat: {
     listSearchPlaceholder: "채팅, 친구 검색",
+    emptyList: "아직 채팅방이 없어요",
     friendSearchPlaceholder: "닉네임 검색",
     addFriendTitle: "친구 추가",
     myFriendsTitle: "친구",
@@ -375,6 +380,9 @@ export const ko: Messages = {
     removeMemberButton: "내보내기",
     leaveChatAction: "채팅방 나가기",
     disbandChatAction: "채팅방 해체하기",
+    sendFailed: "메시지를 보낼 수 없습니다. 연결을 확인해주세요.",
+    leaveFailed: "채팅방 나가기에 실패했습니다.",
+    disbandFailed: "채팅방 해체에 실패했습니다.",
     leaveChatConfirmTitle: "채팅방을 나갑니다",
     leaveChatConfirmDescription: "정말로 나가시겠습니까?",
     disbandChatConfirmTitle: "채팅방을 해체합니다",
