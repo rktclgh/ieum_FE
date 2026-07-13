@@ -21,16 +21,20 @@ interface ScheduleEntry {
 const KST_TIME_ZONE = "Asia/Seoul"
 
 function formatKstTime(locale: string, iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ""
   return new Intl.DateTimeFormat(locale, {
     timeZone: KST_TIME_ZONE,
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(iso))
+  }).format(date)
 }
 
 // 지금 시각 대비 상대 시간을 로케일에 맞춰 표현한다(분/시간/일 단위 자동 선택).
 function formatRelative(locale: string, iso: string): string {
-  const diffMs = new Date(iso).getTime() - Date.now()
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ""
+  const diffMs = date.getTime() - Date.now()
   const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })
   const abs = Math.abs(diffMs)
   const minute = 60_000

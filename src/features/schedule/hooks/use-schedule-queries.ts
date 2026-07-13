@@ -1,10 +1,11 @@
 "use client"
 
+import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
 
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { getCalendar, getMeetingSchedules } from "@/features/schedule/api/schedule-api"
-import type { CalendarRange } from "@/features/schedule/api/schedule-types"
+import type { CalendarItem, CalendarRange } from "@/features/schedule/api/schedule-types"
 import { adaptCalendarItem } from "@/features/schedule/lib/schedule-adapter"
 
 const scheduleKeys = {
@@ -17,10 +18,15 @@ const scheduleKeys = {
 // 기간(월)별 캘린더 조회. 응답 항목을 UI 모델(ScheduleEntry)로 변환한다.
 function useCalendar(range: CalendarRange) {
   const { language } = useTranslation()
+  // 인라인 select는 매 렌더마다 참조가 바뀌어 셀렉터가 재실행되므로 language 기준으로 메모이즈한다.
+  const select = React.useCallback(
+    (items: CalendarItem[]) => items.map((item) => adaptCalendarItem(item, language)),
+    [language]
+  )
   return useQuery({
     queryKey: scheduleKeys.calendar(range),
     queryFn: () => getCalendar(range),
-    select: (items) => items.map((item) => adaptCalendarItem(item, language)),
+    select,
   })
 }
 
