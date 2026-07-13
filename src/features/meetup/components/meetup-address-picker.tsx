@@ -11,6 +11,7 @@ import {
   DrawerViewport,
 } from "@/components/ui/drawer"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { cn } from "@/lib/utils"
 
 interface MeetupAddressPickerProps {
   open: boolean
@@ -36,7 +37,8 @@ function MeetupAddressPicker({ open, onOpenChange, value, onConfirm }: MeetupAdd
 
   const handleConfirm = () => {
     const trimmed = draft.trim()
-    if (trimmed.length > 0) onConfirm(trimmed)
+    if (trimmed.length === 0) return
+    onConfirm(trimmed)
     onOpenChange(false)
   }
 
@@ -69,8 +71,12 @@ function MeetupAddressPicker({ open, onOpenChange, value, onConfirm }: MeetupAdd
                 </button>
                 <button
                   type="button"
+                  disabled={draft.trim().length === 0}
                   onClick={handleConfirm}
-                  className="flex-1 rounded-full bg-primary-600 px-4 py-3 text-center text-body-medium-14 text-white"
+                  className={cn(
+                    "flex-1 rounded-full px-4 py-3 text-center text-body-medium-14 text-white transition-colors",
+                    draft.trim().length > 0 ? "bg-primary-600" : "cursor-not-allowed bg-gray-200"
+                  )}
                 >
                   {t.confirmButton}
                 </button>

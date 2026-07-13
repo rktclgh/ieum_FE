@@ -44,6 +44,9 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
     const file = event.target.files?.[0]
     event.target.value = "" // 같은 파일 재선택 허용
     if (!file) return
+    // 고해상도 원본을 base64로 상태에 담으면 메모리 부담이 커, 5MB 초과분은 받지 않는다.
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+    if (file.size > MAX_IMAGE_SIZE) return
     const reader = new FileReader()
     reader.onload = () => form.setImage(reader.result as string)
     reader.readAsDataURL(file)
@@ -134,7 +137,7 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
         />
 
         {/* 내용 + 사진 첨부 */}
-        <div className="relative min-h-40 flex-1 overflow-hidden rounded-lg border border-gray-100 transition-colors focus-within:border-primary-600">
+        <div className="relative min-h-40 flex-1 rounded-lg border border-gray-100 transition-colors focus-within:border-primary-600">
           <textarea
             value={form.description}
             onChange={(event) => form.setDescription(event.target.value)}
