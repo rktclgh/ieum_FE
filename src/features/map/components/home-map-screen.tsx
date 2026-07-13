@@ -14,6 +14,7 @@ import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
+import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -36,6 +37,7 @@ function HomeMapScreen() {
   const [focusedPlace, setFocusedPlace] = React.useState<Place | null>(null)
   const [clickedPosition, setClickedPosition] = React.useState<Coordinates | null>(null)
   const [createMeetupOpen, setCreateMeetupOpen] = React.useState(false)
+  const [selectedMeetingId, setSelectedMeetingId] = React.useState<number | null>(null)
   const [category, setCategory] = React.useState<Category>("all")
   const [bounds, setBounds] = React.useState<MapBounds | null>(null)
 
@@ -48,8 +50,9 @@ function HomeMapScreen() {
   const pins = pinData?.pins
 
   const handlePinClick = React.useCallback((pin: MapPin) => {
-    // TODO(#31): 질문/모임 상세 화면 URL 확정 시 router.push로 연결 (docs/ROUTES.md 하위 화면 TBD)
-    void pin
+    // 모임 핀 → 그 모임(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.
+    // 질문 핀(pinType==="question") 상세 연결은 후속(#46 상세 시트 재사용).
+    if (pin.pinType === "meeting") setSelectedMeetingId(pin.targetId)
   }, [])
 
   // follow-me 토글: 켤 때는 검색/클릭 선택을 비워 지도가 내 위치를 따라가게 한다.
@@ -119,6 +122,13 @@ function HomeMapScreen() {
 
       {createMeetupOpen ? (
         <CreateMeetupScreen onClose={() => setCreateMeetupOpen(false)} />
+      ) : null}
+
+      {selectedMeetingId !== null ? (
+        <MeetupDetailContainer
+          meetingId={selectedMeetingId}
+          onClose={() => setSelectedMeetingId(null)}
+        />
       ) : null}
     </div>
   )
