@@ -36,6 +36,7 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
   const [datePickerOpen, setDatePickerOpen] = React.useState(false)
   const [timePickerOpen, setTimePickerOpen] = React.useState(false)
   const [addressPickerOpen, setAddressPickerOpen] = React.useState(false)
+  const [titleFocused, setTitleFocused] = React.useState(false)
 
   const cameraInputRef = React.useRef<HTMLInputElement>(null)
   const albumInputRef = React.useRef<HTMLInputElement>(null)
@@ -89,10 +90,12 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
             <input
               value={form.title}
               onChange={(event) => form.setTitle(event.target.value)}
+              onFocus={() => setTitleFocused(true)}
+              onBlur={() => setTitleFocused(false)}
               placeholder={t.titlePlaceholder}
               className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary-600 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
             />
-            {form.title.length > 0 ? (
+            {titleFocused ? (
               <span
                 className={cn(
                   "shrink-0 text-body-regular-14",
