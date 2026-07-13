@@ -74,10 +74,11 @@ function MeetupLocationMap({
         selectedPosition={clicked}
       />
 
-      {/* 전경 레이아웃 — 가운데 스페이서는 지도 드래그를 통과시킨다(pointer-events-none) */}
-      <div className="relative z-20 flex size-full flex-col">
+      {/* 전경 레이아웃 — 컨테이너 자체는 클릭 통과(pointer-events-none)로 지도 클릭을 살리고,
+          상호작용이 필요한 헤더·GPS·시트에만 pointer-events-auto를 준다. */}
+      <div className="pointer-events-none relative z-20 flex size-full flex-col">
         {/* 상단: 앱바 + 검색바 */}
-        <div className="shrink-0 bg-white">
+        <div className="pointer-events-auto shrink-0 bg-white">
           <AppBar
             title={t.title}
             leadingIcon={undefined}
@@ -102,8 +103,8 @@ function MeetupLocationMap({
           </div>
         </div>
 
-        {/* 지도 위 스페이서 — GPS 버튼만 클릭 가능 */}
-        <div className="pointer-events-none relative flex-1">
+        {/* 지도 위 스페이서 — 클릭이 지도로 통과, GPS 버튼만 클릭 가능 */}
+        <div className="relative flex-1">
           <button
             type="button"
             aria-label={t.currentLocationLabel}
@@ -115,7 +116,7 @@ function MeetupLocationMap({
         </div>
 
         {/* 하단 시트: 직접입력 진입 행 + 주변 장소 */}
-        <div className="flex shrink-0 flex-col gap-4 rounded-t-2xl bg-white px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0px_-2px_20px_0px_rgba(0,0,0,0.08)]">
+        <div className="pointer-events-auto flex shrink-0 flex-col gap-4 rounded-t-2xl bg-white px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0px_-2px_20px_0px_rgba(0,0,0,0.08)]">
           <LocationListItem
             iconSrc="/icons/circle/plus.svg"
             title={t.createPlaceTitle}
