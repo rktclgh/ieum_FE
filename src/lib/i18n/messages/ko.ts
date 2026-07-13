@@ -386,7 +386,7 @@ export const ko: Messages = {
     signUp: "회원가입",
     continueWithGoogle: "구글로 로그인",
     continueWithKakao: "카카오로 로그인",
-    loginErrorExplanation: "이메일 또는 비밀번호를 확인해주세요.",
+    loginErrorExplanation: "이메일 혹은 패스워드가 일치하지 않습니다.",
   },
   social: {
     loading: "로그인 중...",

@@ -17,7 +17,7 @@ export const en: Messages = {
     signUp: "Sign up",
     continueWithGoogle: "Continue with Google",
     continueWithKakao: "Continue with Kakao",
-    loginErrorExplanation: "Please check your email or password.",
+    loginErrorExplanation: "Your email or password is incorrect.",
   },
   social: {
     loading: "Signing you in...",

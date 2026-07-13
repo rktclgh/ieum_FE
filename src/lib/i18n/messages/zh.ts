@@ -17,7 +17,7 @@ export const zh: Messages = {
     signUp: "注册",
     continueWithGoogle: "使用 Google 登录",
     continueWithKakao: "使用 Kakao 登录",
-    loginErrorExplanation: "请确认邮箱或密码是否正确。",
+    loginErrorExplanation: "邮箱或密码不正确。",
   },
   social: {
     loading: "正在登录...",

@@ -11,7 +11,6 @@ import { PasswordInput } from "@/components/ui/text-field/password-input"
 import { LanguageToggle } from "@/features/language/components/language-toggle"
 import { useLoginFlow } from "@/features/login/hooks/use-login-flow"
 import { useSocialLogin } from "@/features/social-login/hooks/use-social-login"
-import { getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 export default function LoginPage() {
@@ -56,10 +55,7 @@ export default function LoginPage() {
           onChange={(event) => onPasswordChange(event.target.value)}
         />
         {loginMutation.isError && (
-          <Explanation
-            variant="error"
-            text={getApiErrorMessage(loginMutation.error, messages.login.loginErrorExplanation)}
-          />
+          <Explanation variant="error" text={messages.login.loginErrorExplanation} />
         )}
         <Button type="submit" variant="primary" size="block">
           {messages.login.submit}

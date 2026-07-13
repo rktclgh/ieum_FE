@@ -17,7 +17,7 @@ export const th: Messages = {
     signUp: "สมัครสมาชิก",
     continueWithGoogle: "เข้าสู่ระบบด้วย Google",
     continueWithKakao: "เข้าสู่ระบบด้วย Kakao",
-    loginErrorExplanation: "กรุณาตรวจสอบอีเมลหรือรหัสผ่านของคุณ",
+    loginErrorExplanation: "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
   },
   social: {
     loading: "กำลังเข้าสู่ระบบ...",
