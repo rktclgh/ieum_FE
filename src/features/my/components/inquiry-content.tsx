@@ -17,6 +17,14 @@ function InquiryContent() {
 
   const [content, setContent] = React.useState("")
   const [submitted, setSubmitted] = React.useState(false)
+  const backTimerRef = React.useRef<number | null>(null)
+
+  // 성공 피드백 타이머는 언마운트 시 정리한다(사용자가 먼저 뒤로가면 중복 back 방지).
+  React.useEffect(() => {
+    return () => {
+      if (backTimerRef.current !== null) window.clearTimeout(backTimerRef.current)
+    }
+  }, [])
 
   const trimmed = content.trim()
   const canSubmit = trimmed.length > 0 && !submitInquiry.isPending && !submitted
@@ -29,7 +37,7 @@ function InquiryContent() {
         onSuccess: () => {
           setSubmitted(true)
           // 성공 피드백을 잠깐 보여준 뒤 이전 화면으로 돌아간다.
-          window.setTimeout(() => router.back(), SUCCESS_DISMISS_MS)
+          backTimerRef.current = window.setTimeout(() => router.back(), SUCCESS_DISMISS_MS)
         },
       }
     )

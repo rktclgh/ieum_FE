@@ -37,6 +37,7 @@ function MyPageContent() {
   const flagSrc = flagFromIso2(user.nationality)
 
   const handleLogout = () => {
+    if (logout.isPending) return
     logout.mutate(undefined, {
       onSuccess: () => {
         setLogoutOpen(false)
@@ -46,6 +47,8 @@ function MyPageContent() {
   }
 
   const handleWithdraw = () => {
+    // 파괴적 작업 — 진행 중 중복 요청 방지
+    if (withdraw.isPending) return
     setWithdrawError(false)
     withdraw.mutate(undefined, {
       onSuccess: () => {

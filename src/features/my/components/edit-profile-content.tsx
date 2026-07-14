@@ -203,7 +203,12 @@ function EditProfileForm({ user }: { user: MeUser }) {
             error={nicknameStatus === "duplicate"}
             buttonLabel={messages.join.nicknameDuplicateCheckButton}
             onButtonClick={handleNicknameDuplicateCheck}
-            buttonDisabled={!isNicknameValid || !isNicknameChanged || nicknameStatus === "available"}
+            buttonDisabled={
+              !isNicknameValid ||
+              !isNicknameChanged ||
+              nicknameStatus === "available" ||
+              checkNickname.isPending
+            }
           />
           {nicknameStatus === "available" && (
             <Explanation variant="great" text={messages.join.nicknameAvailableExplanation} />
