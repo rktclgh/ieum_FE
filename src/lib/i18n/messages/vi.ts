@@ -278,6 +278,18 @@ export const vi: Messages = {
       default: "Vui lòng thử lại sau.",
     },
   },
+  profileImage: {
+    takePhoto: "Chụp ảnh",
+    chooseAlbum: "Chọn từ thư viện",
+    editLabel: "Chỉnh sửa ảnh đại diện",
+    deleteLabel: "Xóa ảnh",
+    uploadFailed: "Tải ảnh lên thất bại. Vui lòng thử lại.",
+    invalidType: "Chỉ có thể tải lên tệp hình ảnh.",
+    tooLarge: "Vui lòng dùng ảnh dưới 10MB.",
+    cropTitle: "Chỉnh sửa ảnh",
+    cropConfirm: "Xong",
+    cropCancel: "Hủy",
+  },
   tabBar: {
     home: "Trang chủ",
     meetups: "Gặp mặt",

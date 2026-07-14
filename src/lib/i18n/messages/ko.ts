@@ -278,6 +278,18 @@ export interface Messages {
       default: string
     }
   }
+  profileImage: {
+    takePhoto: string
+    chooseAlbum: string
+    editLabel: string
+    deleteLabel: string
+    uploadFailed: string
+    invalidType: string
+    tooLarge: string
+    cropTitle: string
+    cropConfirm: string
+    cropCancel: string
+  }
   tabBar: {
     home: string
     meetups: string
@@ -679,6 +691,18 @@ export const ko: Messages = {
       VALIDATION_FAILED: "입력값을 다시 확인해 주세요.",
       default: "잠시 후 다시 시도해 주세요.",
     },
+  },
+  profileImage: {
+    takePhoto: "사진 찍기",
+    chooseAlbum: "앨범에서 고르기",
+    editLabel: "프로필 사진 편집",
+    deleteLabel: "사진 삭제",
+    uploadFailed: "사진 업로드에 실패했어요. 잠시 후 다시 시도해주세요.",
+    invalidType: "이미지 파일만 업로드할 수 있어요.",
+    tooLarge: "10MB 이하의 이미지를 사용해주세요.",
+    cropTitle: "사진 편집",
+    cropConfirm: "확인",
+    cropCancel: "취소",
   },
   tabBar: {
     home: "홈",

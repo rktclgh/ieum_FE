@@ -30,7 +30,7 @@ interface CreateMeetingRequest {
   schedule: MeetingScheduleInput
   recurrenceRule?: string
   maxMembers: number
-  imageFileId?: number
+  imageFileId?: string
 }
 
 // POST /meetings 응답.

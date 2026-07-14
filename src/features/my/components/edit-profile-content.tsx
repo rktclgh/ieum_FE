@@ -15,6 +15,9 @@ import { fromIso2, toIso2 } from "@/features/join/lib/nationality-map"
 import type { UpdateMeRequest } from "@/features/my/api/my-types"
 import { useUpdateMe } from "@/features/my/hooks/use-my-mutations"
 import { getMyErrorMessage } from "@/features/my/lib/my-error"
+import { ProfileAvatarButton } from "@/features/profile-image/components/profile-avatar-button"
+import { ProfileImageEditor } from "@/features/profile-image/components/profile-image-editor"
+import { useDeleteProfileImage, useProfileImageUpload } from "@/features/profile-image/hooks/use-profile-image"
 import type { Gender } from "@/features/session/api/session-api"
 import { useMe } from "@/features/session/hooks/use-me"
 import type { CountryCode } from "@/lib/constants/countries"
@@ -43,6 +46,31 @@ function EditProfileForm({ user }: { user: MeUser }) {
   const router = useRouter()
   const { messages } = useTranslation()
   const updateMe = useUpdateMe()
+  const { upload, isUploading } = useProfileImageUpload()
+  const { remove } = useDeleteProfileImage()
+  const [editorSrc, setEditorSrc] = React.useState<string | null>(null)
+
+  const handleFileSelected = (file: File) => {
+    // 방어적: 편집기 재선택 시 이전 objectURL 을 먼저 폐기해 리크를 막는다.
+    if (editorSrc) URL.revokeObjectURL(editorSrc)
+    setEditorSrc(URL.createObjectURL(file))
+  }
+
+  const handleCropped = async (blob: Blob) => {
+    try {
+      await upload(blob)
+    } catch {
+      // 실패 시 me 캐시는 그대로 — 사용자에게 별도 토스트 없이 프리뷰 롤백(현재 user.profileImageUrl 유지)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      await remove()
+    } catch {
+      // 삭제 실패 시 me 캐시는 그대로 — 아바타를 현재 상태로 유지한다
+    }
+  }
 
   const [nickname, setNickname] = React.useState(user.nickname)
   const [birthDateDigits, setBirthDateDigits] = React.useState(
@@ -96,6 +124,34 @@ function EditProfileForm({ user }: { user: MeUser }) {
       />
 
       <div className="flex w-full flex-col gap-3 px-4 pb-32 [&>[data-slot=explanation]]:-mt-3">
+        <div className="flex w-full flex-col items-center py-4">
+          <ProfileAvatarButton
+            previewUrl={user.profileImageUrl}
+            onFileSelected={handleFileSelected}
+            className={cn(isUploading && "pointer-events-none opacity-50")}
+          />
+          {user.profileImageUrl && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="mt-2 text-body-regular-14 text-gray-500"
+            >
+              {messages.profileImage.deleteLabel}
+            </button>
+          )}
+        </div>
+
+        <ProfileImageEditor
+          key={editorSrc ?? "none"}
+          open={editorSrc !== null}
+          imageSrc={editorSrc}
+          onClose={() => {
+            if (editorSrc) URL.revokeObjectURL(editorSrc)
+            setEditorSrc(null)
+          }}
+          onCropped={handleCropped}
+        />
+
         <div className="flex w-full flex-col items-start">
           <Title text={messages.join.nicknameLabel} />
           <Input

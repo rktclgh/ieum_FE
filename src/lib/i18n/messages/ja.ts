@@ -277,6 +277,18 @@ export const ja: Messages = {
       default: "しばらくしてからもう一度お試しください。",
     },
   },
+  profileImage: {
+    takePhoto: "写真を撮る",
+    chooseAlbum: "アルバムから選ぶ",
+    editLabel: "プロフィール写真を編集",
+    deleteLabel: "写真を削除",
+    uploadFailed: "写真のアップロードに失敗しました。しばらくして再度お試しください。",
+    invalidType: "画像ファイルのみアップロードできます。",
+    tooLarge: "10MB以下の画像をご利用ください。",
+    cropTitle: "写真を編集",
+    cropConfirm: "確認",
+    cropCancel: "キャンセル",
+  },
   tabBar: {
     home: "ホーム",
     meetups: "集まり",

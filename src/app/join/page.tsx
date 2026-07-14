@@ -12,7 +12,10 @@ import { routes } from "@/lib/navigation/routes"
 function JoinContent() {
   const router = useRouter()
   const { messages } = useTranslation()
-  const flow = useJoinFlow({ onSignupSuccess: () => router.push(routes.login()) })
+  const flow = useJoinFlow({
+    onSignupSuccess: () => router.push(routes.home()),
+    onAutoLoginFailed: () => router.push(routes.login()),
+  })
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center">

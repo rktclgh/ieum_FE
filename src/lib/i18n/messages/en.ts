@@ -278,6 +278,18 @@ export const en: Messages = {
       default: "Please try again later.",
     },
   },
+  profileImage: {
+    takePhoto: "Take a photo",
+    chooseAlbum: "Choose from album",
+    editLabel: "Edit profile photo",
+    deleteLabel: "Remove photo",
+    uploadFailed: "Failed to upload the photo. Please try again.",
+    invalidType: "Only image files can be uploaded.",
+    tooLarge: "Please use an image under 10MB.",
+    cropTitle: "Edit photo",
+    cropConfirm: "Done",
+    cropCancel: "Cancel",
+  },
   tabBar: {
     home: "Home",
     meetups: "Meetups",

@@ -277,6 +277,18 @@ export const th: Messages = {
       default: "กรุณาลองใหม่ภายหลัง",
     },
   },
+  profileImage: {
+    takePhoto: "ถ่ายรูป",
+    chooseAlbum: "เลือกจากอัลบั้ม",
+    editLabel: "แก้ไขรูปโปรไฟล์",
+    deleteLabel: "ลบรูป",
+    uploadFailed: "อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    invalidType: "อัปโหลดได้เฉพาะไฟล์รูปภาพเท่านั้น",
+    tooLarge: "กรุณาใช้รูปภาพขนาดไม่เกิน 10MB",
+    cropTitle: "แก้ไขรูป",
+    cropConfirm: "ตกลง",
+    cropCancel: "ยกเลิก",
+  },
   tabBar: {
     home: "หน้าแรก",
     meetups: "พบปะ",

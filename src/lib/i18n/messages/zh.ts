@@ -277,6 +277,18 @@ export const zh: Messages = {
       default: "请稍后再试。",
     },
   },
+  profileImage: {
+    takePhoto: "拍照",
+    chooseAlbum: "从相册选择",
+    editLabel: "编辑头像",
+    deleteLabel: "删除照片",
+    uploadFailed: "照片上传失败，请稍后重试。",
+    invalidType: "只能上传图片文件。",
+    tooLarge: "请使用10MB以内的图片。",
+    cropTitle: "编辑照片",
+    cropConfirm: "确定",
+    cropCancel: "取消",
+  },
   tabBar: {
     home: "首页",
     meetups: "聚会",
