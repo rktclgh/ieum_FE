@@ -21,10 +21,10 @@ function ReportReasonOption({ label, selected, onSelect }: ReportReasonOptionPro
       <span
         className={cn(
           "flex size-5 shrink-0 items-center justify-center rounded-full border-[1.5px]",
-          selected ? "border-primary-600" : "border-gray-200"
+          selected ? "border-primary-400" : "border-gray-200"
         )}
       >
-        {selected && <span className="size-2.5 rounded-full bg-primary-600" />}
+        {selected && <span className="size-2.5 rounded-full bg-primary-400" />}
       </span>
     </button>
   )

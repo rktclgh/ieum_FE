@@ -80,7 +80,7 @@ function MeetupLocationSearch({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t.searchPlaceholder}
-              className="w-full min-w-0 bg-transparent text-body-medium-15 text-gray-900 caret-primary-600 outline-none placeholder:text-body-regular-15 placeholder:text-gray-400"
+              className="w-full min-w-0 bg-transparent text-body-medium-15 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-15 placeholder:text-gray-400"
             />
           </div>
           {query.length > 0 && (

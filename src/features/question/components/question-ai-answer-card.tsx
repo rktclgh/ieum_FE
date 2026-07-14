@@ -15,7 +15,7 @@ function QuestionAiAnswerCard({ answer }: QuestionAiAnswerCardProps) {
   return (
     <div className="flex w-full flex-col gap-2 rounded-2xl bg-gray-50 p-4">
       <div className="flex items-center gap-1.5">
-        <CircleCheck className="size-5 text-primary-600" />
+        <CircleCheck className="size-5 text-primary-400" />
         <span className="text-title-semibold-16 text-gray-900">
           {messages.question.aiAnswerTitle}
         </span>

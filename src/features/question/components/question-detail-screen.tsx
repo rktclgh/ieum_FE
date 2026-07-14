@@ -126,7 +126,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   <span className="text-body-regular-14 text-gray-500">{question.address}</span>
                 </div>
                 {question.isResolved ? (
-                  <span className="ml-auto rounded-full bg-primary-600 px-2.5 py-1 text-body-medium-14 text-white">
+                  <span className="ml-auto rounded-full bg-primary-400 px-2.5 py-1 text-body-medium-14 text-white">
                     {messages.question.resolvedBadge}
                   </span>
                 ) : null}
