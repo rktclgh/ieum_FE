@@ -412,6 +412,8 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
                       name={member.name}
                       avatarSrc={member.avatarSrc}
                       isMe={member.isMe}
+                      flagSrc={member.countryFlagSrc}
+                      nation={member.nationalityCode ? messages.countries[member.nationalityCode] : undefined}
                     />
                   ))}
                 </div>

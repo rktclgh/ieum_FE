@@ -28,6 +28,8 @@ interface ChatRoomMemberResponse {
   userId: number
   nickname: string
   profileImageUrl: string | null
+  // 국적(ISO 3166-1 alpha-2). BE 이슈 #70 전까지 없을 수 있음.
+  nationality?: string | null
 }
 
 interface ChatRoomDetailResponse {
