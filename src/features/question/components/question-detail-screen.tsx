@@ -226,9 +226,9 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                 aria-label={messages.question.sendLabel}
                 onClick={handleSend}
                 disabled={postAnswer.isPending}
-                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-400 disabled:opacity-50"
+                className="size-8 shrink-0 disabled:opacity-50"
               >
-                <Image src="/icons/chat/send.svg" alt="" width={16} height={16} className="size-4" />
+                <Image src="/icons/chat/send-button.svg" alt="" width={32} height={32} className="size-8" />
               </button>
             </div>
           </div>
