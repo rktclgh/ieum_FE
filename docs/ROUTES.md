@@ -1,40 +1,85 @@
 # 이음(Ieum) 라우트 계약
 
-> Next.js 16은 빌드 도구로만 사용한다. 운영에는 `out/` 정적 파일만 배포한다.
-> 최종 수정: 2026-07-14 (FE #82 정적 export 전환)
+> 프론트엔드 URL 구조와 정적 배포 계약을 함께 관리하는 문서다. 라우트를 추가·변경할 때는 이 문서를 같은 PR에서 갱신한다.
+>
+> - 와이어프레임: [Figma – 신한해커톤 와이어프레임](https://www.figma.com/design/FPRPYHC1ukJph6hjRiyU0Z/?node-id=782-1049)
+> - 생성: 2026-07-02
+> - 최종 수정: 2026-07-14 (FE #76 질문 내역·답변·꼬리질문 채팅 + FE #82 정적 export 전환)
 
-## 기본 원칙
+## 배포 및 URL 원칙
 
-- 내부 이동은 `src/lib/navigation/routes.ts`의 builder를 기준으로 한다.
-- `trailingSlash: true`에 맞춰 고정 페이지는 끝에 `/`를 붙인다.
-- 루트 `/`와 외부 OAuth 등록값인 `/oauth/kakao/callback`은 예외다. Kakao callback은 끝 `/`를 붙이지 않는다.
+- Next.js 16은 빌드 도구로만 사용한다. 운영에는 `out/` 정적 파일만 배포한다.
+- 내부 이동은 `src/lib/navigation/routes.ts`의 route builder를 기준으로 한다.
+- `trailingSlash: true`에 맞춰 고정 페이지 URL은 끝에 `/`를 붙인다.
+- 루트 `/`와 외부 OAuth 등록값인 `/oauth/kakao/callback`은 예외다. Kakao callback에는 끝 `/`를 붙이지 않는다.
 - Kakao 지도·장소 API 전환은 Kakao OAuth와 별개다. 로그인 흐름과 callback URI는 변경하지 않는다.
-- 런타임 ID는 path segment가 아니라 고정 path의 query로 전달한다. 빌드 시 ID 목록을 열거하지 않는다.
+- 런타임 ID는 동적 path segment가 아니라 고정 path의 query로 전달한다. 빌드 시 ID 목록을 열거하지 않는다.
 - ID query는 `/^[1-9]\d*$/`와 `Number.isSafeInteger`를 모두 통과해야 한다.
-- 잘못된 ID에서는 기존 data component를 mount하지 않는다. 따라서 해당 화면의 API·WebSocket 요청도 시작하지 않는다.
-- `useSearchParams()`는 각 page의 가장 가까운 `Suspense` 아래 client child에서만 읽는다.
+- 잘못된 ID에서는 data component를 mount하지 않는다. 해당 화면의 API·WebSocket 요청도 시작하지 않는다.
+- `useSearchParams()`는 각 page에서 가장 가까운 `Suspense` 아래 client child에서만 읽는다.
+- 필터·정렬·탭·검색어처럼 화면 상태를 나타내는 값도 query로 전달한다.
 
-## 고정 페이지
+## 구현된 라우트
 
-| Canonical URL | 화면 | 접근 계약 |
-|---|---|---|
-| `/` | 지도 홈 | public shell |
-| `/login/` | 로그인 | 이 경로만 guest-only |
-| `/join/` | 회원가입 | 이 경로만 guest-only |
-| `/join/social/` | 소셜 회원가입 | 기존 `sessionStorage` 검증 유지, guest-only 아님 |
-| `/oauth/kakao/callback` | Kakao callback | public shell, 등록 URI 유지 |
-| `/chats/` | 채팅 목록 | public shell, 데이터/API는 서버가 보호 |
-| `/friends/` | 친구 목록 | public shell, 데이터/API는 서버가 보호 |
-| `/questions/` | 질문 탭 | 기존 탭 경로 유지 |
-| `/my/` | 마이 | protected client gate |
-| `/my/edit/` | 내 정보 수정 | protected client gate |
-| `/my/settings/` | 설정 | protected client gate |
+### 인증
 
-`/questions/`는 기존 하단 탭 href만 보존한다. 목록 page와 해당 정적 산출물은 원래 없었으며 FE #82 범위에도 추가하지 않는다.
+| Canonical URL | 화면 | 백엔드 API | 접근 계약 |
+|---|---|---|---|
+| `/login/` | 로그인 (아이디·비밀번호, 소셜, 언어 설정) | `POST /auth/login` | 이 경로만 guest-only |
+| `/join/` | 회원가입 — 계정 만들기 | `POST /auth/signup` | 이 경로만 guest-only |
+| `/join/social/` | 소셜 회원가입 — 프로필 설정 | `PATCH /users/me` | 기존 `sessionStorage` 검증 유지, guest-only 아님 |
+| `/oauth/kakao/callback` | Kakao OAuth callback | OAuth code 교환 | public shell, 외부 등록 URI 유지 |
 
-## 런타임 ID 상세 페이지
+### 홈 및 모임
 
-| 이전 URL | Canonical URL | 필수 query |
+| Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
+|---|---|---|---|---|
+| `/` | 지도 홈 | ④ 홈 1) | `GET /meetups?bounds=`, `GET /questions?bounds=` | public shell |
+| `/?pin={id}&type=meetup\|question` | 핀 선택 바텀시트 | ④ 홈 2) 3) | 상동 | public shell |
+| `/?view=list` | 주변 둘러보기 — 리스트 보기 | ④ 홈 4) | 상동 | public shell |
+| `/meetups/detail/?meetingId={meetingId}` | 모임 상세 (참여하기 → 그룹채팅 입장) | ④ 홈 2) | `GET /meetups/{id}`, `POST /meetups/{id}/join` | public shell, 참여 API는 Spring 인증 필요 |
+
+핀 선택과 리스트 전환은 같은 지도 화면의 상태이므로 별도 path가 아닌 query로 처리한다.
+
+### 질문 내역 및 답변
+
+| Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
+|---|---|---|---|---|
+| `/questions/` | 내 질문 내역 (무한 스크롤, 롱프레스 삭제) | ⑦ 질문 내역 1) | `GET /api/v1/questions/me`, `DELETE /api/v1/questions/{id}` | public shell, 조회·삭제 API는 Spring 인증 필요 |
+| `/questions/detail/?questionId={questionId}` | 질문 상세·답변 보기 | ⑦ 질문 내역 2) | `GET /questions/{id}`, `POST /questions/{id}/answer`, `POST /answers/{id}/accept`, `POST /chat/rooms/question` (BE #68), `POST /answers/{id}/report` (BE #69) | 상세 shell은 public, 답변·채택·채팅·신고 API는 Spring 인증 필요 |
+
+- 질문 상세는 `useMe()`로 작성자와 답변자 화면을 나눈다.
+- 작성자는 답변 채택, 답변자와 1:1 꼬리질문 채팅 시작, 답변 신고를 할 수 있다. 답변자는 답변을 입력할 수 있다.
+- 작성자 국기·작성 시각은 BE #64 응답을 기다리며 프론트는 필드를 null-safe하게 처리한다.
+- 꼬리질문 채팅 시작과 답변 신고는 BE #68/#69 배포 전까지 계약 우선으로 연결하며, API가 미구현이면 안내 메시지를 표시한다.
+
+### 채팅 및 소셜
+
+| Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
+|---|---|---|---|---|
+| `/chats/` | 채팅 목록 (그룹 + 1:1 꼬리질문) | ⑤ 모임채팅 1) | `GET /chats` | public shell, 데이터 API는 Spring 인증 필요 |
+| `/chats/room/?chatId={chatId}` | 채팅방 (그룹채팅·꼬리질문 채팅 공용) | ⑤ 5) / ⑦ 3) | `GET /chats/{id}/messages` + WebSocket | public shell, API·WebSocket은 Spring 인증 필요 |
+| `/chats/notices/?chatId={chatId}` | 메시지 공지 등록·채팅방 공지 고정/해지 | ⑤ 모임채팅 7) | `GET /chats/{id}/notices` | public shell, API는 Spring 인증 필요 |
+| `/chats/report/?chatId={chatId}&messageId={messageId}&target={target}` | 채팅 메시지 신고 | — | 신고 API | public shell, 신고 API는 Spring 인증 필요 |
+| `/chats/schedule/?chatId={chatId}` | 채팅방 캘린더·일정 | ⑤ 모임채팅 6) | `GET /chats/{id}/events` | public shell, API는 Spring 인증 필요 |
+| `/friends/` | 받은 요청·내 친구·닉네임 검색 친구 추가 | ⑤ 모임채팅 2) 3) | `GET /friends`, `GET /friend-requests`, `POST /friend-requests/{id}/accept`, `POST /friend-requests/{id}/reject`, `GET /users?nickname=`, `POST /friends` | public shell, API는 Spring 인증 필요 |
+
+- 꼬리질문 방(`roomType: "question"`)은 연결된 질문 제목을 `useQuestionSummary`로 조회해 방 제목으로 표시한다.
+- 꼬리질문 방 더보기 드로어의 대화 상대 국기는 BE #70 응답을 기다리며 프론트는 null-safe 배선을 유지한다.
+- 채팅방 더보기 드로어(참여자·알림·나가기)는 URL 없이 채팅방 내부 상태로 처리한다.
+- 신고 URL의 `target`은 선택 표시 문자열이다. 식별·인가에 사용하지 않고 React text node로만 출력한다.
+
+### 마이페이지
+
+| Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
+|---|---|---|---|---|
+| `/my/` | 마이 | ③ 마이페이지 1) | `GET /users/me` | protected client gate |
+| `/my/edit/` | 내 정보 수정 (닉네임·국적·비밀번호) | ③ 마이페이지 2) | `PATCH /users/me` | protected client gate |
+| `/my/settings/` | 알림 설정 (모임·질문 알림, 반경, 권한) | ③ 마이페이지 3) | `PATCH /users/me/notification-settings` | protected client gate |
+
+## 런타임 ID URL 전환표
+
+| 이전 Next 동적 URL | 정적 export Canonical URL | 필수 query |
 |---|---|---|
 | `/chats/{chatId}` | `/chats/room/?chatId={chatId}` | `chatId` |
 | `/chats/{chatId}/notices` | `/chats/notices/?chatId={chatId}` | `chatId` |
@@ -43,11 +88,11 @@
 | `/meetups/{meetingId}` | `/meetups/detail/?meetingId={meetingId}` | `meetingId` |
 | `/questions/{questionId}` | `/questions/detail/?questionId={questionId}` | `questionId` |
 
-- `target`은 선택 표시 문자열이다. 식별·인가 판단에 사용하지 않고 React text node로만 출력한다.
 - query 값은 route builder의 `URLSearchParams`로 인코딩한다.
-- 이전 숫자 path의 302 호환 처리는 FE 범위가 아니다. 필요하면 별도 Spring 작업으로 구현한다.
+- 이전 숫자 path의 302 호환 처리는 프론트 범위가 아니다. 필요하면 별도 Spring 작업으로 구현한다.
+- 런타임 `[questionId]`, `[chatId]`, `[meetingId]` route는 더 이상 존재하지 않는다.
 
-## 인증 라우팅
+## 인증 라우팅과 서버 인가
 
 `useMe()`가 브라우저 인증 상태의 단일 진실 공급원이다.
 
@@ -58,23 +103,39 @@
 | guest 확정 | `/login/`으로 replace | content |
 | network/5xx | retry UI, redirect 없음 | retry UI, redirect 없음 |
 
+- guest-only 정책은 정확히 `/login/`과 `/join/`에만 적용한다. `/join/social/`에는 적용하지 않는다.
 - refresh 401/403만 세션 만료로 처리한다. private query cache를 비운 뒤 `['me'] = null`로 둔다.
 - refresh network/5xx는 사용자 identity와 cache를 보존한다. 서버 장애를 로그아웃으로 바꾸지 않는다.
-- chats, friends, meetup, question, callback은 public shell이다. 실제 데이터와 action 인가는 Spring API가 담당한다.
+- chats, friends, meetups, questions, OAuth callback은 정적 public shell이다. 정적 페이지 노출은 데이터 접근 권한을 뜻하지 않는다.
+- Spring Security가 private API, mutation, WebSocket 연결을 최종적으로 인증·인가해야 한다. 프론트 client gate는 보안 경계가 아니다.
+
+## 미구현 또는 URL 미확정 화면
+
+정적 산출물에 없는 화면을 구현된 URL처럼 연결하지 않는다. 구현을 시작할 때 고정 path를 정하고 위 라우트 목록으로 옮긴다.
+
+| 화면 | 상태 | 백엔드 API (예상) |
+|---|---|---|
+| 비밀번호 찾기 | URL 미확정 | `POST /auth/reset-password` |
+| 알림센터 | URL 미확정 | `GET /notifications` |
+| 모임 만들기 | URL 미확정 | `POST /meetups` |
+| 질문 작성 (비슷한 질문·답변 확인 포함) | URL 미확정 | `POST /questions`, `GET /questions/similar?q=` |
+| 다른 사용자 프로필 | URL 미확정 | `GET /users/{id}` |
 
 ## 하단 탭
 
-| 탭 | URL |
+| 탭 | URL 또는 동작 |
 |---|---|
 | 홈 | `/` |
 | 모임채팅 | `/chats/` |
+| 글쓰기 (+) | 모달 → 모임/질문 작성 화면 (URL 미확정) |
 | 질문내역 | `/questions/` |
 | 마이 | `/my/` |
 
-글쓰기 버튼의 화면 정책과 `/questions/` 탭 정책은 이 전환에서 변경하지 않는다.
+`/questions/`는 실제 질문 내역 페이지와 정적 산출물을 가진다.
 
 ## 변경 규칙
 
 - 새 내부 링크를 문자열로 흩뿌리지 말고 route builder를 추가하거나 재사용한다.
-- 새 runtime ID 화면은 유한한 고정 path와 검증된 query 조합으로 설계한다.
+- 새 런타임 ID 화면은 유한한 고정 path와 검증된 query 조합으로 설계한다.
 - 라우트 변경 PR은 이 문서와 정적 산출물 검증 목록을 함께 갱신한다.
+- 프론트의 route 접근 정책과 Spring API 인가 정책을 별개로 검토한다.

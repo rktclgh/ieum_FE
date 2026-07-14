@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -28,6 +29,7 @@ import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-dang
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import {
+  chatKeys,
   useChatMessages,
   useChatRoom,
   useChatSessionAccess,
@@ -47,6 +49,7 @@ import {
   type ChatBubbleMessage,
 } from "@/features/chat/lib/chat-adapter"
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
+import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { getKstDateKey, formatKstFullDate, formatKstShortDate } from "@/lib/date/kst"
@@ -128,6 +131,7 @@ function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): Ch
 
 function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { messages } = useTranslation()
   const myUserId = session.userId ?? -1
 
@@ -163,10 +167,16 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     onMessage: (event) => {
       if (myUserId < 0) return
       setLiveMessages((prev) => [...prev, adaptMessage(event, myUserId)])
+      // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
+      queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })
     },
     onError: (error) => setSocketError(error.message),
     onConnectedChange: (isConnected) => {
-      if (isConnected) setSocketError(null)
+      if (!isConnected) return
+      setSocketError(null)
+      // 연결/재연결 직후 REST 스냅샷을 다시 당겨, 초기 fetch~구독 사이·재연결 중 누락된 메시지를 백필한다.
+      // mergeMessages가 messageId 기준으로 중복을 제거하므로 liveMessages와 겹쳐도 안전하다.
+      queryClient.invalidateQueries({ queryKey: chatKeys.messages(roomId) })
     },
   })
 
@@ -176,7 +186,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.activeRoomId])
 
-  const roomTitle = room ? resolveRoomTitle(room.members, myUserId, room.roomType) : ""
+  const questionId = room?.roomType === "question" ? room.questionId ?? undefined : undefined
+  const { data: questionSummary } = useQuestionSummary(questionId ?? 0, questionId != null)
+
+  const roomTitle = room
+    ? room.roomType === "question" && questionSummary?.title
+      ? questionSummary.title
+      : resolveRoomTitle(room.members, myUserId, room.roomType)
+    : ""
   const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
   const notificationOn = room?.notifyEnabled ?? true
   const roomPinned = room?.pinned ?? false
@@ -425,6 +442,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                       name={member.name}
                       avatarSrc={member.avatarSrc}
                       isMe={member.isMe}
+                      flagSrc={member.countryFlagSrc}
+                      nation={member.nationalityCode ? messages.countries[member.nationalityCode] : undefined}
                     />
                   ))}
                 </div>

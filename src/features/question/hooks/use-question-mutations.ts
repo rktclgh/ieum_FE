@@ -2,18 +2,26 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
+import { createQuestionRoom } from "@/features/chat/api/chat-api"
+import type { QuestionRoomRequest } from "@/features/chat/api/chat-types"
+import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
 import {
   acceptAnswer,
   createQuestion,
+  deleteQuestion,
   postAnswer,
   updateQuestion,
 } from "@/features/question/api/question-api"
 import type {
   CreateQuestionRequest,
+  MyQuestionsPage,
   PostAnswerRequest,
   UpdateQuestionRequest,
 } from "@/features/question/api/question-types"
+import type { InfiniteData } from "@tanstack/react-query"
 import { questionKeys } from "@/features/question/hooks/use-question-queries"
+import { reportAnswer } from "@/features/report/api/report-api"
+import type { ReportReason } from "@/features/report/api/report-types"
 
 function useCreateQuestion() {
   const queryClient = useQueryClient()
@@ -60,9 +68,74 @@ function useAcceptAnswer(questionId: number) {
   })
 }
 
+// 질문 삭제 — 무한쿼리 캐시에서 낙관적으로 제거하고 실패 시 롤백한다.
+function useDeleteQuestion() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (questionId: number) => deleteQuestion(questionId),
+    onMutate: async (questionId) => {
+      await queryClient.cancelQueries({ queryKey: questionKeys.myList() })
+      const previous = queryClient.getQueryData<InfiniteData<MyQuestionsPage>>(
+        questionKeys.myList()
+      )
+      queryClient.setQueryData<InfiniteData<MyQuestionsPage>>(
+        questionKeys.myList(),
+        (data) =>
+          data
+            ? {
+                ...data,
+                pages: data.pages.map((page) => ({
+                  ...page,
+                  items: page.items.filter((item) => item.questionId !== questionId),
+                })),
+              }
+            : data
+      )
+      return { previous }
+    },
+    onError: (_error, _questionId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(questionKeys.myList(), context.previous)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: questionKeys.myList() })
+    },
+  })
+}
+
+// 답변 보기의 "채팅 시작" — 방 생성 성공 시 채팅 목록 캐시를 갱신한다.
+function useCreateQuestionRoom() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: QuestionRoomRequest) => createQuestionRoom(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: chatKeys.rooms() })
+    },
+  })
+}
+
+// 답변 신고 — 성공 시 호출부가 해당 답변을 로컬 블러 처리한다(BE에 신고상태 필드 없음).
+function useReportAnswer() {
+  return useMutation({
+    mutationFn: ({
+      answerId,
+      reason,
+      detail,
+    }: {
+      answerId: number
+      reason: ReportReason
+      detail?: string
+    }) => reportAnswer(answerId, { reason, detail }),
+  })
+}
+
 export {
   useCreateQuestion,
   useUpdateQuestion,
   usePostAnswer,
   useAcceptAnswer,
+  useDeleteQuestion,
+  useCreateQuestionRoom,
+  useReportAnswer,
 }

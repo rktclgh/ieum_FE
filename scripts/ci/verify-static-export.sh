@@ -79,6 +79,7 @@ routes=(
   my/edit
   my/settings
   oauth/kakao/callback
+  questions
   questions/detail
 )
 

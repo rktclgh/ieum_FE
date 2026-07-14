@@ -6,14 +6,20 @@ import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { QuestionAiAnswerCard } from "@/features/question/components/question-ai-answer-card"
+import { QuestionAnswerAuthorItem } from "@/features/question/components/question-answer-author-item"
 import { QuestionAnswerItem } from "@/features/question/components/question-answer-item"
 import {
   useAcceptAnswer,
+  useCreateQuestionRoom,
   usePostAnswer,
+  useReportAnswer,
 } from "@/features/question/hooks/use-question-mutations"
 import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
+import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 interface QuestionDetailScreenProps {
   questionId: number
@@ -26,10 +32,15 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
   const detailQuery = useQuestionDetail(questionId)
   const postAnswer = usePostAnswer(questionId)
   const acceptAnswer = useAcceptAnswer(questionId)
+  const me = useMe()
+  const createRoom = useCreateQuestionRoom()
+  const reportAnswer = useReportAnswer()
 
   const [reply, setReply] = React.useState("")
   const [actionError, setActionError] = React.useState<string | null>(null)
   const [pendingAcceptId, setPendingAcceptId] = React.useState<number | null>(null)
+  const [reportedIds, setReportedIds] = React.useState<Set<number>>(new Set())
+  const [pendingReportId, setPendingReportId] = React.useState<number | null>(null)
 
   React.useEffect(() => {
     if (!actionError) return
@@ -41,6 +52,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
     setActionError(getQuestionErrorMessage(error, messages))
 
   const question = detailQuery.data
+  const isAuthor = question != null && me.data?.userId === question.authorUserId
 
   const handleSend = () => {
     const value = reply.trim()
@@ -58,6 +70,33 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
     if (pendingAcceptId == null) return
     acceptAnswer.mutate(pendingAcceptId, { onError: showError })
     setPendingAcceptId(null)
+  }
+
+  const handleStartChat = (targetUserId: number) => {
+    if (!question) return
+    createRoom.mutate(
+      { questionId: question.questionId, targetUserId },
+      {
+        onSuccess: (room) => router.push(routes.chatRoom(room.roomId)),
+        onError: () => setActionError(messages.question.chatStartFailed),
+      }
+    )
+  }
+
+  const handleConfirmReport = () => {
+    if (pendingReportId == null) return
+    const answerId = pendingReportId
+    reportAnswer.mutate(
+      { answerId, reason: "etc" },
+      {
+        onSuccess: () => {
+          setReportedIds((prev) => new Set(prev).add(answerId))
+          setActionError(messages.question.reportSubmitted)
+        },
+        onError: () => setActionError(messages.question.errors.REPORT_FAILED),
+      }
+    )
+    setPendingReportId(null)
   }
 
   return (
@@ -117,7 +156,30 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
               <span className="text-title-semibold-16 text-gray-900">
                 {messages.question.answersTitle(question.answers.length)}
               </span>
-              {question.answers.length === 0 ? (
+              {isAuthor ? (
+                <div className="flex w-full flex-col gap-3">
+                  {question.answers.filter((a) => a.isAi).map((a) => (
+                    <QuestionAiAnswerCard key={a.answerId} answer={a} />
+                  ))}
+                  {question.answers.filter((a) => !a.isAi).map((a) => (
+                    <QuestionAnswerAuthorItem
+                      key={a.answerId}
+                      answer={a}
+                      isMine={a.authorUserId === me.data?.userId}
+                      isReported={reportedIds.has(a.answerId)}
+                      canAccept={!question.isResolved && !a.isAccepted}
+                      onAccept={() => setPendingAcceptId(a.answerId)}
+                      onStartChat={() => handleStartChat(a.authorUserId)}
+                      onReport={() => setPendingReportId(a.answerId)}
+                    />
+                  ))}
+                  {question.answers.length === 0 ? (
+                    <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
+                      {messages.question.emptyAnswers}
+                    </p>
+                  ) : null}
+                </div>
+              ) : question.answers.length === 0 ? (
                 <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
                   {messages.question.emptyAnswers}
                 </p>
@@ -137,7 +199,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
           <div className="flex-1" />
         )}
 
-        {question ? (
+        {question && !isAuthor ? (
           <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm bg-white px-4 pt-2 pb-6">
             <div className="flex w-full items-center justify-between gap-2 rounded-full border border-gray-50 bg-gray-50/95 py-2 pr-2 pl-4">
               <input
@@ -180,6 +242,16 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
         cancelLabel={messages.question.acceptConfirmCancel}
         confirmLabel={messages.question.acceptButton}
         onConfirm={handleConfirmAccept}
+      />
+
+      <ConfirmDialog
+        open={pendingReportId != null}
+        onOpenChange={(open) => !open && setPendingReportId(null)}
+        title={messages.question.reportConfirmTitle}
+        description={messages.question.reportConfirmDescription}
+        cancelLabel={messages.question.acceptConfirmCancel}
+        confirmLabel={messages.question.reportAction}
+        onConfirm={handleConfirmReport}
       />
     </>
   )

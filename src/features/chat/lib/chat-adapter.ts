@@ -9,6 +9,8 @@ import type {
   RoomType,
   WsMessageEvent,
 } from "@/features/chat/api/chat-types"
+import { flagFromIso2, fromIso2 } from "@/features/join/lib/nationality-map"
+import type { CountryCode } from "@/lib/constants/countries"
 
 // 목록/방 UI가 공통으로 쓰는 뷰 모델.
 
@@ -42,6 +44,8 @@ interface ChatMemberEntry {
   name: string
   avatarSrc?: string
   isMe: boolean
+  countryFlagSrc?: string
+  nationalityCode?: CountryCode
 }
 
 // roomType → 필터/목록 카테고리. direct=friend(1:1), group=meetup(모임), question=question.
@@ -121,6 +125,8 @@ function adaptMember(member: ChatRoomMemberResponse, myUserId: number): ChatMemb
     name: member.nickname,
     avatarSrc: resolveFileUrl(member.profileImageUrl),
     isMe: member.userId === myUserId,
+    countryFlagSrc: flagFromIso2(member.nationality),
+    nationalityCode: fromIso2(member.nationality),
   }
 }
 

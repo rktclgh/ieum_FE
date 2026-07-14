@@ -61,6 +61,11 @@ async function acceptAnswer(answerId: number) {
   await apiClient.post(`/api/v1/answers/${answerId}/accept`)
 }
 
+// 질문 삭제 — 204. 작성자만 가능. (BE: DELETE /api/v1/questions/{id})
+async function deleteQuestion(questionId: number) {
+  await apiClient.delete(`/api/v1/questions/${questionId}`)
+}
+
 export {
   getQuestion,
   getMyQuestions,
@@ -68,4 +73,5 @@ export {
   updateQuestion,
   postAnswer,
   acceptAnswer,
+  deleteQuestion,
 }
