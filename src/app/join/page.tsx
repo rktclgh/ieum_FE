@@ -6,10 +6,11 @@ import { AppBar } from "@/components/ui/app-bar"
 import { CredentialsForm } from "@/features/join/components/credentials-form"
 import { ProfileForm } from "@/features/join/components/profile-form"
 import { useJoinFlow } from "@/features/join/hooks/use-join-flow"
+import { AuthGate } from "@/features/session/components/auth-gate"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
-export default function JoinPage() {
+function JoinContent() {
   const router = useRouter()
   const { messages } = useTranslation()
   const flow = useJoinFlow({ onSignupSuccess: () => router.push(routes.login()) })
@@ -34,5 +35,13 @@ export default function JoinPage() {
         flow={flow.profile}
       />
     </main>
+  )
+}
+
+export default function JoinPage() {
+  return (
+    <AuthGate policy="guest-only">
+      <JoinContent />
+    </AuthGate>
   )
 }

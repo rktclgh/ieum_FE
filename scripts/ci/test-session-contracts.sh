@@ -17,10 +17,12 @@ pnpm exec tsc \
   --rootDir . \
   --outDir "$tmp_dir" \
   scripts/ci/test-auth-state.ts \
+  scripts/ci/test-session-cache.ts \
   scripts/ci/test-session-events.ts \
   scripts/ci/test-session-retry.ts
 
-node --test \
+NODE_PATH="$repo_root/node_modules" node --test \
   "$tmp_dir/scripts/ci/test-auth-state.js" \
+  "$tmp_dir/scripts/ci/test-session-cache.js" \
   "$tmp_dir/scripts/ci/test-session-events.js" \
   "$tmp_dir/scripts/ci/test-session-retry.js"
