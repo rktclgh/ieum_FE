@@ -17,7 +17,10 @@ import {
 } from "@/features/map/constants/map"
 
 interface MapCanvasProps {
+  /** 재중심 시 이동할 좌표. 실시간 위치 갱신은 여기에 반영되어도 뷰를 움직이지 않는다(recenterKey로만 이동). */
   center: Coordinates | null
+  /** 증가할 때마다 그 시점의 center로 지도를 이동시키는 nonce. 미지정이면 재중심 안 함 */
+  recenterKey?: number
   /** center 변경 시 맞출 확대 단계. 없으면 현재 zoom 유지 */
   centerZoom?: number
   /** center 변경 시 flyTo로 부드럽게 이동할지 여부 */
@@ -67,24 +70,28 @@ const userLocationIcon = L.divIcon({
 
 function MapCenterUpdater({
   center,
+  recenterKey,
   zoom,
   animate,
   topInset = 0,
   bottomInset = 0,
 }: {
-  center: Coordinates
+  center: Coordinates | null
+  recenterKey: number
   zoom?: number
   animate?: boolean
   topInset?: number
   bottomInset?: number
 }) {
   const map = useMap()
-  const lastCenterRef = React.useRef<Coordinates | null>(null)
+  // 최초 마운트 시점의 key를 "이미 적용됨"으로 두어, 마운트만으로는 재중심하지 않는다.
+  const appliedKeyRef = React.useRef(recenterKey)
 
   React.useEffect(() => {
-    // 인셋만 바뀐 경우(예: 하단 시트 높이 변화)엔 재중심하지 않고 center 변경 시에만 이동한다.
-    if (lastCenterRef.current === center) return
-    lastCenterRef.current = center
+    // recenterKey가 실제로 바뀌었을 때만 이동. center 실시간 갱신/인셋 변화에는 반응하지 않는다.
+    if (appliedKeyRef.current === recenterKey) return
+    appliedKeyRef.current = recenterKey
+    if (!center) return
 
     const targetZoom = zoom ?? map.getZoom()
 
@@ -100,7 +107,7 @@ function MapCenterUpdater({
     } else {
       map.setView([center.lat, center.lng], targetZoom)
     }
-  }, [center, zoom, animate, topInset, bottomInset, map])
+  }, [center, recenterKey, zoom, animate, topInset, bottomInset, map])
 
   return null
 }
@@ -159,6 +166,7 @@ function MapDragListener({ onUserPan }: { onUserPan: () => void }) {
 
 function MapCanvas({
   center,
+  recenterKey,
   centerZoom,
   animateCenter,
   topInset,
@@ -188,15 +196,14 @@ function MapCanvas({
         subdomains={MAP_TILE_SUBDOMAINS}
         maxZoom={MAP_TILE_MAX_ZOOM}
       />
-      {center && (
-        <MapCenterUpdater
-          center={center}
-          zoom={centerZoom}
-          animate={animateCenter}
-          topInset={topInset}
-          bottomInset={bottomInset}
-        />
-      )}
+      <MapCenterUpdater
+        center={center}
+        recenterKey={recenterKey ?? 0}
+        zoom={centerZoom}
+        animate={animateCenter}
+        topInset={topInset}
+        bottomInset={bottomInset}
+      />
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
       {onUserPan && <MapDragListener onUserPan={onUserPan} />}
