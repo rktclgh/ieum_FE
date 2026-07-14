@@ -1,0 +1,107 @@
+"use client"
+
+import * as React from "react"
+import { useRouter } from "next/navigation"
+
+import { AppBar } from "@/components/ui/app-bar"
+import { useSubmitInquiry } from "@/features/my/hooks/use-my-mutations"
+import { useTranslation } from "@/lib/i18n/use-translation"
+import { cn } from "@/lib/utils"
+
+const SUCCESS_DISMISS_MS = 1200
+
+function InquiryContent() {
+  const router = useRouter()
+  const { messages } = useTranslation()
+  const submitInquiry = useSubmitInquiry()
+
+  const [content, setContent] = React.useState("")
+  const [submitted, setSubmitted] = React.useState(false)
+
+  const trimmed = content.trim()
+  const canSubmit = trimmed.length > 0 && !submitInquiry.isPending && !submitted
+
+  const handleSubmit = () => {
+    if (!canSubmit) return
+    submitInquiry.mutate(
+      { content: trimmed },
+      {
+        onSuccess: () => {
+          setSubmitted(true)
+          // 성공 피드백을 잠깐 보여준 뒤 이전 화면으로 돌아간다.
+          window.setTimeout(() => router.back(), SUCCESS_DISMISS_MS)
+        },
+      }
+    )
+  }
+
+  return (
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col">
+      <AppBar
+        title={messages.my.inquiry.title}
+        trailingIcon={null}
+        onLeadingClick={() => router.back()}
+      />
+
+      <div className="flex w-full flex-col gap-6 px-4 pt-3 pb-32">
+        <textarea
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          placeholder={messages.my.inquiry.placeholder}
+          className="h-40 w-full resize-none rounded-lg border border-gray-100 p-4 text-body-regular-14 text-gray-900 caret-primary-400 outline-none transition-colors placeholder:text-gray-400 focus-within:border-primary-400"
+        />
+
+        <ul className="flex w-full flex-col gap-2">
+          {[messages.my.inquiry.guide1, messages.my.inquiry.guide2].map((guide) => (
+            <li key={guide} className="flex items-start gap-2 text-body-regular-12 text-gray-400">
+              <span className="mt-[6.5px] size-1 shrink-0 rounded-full bg-gray-400" />
+              <span>{guide}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm flex-col items-center gap-2 bg-white px-4 pt-2 pb-2">
+        <div className="flex w-full items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex flex-1 items-center justify-center rounded-full border border-primary-400 px-4 py-3 text-body-medium-14 text-primary-400"
+          >
+            {messages.my.inquiry.cancel}
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className={cn(
+              "flex flex-1 items-center justify-center rounded-full px-4 py-3 text-body-medium-14 text-white transition-colors",
+              canSubmit ? "bg-primary-400" : "bg-gray-200"
+            )}
+          >
+            {messages.my.inquiry.submit}
+          </button>
+        </div>
+        <span className="h-1 w-[135px] rounded-full bg-gray-900" />
+      </div>
+
+      {submitted && (
+        <div className="fixed inset-x-0 bottom-24 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
+            {messages.my.inquiry.success}
+          </div>
+        </div>
+      )}
+
+      {submitInquiry.isError && (
+        <div className="fixed inset-x-0 bottom-24 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
+            {messages.my.inquiry.error}
+          </div>
+        </div>
+      )}
+    </main>
+  )
+}
+
+export { InquiryContent }

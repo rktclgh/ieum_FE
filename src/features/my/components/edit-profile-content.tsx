@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button"
 import { ChoicePill } from "@/components/ui/text-field/choice-pill"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { Input } from "@/components/ui/text-field/input"
+import { InputWithButton } from "@/components/ui/text-field/input-with-button"
 import { Title } from "@/components/ui/text-field/title"
 import { NationalitySelect } from "@/features/join/components/nationality-select"
+import { useCheckNicknameDuplicate } from "@/features/join/hooks/use-join-mutations"
 import { toIsoDate } from "@/features/join/lib/format"
 import { fromIso2, toIso2 } from "@/features/join/lib/nationality-map"
+import type { NicknameStatus } from "@/features/join/types"
 import type { UpdateMeRequest } from "@/features/my/api/my-types"
 import { useUpdateMe } from "@/features/my/hooks/use-my-mutations"
 import { getMyErrorMessage } from "@/features/my/lib/my-error"
@@ -25,7 +28,9 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
 const BIRTH_DATE_DIGIT_LENGTH = 8
-const GENDER_OPTIONS: Gender[] = ["female", "male", "other"]
+// 디자인 결정(#87): UI는 여성/남성 2개만 노출. (BE는 other를 유지하나 프로필 수정에선 제외)
+const GENDER_OPTIONS = ["female", "male"] as const satisfies readonly Gender[]
+const NICKNAME_MIN_LENGTH = 2
 
 function formatBirthDate(digits: string) {
   if (digits.length <= 4) return digits
@@ -73,6 +78,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
   }
 
   const [nickname, setNickname] = React.useState(user.nickname)
+  const [nicknameStatus, setNicknameStatus] = React.useState<NicknameStatus>("idle")
   const [birthDateDigits, setBirthDateDigits] = React.useState(
     (user.birthDate ?? "").replaceAll("-", "")
   )
@@ -81,28 +87,62 @@ function EditProfileForm({ user }: { user: MeUser }) {
     fromIso2(user.nationality) ?? ""
   )
 
-  const genderLabels: Record<Gender, string> = {
+  const checkNickname = useCheckNicknameDuplicate()
+  const latestNicknameRef = React.useRef(nickname)
+
+  const genderLabels: Record<(typeof GENDER_OPTIONS)[number], string> = {
     female: messages.join.genderFemale,
     male: messages.join.genderMale,
-    other: messages.my.edit.genderOther,
   }
+
+  const trimmedNickname = nickname.trim()
+  const isNicknameValid = trimmedNickname.length >= NICKNAME_MIN_LENGTH
+  // 본인 현재 닉네임과 같으면 중복확인 불필요(skip): 그대로 유효로 취급한다.
+  const isNicknameChanged = trimmedNickname !== user.nickname
+  const isNicknameConfirmed = !isNicknameChanged || nicknameStatus === "available"
 
   const isBirthDateComplete = birthDateDigits.length === BIRTH_DATE_DIGIT_LENGTH
   const isBirthDateInvalid = birthDateDigits.length > 0 && !isBirthDateComplete
-  const isNicknameValid = nickname.trim().length >= 2
+
+  const handleNicknameChange = (rawValue: string) => {
+    latestNicknameRef.current = rawValue
+    setNickname(rawValue)
+    setNicknameStatus("idle")
+    if (checkNickname.isError) checkNickname.reset()
+  }
+
+  const handleNicknameDuplicateCheck = () => {
+    if (!isNicknameValid) return
+    // 닉네임 미변경 시 백엔드 호출 없이 통과 처리(본인 닉네임을 "이미 사용중"으로 오탐 방지).
+    if (!isNicknameChanged) {
+      setNicknameStatus("available")
+      return
+    }
+    const requested = trimmedNickname
+    checkNickname.mutate(
+      { nickname: requested },
+      {
+        onSuccess: (data) => {
+          if (latestNicknameRef.current.trim() !== requested) return
+          setNicknameStatus(data.available ? "available" : "duplicate")
+        },
+      }
+    )
+  }
 
   const nextBirthDate =
     isBirthDateComplete ? toIsoDate(formatBirthDate(birthDateDigits)) : undefined
   const nextNationality = nationality ? toIso2(nationality) : undefined
 
   const payload: UpdateMeRequest = {}
-  if (isNicknameValid && nickname !== user.nickname) payload.nickname = nickname
+  if (isNicknameValid && isNicknameChanged) payload.nickname = trimmedNickname
   if (nextBirthDate && nextBirthDate !== user.birthDate) payload.birthDate = nextBirthDate
   if (gender && gender !== user.gender) payload.gender = gender
   if (nextNationality && nextNationality !== user.nationality) payload.nationality = nextNationality
 
   const hasChanges = Object.keys(payload).length > 0
-  const isFormValid = isNicknameValid && !isBirthDateInvalid && gender !== null && nationality !== ""
+  const isFormValid =
+    isNicknameValid && isNicknameConfirmed && !isBirthDateInvalid && gender !== null && nationality !== ""
   const canSave = hasChanges && isFormValid && !updateMe.isPending
 
   const errorCode = updateMe.isError
@@ -154,14 +194,23 @@ function EditProfileForm({ user }: { user: MeUser }) {
 
         <div className="flex w-full flex-col items-start">
           <Title text={messages.join.nicknameLabel} />
-          <Input
+          <InputWithButton
             name="nickname"
             autoComplete="nickname"
             placeholder={messages.join.nicknamePlaceholder}
             value={nickname}
-            onChange={(event) => setNickname(event.target.value)}
-            error={updateMe.isError}
+            onChange={(event) => handleNicknameChange(event.target.value)}
+            error={nicknameStatus === "duplicate"}
+            buttonLabel={messages.join.nicknameDuplicateCheckButton}
+            onButtonClick={handleNicknameDuplicateCheck}
+            buttonDisabled={!isNicknameValid || !isNicknameChanged || nicknameStatus === "available"}
           />
+          {nicknameStatus === "available" && (
+            <Explanation variant="great" text={messages.join.nicknameAvailableExplanation} />
+          )}
+          {nicknameStatus === "duplicate" && (
+            <Explanation variant="error" text={messages.join.nicknameDuplicateExplanation} />
+          )}
         </div>
 
         <div className="flex w-full flex-col items-start">
