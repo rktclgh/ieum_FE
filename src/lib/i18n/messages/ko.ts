@@ -241,41 +241,59 @@ export interface Messages {
     }
   }
   my: {
-    emailLabel: string
-    gradeLabel: string
-    acceptedCountLabel: string
     editInfoLabel: string
-    settingsLabel: string
     edit: {
       title: string
-      genderOther: string
       saveButton: string
     }
-    settings: {
+    notifications: {
       title: string
-      languageLabel: string
-      permissionsSectionTitle: string
-      cameraPermissionLabel: string
-      pushPermissionLabel: string
-      notificationsSectionTitle: string
       notifyAllLabel: string
-      notifyMeetingLabel: string
-      notifyQuestionLabel: string
       notifyRadiusLabel: string
       radiusOption: (km: number) => string
-      locationLabel: string
-      locationUpdateAction: string
-      locationSublabel: string
-      locationUpdating: string
-      locationUpdated: string
-      locationDenied: string
-      locationUnavailable: string
       saveError: string
+    }
+    permissions: {
+      title: string
+      cameraPermissionLabel: string
+      saveError: string
+    }
+    inquiry: {
+      title: string
+      placeholder: string
+      guide1: string
+      guide2: string
+      cancel: string
+      submit: string
+      success: string
+      error: string
     }
     errors: {
       NICKNAME_TAKEN: string
       VALIDATION_FAILED: string
       default: string
+    }
+    menu: {
+      notifications: string
+      permissions: string
+      language: string
+      inquiry: string
+      version: string
+      logout: string
+      withdraw: string
+    }
+    logoutDialog: {
+      title: string
+      description: string
+      cancel: string
+      confirm: string
+    }
+    withdrawDialog: {
+      title: string
+      description: string
+      cancel: string
+      confirm: string
+      error: string
     }
   }
   profileImage: {
@@ -655,41 +673,59 @@ export const ko: Messages = {
     },
   },
   my: {
-    emailLabel: "이메일",
-    gradeLabel: "등급",
-    acceptedCountLabel: "채택 수",
     editInfoLabel: "내 정보 수정",
-    settingsLabel: "설정",
     edit: {
       title: "내 정보 수정",
-      genderOther: "기타",
       saveButton: "저장",
     },
-    settings: {
-      title: "설정",
-      languageLabel: "언어",
-      permissionsSectionTitle: "권한",
-      cameraPermissionLabel: "카메라 권한",
-      pushPermissionLabel: "푸시 알림 권한",
-      notificationsSectionTitle: "알림",
+    notifications: {
+      title: "알림 설정",
       notifyAllLabel: "전체 알림",
-      notifyMeetingLabel: "모임 알림",
-      notifyQuestionLabel: "질문 알림",
       notifyRadiusLabel: "알림 반경",
       radiusOption: (km) => `${km}km`,
-      locationLabel: "위치",
-      locationUpdateAction: "내 위치 업데이트",
-      locationSublabel: "지도에서 내 위치를 최신으로 갱신해요.",
-      locationUpdating: "위치 업데이트 중...",
-      locationUpdated: "위치가 업데이트되었어요.",
-      locationDenied: "위치 권한이 필요해요.",
-      locationUnavailable: "위치를 가져오지 못했어요.",
       saveError: "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    },
+    permissions: {
+      title: "권한 설정",
+      cameraPermissionLabel: "카메라 권한",
+      saveError: "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    },
+    inquiry: {
+      title: "문의하기",
+      placeholder: "문의 내용을 입력해 주세요.",
+      guide1: "문의하신 내용은 최대 7일 안에 답변 드리겠습니다.",
+      guide2: "답변은 등록하신 이메일로 전송해드립니다.",
+      cancel: "취소",
+      submit: "문의",
+      success: "문의가 접수되었어요.",
+      error: "문의 등록에 실패했어요. 잠시 후 다시 시도해 주세요.",
     },
     errors: {
       NICKNAME_TAKEN: "이미 사용중인 닉네임이에요.",
       VALIDATION_FAILED: "입력값을 다시 확인해 주세요.",
       default: "잠시 후 다시 시도해 주세요.",
+    },
+    menu: {
+      notifications: "알림 설정",
+      permissions: "권한 설정",
+      language: "언어 설정",
+      inquiry: "문의하기",
+      version: "버전 정보",
+      logout: "로그아웃",
+      withdraw: "회원탈퇴",
+    },
+    logoutDialog: {
+      title: "이음에서 로그아웃합니다",
+      description: "정말로 로그아웃 하시겠습니까?",
+      cancel: "취소",
+      confirm: "로그아웃",
+    },
+    withdrawDialog: {
+      title: "현재 계정을 탈퇴합니다",
+      description: "정말로 탈퇴하시겠습니까?",
+      cancel: "취소",
+      confirm: "탈퇴",
+      error: "탈퇴에 실패했어요. 잠시 후 다시 시도해 주세요.",
     },
   },
   profileImage: {
