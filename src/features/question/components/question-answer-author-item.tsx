@@ -1,7 +1,10 @@
 "use client"
 
+import * as React from "react"
+
 import { Button } from "@/components/ui/button"
 import { CountryFlag } from "@/features/chat/components/country-flag"
+import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
@@ -11,7 +14,7 @@ interface QuestionAnswerAuthorItemProps {
   isReported: boolean
   onAccept: () => void
   onStartChat: () => void
-  onReport: () => void
+  onLongPress: (rect: DOMRect) => void
 }
 
 function QuestionAnswerAuthorItem({
@@ -20,12 +23,21 @@ function QuestionAnswerAuthorItem({
   isReported,
   onAccept,
   onStartChat,
-  onReport,
+  onLongPress,
 }: QuestionAnswerAuthorItemProps) {
   const { messages } = useTranslation()
+  const ref = React.useRef<HTMLDivElement>(null)
+  const longPress = useLongPress({
+    onLongPress: () => {
+      const rect = ref.current?.getBoundingClientRect()
+      if (rect) onLongPress(rect)
+    },
+  })
 
   return (
     <div
+      ref={ref}
+      {...(isMine ? {} : longPress)}
       className={
         isMine
           ? "flex w-full flex-col gap-2 rounded-2xl bg-white p-4 shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]"
@@ -80,16 +92,6 @@ function QuestionAnswerAuthorItem({
         >
           {answer.content}
         </p>
-      ) : null}
-
-      {!isMine && !isReported ? (
-        <button
-          type="button"
-          onClick={onReport}
-          className="self-end text-body-regular-13 text-gray-400"
-        >
-          {messages.question.reportAction}
-        </button>
       ) : null}
     </div>
   )
