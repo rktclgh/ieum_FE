@@ -26,18 +26,23 @@ interface MeetupTimePickerProps {
   onConfirm: (value: MeetupTimeValue) => void
 }
 
-/** 오전·오후 / 시 / 분 3열 휠 피커 바텀시트. */
-function MeetupTimePicker({ open, onOpenChange, value, onConfirm }: MeetupTimePickerProps) {
+interface MeetupTimePickerContentProps {
+  initialValue: MeetupTimeValue | null
+  onCancel: () => void
+  onConfirm: (value: MeetupTimeValue) => void
+}
+
+function MeetupTimePickerContent({
+  initialValue,
+  onCancel,
+  onConfirm,
+}: MeetupTimePickerContentProps) {
   const { messages } = useTranslation()
   const t = messages.createMeetup
 
-  const [draft, setDraft] = React.useState<MeetupTimeValue>(() => value ?? getKstTimeParts())
-
-  // 시트를 열 때마다 현재 값(없으면 KST 현재 시각)으로 draft 초기화
-  React.useEffect(() => {
-    if (!open) return
-    setDraft(value ?? getKstTimeParts())
-  }, [open, value])
+  const [draft, setDraft] = React.useState<MeetupTimeValue>(
+    () => initialValue ?? getKstTimeParts()
+  )
 
   const periodLabels = PERIODS.map((period) => (period === "am" ? t.amLabel : t.pmLabel))
   const hourLabels = HOURS.map((hour) => t.hourLabel(hour))
@@ -45,6 +50,70 @@ function MeetupTimePicker({ open, onOpenChange, value, onConfirm }: MeetupTimePi
 
   const handleConfirm = () => {
     onConfirm(draft)
+  }
+
+  return (
+    <DrawerContent className="gap-6 pb-2">
+      <div className="relative flex w-full items-center justify-center gap-2 py-1">
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 h-10 -translate-y-1/2 rounded-lg bg-gray-50" />
+        <WheelPicker
+          options={periodLabels}
+          value={draft.period === "am" ? t.amLabel : t.pmLabel}
+          onChange={(label) => {
+            const index = periodLabels.indexOf(label)
+            if (index >= 0) setDraft((prev) => ({ ...prev, period: PERIODS[index] }))
+          }}
+          className="relative z-10 flex-1"
+        />
+        <WheelPicker
+          options={hourLabels}
+          value={t.hourLabel(draft.hour)}
+          onChange={(label) => {
+            const index = hourLabels.indexOf(label)
+            if (index >= 0) setDraft((prev) => ({ ...prev, hour: HOURS[index] }))
+          }}
+          className="relative z-10 flex-1"
+        />
+        <WheelPicker
+          options={minuteLabels}
+          value={t.minuteLabel(String(draft.minute).padStart(2, "0"))}
+          onChange={(label) => {
+            const index = minuteLabels.indexOf(label)
+            if (index >= 0) setDraft((prev) => ({ ...prev, minute: MINUTES[index] }))
+          }}
+          className="relative z-10 flex-1"
+        />
+      </div>
+      <div className="flex w-full items-center gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 rounded-full border border-primary-600 px-4 py-3 text-center text-body-medium-14 text-primary-600"
+        >
+          {t.cancelButton}
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          className="flex-1 rounded-full bg-primary-600 px-4 py-3 text-center text-body-medium-14 text-white"
+        >
+          {t.confirmButton}
+        </button>
+      </div>
+    </DrawerContent>
+  )
+}
+
+/** 오전·오후 / 시 / 분 3열 휠 피커 바텀시트. */
+function MeetupTimePicker({ open, onOpenChange, value, onConfirm }: MeetupTimePickerProps) {
+  const contentKey = !open
+    ? "closed"
+    : value
+      ? `${value.period}-${value.hour}-${value.minute}`
+      : "open-empty"
+
+  const handleConfirm = (nextValue: MeetupTimeValue) => {
+    onConfirm(nextValue)
     onOpenChange(false)
   }
 
@@ -54,54 +123,12 @@ function MeetupTimePicker({ open, onOpenChange, value, onConfirm }: MeetupTimePi
         <DrawerBackdrop />
         <DrawerViewport>
           <DrawerPopup>
-            <DrawerContent className="gap-6 pb-2">
-              <div className="relative flex w-full items-center justify-center gap-2 py-1">
-                <div className="pointer-events-none absolute inset-x-0 top-1/2 h-10 -translate-y-1/2 rounded-lg bg-gray-50" />
-                <WheelPicker
-                  options={periodLabels}
-                  value={draft.period === "am" ? t.amLabel : t.pmLabel}
-                  onChange={(label) => {
-                    const index = periodLabels.indexOf(label)
-                    if (index >= 0) setDraft((prev) => ({ ...prev, period: PERIODS[index] }))
-                  }}
-                  className="relative z-10 flex-1"
-                />
-                <WheelPicker
-                  options={hourLabels}
-                  value={t.hourLabel(draft.hour)}
-                  onChange={(label) => {
-                    const index = hourLabels.indexOf(label)
-                    if (index >= 0) setDraft((prev) => ({ ...prev, hour: HOURS[index] }))
-                  }}
-                  className="relative z-10 flex-1"
-                />
-                <WheelPicker
-                  options={minuteLabels}
-                  value={t.minuteLabel(String(draft.minute).padStart(2, "0"))}
-                  onChange={(label) => {
-                    const index = minuteLabels.indexOf(label)
-                    if (index >= 0) setDraft((prev) => ({ ...prev, minute: MINUTES[index] }))
-                  }}
-                  className="relative z-10 flex-1"
-                />
-              </div>
-              <div className="flex w-full items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onOpenChange(false)}
-                  className="flex-1 rounded-full border border-primary-600 px-4 py-3 text-center text-body-medium-14 text-primary-600"
-                >
-                  {t.cancelButton}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  className="flex-1 rounded-full bg-primary-600 px-4 py-3 text-center text-body-medium-14 text-white"
-                >
-                  {t.confirmButton}
-                </button>
-              </div>
-            </DrawerContent>
+            <MeetupTimePickerContent
+              key={contentKey}
+              initialValue={value}
+              onCancel={() => onOpenChange(false)}
+              onConfirm={handleConfirm}
+            />
           </DrawerPopup>
         </DrawerViewport>
       </DrawerPortal>

@@ -3,18 +3,17 @@
 import * as React from "react"
 import { Client, type IMessage } from "@stomp/stompjs"
 
-import { API_BASE_URL } from "@/lib/api/config"
 import type {
   ChatWebSocketErrorResponse,
   SendChatMessageRequest,
   WsMessageEvent,
 } from "@/features/chat/api/chat-types"
+import { DEV_BACKEND_ORIGIN, toWebSocketUrl } from "@/lib/runtime/dev-backend-origin"
 
-// STOMP 엔드포인트는 rewrite 대상이 아니므로 백엔드(8080)로 직접 연결한다.
-// 인증은 handshake 시 함께 전송되는 access_token 쿠키(host=localhost, 포트 무관)로 처리된다.
+// 운영은 정적 앱과 같은 브라우저 origin, 로컬 next dev만 명시한 백엔드 origin을 사용한다.
 function resolveBrokerUrl() {
-  const wsBase = API_BASE_URL.replace(/^http/, "ws")
-  return `${wsBase}/ws`
+  const origin = DEV_BACKEND_ORIGIN ?? window.location.origin
+  return toWebSocketUrl(origin)
 }
 
 interface ChatSocketHandlers {
