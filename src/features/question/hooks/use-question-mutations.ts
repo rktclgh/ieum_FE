@@ -20,6 +20,8 @@ import type {
 } from "@/features/question/api/question-types"
 import type { InfiniteData } from "@tanstack/react-query"
 import { questionKeys } from "@/features/question/hooks/use-question-queries"
+import { reportAnswer } from "@/features/report/api/report-api"
+import type { ReportReason } from "@/features/report/api/report-types"
 
 function useCreateQuestion() {
   const queryClient = useQueryClient()
@@ -113,6 +115,21 @@ function useCreateQuestionRoom() {
   })
 }
 
+// 답변 신고 — 성공 시 호출부가 해당 답변을 로컬 블러 처리한다(BE에 신고상태 필드 없음).
+function useReportAnswer() {
+  return useMutation({
+    mutationFn: ({
+      answerId,
+      reason,
+      detail,
+    }: {
+      answerId: number
+      reason: ReportReason
+      detail?: string
+    }) => reportAnswer(answerId, { reason, detail }),
+  })
+}
+
 export {
   useCreateQuestion,
   useUpdateQuestion,
@@ -120,4 +137,5 @@ export {
   useAcceptAnswer,
   useDeleteQuestion,
   useCreateQuestionRoom,
+  useReportAnswer,
 }
