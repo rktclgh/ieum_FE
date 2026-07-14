@@ -32,6 +32,9 @@
   --color-gray-800: #363d3f;
   --color-gray-900: #1f2324;
 
+  /* Error/red — node 1064:3742 (TextField), not in the original style-guide export */
+  --color-red: #f20808;
+
   /* Typography — node 732:2496, family: SF Pro */
   --text-title-bold-28: 28px;
   --text-title-bold-28--line-height: 1.3;
@@ -69,6 +72,10 @@
   --text-body-medium-16--line-height: 1.4;
   --text-body-medium-16--font-weight: 510;
 
+  --text-body-medium-15: 15px;
+  --text-body-medium-15--line-height: 1.4;
+  --text-body-medium-15--font-weight: 510;
+
   --text-body-medium-14: 14px;
   --text-body-medium-14--line-height: 1.4;
   --text-body-medium-14--font-weight: 510;
@@ -84,6 +91,10 @@
   --text-body-regular-16: 16px;
   --text-body-regular-16--line-height: 1.4;
   --text-body-regular-16--font-weight: 400;
+
+  --text-body-regular-15: 15px;
+  --text-body-regular-15--line-height: 1.4;
+  --text-body-regular-15--font-weight: 400;
 
   --text-body-regular-14: 14px;
   --text-body-regular-14--line-height: 1.4;
@@ -144,6 +155,9 @@
 }
 
 :root {
+  /* stylelint-disable-next-line value-keyword-case -- Preserve the exact SFMono-Regular font family name. */
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -222,4 +236,25 @@
   html {
     @apply font-sans;
   }
+}
+
+/* 답장 인용 클릭 등으로 특정 메시지 위치로 스크롤했을 때, 어떤 말풍선인지 눈에 띄도록 주는 1회성 강조 애니메이션 */
+@keyframes message-jump-highlight {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-3px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(2px);
+  }
+}
+
+@theme {
+  --animate-message-jump-highlight: message-jump-highlight 0.6s ease-in-out;
 }

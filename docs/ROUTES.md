@@ -1,108 +1,143 @@
-# 이음(Ieum) 라우트 맵
+# 이음(Ieum) 라우트 계약
 
-> 프론트엔드 URL 구조 문서 
-> 라우트를 추가·변경할 때는 반드시 이 문서를 같은 PR에서 함께 수정합니다
+> 프론트엔드 URL 구조와 정적 배포 계약을 함께 관리하는 문서다. 라우트를 추가·변경할 때는 이 문서를 같은 PR에서 갱신한다.
 >
 > - 와이어프레임: [Figma – 신한해커톤 와이어프레임](https://www.figma.com/design/FPRPYHC1ukJph6hjRiyU0Z/?node-id=782-1049)
 > - 생성: 2026-07-02
-> - 최종 수정: 2026-07-02
+> - 최종 수정: 2026-07-14 (FE #76 질문 내역·답변·꼬리질문 채팅 + FE #82 정적 export 전환)
 
+## 배포 및 URL 원칙
 
-## 네이밍 규칙
+- Next.js 16은 빌드 도구로만 사용한다. 운영에는 `out/` 정적 파일만 배포한다.
+- 내부 이동은 `src/lib/navigation/routes.ts`의 route builder를 기준으로 한다.
+- `trailingSlash: true`에 맞춰 고정 페이지 URL은 끝에 `/`를 붙인다.
+- 루트 `/`를 제외한 고정 페이지는 trailing slash canonical을 사용한다. Kakao callback도 `/oauth/kakao/callback/`로 통일한다.
+- Kakao 지도·장소 API 전환은 Kakao OAuth와 별개다. OAuth 개발자 콘솔과 Spring allowlist에는 trailing-slash callback URI를 동일하게 등록한다.
+- 런타임 ID는 동적 path segment가 아니라 고정 path의 query로 전달한다. 빌드 시 ID 목록을 열거하지 않는다.
+- ID query와 route builder 입력은 positive safe integer여야 한다. builder는 잘못된 입력에 `RangeError`를 던진다.
+- 잘못된 ID에서는 data component를 mount하지 않는다. 해당 화면의 API·WebSocket 요청도 시작하지 않는다.
+- `useSearchParams()`는 각 page에서 가장 가까운 `Suspense` 아래 client child에서만 읽는다.
+- 필터·정렬·탭·검색어처럼 화면 상태를 나타내는 값도 query로 전달한다.
 
-1. **소문자 + kebab-case** — `/my-page`
-2. **컬렉션은 복수형 명사** — `/questions`, `/meetups` (백엔드 REST 리소스명과 일치시킴)
-3. **동사 금지, 예외는 `new` / `edit`** — `/questions/new`, `/my/edit`
-4. **동적 세그먼트는 `[리소스명Id]`** — `[id]` 대신 `[questionId]`
-5. **현재는 깊이 1단계까지만 확정** — 2단계 이상 하위 화면은 와이어프레임이 있어도 URL을 미리 고정하지 않는다. 아래 [하위 화면 (URL 미확정)](#하위-화면-url-미확정) 표에 화면명만 기록해두고, 실제 구현을 시작하는 시점에 담당자가 이 문서에서 라우트를 확정해 [라우트 목록](#라우트-목록)으로 옮긴다.
-6. **정체성은 path, 상태는 query** — 필터·정렬·탭·검색어는 쿼리스트링으로
+## 구현된 라우트
 
-## 라우트 그룹 구조
+### 인증
 
-```
-src/app/
-├── (auth)/          # 하단 탭바 없음 (로그인 전)
-└── (main)/          # 하단 탭바 있음 (홈 · 모임채팅 · 글쓰기 · 질문내역 · 마이)
-```
+| Canonical URL | 화면 | 백엔드 API | 접근 계약 |
+|---|---|---|---|
+| `/login/` | 로그인 (아이디·비밀번호, 소셜, 언어 설정) | `POST /auth/login` | guest-only |
+| `/join/` | 회원가입 — 계정 만들기 | `POST /auth/signup` | `/join/**` 공통 guest-only layout |
+| `/join/social/` | 소셜 회원가입 — 프로필 설정 | `PATCH /users/me` | guest-only + 기존 `sessionStorage` 검증 |
+| `/oauth/kakao/callback/` | Kakao OAuth callback | OAuth code 교환 | public shell, 개발자 콘솔·Spring allowlist와 정확히 일치 |
 
-## 라우트 목록
+### 홈 및 모임
 
-### (auth) — 인증
-
-| URL | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
+| Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
 |---|---|---|---|---|
-| `/login` | 로그인 (아이디·비밀번호, 소셜, 언어설정) | ① 로그인 | `POST /auth/login` | X |
-| `/sign-up` | 회원가입 — 계정 만들기 (이후 프로필 설정 단계 있음, 하위 화면 참고) | ② 회원가입 | `POST /auth/sign-up` | X |
-| `/reset-password` | 비밀번호 찾기 | ① 로그인 | `POST /auth/reset-password` | X |
+| `/` | 지도 홈 | ④ 홈 1) | `GET /meetups?bounds=`, `GET /questions?bounds=` | public shell |
+| `/?pin={id}&type=meetup\|question` | 핀 선택 바텀시트 | ④ 홈 2) 3) | 상동 | public shell |
+| `/?view=list` | 주변 둘러보기 — 리스트 보기 | ④ 홈 4) | 상동 | public shell |
+| `/meetups/detail/?meetingId={meetingId}` | 모임 상세 (참여하기 → 그룹채팅 입장) | ④ 홈 2) | `GET /meetups/{id}`, `POST /meetups/{id}/join` | public shell, 참여 API는 Spring 인증 필요 |
 
-### (main) — 홈 (지도 기반)
+핀 선택과 리스트 전환은 같은 지도 화면의 상태이므로 별도 path가 아닌 query로 처리한다.
 
-| URL | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
+### 질문 내역 및 답변
+
+| Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
 |---|---|---|---|---|
-| `/` | 지도 홈 | ④ 홈 1) | `GET /meetups?bounds=`, `GET /questions?bounds=` | X |
-| `/?pin={id}&type=meetup\|question` | 핀 선택 (바텀시트) | ④ 홈 2) 3) | 상동 | X |
-| `/?view=list` | 주변 둘러보기 — 리스트 보기 | ④ 홈 4) | 상동 | X |
-| `/notifications` | 알림센터 | ④ 홈 5) | `GET /notifications` | O |
+| `/questions/` | 내 질문 내역 (무한 스크롤, 롱프레스 삭제) | ⑦ 질문 내역 1) | `GET /api/v1/questions/me`, `DELETE /api/v1/questions/{id}` | public shell, 조회·삭제 API는 Spring 인증 필요 |
+| `/questions/detail/?questionId={questionId}` | 질문 상세·답변 보기 | ⑦ 질문 내역 2) | `GET /questions/{id}`, `POST /questions/{id}/answer`, `POST /answers/{id}/accept`, `POST /chat/rooms/question` (BE #68), `POST /answers/{id}/report` (BE #69) | 상세 shell은 public, 답변·채택·채팅·신고 API는 Spring 인증 필요 |
 
-> 핀 선택·리스트 전환은 "같은 지도 화면의 상태"이므로 별도 경로가 아닌 **query param**으로 처리한다. (뒤로가기·링크 공유는 유지됨)
+- 질문 상세는 `useMe()`로 작성자와 답변자 화면을 나눈다.
+- 작성자는 답변 채택, 답변자와 1:1 꼬리질문 채팅 시작, 답변 신고를 할 수 있다. 답변자는 답변을 입력할 수 있다.
+- 작성자 국기·작성 시각은 BE #64 응답을 기다리며 프론트는 필드를 null-safe하게 처리한다.
+- 꼬리질문 채팅 시작과 답변 신고는 BE #68/#69 배포 전까지 계약 우선으로 연결하며, API가 미구현이면 안내 메시지를 표시한다.
 
-### (main) — 모임 & 질문 (글쓰기 포함)
+### 채팅 및 소셜
 
-| URL | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
+| Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
 |---|---|---|---|---|
-| `/questions` | 내 질문 내역 (`?status=answering\|accepted`) | ⑦ 질문 내역 1) | `GET /users/me/questions` | O |
+| `/chats/` | 채팅 목록 (그룹 + 1:1 꼬리질문) | ⑤ 모임채팅 1) | `GET /chats` | public shell, 데이터 API는 Spring 인증 필요 |
+| `/chats/room/?chatId={chatId}` | 채팅방 (그룹채팅·꼬리질문 채팅 공용) | ⑤ 5) / ⑦ 3) | `GET /chats/{id}/messages` + WebSocket | public shell, API·WebSocket은 Spring 인증 필요 |
+| `/chats/notices/?chatId={chatId}` | 메시지 공지 등록·채팅방 공지 고정/해지 | ⑤ 모임채팅 7) | `GET /chats/{id}/notices` | public shell, API는 Spring 인증 필요 |
+| `/chats/report/?chatId={chatId}&messageId={messageId}&target={target}` | 채팅 메시지 신고 | — | 신고 API | public shell, 신고 API는 Spring 인증 필요 |
+| `/chats/schedule/?chatId={chatId}` | 채팅방 캘린더·일정 | ⑤ 모임채팅 6) | `GET /chats/{id}/events` | public shell, API는 Spring 인증 필요 |
+| `/friends/` | 받은 요청·내 친구·닉네임 검색 친구 추가 | ⑤ 모임채팅 2) 3) | `GET /friends`, `GET /friend-requests`, `POST /friend-requests/{id}/accept`, `POST /friend-requests/{id}/reject`, `GET /users?nickname=`, `POST /friends` | public shell, API는 Spring 인증 필요 |
 
-> 모임 상세·모임 만들기·질문 상세·질문 작성은 하위 화면(2단계 이상)이라 URL 미확정. [하위 화면](#하위-화면-url-미확정) 참고.
-> 하단 탭 가운데 **글쓰기(+) 버튼**은 모달로 열고, 모임/질문 토글에 따라 각각의 작성 화면으로 이동한다 (라우트는 미확정).
+- 꼬리질문 방(`roomType: "question"`)은 연결된 질문 제목을 `useQuestionSummary`로 조회해 방 제목으로 표시한다.
+- 꼬리질문 방 더보기 드로어의 대화 상대 국기는 BE #70 응답을 기다리며 프론트는 null-safe 배선을 유지한다.
+- 채팅방 더보기 드로어(참여자·알림·나가기)는 URL 없이 채팅방 내부 상태로 처리한다.
+- 신고 URL의 `target`은 선택 표시 문자열이다. 식별·인가에 사용하지 않고 React text node로만 출력한다.
 
-### (main) — 채팅 & 소셜
+### 마이페이지
 
-| URL | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
+| Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
 |---|---|---|---|---|
-| `/chats` | 채팅 목록 (그룹 + 1:1 꼬리질문) | ⑤ 모임채팅 1) | `GET /chats` | O |
+| `/my/` | 마이 | ③ 마이페이지 1) | `GET /users/me` | protected client gate |
+| `/my/edit/` | 내 정보 수정 (닉네임·국적·비밀번호) | ③ 마이페이지 2) | `PATCH /users/me` | protected client gate |
+| `/my/settings/` | 알림 설정 (모임·질문 알림, 반경, 권한) | ③ 마이페이지 3) | `PATCH /users/me/notification-settings` | protected client gate |
 
-> 채팅방·공지사항·캘린더·친구 추가·다른 사용자 프로필은 하위 화면이라 URL 미확정. [하위 화면](#하위-화면-url-미확정) 참고.
-> 채팅방의 **더보기 드로어**(⑤ 8: 참여자·알림·나가기)는 URL 없이 채팅방 내부 상태로 처리한다.
+## 런타임 ID URL 전환표
 
-### (main) — 마이페이지
+| 이전 Next 동적 URL | 정적 export Canonical URL | 필수 query |
+|---|---|---|
+| `/chats/{chatId}` | `/chats/room/?chatId={chatId}` | `chatId` |
+| `/chats/{chatId}/notices` | `/chats/notices/?chatId={chatId}` | `chatId` |
+| `/chats/{chatId}/report?...` | `/chats/report/?chatId={chatId}&messageId={messageId}&target={target}` | `chatId`, `messageId` |
+| `/chats/{chatId}/schedule` | `/chats/schedule/?chatId={chatId}` | `chatId` |
+| `/meetups/{meetingId}` | `/meetups/detail/?meetingId={meetingId}` | `meetingId` |
+| `/questions/{questionId}` | `/questions/detail/?questionId={questionId}` | `questionId` |
 
-| URL | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
-|---|---|---|---|---|
-| `/my` | 마이 | ③ 마이페이지 1) | `GET /users/me` | O |
+- query 값은 route builder의 `URLSearchParams`로 인코딩한다.
+- 이전 숫자 path의 302 호환 처리는 프론트 범위가 아니다. 필요하면 별도 Spring 작업으로 구현한다.
+- 런타임 `[questionId]`, `[chatId]`, `[meetingId]` route는 더 이상 존재하지 않는다.
 
-> 내 정보 수정·알림 설정은 하위 화면이라 URL 미확정. [하위 화면](#하위-화면-url-미확정) 참고.
+## 인증 라우팅과 서버 인가
 
-## 하위 화면 (URL 미확정)
+`useMe()`가 브라우저 인증 상태의 단일 진실 공급원이다.
 
-> 와이어프레임은 있지만 URL 경로(깊이 2단계 이상)는 아직 확정하지 않았다. **화면 구현을 시작하는 시점에 담당자가 실제 라우트를 정해 위 [라우트 목록](#라우트-목록) 표로 옮긴다.** "상위 라우트" 컬럼은 참고용 소속 표시이며 실제 하위 URL 구조를 확정하는 것은 아니다.
+| 상태 | `/my/**` | `/login/`, `/join/**` |
+|---|---|---|
+| 최초 확인 중 | 확인 UI | 확인 UI |
+| refresh 중, cached user 없음 | 확인 UI | 확인 UI |
+| 사용자 있음 (background refresh 포함) | content | `/`로 replace |
+| guest 확정 | `/login/`으로 replace | content |
+| network/5xx | retry UI, redirect 없음 | retry UI, redirect 없음 |
 
-| 상위 라우트 | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
-|---|---|---|---|---|
-| `/sign-up` | 회원가입 2/2 — 프로필 설정 (닉네임·국적·성별·생일) | ② 회원가입 | `PATCH /users/me` | X |
-| `/meetups` | 모임 상세 (참여하기 → 그룹채팅 입장) | ④ 홈 2) | `GET /meetups/{id}`, `POST /meetups/{id}/join` | X (참여는 O) |
-| `/meetups` | 모임 만들기 | ⑥ 글쓰기 1) | `POST /meetups` | O |
-| `/questions` | 질문 상세 · 답변 목록 · 답변 채택 | ⑦ 질문 내역 2) | `GET /questions/{id}`, `POST /questions/{id}/answers`, `POST /answers/{id}/accept` | X (답변·채택은 O) |
-| `/questions` | 질문 작성 (비슷한 질문·답변 확인 단계 포함) | ⑥ 글쓰기 2) 3) | `POST /questions`, `GET /questions/similar?q=` | O |
-| `/chats` | 채팅방 (그룹채팅 · 꼬리질문 채팅 공용) | ⑤ 5) / ⑦ 3) | `GET /chats/{id}/messages` (+ WebSocket) | O |
-| `/chats` | 채팅방 공지사항 | ⑤ 모임채팅 7) | `GET /chats/{id}/notices` | O |
-| `/chats` | 채팅방 캘린더 · 일정 | ⑤ 모임채팅 6) | `GET /chats/{id}/events` | O |
-| — | 친구 추가 (닉네임 검색) | ⑤ 모임채팅 2) 3) | `GET /users?nickname=`, `POST /friends` | O |
-| — | 다른 사용자 프로필 | ⑤ 모임채팅 4) | `GET /users/{id}` | O |
-| `/my` | 내 정보 수정 (닉네임·국적·비밀번호) | ③ 마이페이지 2) | `PATCH /users/me` | O |
-| `/my` | 알림 설정 (모임·질문 알림, 반경, 권한) | ③ 마이페이지 3) | `PATCH /users/me/notification-settings` | O |
+- guest-only 정책은 `/login/`과 `/join/**`에 적용한다. `/join/social/`은 layout gate 뒤에서 sessionStorage 토큰도 별도로 검증한다.
+- users/me 401 뒤 refresh 및 재시도 결과 반영이 진행되는 동안 cached user가 없으면 `refreshing` 상태로 content를 숨기고, cached user가 있으면 authenticated 상태를 유지한다.
+- refresh 401/403만 세션 만료로 처리한다. private query data를 비우고 active public query를 새 세션 기준으로 refetch한 뒤 `['me'] = null`로 둔다.
+- refresh network/5xx는 사용자 identity와 cache를 보존한다. 서버 장애를 로그아웃으로 바꾸지 않는다.
+- chats, friends, meetups, questions, OAuth callback은 정적 public shell이다. 정적 페이지 노출은 데이터 접근 권한을 뜻하지 않는다.
+- Spring Security가 private API, mutation, WebSocket 연결을 최종적으로 인증·인가해야 한다. 프론트 client gate는 보안 경계가 아니다.
 
-## 하단 탭 ↔ 라우트 매핑
+## 미구현 또는 URL 미확정 화면
 
-| 탭 | 라우트 |
+정적 산출물에 없는 화면을 구현된 URL처럼 연결하지 않는다. 구현을 시작할 때 고정 path를 정하고 위 라우트 목록으로 옮긴다.
+
+| 화면 | 상태 | 백엔드 API (예상) |
+|---|---|---|
+| 비밀번호 찾기 | URL 미확정 | `POST /auth/reset-password` |
+| 알림센터 | URL 미확정 | `GET /notifications` |
+| 모임 만들기 | URL 미확정 | `POST /meetups` |
+| 질문 작성 (비슷한 질문·답변 확인 포함) | URL 미확정 | `POST /questions`, `GET /questions/similar?q=` |
+| 다른 사용자 프로필 | URL 미확정 | `GET /users/{id}` |
+
+## 하단 탭
+
+| 탭 | URL 또는 동작 |
 |---|---|
 | 홈 | `/` |
-| 모임채팅 | `/chats` |
-| 글쓰기 (+) | 모달 → 모임/질문 작성 화면 (라우트 미확정) |
-| 질문내역 | `/questions` |
-| 마이 | `/my` |
+| 모임채팅 | `/chats/` |
+| 글쓰기 (+) | 모달 → 모임/질문 작성 화면 (URL 미확정) |
+| 질문내역 | `/questions/` |
+| 마이 | `/my/` |
 
-## 직군별 약속
+`/questions/`는 실제 질문 내역 페이지와 정적 산출물을 가진다.
 
-- **백엔드**: 표의 "백엔드 API (예상)" 컬럼은 프론트 기준 초안입니다. 실제 스펙과 다르면 이 문서를 기준으로 맞추거나, 여기 컬럼을 수정해주세요. 원칙은 **페이지 리소스명 = API 리소스명** (`/questions` ↔ `GET /questions`).
-- **디자이너**: Figma 프레임 이름을 URL 기준으로 지어주세요. 예) `questions-list`, `questions-detail`, `chats-room`. 새 화면이 생기면 우선 [하위 화면](#하위-화면-url-미확정) 표에 행을 추가합니다.
-- **프론트**: 라우트 추가/변경 PR에는 이 문서 수정이 반드시 포함되어야 합니다. 하위 화면 구현을 시작할 때는 해당 행을 [하위 화면](#하위-화면-url-미확정) 표에서 [라우트 목록](#라우트-목록) 표로 옮기고 실제 URL을 채웁니다.
+## 변경 규칙
+
+- 새 내부 링크를 문자열로 흩뿌리지 말고 route builder를 추가하거나 재사용한다.
+- 새 런타임 ID 화면은 유한한 고정 path와 검증된 query 조합으로 설계한다.
+- 라우트 변경 PR은 이 문서와 정적 산출물 검증 목록을 함께 갱신한다.
+- 프론트의 route 접근 정책과 Spring API 인가 정책을 별개로 검토한다.

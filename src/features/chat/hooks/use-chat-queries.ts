@@ -1,0 +1,91 @@
+"use client"
+
+import { useQueries, useQuery } from "@tanstack/react-query"
+
+import { getMessages, getRoom, getRooms } from "@/features/chat/api/chat-api"
+import type { RoomType } from "@/features/chat/api/chat-types"
+import { adaptMessage, adaptRoomSummary, type ChatListEntry } from "@/features/chat/lib/chat-adapter"
+import {
+  resolveChatSessionAccess,
+  type ChatSessionAccess,
+} from "@/features/chat/lib/chat-session"
+import { useMe } from "@/features/session/hooks/use-me"
+
+const chatKeys = {
+  all: ["chat"] as const,
+  rooms: (type?: RoomType) => [...chatKeys.all, "rooms", type ?? "all"] as const,
+  room: (roomId: number) => [...chatKeys.all, "room", roomId] as const,
+  messages: (roomId: number) => [...chatKeys.all, "messages", roomId] as const,
+}
+
+function useChatSessionAccess(requestedRoomId?: number) {
+  const { data: me } = useMe()
+  return resolveChatSessionAccess(me, requestedRoomId)
+}
+
+// 방 목록. 백엔드 summary엔 제목이 없어, 각 방 상세(members)를 병렬 조회해 제목/아바타를 파생한다.
+function useChatRoomsView(type?: RoomType) {
+  const session = useChatSessionAccess()
+  const myUserId = session.userId ?? -1
+
+  const roomsQuery = useQuery({
+    queryKey: chatKeys.rooms(type),
+    queryFn: () => getRooms(type),
+    enabled: session.authenticated,
+  })
+
+  const rooms = session.authenticated ? (roomsQuery.data ?? []) : []
+
+  const detailQueries = useQueries({
+    queries: rooms.map((room) => ({
+      queryKey: chatKeys.room(room.roomId),
+      queryFn: () => getRoom(room.roomId),
+      staleTime: 60 * 1000,
+    })),
+  })
+
+  const entries: ChatListEntry[] = rooms.map((room, index) =>
+    adaptRoomSummary(room, detailQueries[index]?.data, myUserId)
+  )
+
+  return {
+    entries,
+    isLoading: roomsQuery.isLoading,
+    isError: roomsQuery.isError,
+    refetch: roomsQuery.refetch,
+  }
+}
+
+function useChatRoom(roomId: number, session: ChatSessionAccess) {
+  const query = useQuery({
+    queryKey: chatKeys.room(roomId),
+    queryFn: () => getRoom(roomId),
+    enabled: session.activeRoomId === roomId,
+  })
+
+  const room = session.activeRoomId === roomId ? query.data : undefined
+  return { ...query, data: room }
+}
+
+// 최근 메시지 한 페이지(최대 50개). 서버는 최신순으로 내려주므로 화면 표시를 위해 오래된→최신으로 뒤집는다.
+function useChatMessages(roomId: number, session: ChatSessionAccess) {
+  const query = useQuery({
+    queryKey: chatKeys.messages(roomId),
+    queryFn: () => getMessages(roomId),
+    enabled: session.activeRoomId === roomId,
+  })
+
+  const messages = session.activeRoomId === roomId && query.data
+    ? [...query.data.items].reverse().map((message) => adaptMessage(message, session.userId ?? -1))
+    : []
+
+  return { messages, isLoading: query.isLoading, isError: query.isError }
+}
+
+export {
+  chatKeys,
+  useChatMessages,
+  useChatRoom,
+  useChatRoomsView,
+  useChatSessionAccess,
+}

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronDown } from "lucide-react"
+import Image from "next/image"
+import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,7 @@ import {
   DrawerViewport,
 } from "@/components/ui/drawer"
 import { LANGUAGE_CODES, LANGUAGE_NATIVE_NAMES, type LanguageCode } from "@/lib/i18n/languages"
+import { MESSAGES } from "@/lib/i18n/messages"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 function LanguageToggle({ className, ...props }: React.ComponentProps<"button">) {
@@ -31,13 +33,13 @@ function LanguageToggle({ className, ...props }: React.ComponentProps<"button">)
       <DrawerTrigger
         data-slot="language-toggle"
         className={cn(
-          "flex items-center gap-0.5 rounded-full border border-gray-100 bg-gray-50 py-1.5 pr-3 pl-2.5 text-body-regular-12 text-gray-900",
+          "flex items-center gap-0.5 rounded-full border border-gray-100 bg-gray-50 py-1.5 pr-2.5 pl-3 text-body-regular-12 text-gray-900",
           className
         )}
         {...props}
       >
         {messages.languages[language]}
-        <ChevronDown className="size-5" />
+        <Image src="/icons/arrow/down.svg" alt="" width={20} height={20} className="size-5" />
       </DrawerTrigger>
       <DrawerPortal>
         <DrawerBackdrop />
@@ -68,7 +70,7 @@ function LanguageToggle({ className, ...props }: React.ComponentProps<"button">)
                 render={<Button variant="primary" size="block" />}
                 onClick={() => setLanguage(pendingLanguage)}
               >
-                {messages.languagePicker.confirm}
+                {MESSAGES[pendingLanguage].languagePicker.confirm}
               </DrawerClose>
             </DrawerContent>
           </DrawerPopup>
