@@ -4,8 +4,9 @@
 > "장소 검색 → 마커/상세", "주소 입력 → 좌표 등록", "클릭 → 좌표/주소 표출"을 구현하기 위한 정리 문서.
 >
 > 스택: **FE** `ieum_FE` (Next.js App Router, Leaflet) / **BE** `ieum_BE` (Spring Boot, `shinhan.fibri.ieum`)
-> 배포: **Spring 서버가 FE 빌드 산출물(정적)을 서빙** → FE·BE 같은 오리진
-> 외부 지도 제공자: **Kakao 전면 폐기 → 네이버로 전환** (아래 2번)
+> 배포 계약: FE는 `out/`만 만들고, 별도 Spring 작업이 exact FE SHA의 산출물을 `app-main/src/main/resources/static/`에서 같은 오리진으로 서빙
+> 지도·장소 제공자: **Kakao 지도/장소 API는 사용하지 않고 네이버로 전환** (아래 2번)
+> Kakao OAuth는 이 전환과 무관하며 unslashed `/oauth/kakao/callback` 계약을 유지
 >
 > 관련 문서:
 > - [be-map-handoff.md](./be-map-handoff.md) — BE 착수 문서(엔드포인트 계약·매핑·키)
@@ -21,7 +22,7 @@
         │  (같은 오리진, CORS 없음)
         ▼
 [Spring 서버 (ieum_BE)]
-  · 정적 리소스(FE out/) 서빙 + SPA 폴백
+  · exact FE SHA의 out/ 정적 서빙 + slash/RSC 요청 계약
   · /api/v1/*        → 도메인 API (유저/채팅 등)
   · /api/places/*    → 네이버 검색·지오코딩·역지오코딩 프록시  ← 외부 지도 API 키는 여기에만
         │
@@ -35,25 +36,28 @@
 - FE는 외부 API를 직접 부르지 않고, **자기 오리진의 `/api/places/*`** 만 호출한다.
 
 > ⚠️ 정적 서빙 구조에서는 Next.js `app/api/*` route handler가 **동작하지 않는다.**
-> 현재 FE의 `app/api/places/*`(Kakao 호출) 로직은 삭제하고 **Spring 컨트롤러로 이전**한다.
+> FE에는 `app/api/places/*` handler를 두지 않는다. `/api/places/*` 구현은 **별도 Spring 작업**이다.
 
 ---
 
-## 2. 외부 API & 발급해야 하는 키 (⚠️ 핵심)
+## 2. 외부 API 자격증명 상태 (⚠️ 핵심)
 
 기능이 성격이 달라 **발급처가 둘로 나뉜다.**
 
-| 용도 | 제공자 / 발급처 | 자격증명(헤더) | 비용 | 담당 |
+| 용도 | 제공자 / 발급처 | 자격증명(헤더) | 비용 | 상태 |
 |------|----------------|----------------|------|------|
-| **장소·키워드 검색** (출시 필수) | 네이버 개발자센터 `developers.naver.com` → **검색 API** | `X-Naver-Client-Id` / `X-Naver-Client-Secret` | **무료** (일 25,000회) | 김지혜 발급 완료  |
-| **주소→좌표 (지오코딩) · 좌표→주소 (역지오코딩)** (출시 필수) | 네이버 클라우드 플랫폼(NCP) `console.ncloud.com` → **Maps (VPC)** | `x-ncp-apigw-api-key-id` / `x-ncp-apigw-api-key` | 유료(무료 제공량 有) | 김지혜 발급 예정 |
-| **지도 타일 렌더링** | — (Leaflet+CARTO 유지) | **불필요** | — | — |
+| **장소·키워드 검색** (출시 필수) | 네이버 개발자센터 `developers.naver.com` → **검색 API** | `X-Naver-Client-Id` / `X-Naver-Client-Secret` | **무료** (일 25,000회) | 발급 완료, 값은 승인된 비밀 저장소에만 보관 |
+| **주소→좌표 (지오코딩)** (출시 필수) | 네이버 클라우드 플랫폼(NCP) `console.ncloud.com` → **Maps (VPC)** | `x-ncp-apigw-api-key-id` / `x-ncp-apigw-api-key` | 유료(무료 제공량 有) | 발급 대기 |
+| **좌표→주소 (역지오코딩)** (선택·출시 후) | NCP Maps (지오코딩과 공유) | 지오코딩과 같은 NCP 자격증명 | NCP 요금 적용 | NCP 자격증명 발급 후 사용 가능 |
+| **지도 타일 렌더링** | — (Leaflet+CARTO 유지) | **불필요** | — | 해당 없음 |
 
-> **NCP 키 1개로 지오코딩·역지오코딩 둘 다** 호출한다(엔드포인트만 다름). 지오코딩(주소→좌표)이 **출시 필수**라 NCP 키는 이제 **출시 blocking**(후순위 아님).
+이 문서에는 secret 이름과 placeholder만 있으며 실제 secret 값은 없다. 발급된 검색 자격증명과 향후 NCP 자격증명은 팀이 승인한 비밀 저장소와 배포 환경 secret 설정에만 둔다.
+
+> **NCP 자격증명 1세트로 지오코딩·역지오코딩 둘 다** 호출한다(엔드포인트만 다름). 출시 blocking인 기능은 주소→좌표 지오코딩이며, 역지오코딩은 선택·출시 후 범위다.
 
 **발급 액션**
-1. **검색 키(무료·지금)** — 네이버 개발자센터 로그인 → 애플리케이션 등록 → **"검색" API 사용 신청** → Client ID/Secret 확보. 개인 네이버 계정이면 결제수단 없이 가능.
-2. **NCP 키(유료·출시 필수)** — NCP 콘솔 → **결제수단 등록** → Maps Application(VPC) 등록 → API Key 확보. 지오코딩·역지오코딩 공용. 결제 지연 시 임시로 무료 대안(행안부 도로명주소 API / VWorld / OSM Nominatim) 검토(계약 shape은 동일 유지).
+1. **검색 자격증명(발급 완료)** — 값은 승인된 비밀 저장소에서만 관리하고 배포 환경에 secret으로 주입한다.
+2. **NCP 자격증명(발급 대기·출시 필수)** — NCP 콘솔에서 결제수단과 Maps Application(VPC)을 준비한다. 지오코딩·역지오코딩이 공유한다. 지연 시 무료 대안을 검토하되 FE 응답 계약은 유지한다.
 
 **엔드포인트/좌표 규칙**
 - 검색(개발자센터): `GET https://openapi.naver.com/v1/search/local.json?query=&display=5`
@@ -84,10 +88,10 @@ map.on("click", (e) => {
 })
 ```
 
-### 3-3. 좌표 → 주소 (역지오코딩)
+### 3-3. 좌표 → 주소 (역지오코딩, 선택·출시 후)
 - `/api/places/reverse-geocode?lat=&lng=` 호출 → `{ fullAddress, shortLabel }`.
 - FE 호출부(`features/map/api/reverse-geocode-api.ts`)·훅(`use-reverse-geocode.ts`)은 **경로 그대로 유지** → Spring이 받으면 FE 무변경.
-- 역지오코딩 미구현 시 FE는 "조회 실패" 폴백(배포 무방).
+- 역지오코딩은 release blocking이 아니다. 미구현 시 FE는 "조회 실패" 폴백을 사용하며 출시 후 붙일 수 있다.
 
 ### 3-4. 상호·POI 검색 (OSM 상호 부족 보완, 출시 필수)
 - CARTO/OSM 타일엔 국내 상호가 희박 → 상호·업종·주소는 네이버 지역검색으로 채운다.
@@ -125,37 +129,37 @@ map.on("click", async (e) => {
 
 ---
 
-## 4. 프론트엔드(ieum_FE) 착수 순서
+## 4. 프론트엔드(ieum_FE) 현재 계약
 
-정적 export 전환과 세트다. 상세는 [static-deploy-plan.md](./static-deploy-plan.md).
+정적 export와 지도 호출의 경계는 [static-deploy-plan.md](./static-deploy-plan.md)를 따른다.
 
-- [ ] `app/api/places/search/route.ts`, `app/api/places/reverse-geocode/route.ts` **삭제** (→ Spring 이전)
-- [ ] `.env.local`의 `KAKAO_REST_API_KEY` 제거
-- [ ] FE 호출부/훅(`features/map/api/*`, `use-place-search`, `use-reverse-geocode`)은 **유지** (경로 계약 불변)
-- [ ] **신규: `features/map/api/geocode-api.ts` + `use-geocode.ts`** (주소→좌표, `/api/places/geocode`) + 주소 입력 UI
-- [ ] `next.config.ts`: `output:"export"` + `images:{unoptimized:true}`, `headers`(COOP)·`rewrites` 정리(rewrites는 dev 전용 조건부)
-- [ ] 미들웨어/서버렌더 페이지 정적 대응(인증 클라 가드) — 지도 외지만 export에 딸려옴
-- [ ] (선택) 3-7 follow-me 추적
-- [ ] `pnpm build` → `out/` 생성·딥링크 스모크 테스트
+- FE 지도 API는 상대 경로 `/api/places/search`, `/api/places/geocode`, `/api/places/reverse-geocode`만 호출한다.
+- production REST와 WebSocket은 브라우저 same-origin이다.
+- local `next dev`만 `NEXT_PUBLIC_DEV_BACKEND_ORIGIN`으로 Spring origin을 명시할 수 있다.
+- Next route handler, Proxy, 운영 rewrite/header, request-time cookie/server fetch는 사용하지 않는다.
+- 배포 산출물은 `output: "export"`, `trailingSlash: true`, `images.unoptimized: true`로 만든 `out/`이다.
+- 런타임 상세 화면은 여섯 고정 query route를 사용하며 ID는 strict positive safe integer로 검증한다.
+- `/my/**`는 `useMe()` 기반 client gate다. `/login/`과 `/join/`만 guest-only이며 `/join/social/`은 기존 검증을 유지한다.
+- follow-me 추적은 지도 기능의 선택 범위이며 정적 배포 계약과 분리한다.
 
 ---
 
-## 5. 지연(latency)과 UX
+## 5. 응답성과 UX
 
-- 정상 배포·병렬·캐시 미적중 기준 **클릭 후 체감 300~500ms**. 순차 호출 시 400~900ms → **반드시 병렬(`Promise.all`)**.
-- 같은 좌표 재조회는 캐시 적중 시 거의 즉시.
-- 클릭 즉시 마커부터 찍고 "조회 중…" 스켈레톤 → 응답 채우는 **낙관적 UI**.
-- Spring 상시 구동이라 서버리스 콜드 스타트 없음(정적 서빙 장점).
+- 서로 독립적인 주소·POI 조회는 `Promise.all`로 병렬 처리한다.
+- 같은 좌표의 결과는 query cache를 재사용한다.
+- 클릭 직후 마커와 "조회 중…" 상태를 먼저 보여주고 응답으로 내용을 채운다.
+- 실제 지연 수치는 배포 환경에서 측정해 기록한다. 이 문서에서는 검증하지 않은 수치를 제시하지 않는다.
 
 ---
 
 ## 6. 요약
 
 1. 지도 타일 = Leaflet+CARTO 렌더링. 외부 지도 API = **데이터 공급원**.
-2. 세 기능 모두 **Spring 프록시**로, 키는 서버에만:
-   - 키워드 검색 → **지역검색**(개발자센터, 무료 키)
+2. 세 기능 모두 **Spring 프록시**로, 자격증명은 승인된 서버 비밀 저장소에만 둔다:
+   - 키워드 검색 → **지역검색**(개발자센터) — 출시 필수, 자격증명 발급 완료
    - 주소→좌표 → **지오코딩**(NCP, 유료 키) — 출시 필수
-   - 좌표→주소 → **역지오코딩**(NCP, 같은 키)
+   - 좌표→주소 → **역지오코딩**(NCP, 같은 자격증명) — 선택·출시 후
 3. 좌표 순서/스케일이 엔드포인트마다 다름 — 지역검색 `mapx/mapy /1e7`, **지오코딩 `x/y` 변환 없음**, 역지오코딩 입력 `coords=경도,위도`.
 4. 주소·POI는 **병렬 + 캐싱 + 낙관적 UI**로 체감 지연 최소화.
-5. 정적 배포 전환 시 route handler·rewrites·미들웨어·동적 라우트 함께 정리.
+5. FE는 build-only 정적 앱이며, Spring 정적 호스팅·MIME/cache/404/security는 별도 BE 작업으로 검증한다.
