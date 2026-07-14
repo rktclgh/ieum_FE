@@ -199,11 +199,13 @@ export interface Messages {
     acceptConfirmDescription: string
     acceptConfirmCancel: string
     createTitle: string
+    editTitle: string
     titlePlaceholder: string
     contentPlaceholder: string
     locationPlaceholder: string
     submitButton: string
     submittingButton: string
+    updateButton: string
     imageUploadFailed: string
     imageTooLarge: string
     similarTitle: string
@@ -214,6 +216,7 @@ export interface Messages {
     addImageLabel: string
     historyTitle: string
     historyEmpty: string
+    editAction: string
     deleteAction: string
     deleteConfirmTitle: string
     deleteConfirmDescription: string
@@ -344,6 +347,7 @@ export interface Messages {
     sendFailed: string
     leaveFailed: string
     disbandFailed: string
+    connecting: string
     leaveChatConfirmTitle: string
     leaveChatConfirmDescription: string
     disbandChatConfirmTitle: string
@@ -610,14 +614,16 @@ export const ko: Messages = {
     acceptedBadge: "채택됨",
     acceptButton: "채택",
     acceptConfirmTitle: "이 답변을 채택할까요?",
-    acceptConfirmDescription: "채택하면 질문이 해결 상태로 바뀌며 되돌릴 수 없어요.",
+    acceptConfirmDescription: "채택하면 이 답변 작성자와 채팅을 시작할 수 있어요.",
     acceptConfirmCancel: "취소",
     createTitle: "질문하기",
+    editTitle: "질문 수정",
     titlePlaceholder: "질문 제목",
     contentPlaceholder: "질문 내용을 입력해주세요.",
     locationPlaceholder: "장소 선택",
     submitButton: "질문 올리기",
     submittingButton: "올리는 중…",
+    updateButton: "수정 완료",
     imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
     imageTooLarge: "이미지는 5MB 이하만 첨부할 수 있어요.",
     similarTitle: "비슷한 질문",
@@ -628,6 +634,7 @@ export const ko: Messages = {
     addImageLabel: "사진 첨부",
     historyTitle: "질문 내역",
     historyEmpty: "아직 등록한 질문이 없어요.",
+    editAction: "수정",
     deleteAction: "삭제",
     deleteConfirmTitle: "이 질문을 삭제할까요?",
     deleteConfirmDescription: "삭제하면 답변과 함께 사라지며 되돌릴 수 없어요.",
@@ -758,6 +765,7 @@ export const ko: Messages = {
     sendFailed: "메시지를 보낼 수 없습니다. 연결을 확인해주세요.",
     leaveFailed: "채팅방 나가기에 실패했습니다.",
     disbandFailed: "채팅방 해체에 실패했습니다.",
+    connecting: "연결 중…",
     leaveChatConfirmTitle: "채팅방을 나갑니다",
     leaveChatConfirmDescription: "정말로 나가시겠습니까?",
     disbandChatConfirmTitle: "채팅방을 해체합니다",

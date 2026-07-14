@@ -6,9 +6,11 @@ import { AppBar } from "@/components/ui/app-bar"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { uploadImage } from "@/features/question/api/question-file-api"
 import { SimilarQuestionsSection } from "@/features/question/components/similar-questions-section"
-import { useCreateQuestion } from "@/features/question/hooks/use-question-mutations"
+import { useCreateQuestion, useUpdateQuestion } from "@/features/question/hooks/use-question-mutations"
+import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
 import { useSimilarQuestions } from "@/features/question/hooks/use-similar-questions"
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
+import type { QuestionDetailView } from "@/features/question/lib/question-adapter"
 // 입력 UI는 "모임 생성과 동일"하게 맞추기 위해 meetup 도메인의 장소·사진 위젯을 공유한다.
 // (장소 선택기는 사실상 map 기반 공용 위젯이라 재구현 대신 재사용한다.)
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
@@ -25,22 +27,89 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 interface CreateQuestionScreenProps {
   /** 닫기(X) 또는 제출 완료 시 호출 — 오버레이 언마운트는 부모가 담당 */
   onClose: () => void
+  /** "edit"이면 기존 질문을 prefill해 수정 화면으로 동작한다. 기본값 "create". */
+  mode?: "create" | "edit"
+  /** mode="edit"일 때 필수 — 수정 대상 질문 id */
+  questionId?: number
 }
 
 /**
  * 새 질문 작성 풀스크린 오버레이. 지도 홈 FAB의 "질문하기"에서 열린다(모임 만들기와 동일한 흐름).
  * 제목·장소·내용을 채우면 제출이 활성화되고, 제출 시 POST /questions 로 생성한 뒤 지도로 돌아간다.
  * 장소는 MeetupLocationPicker(지도 기반)에서 좌표·주소·라벨까지 확보한다.
+ *
+ * mode="edit"이면 질문 내역 리스트 롱프레스 → 수정에서 열리며, 기존 제목/내용/장소/이미지를
+ * prefill한 뒤 PATCH /questions/{id}로 제출한다(#92).
+ *
+ * 컨테이너: edit 모드에서는 상세가 로드된 뒤에만 폼을 마운트해, 프리필용 렌더 중
+ * setState 없이 초기값을 확정한다(edit-profile-content.tsx와 동일한 패턴).
  */
-function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
+function CreateQuestionScreen({ onClose, mode = "create", questionId }: CreateQuestionScreenProps) {
+  const { messages } = useTranslation()
+  const detail = useQuestionDetail(questionId ?? 0, mode === "edit")
+
+  if (mode === "edit" && detail.isError) {
+    // 상세 fetch 실패 시 null을 반환하면 AppBar도 없는 먹통 화면이 되므로,
+    // question-detail-screen.tsx와 동일하게 닫기 가능한 에러 상태를 보여준다.
+    return (
+      <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-sm flex-col bg-white">
+        <AppBar
+          title={messages.question.editTitle}
+          leadingIcon={null}
+          trailingVariant="close"
+          onTrailingClick={onClose}
+          className="shrink-0"
+        />
+        <p className="w-full px-4 pt-10 text-center text-body-regular-14 text-gray-400">
+          {getQuestionErrorMessage(detail.error, messages) || messages.question.loadError}
+        </p>
+      </div>
+    )
+  }
+
+  if (mode === "edit" && !detail.data) return null
+
+  // 위 가드를 통과하면 mode="edit"일 때 detail.data가 반드시 채워져 있다.
+  // TS는 이 사실을 dotted-name까지 narrowing하지 못하므로 `as` 대신 `?? null`로 안전하게 좁힌다.
+  const editDetail = mode === "edit" ? (detail.data ?? null) : null
+
+  return (
+    <CreateQuestionForm onClose={onClose} mode={mode} questionId={questionId} initial={editDetail} />
+  )
+}
+
+interface CreateQuestionFormProps {
+  onClose: () => void
+  mode: "create" | "edit"
+  questionId?: number
+  initial: QuestionDetailView | null
+}
+
+function CreateQuestionForm({ onClose, mode, questionId, initial }: CreateQuestionFormProps) {
   const { messages } = useTranslation()
   const t = messages.question
   const createQuestion = useCreateQuestion()
+  const updateQuestion = useUpdateQuestion(questionId ?? 0)
 
-  const [title, setTitle] = React.useState("")
-  const [content, setContent] = React.useState("")
-  const [place, setPlace] = React.useState<MeetupPlaceValue | null>(null)
+  const [title, setTitle] = React.useState(initial?.title ?? "")
+  const [content, setContent] = React.useState(initial?.content ?? "")
+  const [place, setPlace] = React.useState<MeetupPlaceValue | null>(
+    initial
+      ? {
+          lat: initial.location.lat,
+          lng: initial.location.lng,
+          address: initial.location.address,
+          label: initial.location.label ?? initial.location.address,
+        }
+      : null
+  )
   const [image, setImage] = React.useState<{ preview: string; file: File } | null>(null)
+  const [existingImageUrl, setExistingImageUrl] = React.useState<string | null>(
+    initial?.imageUrls[0] ?? null
+  )
+  // edit 모드에서 prefill된 이미지를 제거하고 새 이미지를 고르지 않은 채 저장하면,
+  // 서버에 imageFileIds를 아예 보내지 않아 기존 이미지가 그대로 남는다 → 명시적 clear 플래그로 [] 전송.
+  const [imageCleared, setImageCleared] = React.useState(false)
   const [locationPickerOpen, setLocationPickerOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -50,7 +119,7 @@ function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
   // 비슷한 질문 제안: 백엔드 API 생기기 전까지 stub(빈 목록) → 섹션은 자동으로 숨겨진다.
   const { items: similarQuestions } = useSimilarQuestions(title)
 
-  const submitting = createQuestion.isPending
+  const submitting = createQuestion.isPending || updateQuestion.isPending
 
   const canSubmit =
     Boolean(place) && title.trim().length > 0 && content.trim().length > 0 && !submitting
@@ -73,7 +142,7 @@ function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
     if (!canSubmit || !place) return
     setError(null)
 
-    // 이미지 업로드 실패와 질문 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
+    // 이미지 업로드 실패와 질문 생성/수정 실패를 구분해, 원인에 맞는 메시지를 노출한다.
     let imageFileIds: string[] | undefined
     if (image) {
       try {
@@ -82,6 +151,29 @@ function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
         setError(t.imageUploadFailed)
         return
       }
+    } else if (mode === "edit" && imageCleared) {
+      // 새 이미지 없이 기존 이미지만 제거한 경우: 빈 배열을 명시적으로 보내 서버 쪽 이미지도 지운다.
+      imageFileIds = []
+    }
+
+    if (mode === "edit" && questionId != null) {
+      try {
+        await updateQuestion.mutateAsync({
+          title: title.trim(),
+          content: content.trim(),
+          location: {
+            lat: place.lat,
+            lng: place.lng,
+            address: place.address,
+            label: place.label,
+          },
+          imageFileIds,
+        })
+        onClose()
+      } catch (err) {
+        setError(getQuestionErrorMessage(err, messages))
+      }
+      return
     }
 
     try {
@@ -105,7 +197,7 @@ function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
   return (
     <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-sm flex-col bg-white">
       <AppBar
-        title={t.createTitle}
+        title={mode === "edit" ? t.editTitle : t.createTitle}
         leadingIcon={null}
         trailingVariant="close"
         onTrailingClick={onClose}
@@ -145,10 +237,14 @@ function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
             className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary-400 outline-none placeholder:text-gray-400"
           />
           <MeetupImagePicker
-            image={image?.preview ?? null}
+            image={image?.preview ?? existingImageUrl}
             onTakePhoto={() => cameraInputRef.current?.click()}
             onChooseAlbum={() => albumInputRef.current?.click()}
-            onRemove={() => setImage(null)}
+            onRemove={() => {
+              if (existingImageUrl && !image) setImageCleared(true)
+              setImage(null)
+              setExistingImageUrl(null)
+            }}
             className="absolute bottom-[15px] left-[15px]"
           />
         </div>
@@ -169,7 +265,7 @@ function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
             canSubmit ? "bg-primary-400" : "bg-gray-200"
           )}
         >
-          {submitting ? t.submittingButton : t.submitButton}
+          {submitting ? t.submittingButton : mode === "edit" ? t.updateButton : t.submitButton}
         </button>
       </div>
 
