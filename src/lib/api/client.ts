@@ -1,6 +1,9 @@
 import axios from "axios"
 
+import { DEV_BACKEND_ORIGIN } from "@/lib/runtime/dev-backend-origin"
+
 export const apiClient = axios.create({
+  baseURL: DEV_BACKEND_ORIGIN,
   withCredentials: true,
 })
 
