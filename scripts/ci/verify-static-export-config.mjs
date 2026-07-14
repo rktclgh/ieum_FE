@@ -1,9 +1,12 @@
-const assert = require("node:assert/strict")
-const fs = require("node:fs")
-const path = require("node:path")
-const ts = require("typescript")
+import assert from "node:assert/strict"
+import fs from "node:fs"
+import { createRequire } from "node:module"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import ts from "typescript"
 
-const repoRoot = path.resolve(__dirname, "../..")
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url))
+const repoRoot = path.resolve(currentDirectory, "../..")
 const nextConfigPath = path.join(repoRoot, "next.config.ts")
 const source = fs.readFileSync(nextConfigPath, "utf8")
 const transpiled = ts.transpileModule(source, {
@@ -29,7 +32,13 @@ const evaluateConfig = new Function(
   "__dirname",
   transpiled.outputText,
 )
-evaluateConfig(configModule.exports, configModule, require, nextConfigPath, repoRoot)
+evaluateConfig(
+  configModule.exports,
+  configModule,
+  createRequire(nextConfigPath),
+  nextConfigPath,
+  repoRoot,
+)
 
 assert.deepEqual(configModule.exports.default, {
   output: "export",

@@ -51,7 +51,7 @@ if grep -n -E 'async (headers|rewrites|redirects)\(|headers:|rewrites:|redirects
   fail "request-time Next config remains"
 fi
 
-node scripts/ci/verify-static-export-config.cjs || fail "source config does not match the static export contract"
+node scripts/ci/verify-static-export-config.mjs || fail "source config does not match the static export contract"
 
 assert_file out/index.html
 assert_file out/index.txt
