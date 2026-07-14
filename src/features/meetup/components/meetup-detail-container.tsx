@@ -13,6 +13,7 @@ import {
 import { adaptMeetingDetail } from "@/features/meetup/lib/meetup-adapter"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 interface MeetupDetailContainerProps {
   meetingId: number
@@ -60,7 +61,7 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
   const handleJoin = () =>
     run(async () => {
       const { roomId } = await join.mutateAsync()
-      router.replace(`/chats/${roomId}`)
+      router.replace(routes.chatRoom(roomId))
     })
   const handleLeave = () =>
     setConfirm({
@@ -70,7 +71,7 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
       onConfirm: () => run(async () => { await leave.mutateAsync(); close() }),
     })
   const handleEnterRoom = () => {
-    if (detail) router.push(`/chats/${detail.roomId}`)
+    if (detail) router.push(routes.chatRoom(detail.roomId))
   }
 
   if (meetingQuery.isError) {

@@ -12,6 +12,7 @@ import { LanguageToggle } from "@/features/language/components/language-toggle"
 import { useLoginFlow } from "@/features/login/hooks/use-login-flow"
 import { useSocialLogin } from "@/features/social-login/hooks/use-social-login"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 export default function LoginPage() {
   const { messages } = useTranslation()
@@ -65,7 +66,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center gap-4">
         <span className="text-body-regular-12 text-gray-600">{messages.login.forgotPassword}</span>
         <span className="h-2 w-px bg-gray-200" />
-        <Link href="/join" className="text-body-regular-12 text-gray-600">
+        <Link href={routes.join()} className="text-body-regular-12 text-gray-600">
           {messages.login.signUp}
         </Link>
       </div>
