@@ -6,8 +6,7 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
 interface MapControlsProps {
-  onToggleFollow: () => void
-  isFollowing?: boolean
+  onRecenter: () => void
   onCreateMeetup?: () => void
   onCreateQuestion?: () => void
   onListView?: () => void
@@ -15,8 +14,7 @@ interface MapControlsProps {
 }
 
 function MapControls({
-  onToggleFollow,
-  isFollowing = false,
+  onRecenter,
   onCreateMeetup,
   onCreateQuestion,
   onListView,
@@ -29,9 +27,7 @@ function MapControls({
       <Circle
         iconSrc="/icons/circle/location.svg"
         aria-label={messages.home.locateMeLabel}
-        aria-pressed={isFollowing}
-        className={isFollowing ? "outline-2 outline-primary-600" : undefined}
-        onClick={onToggleFollow}
+        onClick={onRecenter}
       />
       <Circle
         iconSrc="/icons/circle/list.svg"

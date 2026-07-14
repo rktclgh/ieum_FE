@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic"
 import * as React from "react"
 
-import type { Place } from "@/features/map/api/place-search-api"
 import type { MapBounds, MapPin, PinType } from "@/features/map/api/pin-types"
 import { CategoryChipGroup, type Category } from "@/features/map/components/category-chip-group"
 import { MapAttribution } from "@/features/map/components/map-attribution"
@@ -37,8 +36,9 @@ function toPinType(category: Category): PinType | undefined {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
-  const { position, accuracy, isFollowing, toggleFollow, stopFollow } = useGeolocation()
-  const [focusedPlace, setFocusedPlace] = React.useState<Place | null>(null)
+  const { position, accuracy } = useGeolocation()
+  const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
+  const [recenterKey, setRecenterKey] = React.useState(0)
   const [clickedPosition, setClickedPosition] = React.useState<Coordinates | null>(null)
   const [createMeetupOpen, setCreateMeetupOpen] = React.useState(false)
   const [createQuestionOpen, setCreateQuestionOpen] = React.useState(false)
@@ -63,32 +63,38 @@ function HomeMapScreen() {
     else if (pin.pinType === "question") setSelectedQuestionId(pin.targetId)
   }, [])
 
-  // follow-me 토글: 켤 때는 검색/클릭 선택을 비워 지도가 내 위치를 따라가게 한다.
-  const handleToggleFollow = React.useCallback(() => {
-    if (!isFollowing) {
-      setFocusedPlace(null)
-      setClickedPosition(null)
-    }
-    toggleFollow()
-  }, [isFollowing, toggleFollow])
+  // 지도 뷰 이동은 recenterKey(nonce)로만 구동한다. target을 정하고 key를 올리면 그 좌표로 이동.
+  const recenterTo = React.useCallback((target: Coordinates) => {
+    setRecenterTarget(target)
+    setRecenterKey((key) => key + 1)
+  }, [])
 
-  const center = focusedPlace ? { lat: focusedPlace.lat, lng: focusedPlace.lng } : position
+  // 최초 위치 확보 1회: 내 위치로 자동 중심 이동.
+  const hasCenteredRef = React.useRef(false)
+  React.useEffect(() => {
+    if (hasCenteredRef.current || !position) return
+    hasCenteredRef.current = true
+    recenterTo(position)
+  }, [position, recenterTo])
+
+  // 위치 버튼: 현재 내 위치를 화면 정중앙으로.
+  const handleRecenter = React.useCallback(() => {
+    if (position) recenterTo(position)
+  }, [position, recenterTo])
 
   return (
     <div className="fixed inset-0 mx-auto flex w-full max-w-sm flex-col overflow-hidden">
       <MapCanvas
-        center={center}
+        center={recenterTarget}
+        recenterKey={recenterKey}
+        animateCenter
         className="absolute inset-0 z-0 size-full"
-        onMapClick={(position) => {
-          setFocusedPlace(null)
-          setClickedPosition(position)
-        }}
+        onMapClick={(position) => setClickedPosition(position)}
         onBoundsChange={setBounds}
         pins={pins}
         onPinClick={handlePinClick}
-        livePosition={isFollowing ? position : null}
-        liveAccuracy={isFollowing ? accuracy : null}
-        onUserPan={isFollowing ? stopFollow : undefined}
+        livePosition={position}
+        liveAccuracy={accuracy}
       />
 
       <div className="relative z-10 flex flex-col gap-2 p-4">
@@ -111,8 +117,7 @@ function HomeMapScreen() {
 
       {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
       <MapControls
-        onToggleFollow={handleToggleFollow}
-        isFollowing={isFollowing}
+        onRecenter={handleRecenter}
         onCreateMeetup={() => setCreateMeetupOpen(true)}
         onCreateQuestion={() => setCreateQuestionOpen(true)}
         onListView={() => setListOpen(true)}
@@ -131,7 +136,7 @@ function HomeMapScreen() {
           onClose={() => setSearchOpen(false)}
           onSelectPlace={(place) => {
             setClickedPosition(null)
-            setFocusedPlace(place)
+            recenterTo({ lat: place.lat, lng: place.lng })
             setSearchOpen(false)
           }}
           onOpenMeetup={(id) => setSelectedMeetingId(id)}
