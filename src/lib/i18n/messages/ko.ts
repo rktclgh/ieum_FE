@@ -8,6 +8,14 @@ export interface Messages {
     back: string
     close: string
     more: string
+    retry: string
+  }
+  route: {
+    invalidLink: string
+  }
+  session: {
+    checking: string
+    backendUnavailable: string
   }
   login: {
     logoAlt: string
@@ -384,6 +392,14 @@ export const ko: Messages = {
     back: "뒤로 가기",
     close: "닫기",
     more: "더보기",
+    retry: "다시 시도",
+  },
+  route: {
+    invalidLink: "유효하지 않은 링크입니다.",
+  },
+  session: {
+    checking: "로그인 상태를 확인하고 있어요.",
+    backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   login: {
     logoAlt: "로고",

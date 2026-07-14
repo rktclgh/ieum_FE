@@ -7,6 +7,14 @@ export const ja: Messages = {
     back: "戻る",
     close: "閉じる",
     more: "その他",
+    retry: "再試行",
+  },
+  route: {
+    invalidLink: "このリンクは無効です。",
+  },
+  session: {
+    checking: "ログイン状態を確認しています。",
+    backendUnavailable: "サーバーに接続できません。しばらくしてからもう一度お試しください。",
   },
   login: {
     logoAlt: "ロゴ",

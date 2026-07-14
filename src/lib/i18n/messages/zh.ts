@@ -7,6 +7,14 @@ export const zh: Messages = {
     back: "返回",
     close: "关闭",
     more: "更多",
+    retry: "重试",
+  },
+  route: {
+    invalidLink: "此链接无效。",
+  },
+  session: {
+    checking: "正在检查登录状态。",
+    backendUnavailable: "无法连接到服务器，请稍后重试。",
   },
   login: {
     logoAlt: "标志",
