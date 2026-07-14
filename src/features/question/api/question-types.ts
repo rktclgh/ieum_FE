@@ -49,6 +49,8 @@ interface MyQuestionItem {
   thumbnailUrl: string | null
   answerCount: number
   createdAt: string
+  // 리스트 본문 미리보기. BE 미구현(계약우선) — 오면 표시, 없으면 생략. #92
+  contentPreview?: string | null
 }
 
 interface MyQuestionsPage {
@@ -76,6 +78,8 @@ interface UpdateQuestionRequest {
   title?: string
   content?: string
   imageFileIds?: number[]
+  // 장소 수정. BE UpdateQuestionRequest에 필드 없음(계약우선). #92
+  location?: LocationSnapshot
 }
 
 interface PostAnswerRequest {
