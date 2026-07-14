@@ -83,7 +83,7 @@ function HomeMapScreen() {
   }, [position, recenterTo])
 
   return (
-    <div className="fixed inset-0 mx-auto flex w-full max-w-sm flex-col overflow-hidden">
+    <div className="fixed inset-0 flex w-full flex-col overflow-hidden">
       <MapCanvas
         center={recenterTarget}
         recenterKey={recenterKey}
@@ -97,7 +97,7 @@ function HomeMapScreen() {
         liveAccuracy={accuracy}
       />
 
-      <div className="relative z-10 flex flex-col gap-2 p-4">
+      <div className="relative z-10 mx-auto flex w-full max-w-sm flex-col gap-2 p-4">
         <div className="flex items-center gap-2">
           <MapSearchBar
             onFocus={() => setSearchOpen(true)}
@@ -115,16 +115,20 @@ function HomeMapScreen() {
         )}
       </div>
 
-      {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
-      <MapControls
-        onRecenter={handleRecenter}
-        onCreateMeetup={() => setCreateMeetupOpen(true)}
-        onCreateQuestion={() => setCreateQuestionOpen(true)}
-        onListView={() => setListOpen(true)}
-        className="absolute right-4 bottom-28 z-10 flex flex-col gap-2"
-      />
+      {/* 지도는 풀블리드지만 컨트롤·저작권 표기는 앱 전역 max-w-sm 컬럼에 맞춰 중앙 정렬 유지.
+          wrapper는 pointer-events-none으로 지도 클릭을 통과시키고, 실제 컨트롤만 pointer-events-auto. */}
+      <div className="pointer-events-none absolute inset-0 z-10 mx-auto w-full max-w-sm">
+        {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
+        <MapControls
+          onRecenter={handleRecenter}
+          onCreateMeetup={() => setCreateMeetupOpen(true)}
+          onCreateQuestion={() => setCreateQuestionOpen(true)}
+          onListView={() => setListOpen(true)}
+          className="pointer-events-auto absolute right-4 bottom-28 flex flex-col gap-2"
+        />
 
-      <MapAttribution className="absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3 z-10" />
+        <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3" />
+      </div>
 
       <div className="absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-sm">
         <TabBar />
