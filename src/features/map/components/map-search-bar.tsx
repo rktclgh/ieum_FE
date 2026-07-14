@@ -1,44 +1,25 @@
 "use client"
 
-import * as React from "react"
 import Image from "next/image"
 
 import { SearchBox } from "@/components/ui/search-box"
-import type { Place } from "@/features/map/api/place-search-api"
-import type { Coordinates } from "@/features/map/hooks/use-geolocation"
-import { usePlaceSearch } from "@/features/map/hooks/use-place-search"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface MapSearchBarProps {
-  near: Coordinates | null
-  onSelectPlace: (place: Place) => void
+  /** 검색바 포커스 시 검색 오버레이를 연다. 실제 검색 입력은 오버레이가 담당한다. */
+  onFocus: () => void
   selectedLocationLabel?: string | null
   onClearSelectedLocation?: () => void
   className?: string
 }
 
 function MapSearchBar({
-  near,
-  onSelectPlace,
+  onFocus,
   selectedLocationLabel,
   onClearSelectedLocation,
   className,
 }: MapSearchBarProps) {
   const { messages } = useTranslation()
-  const [query, setQuery] = React.useState("")
-  const [debouncedQuery, setDebouncedQuery] = React.useState("")
-  const skipNextDebounceRef = React.useRef(false)
-
-  React.useEffect(() => {
-    if (skipNextDebounceRef.current) {
-      skipNextDebounceRef.current = false
-      return
-    }
-    const timer = setTimeout(() => setDebouncedQuery(query), 300)
-    return () => clearTimeout(timer)
-  }, [query])
-
-  const { data: places } = usePlaceSearch(debouncedQuery, near)
 
   if (selectedLocationLabel) {
     return (
@@ -47,7 +28,7 @@ function MapSearchBar({
           <span className="truncate text-body-medium-15 text-gray-900">
             {messages.home.selectedLocationPrefix}: {selectedLocationLabel}
           </span>
-          {onClearSelectedLocation && (
+          {onClearSelectedLocation ? (
             <button
               type="button"
               aria-label={messages.home.clearSelectedLocationLabel}
@@ -56,7 +37,7 @@ function MapSearchBar({
             >
               <Image src="/icons/common/clear.svg" alt="" width={8} height={8} className="size-2" />
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     )
@@ -64,32 +45,8 @@ function MapSearchBar({
 
   return (
     <div className={className ?? "relative flex-1"}>
-      <SearchBox
-        placeholder={messages.home.searchPlaceholder}
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-      />
-      {places && places.length > 0 && (
-        <ul className="absolute inset-x-0 top-full z-20 mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto rounded-2xl bg-white p-2 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.10)]">
-          {places.map((place) => (
-            <li key={place.id}>
-              <button
-                type="button"
-                className="flex w-full flex-col items-start gap-0.5 rounded-xl p-2 text-left hover:bg-gray-50"
-                onClick={() => {
-                  onSelectPlace(place)
-                  skipNextDebounceRef.current = true
-                  setQuery(place.name)
-                  setDebouncedQuery("")
-                }}
-              >
-                <span className="text-body-medium-14 text-gray-900">{place.name}</span>
-                <span className="text-body-regular-12 text-gray-500">{place.address}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* readOnly: 포커스만으로 오버레이를 열고, 타이핑은 오버레이 입력에서 한다. */}
+      <SearchBox readOnly placeholder={messages.home.searchPlaceholder} onFocus={onFocus} />
     </div>
   )
 }

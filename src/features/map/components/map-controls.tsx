@@ -9,10 +9,17 @@ interface MapControlsProps {
   onRecenter: () => void
   onCreateMeetup?: () => void
   onCreateQuestion?: () => void
+  onListView?: () => void
   className?: string
 }
 
-function MapControls({ onRecenter, onCreateMeetup, onCreateQuestion, className }: MapControlsProps) {
+function MapControls({
+  onRecenter,
+  onCreateMeetup,
+  onCreateQuestion,
+  onListView,
+  className,
+}: MapControlsProps) {
   const { messages } = useTranslation()
 
   return (
@@ -22,7 +29,11 @@ function MapControls({ onRecenter, onCreateMeetup, onCreateQuestion, className }
         aria-label={messages.home.locateMeLabel}
         onClick={onRecenter}
       />
-      <Circle iconSrc="/icons/circle/list.svg" aria-label={messages.home.listViewLabel} />
+      <Circle
+        iconSrc="/icons/circle/list.svg"
+        aria-label={messages.home.listViewLabel}
+        onClick={onListView}
+      />
       <MapFab onCreateMeetup={onCreateMeetup} onCreateQuestion={onCreateQuestion} />
     </div>
   )

@@ -42,5 +42,5 @@ async function getMapPins({ swLat, swLng, neLat, neLng, type }: GetMapPinsParams
   }
 }
 
-export { getMapPins }
+export { getMapPins, adaptPin }
 export type { GetMapPinsParams }

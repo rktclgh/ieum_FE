@@ -8,6 +8,8 @@ import { CategoryChipGroup, type Category } from "@/features/map/components/cate
 import { MapAttribution } from "@/features/map/components/map-attribution"
 import { MapControls } from "@/features/map/components/map-controls"
 import { MapSearchBar } from "@/features/map/components/map-search-bar"
+import { PinListOverlay } from "@/features/map/components/pin-list-overlay"
+import { SearchOverlay } from "@/features/map/components/search-overlay"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
@@ -44,6 +46,8 @@ function HomeMapScreen() {
   const [selectedQuestionId, setSelectedQuestionId] = React.useState<number | null>(null)
   const [category, setCategory] = React.useState<Category>("all")
   const [bounds, setBounds] = React.useState<MapBounds | null>(null)
+  const [isSearchOpen, setSearchOpen] = React.useState(false)
+  const [isListOpen, setListOpen] = React.useState(false)
 
   const { data: reverseGeocoded } = useReverseGeocode(clickedPosition)
   const selectedLocationLabel = clickedPosition
@@ -96,11 +100,7 @@ function HomeMapScreen() {
       <div className="relative z-10 flex flex-col gap-2 p-4">
         <div className="flex items-center gap-2">
           <MapSearchBar
-            near={position}
-            onSelectPlace={(place) => {
-              setClickedPosition(null)
-              recenterTo({ lat: place.lat, lng: place.lng })
-            }}
+            onFocus={() => setSearchOpen(true)}
             selectedLocationLabel={selectedLocationLabel}
             onClearSelectedLocation={() => setClickedPosition(null)}
           />
@@ -120,6 +120,7 @@ function HomeMapScreen() {
         onRecenter={handleRecenter}
         onCreateMeetup={() => setCreateMeetupOpen(true)}
         onCreateQuestion={() => setCreateQuestionOpen(true)}
+        onListView={() => setListOpen(true)}
         className="absolute right-4 bottom-28 z-10 flex flex-col gap-2"
       />
 
@@ -128,6 +129,31 @@ function HomeMapScreen() {
       <div className="absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-sm">
         <TabBar />
       </div>
+
+      {isSearchOpen ? (
+        <SearchOverlay
+          near={position}
+          onClose={() => setSearchOpen(false)}
+          onSelectPlace={(place) => {
+            setClickedPosition(null)
+            recenterTo({ lat: place.lat, lng: place.lng })
+            setSearchOpen(false)
+          }}
+          onOpenMeetup={(id) => setSelectedMeetingId(id)}
+          onOpenQuestion={(id) => setSelectedQuestionId(id)}
+        />
+      ) : null}
+
+      {isListOpen ? (
+        <PinListOverlay
+          bounds={bounds}
+          onClose={() => setListOpen(false)}
+          onOpenMeetup={(id) => setSelectedMeetingId(id)}
+          onOpenQuestion={(id) => setSelectedQuestionId(id)}
+          onCreateMeetup={() => setCreateMeetupOpen(true)}
+          onCreateQuestion={() => setCreateQuestionOpen(true)}
+        />
+      ) : null}
 
       {createMeetupOpen ? (
         <CreateMeetupScreen onClose={() => setCreateMeetupOpen(false)} />
