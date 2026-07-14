@@ -20,6 +20,7 @@ import {
 import type { ChatListEntry } from "@/features/chat/lib/chat-adapter"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { hangulIncludes } from "@/lib/hangul-includes"
+import { routes } from "@/lib/navigation/routes"
 
 // 컨텍스트 메뉴(3개 항목) 높이 추정치 + 하단 고정 TabBar와 겹치지 않기 위한 여유 공간
 const CONTEXT_MENU_HEIGHT_ESTIMATE = 180
@@ -140,7 +141,7 @@ function ChatListPageContent() {
             iconSrc="/icons/circle/friend-list.svg"
             aria-label={messages.chat.myFriendsTitle}
             tone="flat"
-            onClick={() => router.push("/friends")}
+            onClick={() => router.push(routes.friends())}
           />
         </div>
         <ChatFilterChips value={category} onChange={setCategory} />
@@ -154,7 +155,7 @@ function ChatListPageContent() {
               menuItems={menuItemsFor(chat)}
               onOpenMenu={() => setOpenMenuRoomId(chat.roomId)}
               onCloseMenu={() => setOpenMenuRoomId(null)}
-              onNavigate={() => router.push(`/chats/${chat.roomId}`)}
+              onNavigate={() => router.push(routes.chatRoom(chat.roomId))}
             />
           ))}
           {!isLoading && filteredChats.length === 0 && (

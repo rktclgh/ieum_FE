@@ -1,5 +1,8 @@
 # 질문 내역 · 답변 보기 · 꼬리 질문 채팅 — 설계
 
+> [!IMPORTANT]
+> 이 문서는 #76 구현 당시 기록이다. #82 정적 export 전환 이후 현행 canonical URL은 `/questions/detail/?questionId={questionId}`와 `/chats/room/?chatId={chatId}`이며, 아래의 동적 path 표기는 역사적 설명으로만 읽는다. 현재 계약은 `docs/ROUTES.md`를 기준으로 한다.
+>
 > 생성: 2026-07-14
 > 관련 Figma: node `1722-13490`, `1722-13489`(질문 내역) · `1744-10029`, `1744-10030`(답변 보기) · `958-4520`, `1722-13148`(꼬리 질문 채팅)
 > 대상 저장소: ieum_FE (구현) · ieum_BE (엔드포인트 이슈 등록만)

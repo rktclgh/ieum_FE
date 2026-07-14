@@ -13,6 +13,7 @@ import {
 import { adaptMeetingDetail } from "@/features/meetup/lib/meetup-adapter"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 interface MeetupDetailContainerProps {
   meetingId: number
@@ -22,7 +23,7 @@ interface MeetupDetailContainerProps {
 
 /**
  * 모임 상세 컨테이너. 상세/참가자 조회 + 참가·탈퇴·강퇴·마감·취소 mutation 을 시트에 연결한다.
- * 라우트(/meetups/[meetingId])와 지도 핀 클릭 오버레이 양쪽에서 재사용한다.
+ * 라우트(/meetups/detail/?meetingId=...)와 지도 핀 클릭 오버레이 양쪽에서 재사용한다.
  */
 function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProps) {
   const router = useRouter()
@@ -60,7 +61,7 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
   const handleJoin = () =>
     run(async () => {
       const { roomId } = await join.mutateAsync()
-      router.replace(`/chats/${roomId}`)
+      router.replace(routes.chatRoom(roomId))
     })
   const handleLeave = () =>
     setConfirm({
@@ -70,7 +71,7 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
       onConfirm: () => run(async () => { await leave.mutateAsync(); close() }),
     })
   const handleEnterRoom = () => {
-    if (detail) router.push(`/chats/${detail.roomId}`)
+    if (detail) router.push(routes.chatRoom(detail.roomId))
   }
 
   if (meetingQuery.isError) {

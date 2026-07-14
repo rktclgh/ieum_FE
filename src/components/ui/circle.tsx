@@ -8,7 +8,7 @@ const circleVariants = cva("inline-flex size-[46px] shrink-0 items-center justif
   variants: {
     background: {
       white: "bg-white",
-      primary: "bg-primary-600",
+      primary: "bg-primary-400",
     },
     tone: {
       elevated: "shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)] outline outline-1 -outline-offset-1 outline-gray-50",

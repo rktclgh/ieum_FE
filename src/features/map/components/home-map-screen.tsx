@@ -20,6 +20,7 @@ import { CreateQuestionScreen } from "@/features/question/components/create-ques
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
+import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 const MapCanvas = dynamic(
@@ -124,7 +125,7 @@ function HomeMapScreen() {
           onCreateMeetup={() => setCreateMeetupOpen(true)}
           onCreateQuestion={() => setCreateQuestionOpen(true)}
           onListView={() => setListOpen(true)}
-          className="pointer-events-auto absolute right-4 bottom-28 flex flex-col gap-2"
+          className={`pointer-events-auto absolute right-4 ${FAB_BOTTOM_WITH_TABBAR} flex flex-col gap-2`}
         />
 
         <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3" />

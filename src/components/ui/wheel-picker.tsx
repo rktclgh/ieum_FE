@@ -20,18 +20,29 @@ function WheelPicker({ className, options, value, onChange, ...props }: WheelPic
   const settleTimeoutRef = React.useRef<ReturnType<typeof setTimeout>>(undefined)
   const isSyncingRef = React.useRef(false)
   const selectedIndex = Math.max(options.indexOf(value), 0)
-  const [centerIndex, setCenterIndex] = React.useState(selectedIndex)
+  const [scrollSelection, setScrollSelection] = React.useState(() => ({
+    value,
+    selectedIndex,
+    centerIndex: selectedIndex,
+  }))
+  const controlledSelectionChanged =
+    scrollSelection.value !== value || scrollSelection.selectedIndex !== selectedIndex
+
+  // 제어 값이 바뀐 렌더에서 이전 스크롤 snapshot을 폐기해 같은 값으로 돌아와도 되살아나지 않게 한다.
+  if (controlledSelectionChanged) {
+    setScrollSelection({ value, selectedIndex, centerIndex: selectedIndex })
+  }
+
+  const centerIndex = controlledSelectionChanged ? selectedIndex : scrollSelection.centerIndex
 
   React.useEffect(() => {
-    const index = Math.max(options.indexOf(value), 0)
-    setCenterIndex(index)
     isSyncingRef.current = true
-    containerRef.current?.scrollTo({ top: index * ITEM_HEIGHT, behavior: "auto" })
+    containerRef.current?.scrollTo({ top: selectedIndex * ITEM_HEIGHT, behavior: "auto" })
     const frame = requestAnimationFrame(() => {
       isSyncingRef.current = false
     })
     return () => cancelAnimationFrame(frame)
-  }, [value, options])
+  }, [selectedIndex, value])
 
   React.useEffect(() => () => clearTimeout(settleTimeoutRef.current), [])
 
@@ -40,7 +51,7 @@ function WheelPicker({ className, options, value, onChange, ...props }: WheelPic
 
     const top = containerRef.current?.scrollTop ?? 0
     const index = Math.min(Math.max(Math.round(top / ITEM_HEIGHT), 0), options.length - 1)
-    setCenterIndex(index)
+    setScrollSelection({ value, selectedIndex, centerIndex: index })
 
     clearTimeout(settleTimeoutRef.current)
     settleTimeoutRef.current = setTimeout(() => {

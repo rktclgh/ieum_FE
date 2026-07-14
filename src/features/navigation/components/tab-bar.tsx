@@ -51,7 +51,7 @@ function TabBar({ className, activeHref, ...props }: TabBarProps) {
               <span
                 className={cn(
                   "text-body-regular-12",
-                  active ? "text-primary-600" : "text-gray-900"
+                  active ? "text-primary-400" : "text-gray-900"
                 )}
               >
                 {messages.tabBar[item.labelKey]}

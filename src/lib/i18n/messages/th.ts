@@ -7,6 +7,14 @@ export const th: Messages = {
     back: "ย้อนกลับ",
     close: "ปิด",
     more: "เพิ่มเติม",
+    retry: "ลองอีกครั้ง",
+  },
+  route: {
+    invalidLink: "ลิงก์นี้ไม่ถูกต้อง",
+  },
+  session: {
+    checking: "กำลังตรวจสอบสถานะการเข้าสู่ระบบ",
+    backendUnavailable: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ โปรดลองอีกครั้งในภายหลัง",
   },
   login: {
     logoAlt: "โลโก้",

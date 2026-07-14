@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { QueryProvider } from "@/lib/query/query-provider";
 import { I18nProvider } from "@/lib/i18n/i18n-provider";
@@ -11,11 +10,6 @@ const pretendard = localFont({
   variable: "--font-pretendard",
   weight: "45 920",
   display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -52,10 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className={`${pretendard.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="ko" className={`${pretendard.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <I18nProvider>
           <QueryProvider>{children}</QueryProvider>

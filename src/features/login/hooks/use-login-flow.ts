@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import * as React from "react"
 
 import { useLogin } from "@/features/login/hooks/use-login-mutations"
+import { routes } from "@/lib/navigation/routes"
 
 function useLoginFlow() {
   const router = useRouter()
@@ -27,7 +28,7 @@ function useLoginFlow() {
     if (!email || !password || loginMutation.isPending) return
     loginMutation.mutate(
       { email, password },
-      { onSuccess: () => router.push("/") }
+      { onSuccess: () => router.push(routes.home()) }
     )
   }
 

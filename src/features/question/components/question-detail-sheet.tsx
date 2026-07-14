@@ -189,7 +189,7 @@ function QuestionDetailSheet({
         <button
           type="button"
           onClick={onViewAnswers}
-          className="flex w-full items-center justify-center rounded-full bg-primary-600 px-4 py-3 text-body-medium-14 text-white"
+          className="flex w-full items-center justify-center rounded-full bg-primary-400 px-4 py-3 text-body-medium-14 text-white"
         >
           {t.viewAnswersLabel}
         </button>
