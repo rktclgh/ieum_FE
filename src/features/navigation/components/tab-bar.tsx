@@ -48,12 +48,7 @@ function TabBar({ className, activeHref, ...props }: TabBarProps) {
                   className="size-5"
                 />
               </div>
-              <span
-                className={cn(
-                  "text-body-regular-12",
-                  active ? "text-primary-400" : "text-gray-900"
-                )}
-              >
+              <span className="text-body-regular-12 text-gray-900">
                 {messages.tabBar[item.labelKey]}
               </span>
             </Link>

@@ -292,7 +292,7 @@ export const en: Messages = {
   },
   tabBar: {
     home: "Home",
-    meetups: "Meetups",
+    chat: "Chat",
     questions: "Questions",
     my: "My",
   },

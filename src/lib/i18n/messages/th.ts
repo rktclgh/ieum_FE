@@ -291,7 +291,7 @@ export const th: Messages = {
   },
   tabBar: {
     home: "หน้าแรก",
-    meetups: "พบปะ",
+    chat: "แชท",
     questions: "คำถาม",
     my: "ของฉัน",
   },

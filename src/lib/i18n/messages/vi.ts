@@ -292,7 +292,7 @@ export const vi: Messages = {
   },
   tabBar: {
     home: "Trang chủ",
-    meetups: "Gặp mặt",
+    chat: "Trò chuyện",
     questions: "Câu hỏi",
     my: "Của tôi",
   },

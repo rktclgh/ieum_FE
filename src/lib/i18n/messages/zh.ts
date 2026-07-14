@@ -291,7 +291,7 @@ export const zh: Messages = {
   },
   tabBar: {
     home: "首页",
-    meetups: "聚会",
+    chat: "聊天",
     questions: "提问",
     my: "我的",
   },
