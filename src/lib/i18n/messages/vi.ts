@@ -7,6 +7,14 @@ export const vi: Messages = {
     back: "Quay lại",
     close: "Đóng",
     more: "Thêm",
+    retry: "Thử lại",
+  },
+  route: {
+    invalidLink: "Liên kết này không hợp lệ.",
+  },
+  session: {
+    checking: "Đang kiểm tra trạng thái đăng nhập.",
+    backendUnavailable: "Không thể kết nối với máy chủ. Vui lòng thử lại sau.",
   },
   login: {
     logoAlt: "Logo",
@@ -273,9 +281,21 @@ export const vi: Messages = {
       default: "Vui lòng thử lại sau.",
     },
   },
+  profileImage: {
+    takePhoto: "Chụp ảnh",
+    chooseAlbum: "Chọn từ thư viện",
+    editLabel: "Chỉnh sửa ảnh đại diện",
+    deleteLabel: "Xóa ảnh",
+    uploadFailed: "Tải ảnh lên thất bại. Vui lòng thử lại.",
+    invalidType: "Chỉ có thể tải lên tệp hình ảnh.",
+    tooLarge: "Vui lòng dùng ảnh dưới 10MB.",
+    cropTitle: "Chỉnh sửa ảnh",
+    cropConfirm: "Xong",
+    cropCancel: "Hủy",
+  },
   tabBar: {
     home: "Trang chủ",
-    meetups: "Gặp mặt",
+    chat: "Trò chuyện",
     questions: "Câu hỏi",
     my: "Của tôi",
   },

@@ -22,6 +22,7 @@ import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 interface QuestionDetailScreenProps {
   questionId: number
@@ -84,7 +85,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
     createRoom.mutate(
       { questionId: question.questionId, targetUserId },
       {
-        onSuccess: (room) => router.push(`/chats/${room.roomId}`),
+        onSuccess: (room) => router.push(routes.chatRoom(room.roomId)),
         onError: () => setActionError(messages.question.chatStartFailed),
       }
     )
@@ -134,7 +135,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   <span className="text-body-regular-14 text-gray-500">{question.address}</span>
                 </div>
                 {question.isResolved ? (
-                  <span className="ml-auto rounded-full bg-primary-600 px-2.5 py-1 text-body-medium-14 text-white">
+                  <span className="ml-auto rounded-full bg-primary-400 px-2.5 py-1 text-body-medium-14 text-white">
                     {messages.question.resolvedBadge}
                   </span>
                 ) : null}

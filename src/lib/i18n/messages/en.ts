@@ -7,6 +7,14 @@ export const en: Messages = {
     back: "Back",
     close: "Close",
     more: "More",
+    retry: "Retry",
+  },
+  route: {
+    invalidLink: "This link is invalid.",
+  },
+  session: {
+    checking: "Checking your sign-in status.",
+    backendUnavailable: "We couldn't connect to the server. Please try again shortly.",
   },
   login: {
     logoAlt: "Logo",
@@ -273,9 +281,21 @@ export const en: Messages = {
       default: "Please try again later.",
     },
   },
+  profileImage: {
+    takePhoto: "Take a photo",
+    chooseAlbum: "Choose from album",
+    editLabel: "Edit profile photo",
+    deleteLabel: "Remove photo",
+    uploadFailed: "Failed to upload the photo. Please try again.",
+    invalidType: "Only image files can be uploaded.",
+    tooLarge: "Please use an image under 10MB.",
+    cropTitle: "Edit photo",
+    cropConfirm: "Done",
+    cropCancel: "Cancel",
+  },
   tabBar: {
     home: "Home",
-    meetups: "Meetups",
+    chat: "Chat",
     questions: "Questions",
     my: "My",
   },

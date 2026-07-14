@@ -7,6 +7,14 @@ export const zh: Messages = {
     back: "返回",
     close: "关闭",
     more: "更多",
+    retry: "重试",
+  },
+  route: {
+    invalidLink: "此链接无效。",
+  },
+  session: {
+    checking: "正在检查登录状态。",
+    backendUnavailable: "无法连接到服务器，请稍后重试。",
   },
   login: {
     logoAlt: "标志",
@@ -272,9 +280,21 @@ export const zh: Messages = {
       default: "请稍后再试。",
     },
   },
+  profileImage: {
+    takePhoto: "拍照",
+    chooseAlbum: "从相册选择",
+    editLabel: "编辑头像",
+    deleteLabel: "删除照片",
+    uploadFailed: "照片上传失败，请稍后重试。",
+    invalidType: "只能上传图片文件。",
+    tooLarge: "请使用10MB以内的图片。",
+    cropTitle: "编辑照片",
+    cropConfirm: "确定",
+    cropCancel: "取消",
+  },
   tabBar: {
     home: "首页",
-    meetups: "聚会",
+    chat: "聊天",
     questions: "提问",
     my: "我的",
   },

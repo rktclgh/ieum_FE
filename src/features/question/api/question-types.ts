@@ -62,7 +62,7 @@ interface CreateQuestionRequest {
   title: string
   content: string
   location: LocationSnapshot
-  imageFileIds?: number[]
+  imageFileIds?: string[]
 }
 
 // 비슷한 질문 제안(작성 중 노출). 채택된 답변이 있는 질문만 내려올 예정.
@@ -77,14 +77,14 @@ interface SimilarQuestion {
 interface UpdateQuestionRequest {
   title?: string
   content?: string
-  imageFileIds?: number[]
+  imageFileIds?: string[]
   // 장소 수정. BE UpdateQuestionRequest에 필드 없음(계약우선). #92
   location?: LocationSnapshot
 }
 
 interface PostAnswerRequest {
   content?: string
-  imageFileIds?: number[]
+  imageFileIds?: string[]
 }
 
 interface PostAnswerResponse {

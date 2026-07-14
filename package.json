@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "test:contracts": "bash scripts/ci/test-client-contracts.sh",
+    "verify:out": "bash scripts/ci/verify-static-export.sh",
+    "verify": "pnpm test:contracts && pnpm lint && pnpm typecheck && pnpm build && pnpm verify:out"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -23,6 +26,7 @@
     "pretendard": "^1.3.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-easy-crop": "^6.2.2",
     "react-leaflet": "^5.0.0",
     "shadcn": "^4.12.0",
     "tailwind-merge": "^3.6.0",

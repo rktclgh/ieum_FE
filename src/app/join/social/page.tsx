@@ -12,6 +12,7 @@ import {
   type SocialSignupStoragePayload,
 } from "@/features/social-login/lib/social-signup-storage"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 export default function SocialJoinPage() {
   const router = useRouter()
@@ -24,7 +25,7 @@ export default function SocialJoinPage() {
     const storedPayload = load()
     if (!storedPayload) {
       saveSocialLoginError("tokenExpired")
-      router.replace("/login")
+      router.replace(routes.login())
       return
     }
 
@@ -38,7 +39,7 @@ export default function SocialJoinPage() {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center px-4">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-600" />
+          <span className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-400" />
           <p className="text-body-medium-16 text-gray-900">{messages.social.loading}</p>
         </div>
       </main>
@@ -51,7 +52,7 @@ export default function SocialJoinPage() {
         title={messages.join.infoAppBarTitle}
         trailingVariant="close"
         leadingIcon={null}
-        onTrailingClick={() => router.push("/login")}
+        onTrailingClick={() => router.push(routes.login())}
         className="w-full"
       />
       <ProfileForm flow={flow.profile} />

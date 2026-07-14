@@ -3,18 +3,17 @@
 import * as React from "react"
 import { Client, type IMessage } from "@stomp/stompjs"
 
-import { API_BASE_URL } from "@/lib/api/config"
 import type {
   ChatWebSocketErrorResponse,
   SendChatMessageRequest,
   WsMessageEvent,
 } from "@/features/chat/api/chat-types"
+import { DEV_BACKEND_ORIGIN, toWebSocketUrl } from "@/lib/runtime/dev-backend-origin"
 
-// STOMP 엔드포인트는 rewrite 대상이 아니므로 백엔드(8080)로 직접 연결한다.
-// 인증은 handshake 시 함께 전송되는 access_token 쿠키(host=localhost, 포트 무관)로 처리된다.
+// 운영은 정적 앱과 같은 브라우저 origin, 로컬 next dev만 명시한 백엔드 origin을 사용한다.
 function resolveBrokerUrl() {
-  const wsBase = API_BASE_URL.replace(/^http/, "ws")
-  return `${wsBase}/ws`
+  const origin = DEV_BACKEND_ORIGIN ?? window.location.origin
+  return toWebSocketUrl(origin)
 }
 
 interface ChatSocketHandlers {
@@ -27,7 +26,7 @@ interface ChatSocketHandlers {
 // - /topic/rooms/{roomId} 구독 → 메시지 수신
 // - /user/queue/errors 구독 → 검증/세션 에러 수신
 // - send()로 /app/rooms/{roomId}/send 발행
-function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) {
+function useChatRoomSocket(activeRoomId: number | null, handlers: ChatSocketHandlers) {
   const clientRef = React.useRef<Client | null>(null)
   const [connected, setConnected] = React.useState(false)
 
@@ -39,7 +38,7 @@ function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) 
   }, [handlers])
 
   React.useEffect(() => {
-    if (roomId == null) return
+    if (activeRoomId == null) return
 
     const client = new Client({
       brokerURL: resolveBrokerUrl(),
@@ -50,7 +49,7 @@ function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) 
         setConnected(true)
         handlersRef.current.onConnectedChange?.(true)
 
-        client.subscribe(`/topic/rooms/${roomId}`, (message: IMessage) => {
+        client.subscribe(`/topic/rooms/${activeRoomId}`, (message: IMessage) => {
           try {
             const event = JSON.parse(message.body) as WsMessageEvent
             handlersRef.current.onMessage?.(event)
@@ -85,19 +84,19 @@ function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) 
       clientRef.current = null
       void client.deactivate()
     }
-  }, [roomId])
+  }, [activeRoomId])
 
   const send = React.useCallback(
     (payload: SendChatMessageRequest) => {
       const client = clientRef.current
-      if (!client || !client.connected || roomId == null) return false
+      if (!client || !client.connected || activeRoomId == null) return false
       client.publish({
-        destination: `/app/rooms/${roomId}/send`,
+        destination: `/app/rooms/${activeRoomId}/send`,
         body: JSON.stringify(payload),
       })
       return true
     },
-    [roomId]
+    [activeRoomId]
   )
 
   return { connected, send }

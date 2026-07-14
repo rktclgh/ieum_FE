@@ -14,6 +14,7 @@ import {
 } from "@/features/social-login/lib/oauth-state-storage"
 import * as socialSignupStorage from "@/features/social-login/lib/social-signup-storage"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 function useSocialLogin() {
   const router = useRouter()
@@ -46,7 +47,7 @@ function useSocialLogin() {
   const handleStartResponse = React.useCallback(
     (provider: SocialProvider, response: SocialStartResponse) => {
       if (!response.isNewUser) {
-        router.push("/")
+        router.push(routes.home())
         return
       }
 
@@ -55,7 +56,7 @@ function useSocialLogin() {
         token: response.socialSignupToken,
         expiresInSeconds: response.expiresInSeconds,
       })
-      router.push("/join/social")
+      router.push(routes.socialJoin())
     },
     [router]
   )
@@ -102,7 +103,7 @@ function useSocialLogin() {
       return
     }
 
-    const redirectUri = `${window.location.origin}/oauth/kakao/callback`
+    const redirectUri = `${window.location.origin}${routes.kakaoCallback()}`
     const state = generateOAuthState()
     saveKakaoOAuthState(state)
     const authorizeUrl = new URL("https://kauth.kakao.com/oauth/authorize")

@@ -27,6 +27,7 @@ import {
 import { useCreateDirectRoom } from "@/features/chat/hooks/use-chat-mutations"
 import { getFriendErrorMessage } from "@/features/friends/lib/friend-error"
 import type { FriendEntry, SearchEntry } from "@/features/friends/lib/friend-adapter"
+import { routes } from "@/lib/navigation/routes"
 
 type ConfirmAction =
   | { type: "reject"; target: FriendEntry }
@@ -37,6 +38,9 @@ type ConfirmAction =
 // 컨텍스트 메뉴(2개 항목) 높이 추정치 + 화면 하단(홈 인디케이터)과 겹치지 않기 위한 여유 공간
 const FRIEND_CONTEXT_MENU_HEIGHT_ESTIMATE = 130
 const FRIEND_BOTTOM_SAFE_AREA = 24
+const EMPTY_FRIENDS: FriendEntry[] = []
+const EMPTY_RECEIVED_REQUESTS: FriendEntry[] = []
+const EMPTY_SENT_REQUESTS: FriendEntry[] = []
 
 function FriendListPageContent() {
   const router = useRouter()
@@ -60,7 +64,7 @@ function FriendListPageContent() {
   // 친구와의 1:1 방을 (없으면) 생성한 뒤 그 roomId로 이동한다. userId ≠ roomId.
   const handleStartChat = (friendId: number) => {
     createDirectRoom.mutate(friendId, {
-      onSuccess: (room) => router.push(`/chats/${room.roomId}`),
+      onSuccess: (room) => router.push(routes.chatRoom(room.roomId)),
       onError: showError,
     })
   }
@@ -71,9 +75,9 @@ function FriendListPageContent() {
   const [requestedIds, setRequestedIds] = React.useState<Set<number>>(new Set())
   const [actionError, setActionError] = React.useState<string | null>(null)
 
-  const friends = friendsQuery.data ?? []
-  const requests = requestsQuery.data ?? []
-  const sentRequests = sentRequestsQuery.data ?? []
+  const friends = friendsQuery.data ?? EMPTY_FRIENDS
+  const requests = requestsQuery.data ?? EMPTY_RECEIVED_REQUESTS
+  const sentRequests = sentRequestsQuery.data ?? EMPTY_SENT_REQUESTS
   const searchResults = searchQuery.data ?? []
 
   // 서버 기준 "이미 요청 보낸 유저" — 재검색·새로고침 후에도 유지되는 진실 공급원.

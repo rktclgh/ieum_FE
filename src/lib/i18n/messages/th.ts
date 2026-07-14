@@ -7,6 +7,14 @@ export const th: Messages = {
     back: "ย้อนกลับ",
     close: "ปิด",
     more: "เพิ่มเติม",
+    retry: "ลองอีกครั้ง",
+  },
+  route: {
+    invalidLink: "ลิงก์นี้ไม่ถูกต้อง",
+  },
+  session: {
+    checking: "กำลังตรวจสอบสถานะการเข้าสู่ระบบ",
+    backendUnavailable: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ โปรดลองอีกครั้งในภายหลัง",
   },
   login: {
     logoAlt: "โลโก้",
@@ -272,9 +280,21 @@ export const th: Messages = {
       default: "กรุณาลองใหม่ภายหลัง",
     },
   },
+  profileImage: {
+    takePhoto: "ถ่ายรูป",
+    chooseAlbum: "เลือกจากอัลบั้ม",
+    editLabel: "แก้ไขรูปโปรไฟล์",
+    deleteLabel: "ลบรูป",
+    uploadFailed: "อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    invalidType: "อัปโหลดได้เฉพาะไฟล์รูปภาพเท่านั้น",
+    tooLarge: "กรุณาใช้รูปภาพขนาดไม่เกิน 10MB",
+    cropTitle: "แก้ไขรูป",
+    cropConfirm: "ตกลง",
+    cropCancel: "ยกเลิก",
+  },
   tabBar: {
     home: "หน้าแรก",
-    meetups: "พบปะ",
+    chat: "แชท",
     questions: "คำถาม",
     my: "ของฉัน",
   },

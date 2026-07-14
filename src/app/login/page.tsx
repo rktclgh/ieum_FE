@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/text-field/input"
 import { PasswordInput } from "@/components/ui/text-field/password-input"
 import { LanguageToggle } from "@/features/language/components/language-toggle"
 import { useLoginFlow } from "@/features/login/hooks/use-login-flow"
+import { AuthGate } from "@/features/session/components/auth-gate"
 import { useSocialLogin } from "@/features/social-login/hooks/use-social-login"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
-export default function LoginPage() {
+function LoginContent() {
   const { messages } = useTranslation()
   const {
     email,
@@ -65,7 +67,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center gap-4">
         <span className="text-body-regular-12 text-gray-600">{messages.login.forgotPassword}</span>
         <span className="h-2 w-px bg-gray-200" />
-        <Link href="/join" className="text-body-regular-12 text-gray-600">
+        <Link href={routes.join()} className="text-body-regular-12 text-gray-600">
           {messages.login.signUp}
         </Link>
       </div>
@@ -114,5 +116,13 @@ export default function LoginPage() {
         </Button>
       </div>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <AuthGate policy="guest-only">
+      <LoginContent />
+    </AuthGate>
   )
 }

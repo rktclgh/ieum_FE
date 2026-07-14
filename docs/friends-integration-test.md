@@ -7,7 +7,7 @@
 
 ## 사전 준비
 
-- **프론트**: `pnpm dev` (:3000). `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080` (프록시 없음, 크로스오리진). 단 `:3000`↔`:8080`은 same-site라 로컬에선 SameSite=Lax 쿠키가 전송됨. **운영 도메인 분리 시엔 별도 대응 필요.**
+- **프론트**: `pnpm dev` (:3000). `NEXT_PUBLIC_DEV_BACKEND_ORIGIN=http://localhost:8080` (로컬 개발만 크로스오리진). 단 `:3000`↔`:8080`은 same-site라 로컬에선 SameSite=Lax 쿠키가 전송됨. 운영 빌드는 Spring과 same-origin 상대 경로를 사용한다.
 - **백엔드(실제 실행 환경)**: 로컬 Postgres가 아니라 **SSH 터널로 배포 RDS(운영, PostGIS)** 에 연결하는 구조. 로컬 Redis는 세션/토큰용.
   ```
   [프론트 :3000] --XHR(credentials)--> [백엔드 :8080]

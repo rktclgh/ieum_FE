@@ -1,3 +1,5 @@
+import { apiClient } from "@/lib/api/client"
+
 interface Place {
   id: string
   name: string
@@ -13,16 +15,13 @@ interface SearchPlacesParams {
 }
 
 async function searchPlaces({ query, near }: SearchPlacesParams): Promise<Place[]> {
-  const params = new URLSearchParams({ query })
-  if (near) {
-    params.set("lat", String(near.lat))
-    params.set("lng", String(near.lng))
-  }
-
-  const response = await fetch(`/api/places/search?${params.toString()}`)
-  if (!response.ok) throw new Error("Failed to search places")
-
-  const data: { places: Place[] } = await response.json()
+  const { data } = await apiClient.get<{ places: Place[] }>("/api/places/search", {
+    params: {
+      query,
+      lat: near?.lat,
+      lng: near?.lng,
+    },
+  })
   return data.places
 }
 

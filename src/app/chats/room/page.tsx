@@ -1,0 +1,25 @@
+"use client"
+
+import { useSearchParams } from "next/navigation"
+import * as React from "react"
+
+import { RoutePageState } from "@/components/ui/route-page-state"
+import { ChatRoomPageContent } from "@/features/chat/components/chat-room-page-content"
+import { parsePositiveInteger } from "@/lib/navigation/routes"
+
+function ChatRoomRoute() {
+  const searchParams = useSearchParams()
+  const roomId = parsePositiveInteger(searchParams.get("chatId"))
+
+  if (roomId === null) return <RoutePageState kind="invalid-link" />
+
+  return <ChatRoomPageContent key={roomId} roomId={roomId} />
+}
+
+export default function ChatRoomPage() {
+  return (
+    <React.Suspense fallback={<RoutePageState kind="loading" />}>
+      <ChatRoomRoute />
+    </React.Suspense>
+  )
+}

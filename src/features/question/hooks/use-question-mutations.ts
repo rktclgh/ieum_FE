@@ -22,6 +22,10 @@ import type { InfiniteData } from "@tanstack/react-query"
 import { questionKeys } from "@/features/question/hooks/use-question-queries"
 import { reportAnswer } from "@/features/report/api/report-api"
 import type { ReportReason } from "@/features/report/api/report-types"
+import {
+  getSessionGeneration,
+  isSessionGenerationCurrent,
+} from "@/features/session/lib/session-cache"
 
 function useCreateQuestion() {
   const queryClient = useQueryClient()
@@ -74,7 +78,11 @@ function useDeleteQuestion() {
   return useMutation({
     mutationFn: (questionId: number) => deleteQuestion(questionId),
     onMutate: async (questionId) => {
+      const sessionGeneration = getSessionGeneration(queryClient)
       await queryClient.cancelQueries({ queryKey: questionKeys.myList() })
+      if (!isSessionGenerationCurrent(queryClient, sessionGeneration)) {
+        return { previous: undefined, sessionGeneration }
+      }
       const previous = queryClient.getQueryData<InfiniteData<MyQuestionsPage>>(
         questionKeys.myList()
       )
@@ -91,14 +99,16 @@ function useDeleteQuestion() {
               }
             : data
       )
-      return { previous }
+      return { previous, sessionGeneration }
     },
     onError: (_error, _questionId, context) => {
+      if (!isSessionGenerationCurrent(queryClient, context?.sessionGeneration)) return
       if (context?.previous) {
         queryClient.setQueryData(questionKeys.myList(), context.previous)
       }
     },
-    onSettled: () => {
+    onSettled: (_data, _error, _questionId, context) => {
+      if (!isSessionGenerationCurrent(queryClient, context?.sessionGeneration)) return
       queryClient.invalidateQueries({ queryKey: questionKeys.myList() })
     },
   })

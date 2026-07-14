@@ -17,6 +17,7 @@ import { useDeleteQuestion } from "@/features/question/hooks/use-question-mutati
 import { useMyQuestions } from "@/features/question/hooks/use-question-queries"
 import { adaptMyQuestionItem, type MyQuestionListItemView } from "@/features/question/lib/question-adapter"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 // 질문 내역 화면 — 목록 + 무한스크롤 + 롱프레스 수정/삭제. 탭바가 있는 (main) 화면.
 function QuestionsListPageContent() {
@@ -67,7 +68,7 @@ function QuestionsListPageContent() {
               <QuestionHistoryItem
                 key={item.questionId}
                 item={item}
-                onOpen={() => router.push(`/questions/${item.questionId}`)}
+                onOpen={() => router.push(routes.questionDetail(item.questionId))}
                 onLongPress={(rect) => setActive({ id: item.questionId, rect, view: item })}
               />
             ))

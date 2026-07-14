@@ -8,6 +8,14 @@ export interface Messages {
     back: string
     close: string
     more: string
+    retry: string
+  }
+  route: {
+    invalidLink: string
+  }
+  session: {
+    checking: string
+    backendUnavailable: string
   }
   login: {
     logoAlt: string
@@ -273,9 +281,21 @@ export interface Messages {
       default: string
     }
   }
+  profileImage: {
+    takePhoto: string
+    chooseAlbum: string
+    editLabel: string
+    deleteLabel: string
+    uploadFailed: string
+    invalidType: string
+    tooLarge: string
+    cropTitle: string
+    cropConfirm: string
+    cropCancel: string
+  }
   tabBar: {
     home: string
-    meetups: string
+    chat: string
     questions: string
     my: string
   }
@@ -406,6 +426,14 @@ export const ko: Messages = {
     back: "뒤로 가기",
     close: "닫기",
     more: "더보기",
+    retry: "다시 시도",
+  },
+  route: {
+    invalidLink: "유효하지 않은 링크입니다.",
+  },
+  session: {
+    checking: "로그인 상태를 확인하고 있어요.",
+    backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   login: {
     logoAlt: "로고",
@@ -671,9 +699,21 @@ export const ko: Messages = {
       default: "잠시 후 다시 시도해 주세요.",
     },
   },
+  profileImage: {
+    takePhoto: "사진 찍기",
+    chooseAlbum: "앨범에서 고르기",
+    editLabel: "프로필 사진 편집",
+    deleteLabel: "사진 삭제",
+    uploadFailed: "사진 업로드에 실패했어요. 잠시 후 다시 시도해주세요.",
+    invalidType: "이미지 파일만 업로드할 수 있어요.",
+    tooLarge: "10MB 이하의 이미지를 사용해주세요.",
+    cropTitle: "사진 편집",
+    cropConfirm: "확인",
+    cropCancel: "취소",
+  },
   tabBar: {
     home: "홈",
-    meetups: "모임",
+    chat: "채팅",
     questions: "질문",
     my: "마이",
   },

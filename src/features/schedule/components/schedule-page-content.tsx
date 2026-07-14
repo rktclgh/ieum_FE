@@ -17,6 +17,7 @@ import type { ScheduleEntry } from "@/features/schedule/lib/schedule-adapter"
 import { formatYearMonth, toDateKey } from "@/features/schedule/lib/calendar"
 import { getKstDateKey } from "@/lib/date/kst"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 function SchedulePageContent() {
   const router = useRouter()
@@ -84,7 +85,7 @@ function SchedulePageContent() {
       <div key={event.scheduleId} className="relative w-full">
         <ScheduleListItem
           event={event}
-          onSelect={() => router.push(`/chats/${event.roomId}`)}
+          onSelect={() => router.push(routes.chatRoom(event.roomId))}
           onMoreClick={event.isHost ? () => setActiveMenuId(event.scheduleId) : undefined}
         />
         {activeMenuId === event.scheduleId && (

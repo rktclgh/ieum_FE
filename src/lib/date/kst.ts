@@ -75,6 +75,26 @@ function getKstTimeParts(
   return { period, hour: hour12, minute }
 }
 
+// 그룹핑 루프에서 메시지마다 반복 호출되므로 formatter를 모듈 스코프에서 한 번만 생성해 재사용한다.
+const KST_MINUTE_KEY_FORMAT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: KST_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+})
+
+/** 그룹핑용 분 단위 키: KST 기준 "2026-07-09 08:21". 유효하지 않은 입력은 빈 문자열. */
+function getKstMinuteKey(input: Date | string | number): string {
+  const date = new Date(input)
+  if (isNaN(date.getTime())) return ""
+  const parts = KST_MINUTE_KEY_FORMAT.formatToParts(date)
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? ""
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`
+}
+
 export {
   getKstDateKey,
   formatKstFullDate,
@@ -83,4 +103,5 @@ export {
   formatKstTime,
   formatKstDateTimeLabel,
   getKstTimeParts,
+  getKstMinuteKey,
 }

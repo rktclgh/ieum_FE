@@ -11,6 +11,7 @@ import {
 } from "@/features/social-login/lib/oauth-state-storage"
 import * as socialSignupStorage from "@/features/social-login/lib/social-signup-storage"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 function KakaoCallbackContent() {
   const router = useRouter()
@@ -29,17 +30,17 @@ function KakaoCallbackContent() {
 
     if (error || !code || !consumeKakaoOAuthState(state)) {
       saveSocialLoginError("kakaoFailed")
-      router.replace("/login")
+      router.replace(routes.login())
       return
     }
 
-    const redirectUri = `${window.location.origin}/oauth/kakao/callback`
+    const redirectUri = `${window.location.origin}${routes.kakaoCallback()}`
     startSocialMutation.mutate(
       { provider: "kakao", code, redirectUri },
       {
         onSuccess: (response) => {
           if (!response.isNewUser) {
-            router.replace("/")
+            router.replace(routes.home())
             return
           }
 
@@ -48,14 +49,14 @@ function KakaoCallbackContent() {
             token: response.socialSignupToken,
             expiresInSeconds: response.expiresInSeconds,
           })
-          router.replace("/join/social")
+          router.replace(routes.socialJoin())
         },
         onError: (error) => {
           const code = getApiCode(error)
           if (code === "SUSPENDED_USER") saveSocialLoginError("suspended")
           else if (code === "INVALID_SOCIAL_TOKEN") saveSocialLoginError("invalidToken")
           else saveSocialLoginError("kakaoFailed")
-          router.replace("/login")
+          router.replace(routes.login())
         },
       }
     )
@@ -64,7 +65,7 @@ function KakaoCallbackContent() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center px-4">
       <div className="flex flex-col items-center gap-3 text-center">
-        <span className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-600" />
+        <span className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-400" />
         <p className="text-body-medium-16 text-gray-900">{messages.social.loading}</p>
       </div>
     </main>
