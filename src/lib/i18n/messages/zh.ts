@@ -319,7 +319,6 @@ export const zh: Messages = {
     removeFriendConfirmDescription: "确定要删除吗?",
     addFriendButton: "添加好友",
     requestedButton: "已请求",
-    startChatButton: "开始聊天",
     pinAction: "置顶",
     muteAction: "取消通知",
     notificationLabel: "通知",

@@ -320,7 +320,6 @@ export const en: Messages = {
     removeFriendConfirmDescription: "Are you sure you want to remove this friend?",
     addFriendButton: "Add friend",
     requestedButton: "Requested",
-    startChatButton: "Start chat",
     pinAction: "Pin",
     muteAction: "Mute",
     notificationLabel: "Notification",

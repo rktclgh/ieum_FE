@@ -319,7 +319,6 @@ export const ja: Messages = {
     removeFriendConfirmDescription: "本当に削除しますか?",
     addFriendButton: "友達リクエスト",
     requestedButton: "リクエスト済み",
-    startChatButton: "チャット開始",
     pinAction: "固定",
     muteAction: "通知オフ",
     notificationLabel: "通知",

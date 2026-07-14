@@ -320,7 +320,6 @@ export const vi: Messages = {
     removeFriendConfirmDescription: "Bạn có chắc chắn muốn xóa người này không?",
     addFriendButton: "Kết bạn",
     requestedButton: "Đã gửi",
-    startChatButton: "Bắt đầu trò chuyện",
     pinAction: "Ghim",
     muteAction: "Tắt thông báo",
     notificationLabel: "Thông báo đẩy",

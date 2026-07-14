@@ -320,7 +320,6 @@ export const ru: Messages = {
     removeFriendConfirmDescription: "Вы уверены, что хотите удалить этого друга?",
     addFriendButton: "Добавить в друзья",
     requestedButton: "Заявка отправлена",
-    startChatButton: "Начать чат",
     pinAction: "Закрепить",
     muteAction: "Выключить уведомления",
     notificationLabel: "Уведомление",

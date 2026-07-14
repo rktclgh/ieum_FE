@@ -320,7 +320,6 @@ export interface Messages {
     removeFriendConfirmDescription: string
     addFriendButton: string
     requestedButton: string
-    startChatButton: string
     pinAction: string
     muteAction: string
     notificationLabel: string
@@ -734,7 +733,6 @@ export const ko: Messages = {
     removeFriendConfirmDescription: "정말로 삭제하시겠습니까?",
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
-    startChatButton: "채팅 시작",
     pinAction: "고정",
     muteAction: "알림 해제",
     notificationLabel: "알림",
