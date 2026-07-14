@@ -116,6 +116,34 @@ test("session reset preserves me and empties active private observers", async ()
   }
 })
 
+test("a mutation from the current session applies its success data", async () => {
+  const queryClient = new QueryClient()
+  const previousUser = { userId: 1, nickname: "before-update" }
+  const updatedUser = { userId: 1, nickname: "after-update" }
+  const generation = getSessionGeneration(queryClient)
+  let successCalls = 0
+
+  queryClient.setQueryData(ME_QUERY_KEY, previousUser)
+  const profileMutation = queryClient.getMutationCache().build(queryClient, {
+    mutationKey: ["my", "profile"],
+    mutationFn: async () => updatedUser,
+    ...createSessionMutationCallbacks(queryClient, (data: typeof updatedUser) => {
+      successCalls += 1
+      queryClient.setQueryData(ME_QUERY_KEY, data)
+    }),
+  })
+
+  try {
+    await profileMutation.execute(undefined)
+
+    assert.equal(getSessionGeneration(queryClient), generation)
+    assert.equal(successCalls, 1)
+    assert.deepEqual(queryClient.getQueryData(ME_QUERY_KEY), updatedUser)
+  } finally {
+    queryClient.clear()
+  }
+})
+
 test("a mutation from an expired session cannot overwrite a new identity", async () => {
   const queryClient = new QueryClient()
   const previousUser = { userId: 1, nickname: "previous-session" }

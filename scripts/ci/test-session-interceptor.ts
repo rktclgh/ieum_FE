@@ -1,4 +1,6 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import test from "node:test"
 
 import axios, {
@@ -8,11 +10,99 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from "axios"
+import ts from "typescript"
 
 import { subscribeSessionExpired } from "../../src/features/session/lib/session-events.js"
 import { installSessionInterceptor } from "../../src/lib/api/session-interceptor.js"
 
 const REFRESH_URL = "/api/v1/auth/refresh"
+const REFRESH_FAILURE_TIMEOUT_MS = 2_000
+
+function hasProductionSessionInterceptorWiring(source: string) {
+  const sourceFile = ts.createSourceFile(
+    "client.ts",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  )
+  let importedBinding: string | undefined
+
+  for (const statement of sourceFile.statements) {
+    if (
+      !ts.isImportDeclaration(statement) ||
+      !ts.isStringLiteral(statement.moduleSpecifier) ||
+      statement.moduleSpecifier.text !== "@/lib/api/session-interceptor"
+    ) {
+      continue
+    }
+
+    const namedBindings = statement.importClause?.namedBindings
+    if (!namedBindings || !ts.isNamedImports(namedBindings)) continue
+
+    const interceptorImport = namedBindings.elements.find(
+      (element) =>
+        (element.propertyName?.text ?? element.name.text) ===
+        "installSessionInterceptor",
+    )
+    importedBinding = interceptorImport?.name.text
+  }
+
+  if (!importedBinding) return false
+
+  const apiClientDeclarationIndex = sourceFile.statements.findIndex(
+    (statement) =>
+      ts.isVariableStatement(statement) &&
+      statement.modifiers?.some(
+        (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+      ) === true &&
+      statement.declarationList.declarations.some(
+        (declaration) =>
+          ts.isIdentifier(declaration.name) &&
+          declaration.name.text === "apiClient",
+      ),
+  )
+
+  if (apiClientDeclarationIndex < 0) return false
+
+  return sourceFile.statements.some((statement, index) => {
+    if (
+      index <= apiClientDeclarationIndex ||
+      !ts.isExpressionStatement(statement) ||
+      !ts.isCallExpression(statement.expression)
+    ) {
+      return false
+    }
+
+    const call = statement.expression
+    return (
+      ts.isIdentifier(call.expression) &&
+      call.expression.text === importedBinding &&
+      call.arguments.length === 1 &&
+      ts.isIdentifier(call.arguments[0]) &&
+      call.arguments[0].text === "apiClient"
+    )
+  })
+}
+
+async function withTimeout<T>(promise: Promise<T>, label: string) {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(
+        new Error(
+          `${label} did not settle within ${REFRESH_FAILURE_TIMEOUT_MS}ms`,
+        ),
+      )
+    }, REFRESH_FAILURE_TIMEOUT_MS)
+  })
+
+  try {
+    return await Promise.race([promise, timeout])
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId)
+  }
+}
 
 function createResponse(
   config: InternalAxiosRequestConfig,
@@ -99,6 +189,22 @@ test("concurrent 401 responses share one refresh and retry each request once", a
   assert.equal(attempts.get("/api/v1/private/two"), 2)
 })
 
+test("production apiClient installs the exported session interceptor", () => {
+  const source = readFileSync(
+    resolve(process.cwd(), "src/lib/api/client.ts"),
+    "utf8",
+  )
+  const missingInstallCall = `
+    import axios from "axios"
+    import { installSessionInterceptor } from "@/lib/api/session-interceptor"
+
+    export const apiClient = axios.create()
+  `
+
+  assert.equal(hasProductionSessionInterceptorWiring(missingInstallCall), false)
+  assert.equal(hasProductionSessionInterceptorWiring(source), true)
+})
+
 async function verifyRefreshFailure(refreshStatus: number) {
   let notifications = 0
   let refreshCalls = 0
@@ -118,7 +224,10 @@ async function verifyRefreshFailure(refreshStatus: number) {
 
   try {
     await assert.rejects(
-      client.get("/api/v1/private"),
+      withTimeout(
+        client.get("/api/v1/private"),
+        `refresh ${refreshStatus} failure`,
+      ),
       (error: unknown) =>
         axios.isAxiosError(error) && error.response?.status === refreshStatus,
     )
