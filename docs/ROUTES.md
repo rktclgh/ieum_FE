@@ -11,10 +11,10 @@
 - Next.js 16은 빌드 도구로만 사용한다. 운영에는 `out/` 정적 파일만 배포한다.
 - 내부 이동은 `src/lib/navigation/routes.ts`의 route builder를 기준으로 한다.
 - `trailingSlash: true`에 맞춰 고정 페이지 URL은 끝에 `/`를 붙인다.
-- 루트 `/`와 외부 OAuth 등록값인 `/oauth/kakao/callback`은 예외다. Kakao callback에는 끝 `/`를 붙이지 않는다.
-- Kakao 지도·장소 API 전환은 Kakao OAuth와 별개다. 로그인 흐름과 callback URI는 변경하지 않는다.
+- 루트 `/`를 제외한 고정 페이지는 trailing slash canonical을 사용한다. Kakao callback도 `/oauth/kakao/callback/`로 통일한다.
+- Kakao 지도·장소 API 전환은 Kakao OAuth와 별개다. OAuth 개발자 콘솔과 Spring allowlist에는 trailing-slash callback URI를 동일하게 등록한다.
 - 런타임 ID는 동적 path segment가 아니라 고정 path의 query로 전달한다. 빌드 시 ID 목록을 열거하지 않는다.
-- ID query는 `/^[1-9]\d*$/`와 `Number.isSafeInteger`를 모두 통과해야 한다.
+- ID query와 route builder 입력은 positive safe integer여야 한다. builder는 잘못된 입력에 `RangeError`를 던진다.
 - 잘못된 ID에서는 data component를 mount하지 않는다. 해당 화면의 API·WebSocket 요청도 시작하지 않는다.
 - `useSearchParams()`는 각 page에서 가장 가까운 `Suspense` 아래 client child에서만 읽는다.
 - 필터·정렬·탭·검색어처럼 화면 상태를 나타내는 값도 query로 전달한다.
@@ -25,10 +25,10 @@
 
 | Canonical URL | 화면 | 백엔드 API | 접근 계약 |
 |---|---|---|---|
-| `/login/` | 로그인 (아이디·비밀번호, 소셜, 언어 설정) | `POST /auth/login` | 이 경로만 guest-only |
-| `/join/` | 회원가입 — 계정 만들기 | `POST /auth/signup` | 이 경로만 guest-only |
-| `/join/social/` | 소셜 회원가입 — 프로필 설정 | `PATCH /users/me` | 기존 `sessionStorage` 검증 유지, guest-only 아님 |
-| `/oauth/kakao/callback` | Kakao OAuth callback | OAuth code 교환 | public shell, 외부 등록 URI 유지 |
+| `/login/` | 로그인 (아이디·비밀번호, 소셜, 언어 설정) | `POST /auth/login` | guest-only |
+| `/join/` | 회원가입 — 계정 만들기 | `POST /auth/signup` | `/join/**` 공통 guest-only layout |
+| `/join/social/` | 소셜 회원가입 — 프로필 설정 | `PATCH /users/me` | guest-only + 기존 `sessionStorage` 검증 |
+| `/oauth/kakao/callback/` | Kakao OAuth callback | OAuth code 교환 | public shell, 개발자 콘솔·Spring allowlist와 정확히 일치 |
 
 ### 홈 및 모임
 
@@ -96,15 +96,15 @@
 
 `useMe()`가 브라우저 인증 상태의 단일 진실 공급원이다.
 
-| 상태 | `/my/**` | `/login/`, `/join/` |
+| 상태 | `/my/**` | `/login/`, `/join/**` |
 |---|---|---|
 | 확인 중 | 확인 UI | 확인 UI |
 | 사용자 있음 | content | `/`로 replace |
 | guest 확정 | `/login/`으로 replace | content |
 | network/5xx | retry UI, redirect 없음 | retry UI, redirect 없음 |
 
-- guest-only 정책은 정확히 `/login/`과 `/join/`에만 적용한다. `/join/social/`에는 적용하지 않는다.
-- refresh 401/403만 세션 만료로 처리한다. private query cache를 비운 뒤 `['me'] = null`로 둔다.
+- guest-only 정책은 `/login/`과 `/join/**`에 적용한다. `/join/social/`은 layout gate 뒤에서 sessionStorage 토큰도 별도로 검증한다.
+- refresh 401/403만 세션 만료로 처리한다. private query data를 비우고 active public query를 새 세션 기준으로 refetch한 뒤 `['me'] = null`로 둔다.
 - refresh network/5xx는 사용자 identity와 cache를 보존한다. 서버 장애를 로그아웃으로 바꾸지 않는다.
 - chats, friends, meetups, questions, OAuth callback은 정적 public shell이다. 정적 페이지 노출은 데이터 접근 권한을 뜻하지 않는다.
 - Spring Security가 private API, mutation, WebSocket 연결을 최종적으로 인증·인가해야 한다. 프론트 client gate는 보안 경계가 아니다.

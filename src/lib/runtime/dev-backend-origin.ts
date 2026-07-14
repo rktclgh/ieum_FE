@@ -14,10 +14,13 @@ function resolveDevBackendOrigin(
   return url.origin
 }
 
-const DEV_BACKEND_ORIGIN = resolveDevBackendOrigin(
-  process.env.NODE_ENV,
-  process.env.NEXT_PUBLIC_DEV_BACKEND_ORIGIN
-)
+const DEV_BACKEND_ORIGIN =
+  process.env.NODE_ENV === "development"
+    ? resolveDevBackendOrigin(
+        "development",
+        process.env.NEXT_PUBLIC_DEV_BACKEND_ORIGIN
+      )
+    : undefined
 
 function toWebSocketUrl(origin: string): string {
   const url = new URL("/ws", origin)

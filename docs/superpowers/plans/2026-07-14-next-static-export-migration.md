@@ -15,7 +15,7 @@
 - production API와 WebSocket은 same-origin이다.
 - runtime ID를 `generateStaticParams()`로 열거하지 않는다.
 - 새 dependency를 추가하지 않는다.
-- 디자인, API payload, `/join/social`, `/questions` 탭, Kakao callback URI의 현행 동작을 바꾸지 않는다.
+- 디자인, API payload, `/questions` 탭은 바꾸지 않는다. `/join/**` guest-only와 trailing-slash Kakao callback은 원본 migration 계약을 따른다.
 - 72번 CI/CD workflow와 BE 저장소 파일은 수정하지 않는다.
 - 병렬 worker는 지정된 worktree와 write scope만 수정하고 `pnpm build`를 실행하지 않는다.
 
@@ -35,9 +35,9 @@
 - Create: `scripts/ci/test-client-contracts.sh`
 
 **Interfaces:**
-- Produces: exact route strings, positive-safe-integer parsing, auth state resolution, session-expired subscription, refresh failure classification, WS URL conversion.
+- Produces: exact route strings, positive-safe-integer parsing and builder rejection, auth state resolution, session-expired subscription, refresh failure classification, WS URL conversion.
 
-- [ ] Write route tests for all six query URLs, fixed URLs, URL encoding, invalid IDs `null`, `""`, `0`, `-1`, `01`, decimal, suffix, and unsafe integer.
+- [ ] Write route tests for all six query URLs, fixed URLs, URL encoding, invalid parser inputs, and `RangeError` from every numeric builder for zero, negative, decimal, non-finite, and unsafe values.
 - [ ] Run `bash scripts/ci/test-route-contracts.sh`; expect TS2307 because `src/lib/navigation/routes.ts` does not exist.
 - [ ] Write session tests for pending/user/null/error, expired listener unsubscribe, 401/403 vs 5xx/network, and retry-once marker.
 - [ ] Run `bash scripts/ci/test-session-contracts.sh`; expect TS2307 for the three session lib modules.
@@ -59,7 +59,7 @@
 - Modify: `src/lib/i18n/messages/{ko,en,ja,vi,ru,th,zh}.ts`
 
 **Interfaces:**
-- Produces: `parsePositiveInteger(value): number | null` and `routes` builders.
+- Produces: `parsePositiveInteger(value): number | null`, fail-fast positive-safe-integer guards, and `routes` builders.
 - Consumes: existing content components without changing their props.
 
 - [ ] Implement the minimal route helper until `bash scripts/ci/test-route-contracts.sh` passes.
@@ -118,7 +118,7 @@
 - Consumes: Task 2 `routes` only; external OAuth URLs and `/api/**` strings stay external/API.
 
 - [ ] Replace every runtime dynamic URL with its builder.
-- [ ] Convert fixed internal links where needed to trailing-slash builders; keep `routes.kakaoCallback()` unslashed to preserve provider registration.
+- [ ] Convert fixed internal links to trailing-slash builders, including canonical `/oauth/kakao/callback/`; require the Kakao console and Spring allowlist to use the same URI before deployment.
 - [ ] Fix friend fallback arrays as module constants while touching that file.
 - [ ] Run route contracts and `rg -n '/chats/\$\{|/meetups/\$\{|/questions/\$\{' src`; expect no navigation hits.
 - [ ] Commit `refactor: #82 내부 이동 URL 계약 통합`.
@@ -130,6 +130,7 @@
 - Create: `src/features/session/components/auth-gate.tsx`
 - Create: `src/features/session/components/session-route-state.tsx`
 - Create: `src/app/my/layout.tsx`
+- Create: `src/app/join/layout.tsx`
 - Modify: three `src/app/my/**/page.tsx`
 - Modify: `src/app/login/page.tsx`, `src/app/join/page.tsx`
 - Modify: session API/hooks, `src/lib/api/client.ts`, `src/lib/query/query-provider.tsx`
@@ -137,12 +138,12 @@
 
 **Interfaces:**
 - Consumes: Task 2 routes and Task 3 auth/session helpers.
-- Produces: protected `/my/**`, exact-page guest gates for `/login` and `/join`, cache reset on expiry/logout, me invalidation after all login variants.
+- Produces: protected `/my/**`, guest gates for `/login` and `/join/**`, cache reset on expiry/logout, me invalidation after all login variants.
 
-- [ ] Wrap only login and join pages in guest-only gate; do not create a join layout that also gates `/join/social`.
+- [ ] Keep `/login` guest-only and wrap `/join/**` in a shared guest-only layout so `/join/social/` cannot bypass the policy.
 - [ ] Replace three my server pages with static shells under protected layout.
 - [ ] Publish expiry once from the single refresh promise on refresh 401/403; do nothing to identity cache on network/5xx.
-- [ ] On expiry/logout run `queryClient.clear()` then set `["me"]` to null.
+- [ ] On expiry/logout invalidate the session generation, cancel/clear private queries, refetch active public queries, clear disabled observed public queries, remove unobserved public queries, then set `["me"]` to null.
 - [ ] Invalidate `["me"]` after password login, existing social login, and social signup.
 - [ ] Remove MyPageContent's response-error redirect and stale server-hydration comments.
 - [ ] Run session contracts, lint, and typecheck.
@@ -171,10 +172,11 @@
 ### Task 8: Documentation, Final Review, and PR
 
 **Files:**
-- Modify: `docs/ROUTES.md`, `docs/static-deploy-plan.md`, `docs/map-implementation.md`, `docs/be-map-handoff.md`, `PORTFOLIO.md`
+- Modify: `docs/ROUTES.md`, `docs/map-implementation.md`, `docs/be-map-handoff.md`
+- Delete: `docs/static-deploy-plan.md`
 - Preserve: 72 CI/CD worktree files and BE repository.
 
-- [ ] Replace stale generateStaticParams/rewrite/server claims with the implemented route, auth, artifact, and BE handoff contract.
+- [ ] Delete the stale static deploy plan and replace its references with the implemented route, auth, artifact, and BE handoff contracts.
 - [ ] Run `pnpm install --frozen-lockfile`, `pnpm verify`, `git diff --check`, and confirm only `.ai/` remains unrelated/untracked.
 - [ ] Review the full branch diff against this plan; fix all Critical/Important findings and rerun covering tests.
 - [ ] Push the existing issue 82 branch and create a draft PR to `develop` with `close #82`, changed files, checks, and explicit BE compatibility follow-up.

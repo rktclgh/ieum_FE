@@ -1,6 +1,7 @@
 import type { QueryClient, QueryKey } from "@tanstack/react-query"
 
 const ME_QUERY_KEY = ["me"] as const
+const PUBLIC_QUERY_META = { sessionScope: "public" } as const
 const sessionGenerations = new WeakMap<QueryClient, number>()
 
 function getSessionGeneration(queryClient: QueryClient) {
@@ -35,6 +36,10 @@ function isExactMeQuery(queryKey: QueryKey) {
   return queryKey.length === 1 && queryKey[0] === ME_QUERY_KEY[0]
 }
 
+function isPublicQuery(meta: Record<string, unknown> | undefined) {
+  return meta?.sessionScope === PUBLIC_QUERY_META.sessionScope
+}
+
 async function resetSessionCache(queryClient: QueryClient) {
   sessionGenerations.set(
     queryClient,
@@ -47,19 +52,40 @@ async function resetSessionCache(queryClient: QueryClient) {
   await meQuery?.cancel({ silent: true })
   meQuery?.reset()
 
-  queryCache.getAll().forEach((query) => {
-    if (isExactMeQuery(query.queryKey)) return
+  const activePublicQueryKeys: QueryKey[] = []
 
+  for (const query of queryCache.getAll()) {
+    if (isExactMeQuery(query.queryKey)) continue
+
+    if (isPublicQuery(query.meta)) {
+      if (query.isActive()) {
+        activePublicQueryKeys.push(query.queryKey)
+      } else if (query.getObserversCount() === 0) {
+        queryCache.remove(query)
+      } else {
+        await query.cancel({ silent: true })
+        query.reset()
+      }
+      continue
+    }
+
+    await query.cancel({ silent: true })
     if (query.getObserversCount() > 0) {
       query.reset()
-      return
+      continue
     }
 
     queryCache.remove(query)
-  })
+  }
 
   queryClient.getMutationCache().clear()
   queryClient.setQueryData(ME_QUERY_KEY, null)
+
+  await Promise.all(
+    activePublicQueryKeys.map((queryKey) =>
+      queryClient.resetQueries({ queryKey, exact: true, type: "active" })
+    )
+  )
 }
 
 export {
@@ -67,5 +93,6 @@ export {
   getSessionGeneration,
   isSessionGenerationCurrent,
   ME_QUERY_KEY,
+  PUBLIC_QUERY_META,
   resetSessionCache,
 }

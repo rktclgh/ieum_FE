@@ -45,7 +45,7 @@ test("fixed route builders preserve the static export path contract", () => {
       login: "/login/",
       join: "/join/",
       socialJoin: "/join/social/",
-      kakaoCallback: "/oauth/kakao/callback",
+      kakaoCallback: "/oauth/kakao/callback/",
       chats: "/chats/",
       questions: "/questions/",
       friends: "/friends/",
@@ -77,15 +77,23 @@ test("detail route builders produce the six exact canonical query URLs", () => {
   )
 })
 
-test("chatReport safely encodes messageId and optional target query values", () => {
-  const chatReport = routes.chatReport as unknown as (
-    chatId: number,
-    messageId: string,
-    target?: string
-  ) => string
+test("detail route builders reject invalid numeric input", () => {
+  const invalidIds = [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]
 
+  for (const value of invalidIds) {
+    assert.throws(() => routes.chatRoom(value), RangeError)
+    assert.throws(() => routes.chatNotices(value), RangeError)
+    assert.throws(() => routes.chatSchedule(value), RangeError)
+    assert.throws(() => routes.meetupDetail(value), RangeError)
+    assert.throws(() => routes.questionDetail(value), RangeError)
+    assert.throws(() => routes.chatReport(value, 29), RangeError)
+    assert.throws(() => routes.chatReport(11, value), RangeError)
+  }
+})
+
+test("chatReport safely encodes optional target query values", () => {
   assert.equal(
-    chatReport(11, "29&target=forged", "홍 길동 & 운영팀?"),
-    "/chats/report/?chatId=11&messageId=29%26target%3Dforged&target=%ED%99%8D+%EA%B8%B8%EB%8F%99+%26+%EC%9A%B4%EC%98%81%ED%8C%80%3F"
+    routes.chatReport(11, 29, "홍 길동 & 운영팀?"),
+    "/chats/report/?chatId=11&messageId=29&target=%ED%99%8D+%EA%B8%B8%EB%8F%99+%26+%EC%9A%B4%EC%98%81%ED%8C%80%3F"
   )
 })

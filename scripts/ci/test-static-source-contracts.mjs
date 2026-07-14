@@ -215,7 +215,9 @@ test("fixed query route literals stay centralized in the route builders", () => 
 test("auth gates, session reset subscription, and login invalidation stay wired", () => {
   assert.match(read("src/app/my/layout.tsx"), /<AuthGate policy="protected">/)
   assert.match(read("src/app/login/page.tsx"), /<AuthGate policy="guest-only">/)
-  assert.match(read("src/app/join/page.tsx"), /<AuthGate policy="guest-only">/)
+  assert.equal(fs.existsSync(path.join(repoRoot, "src/app/join/layout.tsx")), true)
+  assert.match(read("src/app/join/layout.tsx"), /<AuthGate policy="guest-only">/)
+  assert.doesNotMatch(read("src/app/join/page.tsx"), /\bAuthGate\b/)
   assert.doesNotMatch(read("src/app/join/social/page.tsx"), /\bAuthGate\b/)
 
   const authGateFile = parse("src/features/session/components/auth-gate.tsx")
@@ -291,6 +293,10 @@ test("auth gates, session reset subscription, and login invalidation stay wired"
   )
 })
 
+test("obsolete static deploy plan stays removed", () => {
+  assert.equal(fs.existsSync(path.join(repoRoot, "docs/static-deploy-plan.md")), false)
+})
+
 test("profile and settings mutations install the session-generation callbacks", () => {
   const relativePath = "src/features/my/hooks/use-my-mutations.ts"
   const sourceFile = parse(relativePath)
@@ -347,6 +353,37 @@ test("profile and settings mutations install the session-generation callbacks", 
       callbackText.includes("queryClient.setQueryData<UserMeResponse>(ME_QUERY_KEY"),
       `${functionName} must update only the shared me cache after the generation check`,
     )
+  }
+})
+
+test("question delete rollback and invalidation stay session-generation guarded", () => {
+  const source = compact(read("src/features/question/hooks/use-question-mutations.ts"))
+
+  assert.ok(source.includes("constsessionGeneration=getSessionGeneration(queryClient)"))
+  assert.ok(source.includes("return{previous,sessionGeneration}"))
+  assert.equal(
+    source.match(
+      /if\(!isSessionGenerationCurrent\(queryClient,context\?\.sessionGeneration\)\)return/g,
+    )?.length,
+    2,
+  )
+})
+
+test("public data hooks opt into the public session query scope", () => {
+  const expectedPublicMetaCounts = new Map([
+    ["src/features/question/hooks/use-question-queries.ts", 2],
+    ["src/features/meetup/hooks/use-meetup-queries.ts", 2],
+    ["src/features/map/hooks/use-place-search.ts", 1],
+    ["src/features/map/hooks/use-pin-list.ts", 1],
+    ["src/features/map/hooks/use-geocode.ts", 1],
+    ["src/features/map/hooks/use-map-pins.ts", 1],
+    ["src/features/map/hooks/use-reverse-geocode.ts", 1],
+  ])
+
+  for (const [relativePath, expectedCount] of expectedPublicMetaCounts) {
+    const source = read(relativePath)
+    assert.match(source, /import \{ PUBLIC_QUERY_META \}/, relativePath)
+    assert.equal(source.match(/meta: PUBLIC_QUERY_META/g)?.length, expectedCount, relativePath)
   }
 })
 

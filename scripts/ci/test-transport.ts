@@ -1,4 +1,6 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import test from "node:test"
 
 import {
@@ -20,6 +22,18 @@ test("normalizes a trailing slash and replaces any origin path with /ws", () => 
 
 test("ignores a configured backend origin outside development", () => {
   assert.equal(resolveDevBackendOrigin("production", "not a URL"), undefined)
+})
+
+test("guards the public development origin behind a compile-time development branch", () => {
+  const source = readFileSync(
+    resolve(process.cwd(), "src/lib/runtime/dev-backend-origin.ts"),
+    "utf8"
+  ).replace(/\s+/g, "")
+
+  assert.match(
+    source,
+    /constDEV_BACKEND_ORIGIN=process\.env\.NODE_ENV==="development"\?resolveDevBackendOrigin\("development",process\.env\.NEXT_PUBLIC_DEV_BACKEND_ORIGIN\):undefined/,
+  )
 })
 
 test("defaults local development to the Spring server when no override is configured", () => {

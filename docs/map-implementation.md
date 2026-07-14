@@ -6,11 +6,12 @@
 > 스택: **FE** `ieum_FE` (Next.js App Router, Leaflet) / **BE** `ieum_BE` (Spring Boot, `shinhan.fibri.ieum`)
 > 배포 계약: FE는 `out/`만 만들고, 별도 Spring 작업이 exact FE SHA의 산출물을 `app-main/src/main/resources/static/`에서 같은 오리진으로 서빙
 > 지도·장소 제공자: **Kakao 지도/장소 API는 사용하지 않고 네이버로 전환** (아래 2번)
-> Kakao OAuth는 이 전환과 무관하며 unslashed `/oauth/kakao/callback` 계약을 유지
+> Kakao OAuth callback canonical은 `/oauth/kakao/callback/`이며 개발자 콘솔·Spring allowlist와 일치해야 함
 >
 > 관련 문서:
 > - [be-map-handoff.md](./be-map-handoff.md) — BE 착수 문서(엔드포인트 계약·매핑·키)
-> - [static-deploy-plan.md](./static-deploy-plan.md) — 정적 export 전환 전반(인증/라우팅 포함)
+> - [ROUTES.md](./ROUTES.md) — 정적 export 라우트·인증 계약
+> - [Next static export 설계](./superpowers/specs/2026-07-14-next-static-export-migration-design.md) — 런타임·Spring 인계 경계
 
 ---
 
@@ -131,7 +132,7 @@ map.on("click", async (e) => {
 
 ## 4. 프론트엔드(ieum_FE) 현재 계약
 
-정적 export와 지도 호출의 경계는 [static-deploy-plan.md](./static-deploy-plan.md)를 따른다.
+정적 export와 지도 호출의 경계는 [ROUTES.md](./ROUTES.md)와 [Next static export 설계](./superpowers/specs/2026-07-14-next-static-export-migration-design.md)를 따른다.
 
 - FE 지도 API는 상대 경로 `/api/places/search`, `/api/places/geocode`, `/api/places/reverse-geocode`만 호출한다.
 - production REST와 WebSocket은 브라우저 same-origin이다.
@@ -139,7 +140,7 @@ map.on("click", async (e) => {
 - Next route handler, Proxy, 운영 rewrite/header, request-time cookie/server fetch는 사용하지 않는다.
 - 배포 산출물은 `output: "export"`, `trailingSlash: true`, `images.unoptimized: true`로 만든 `out/`이다.
 - 런타임 상세 화면은 여섯 고정 query route를 사용하며 ID는 strict positive safe integer로 검증한다.
-- `/my/**`는 `useMe()` 기반 client gate다. `/login/`과 `/join/`만 guest-only이며 `/join/social/`은 기존 검증을 유지한다.
+- `/my/**`는 `useMe()` 기반 client gate다. `/login/`과 `/join/**`는 guest-only이며 `/join/social/`은 sessionStorage 검증도 유지한다.
 - follow-me 추적은 지도 기능의 선택 범위이며 정적 배포 계약과 분리한다.
 
 ---

@@ -91,6 +91,14 @@ done
 static_asset=$(find out/_next/static -type f -size +0c -print -quit 2>/dev/null || true)
 [[ -n "$static_asset" ]] || fail "missing Next static assets"
 
+if grep -R -q -E 'https?://localhost:8080|https?://127\.0\.0\.1:8080|NEXT_PUBLIC_(DEV_BACKEND_ORIGIN|API_BASE_URL)|API_BASE_URL' out/_next/static; then
+  fail "development or legacy backend origin leaked into the production bundle"
+fi
+
+if grep -R -q -i -E 'CI_GITHUB_TOKEN|SSH_PRIVATE_KEY|APP_MAIN_ENV_FILE|client[-_]?secret|refresh[_-]?token' out/_next/static; then
+  fail "sensitive deployment identifier leaked into the production bundle"
+fi
+
 local_font=$(find out/_next/static -type f -name '*.woff2' -size +0c -print -quit 2>/dev/null || true)
 [[ -n "$local_font" ]] || fail "missing bundled local WOFF2 font"
 
