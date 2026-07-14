@@ -43,6 +43,9 @@ function useJoinFlow({ onSignupSuccess, onAutoLoginFailed }: UseJoinFlowOptions 
   // 이메일 형식 에러는 타이핑 중이 아니라 "인증하기" 버튼을 눌렀을 때만 표출한다.
   const [showEmailError, setShowEmailError] = React.useState(false)
   const avatarCrop = useAvatarCropState()
+  // signupMutation.isPending 는 signup 응답 즉시 false 가 되므로, 이어지는 자동로그인/이미지 업로드까지
+  // 로딩 상태를 유지해 제출 버튼 재활성화(중복 가입 요청)를 막는다.
+  const [isFinalizing, setIsFinalizing] = React.useState(false)
 
   const checkEmailMutation = useCheckEmailDuplicate()
   const sendCodeMutation = useSendEmailVerificationCode()
@@ -142,27 +145,33 @@ function useJoinFlow({ onSignupSuccess, onAutoLoginFailed }: UseJoinFlowOptions 
   }
 
   const handleSignupSubmit = () => {
-    if (!profile.values) return
+    if (!profile.values || signupMutation.isPending || isFinalizing) return
     signupMutation.mutate(
       { email, password, ...profile.values, emailVerificationToken },
       {
         onSuccess: async () => {
+          // signup 이후 자동로그인·이미지 업로드가 끝날 때까지 로딩 상태를 유지한다(중복 제출 방지).
+          setIsFinalizing(true)
           try {
-            await login({ email, password })
-          } catch {
-            // 자동로그인 실패 시 사진 업로드는 건너뛰고 /login 으로 폴백 이동시킨다(비로그인 상태로 홈 진입 방지).
-            onAutoLoginFailed?.()
-            return
-          }
-          if (avatarCrop.croppedBlob) {
             try {
-              const fileId = await uploadImage(avatarCrop.croppedBlob, "profile")
-              await updateProfileImage(fileId)
+              await login({ email, password })
             } catch {
-              // 사진 업로드 실패는 가입/로그인 완료를 막지 않는다(마이에서 재시도 가능)
+              // 자동로그인 실패 시 사진 업로드는 건너뛰고 /login 으로 폴백 이동시킨다(비로그인 상태로 홈 진입 방지).
+              onAutoLoginFailed?.()
+              return
             }
+            if (avatarCrop.croppedBlob) {
+              try {
+                const fileId = await uploadImage(avatarCrop.croppedBlob, "profile")
+                await updateProfileImage(fileId)
+              } catch {
+                // 사진 업로드 실패는 가입/로그인 완료를 막지 않는다(마이에서 재시도 가능)
+              }
+            }
+            onSignupSuccess?.()
+          } finally {
+            setIsFinalizing(false)
           }
-          onSignupSuccess?.()
         },
       }
     )
@@ -201,7 +210,11 @@ function useJoinFlow({ onSignupSuccess, onAutoLoginFailed }: UseJoinFlowOptions 
       ...profile,
       isNextEnabled: profile.isValid,
       onSubmit: handleSignupSubmit,
-      signupMutation,
+      signupMutation: {
+        isPending: signupMutation.isPending || isFinalizing,
+        isError: signupMutation.isError,
+        error: signupMutation.error,
+      },
       ...avatarCrop,
     },
   }

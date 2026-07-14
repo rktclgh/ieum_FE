@@ -76,7 +76,7 @@ function ProfileAvatarButton({ previewUrl, onFileSelected, className }: ProfileA
         ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
+        capture="user"
         onChange={handleChange}
         className="hidden"
       />

@@ -51,6 +51,8 @@ function EditProfileForm({ user }: { user: MeUser }) {
   const [editorSrc, setEditorSrc] = React.useState<string | null>(null)
 
   const handleFileSelected = (file: File) => {
+    // 방어적: 편집기 재선택 시 이전 objectURL 을 먼저 폐기해 리크를 막는다.
+    if (editorSrc) URL.revokeObjectURL(editorSrc)
     setEditorSrc(URL.createObjectURL(file))
   }
 

@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { useProfileForm } from "@/features/join/hooks/use-profile-form"
@@ -17,9 +18,12 @@ function useSocialSignupFlow(socialSignupToken: string) {
   const profile = useProfileForm()
   const signupMutation = useCompleteSocialSignup()
   const avatarCrop = useAvatarCropState()
+  // signupMutation.isPending 는 가입 응답 즉시 false 가 되므로, 이어지는 이미지 업로드까지
+  // 로딩 상태를 유지해 제출 버튼 재활성화(중복 가입 요청)를 막는다.
+  const [isFinalizing, setIsFinalizing] = React.useState(false)
 
   const handleSubmit = () => {
-    if (!profile.values || !socialSignupToken || signupMutation.isPending) return
+    if (!profile.values || !socialSignupToken || signupMutation.isPending || isFinalizing) return
 
     signupMutation.mutate(
       {
@@ -29,16 +33,22 @@ function useSocialSignupFlow(socialSignupToken: string) {
       {
         onSuccess: async () => {
           // 소셜 가입 완료 시점에 세션이 이미 수립되므로 별도 로그인 없이 바로 업로드한다.
-          if (avatarCrop.croppedBlob) {
-            try {
-              const fileId = await uploadImage(avatarCrop.croppedBlob, "profile")
-              await updateProfileImage(fileId)
-            } catch {
-              // 사진 업로드 실패는 가입 완료를 막지 않는다(마이에서 재시도 가능)
+          // 업로드가 끝날 때까지 로딩 상태를 유지한다(중복 제출 방지).
+          setIsFinalizing(true)
+          try {
+            if (avatarCrop.croppedBlob) {
+              try {
+                const fileId = await uploadImage(avatarCrop.croppedBlob, "profile")
+                await updateProfileImage(fileId)
+              } catch {
+                // 사진 업로드 실패는 가입 완료를 막지 않는다(마이에서 재시도 가능)
+              }
             }
+            socialSignupStorage.clear()
+            router.push(routes.home())
+          } finally {
+            setIsFinalizing(false)
           }
-          socialSignupStorage.clear()
-          router.push(routes.home())
         },
         onError: (error) => {
           const code = getApiCode(error)
@@ -59,7 +69,11 @@ function useSocialSignupFlow(socialSignupToken: string) {
       ...profile,
       isNextEnabled: profile.isValid,
       onSubmit: handleSubmit,
-      signupMutation,
+      signupMutation: {
+        isPending: signupMutation.isPending || isFinalizing,
+        isError: signupMutation.isError,
+        error: signupMutation.error,
+      },
       ...avatarCrop,
     },
   }
