@@ -9,7 +9,6 @@ interface QuestionAnswerAuthorItemProps {
   answer: QuestionAnswerView
   isMine: boolean
   isReported: boolean
-  canAccept: boolean
   onAccept: () => void
   onStartChat: () => void
   onReport: () => void
@@ -19,7 +18,6 @@ function QuestionAnswerAuthorItem({
   answer,
   isMine,
   isReported,
-  canAccept,
   onAccept,
   onStartChat,
   onReport,
@@ -62,20 +60,13 @@ function QuestionAnswerAuthorItem({
             {messages.question.personalChatLabel}
           </Button>
         ) : answer.isAccepted ? (
-          <span className="shrink-0 rounded-full bg-primary-600 px-2.5 py-1 text-body-medium-14 text-white">
-            {messages.question.acceptedBadge}
-          </span>
+          <Button variant="primary" size="sm" onClick={onStartChat}>
+            {messages.question.startChatLabel}
+          </Button>
         ) : (
-          <div className="flex shrink-0 items-center gap-2">
-            {canAccept ? (
-              <Button variant="outline" size="sm" onClick={onAccept}>
-                {messages.question.acceptButton}
-              </Button>
-            ) : null}
-            <Button variant="primary" size="sm" onClick={onStartChat}>
-              {messages.question.startChatLabel}
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={onAccept}>
+            {messages.question.acceptButton}
+          </Button>
         )}
       </div>
 

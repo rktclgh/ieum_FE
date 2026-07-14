@@ -188,7 +188,7 @@ export const vi: Messages = {
     acceptedBadge: "Đã chọn",
     acceptButton: "Chọn",
     acceptConfirmTitle: "Chọn câu trả lời này?",
-    acceptConfirmDescription: "Khi chọn, câu hỏi sẽ được đánh dấu là đã giải quyết và không thể hoàn tác.",
+    acceptConfirmDescription: "Khi chọn, bạn có thể bắt đầu trò chuyện với người trả lời này.",
     acceptConfirmCancel: "Hủy",
     createTitle: "Đặt câu hỏi",
     editTitle: "Sửa câu hỏi",

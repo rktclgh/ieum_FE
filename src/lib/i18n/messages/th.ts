@@ -187,7 +187,7 @@ export const th: Messages = {
     acceptedBadge: "เลือกแล้ว",
     acceptButton: "เลือก",
     acceptConfirmTitle: "เลือกคำตอบนี้หรือไม่?",
-    acceptConfirmDescription: "เมื่อเลือกแล้ว คำถามจะถูกทำเครื่องหมายว่าแก้ไขแล้วและไม่สามารถย้อนกลับได้",
+    acceptConfirmDescription: "เมื่อเลือกแล้ว คุณจะสามารถเริ่มแชทกับผู้เขียนคำตอบนี้ได้",
     acceptConfirmCancel: "ยกเลิก",
     createTitle: "ถามคำถาม",
     editTitle: "แก้ไขคำถาม",

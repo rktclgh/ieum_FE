@@ -166,7 +166,6 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                       answer={a}
                       isMine={a.authorUserId === me.data?.userId}
                       isReported={reportedIds.has(a.answerId)}
-                      canAccept={!question.isResolved && !a.isAccepted}
                       onAccept={() => setPendingAcceptId(a.answerId)}
                       onStartChat={() => handleStartChat(a.authorUserId)}
                       onReport={() => setPendingReportId(a.answerId)}

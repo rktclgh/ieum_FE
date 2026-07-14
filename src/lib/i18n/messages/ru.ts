@@ -188,7 +188,7 @@ export const ru: Messages = {
     acceptedBadge: "Принят",
     acceptButton: "Принять",
     acceptConfirmTitle: "Принять этот ответ?",
-    acceptConfirmDescription: "После принятия вопрос будет отмечен как решённый, это нельзя отменить.",
+    acceptConfirmDescription: "После принятия вы сможете начать чат с автором этого ответа.",
     acceptConfirmCancel: "Отмена",
     createTitle: "Задать вопрос",
     editTitle: "Изменить вопрос",

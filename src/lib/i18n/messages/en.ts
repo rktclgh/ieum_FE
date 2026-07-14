@@ -188,7 +188,7 @@ export const en: Messages = {
     acceptedBadge: "Accepted",
     acceptButton: "Accept",
     acceptConfirmTitle: "Accept this answer?",
-    acceptConfirmDescription: "Accepting marks the question resolved and can't be undone.",
+    acceptConfirmDescription: "Accepting lets you start a chat with this answer's author.",
     acceptConfirmCancel: "Cancel",
     createTitle: "Ask a question",
     editTitle: "Edit question",

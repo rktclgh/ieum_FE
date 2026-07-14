@@ -187,7 +187,7 @@ export const zh: Messages = {
     acceptedBadge: "已采纳",
     acceptButton: "采纳",
     acceptConfirmTitle: "采纳这条回答吗？",
-    acceptConfirmDescription: "采纳后问题将标记为已解决，且无法撤销。",
+    acceptConfirmDescription: "采纳后即可与该回答的作者开始聊天。",
     acceptConfirmCancel: "取消",
     createTitle: "提问",
     editTitle: "编辑问题",

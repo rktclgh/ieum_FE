@@ -187,7 +187,7 @@ export const ja: Messages = {
     acceptedBadge: "採用済み",
     acceptButton: "採用",
     acceptConfirmTitle: "この回答を採用しますか？",
-    acceptConfirmDescription: "採用すると質問は解決済みになり、取り消せません。",
+    acceptConfirmDescription: "採用すると、この回答の作成者とチャットを始められます。",
     acceptConfirmCancel: "キャンセル",
     createTitle: "質問する",
     editTitle: "質問を編集",
