@@ -92,6 +92,11 @@ export const ru: Messages = {
     clusterMarkerLabel: (count) => `${count} рядом`,
     attributionButtonLabel: "Атрибуция карты",
     pinsTruncatedNotice: "Здесь много меток. Увеличьте масштаб, чтобы увидеть все",
+    categoryPlace: "Место",
+    listTitle: "Список",
+    listParticipantCount: (count) => `${count} чел.`,
+    searchEmpty: "Ничего не найдено",
+    listEmpty: "Здесь пока ничего нет",
   },
   meetup: {
     joinButton: "Участвовать",

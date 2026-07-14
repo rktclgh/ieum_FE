@@ -92,6 +92,11 @@ export const en: Messages = {
     clusterMarkerLabel: (count) => `${count} nearby`,
     attributionButtonLabel: "Map attribution",
     pinsTruncatedNotice: "Many pins here. Zoom in to see them all",
+    categoryPlace: "Place",
+    listTitle: "List",
+    listParticipantCount: (count) => `${count} joined`,
+    searchEmpty: "No results found",
+    listEmpty: "Nothing to show in this area",
   },
   meetup: {
     joinButton: "Join",
