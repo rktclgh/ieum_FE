@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -27,7 +28,7 @@ import { ChatRoomMemberItem } from "@/features/chat/components/chat-room-member-
 import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-danger-actions"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
-import { useChatMessages, useChatRoom } from "@/features/chat/hooks/use-chat-queries"
+import { chatKeys, useChatMessages, useChatRoom } from "@/features/chat/hooks/use-chat-queries"
 import {
   useDisbandRoom,
   useLeaveRoom,
@@ -120,6 +121,7 @@ function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): Ch
 
 function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { messages } = useTranslation()
   const { data: me } = useMe()
   const myUserId = me?.userId ?? -1
@@ -156,10 +158,16 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
     onMessage: (event) => {
       if (myUserId < 0) return
       setLiveMessages((prev) => [...prev, adaptMessage(event, myUserId)])
+      // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
+      queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })
     },
     onError: (error) => setSocketError(error.message),
     onConnectedChange: (isConnected) => {
-      if (isConnected) setSocketError(null)
+      if (!isConnected) return
+      setSocketError(null)
+      // 연결/재연결 직후 REST 스냅샷을 다시 당겨, 초기 fetch~구독 사이·재연결 중 누락된 메시지를 백필한다.
+      // mergeMessages가 messageId 기준으로 중복을 제거하므로 liveMessages와 겹쳐도 안전하다.
+      queryClient.invalidateQueries({ queryKey: chatKeys.messages(roomId) })
     },
   })
 
