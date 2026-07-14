@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { TabBar } from "@/features/navigation/components/tab-bar"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { QuestionHistoryItem } from "@/features/question/components/question-history-item"
 import { useDeleteQuestion } from "@/features/question/hooks/use-question-mutations"
@@ -77,6 +78,10 @@ function QuestionsListPageContent() {
           <div ref={sentinelRef} className="h-4" />
         </div>
       </main>
+
+      <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm">
+        <TabBar />
+      </div>
 
       {menuFor != null && (
         <div className="fixed inset-0 z-50">
