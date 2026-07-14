@@ -49,8 +49,8 @@ function MeetupLocationMap({
   // 지도 뷰 이동은 recenterKey(nonce)로만 구동한다. position은 실시간 갱신되어도 뷰를 움직이지 않는다.
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
-  const recenterTo = React.useCallback((t: Coordinates) => {
-    setRecenterTarget(t)
+  const recenterTo = React.useCallback((target: Coordinates) => {
+    setRecenterTarget(target)
     setRecenterKey((key) => key + 1)
   }, [])
 

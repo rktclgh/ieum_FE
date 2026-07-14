@@ -21,9 +21,9 @@ interface MapCanvasProps {
   center: Coordinates | null
   /** 증가할 때마다 그 시점의 center로 지도를 이동시키는 nonce. 미지정이면 재중심 안 함 */
   recenterKey?: number
-  /** center 변경 시 맞출 확대 단계. 없으면 현재 zoom 유지 */
+  /** 재중심 시 맞출 확대 단계. 없으면 현재 zoom 유지 */
   centerZoom?: number
-  /** center 변경 시 flyTo로 부드럽게 이동할지 여부 */
+  /** 재중심 시 flyTo로 부드럽게 이동할지 여부 */
   animateCenter?: boolean
   /** 상단 오버레이(헤더 등)에 가려지는 높이(px). 보이는 영역 정중앙 계산에 사용 */
   topInset?: number
@@ -36,7 +36,6 @@ interface MapCanvasProps {
   onPinClick?: (pin: MapPin) => void
   livePosition?: Coordinates | null
   liveAccuracy?: number | null
-  onUserPan?: () => void
   /** 사용자가 지도에서 고른 지점 — Figma Location/XL 핀으로 표시 */
   selectedPosition?: Coordinates | null
 }
@@ -157,13 +156,6 @@ function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBoun
   return null
 }
 
-// 사용자가 지도를 드래그하면 follow-me를 해제한다. dragstart는 사용자 조작에만 발생하고
-// 프로그램적 setView(recenter)에는 발생하지 않아 follow 중 재중심과 충돌하지 않는다.
-function MapDragListener({ onUserPan }: { onUserPan: () => void }) {
-  useMapEvents({ dragstart: onUserPan })
-  return null
-}
-
 function MapCanvas({
   center,
   recenterKey,
@@ -178,7 +170,6 @@ function MapCanvas({
   onPinClick,
   livePosition,
   liveAccuracy,
-  onUserPan,
   selectedPosition,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
@@ -206,7 +197,6 @@ function MapCanvas({
       />
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
-      {onUserPan && <MapDragListener onUserPan={onUserPan} />}
       {pins?.map((pin) => (
         <PinMarker key={pin.pinId} pin={pin} onClick={onPinClick} />
       ))}
