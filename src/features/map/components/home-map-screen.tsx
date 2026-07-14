@@ -83,7 +83,7 @@ function HomeMapScreen() {
   }, [position, recenterTo])
 
   return (
-    <div className="fixed inset-0 mx-auto flex w-full max-w-sm flex-col overflow-hidden">
+    <div className="fixed inset-0 flex w-full flex-col overflow-hidden">
       <MapCanvas
         center={recenterTarget}
         recenterKey={recenterKey}
@@ -97,7 +97,7 @@ function HomeMapScreen() {
         liveAccuracy={accuracy}
       />
 
-      <div className="relative z-10 flex flex-col gap-2 p-4">
+      <div className="relative z-10 mx-auto flex w-full max-w-sm flex-col gap-2 p-4">
         <div className="flex items-center gap-2">
           <MapSearchBar
             onFocus={() => setSearchOpen(true)}

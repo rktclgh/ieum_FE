@@ -36,18 +36,18 @@ function ConfirmDialog({
         <AlertDialogBackdrop />
         <AlertDialogViewport>
           <AlertDialogPopup>
-            <div className="flex w-[272px] flex-col items-center gap-2.5 px-2 pt-2 pb-4">
+            <div className="flex w-full max-w-[272px] flex-col items-center gap-2.5 px-2 pt-2 pb-4">
               <AlertDialogTitle>{title}</AlertDialogTitle>
               <AlertDialogDescription>{description}</AlertDialogDescription>
             </div>
-            <div className="flex w-[272px] items-start gap-4">
-              <AlertDialogClose className="flex w-32 items-center justify-center rounded-full bg-gray-100 px-3 py-2.5 text-body-medium-14 text-gray-900">
+            <div className="flex w-full max-w-[272px] items-start gap-4">
+              <AlertDialogClose className="flex flex-1 items-center justify-center rounded-full bg-gray-100 px-3 py-2.5 text-body-medium-14 text-gray-900">
                 {cancelLabel}
               </AlertDialogClose>
               <button
                 type="button"
                 onClick={onConfirm}
-                className="flex w-32 items-center justify-center rounded-full bg-gray-100 px-3 py-2.5 text-body-medium-14 text-gray-900"
+                className="flex flex-1 items-center justify-center rounded-full bg-gray-100 px-3 py-2.5 text-body-medium-14 text-gray-900"
               >
                 {confirmLabel}
               </button>

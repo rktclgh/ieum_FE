@@ -131,7 +131,7 @@ function ChatBubble({
       {...props}
     >
       {!isMe && <ChatProfile src={avatarSrc} size={26} />}
-      <div className={cn("flex flex-col gap-1", isMe ? "items-end" : "w-[309px] items-start")}>
+      <div className={cn("flex max-w-[75%] flex-col gap-1", isMe ? "items-end" : "items-start")}>
         {!isMe && name && <p className="text-body-regular-12 text-gray-400">{name}</p>}
         {texts.map((text, index) => (
           <div
@@ -141,7 +141,7 @@ function ChatBubble({
               "px-4 py-3",
               isMe ? "bg-primary-400" : "bg-gray-50",
               radiusMap[bubblePosition(index, texts.length)],
-              isLong && "w-[253px]",
+              isLong && "max-w-full",
               index === highlightedIndex && "relative z-10 animate-message-jump-highlight"
             )}
           >
