@@ -1,8 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-const routeModulePath = "../../src/lib/navigation/routes.ts"
-const { parsePositiveInteger, routes } = await import(routeModulePath)
+import { parsePositiveInteger, routes } from "../../src/lib/navigation/routes"
 
 test("parsePositiveInteger accepts canonical positive safe integers", () => {
   assert.equal(parsePositiveInteger("1"), 1)

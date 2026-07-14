@@ -94,4 +94,3 @@ FE PR 완료는 Spring 배포 완료를 뜻하지 않는다. BE 호환 PR은 다
 자동 검증은 pure Node contracts → lint/typecheck → fresh static build → artifact/source audit 순서다. 빌드는 공유 출력인 `.next/`와 `out/`을 쓰므로 leader 통합 워크트리에서만 실행한다.
 
 최종 수동 smoke는 valid/invalid query, my auth matrix, password/Google/Kakao login cache 갱신, same-origin WS, API thumbnail 원본 로드, mobile route state를 확인한다. Spring/JAR smoke는 BE 호환 PR에서 수행한다.
-

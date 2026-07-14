@@ -185,4 +185,3 @@
 - Wave 2: Task 5 navigation and Task 6 auth integration in isolated worktrees based on the integrated Wave 1 commit.
 - Leader-only: Task 7 export/build, Task 8 docs/full verification/PR.
 - No worker runs `pnpm build`; `.next/` and `out/` are leader-owned shared outputs.
-
