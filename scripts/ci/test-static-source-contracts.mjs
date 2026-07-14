@@ -141,6 +141,20 @@ test("fixed query pages validate IDs before mounting data content", () => {
     )
     assert.ok(invalidGuard, `${page.path} must render the invalid-link state from an ID guard`)
 
+    const guardStatements = ts.isBlock(invalidGuard.thenStatement)
+      ? invalidGuard.thenStatement.statements
+      : [invalidGuard.thenStatement]
+    assert.equal(
+      guardStatements.length,
+      1,
+      `${page.path} invalid guard must have exactly one blocking return`,
+    )
+    assert.ok(
+      ts.isReturnStatement(guardStatements[0]) &&
+        guardStatements[0].expression?.getText(sourceFile).includes('kind="invalid-link"'),
+      `${page.path} invalid guard must return before data content can mount`,
+    )
+
     const guardedVariables = flattenOr(invalidGuard.expression)
       .map(nullCheckedIdentifier)
       .filter(Boolean)
@@ -153,7 +167,7 @@ test("fixed query pages validate IDs before mounting data content", () => {
 
     const contentMount = source.indexOf(page.content)
     assert.ok(
-      contentMount > invalidGuard.getStart(sourceFile),
+      contentMount > invalidGuard.end,
       `${page.path} must guard before mounting content`,
     )
   }
@@ -238,16 +252,22 @@ test("auth gates, session reset subscription, and login invalidation stay wired"
     /<SessionUnavailable\s+onRetry=/,
     "backend failures must keep the route mounted with retry UI",
   )
-  const blockingBranch = gateBranches.find((statement) => {
-    const condition = compact(statement.expression.getText(authGateFile))
-    return condition.includes('state.kind==="loading"') &&
-      condition.includes("shouldRedirectToLogin") &&
-      condition.includes("shouldRedirectHome")
-  })
+  const blockingBranch = gateBranches.find((statement) =>
+    statement.thenStatement.getText(authGateFile).includes("<SessionLoading"),
+  )
   assert.match(
     blockingBranch?.thenStatement.getText(authGateFile) ?? "",
     /<SessionLoading\s*\/>/,
     "loading and redirect transitions must not expose gated children",
+  )
+  assert.deepEqual(
+    blockingBranch
+      ? flattenOr(blockingBranch.expression)
+          .map((expression) => compact(expression.getText(authGateFile)))
+          .sort()
+      : [],
+    ['state.kind==="loading"', "shouldRedirectHome", "shouldRedirectToLogin"].sort(),
+    "loading and both redirect transitions must block children with OR semantics",
   )
   const finalStatement = authGate.body.statements.at(-1)
   assert.ok(
@@ -303,6 +323,11 @@ test("profile and settings mutations install the session-generation callbacks", 
     assert.ok(
       sessionCallbacks && ts.isSpreadAssignment(sessionCallbacks),
       `${functionName} must spread the shared session callbacks into useMutation`,
+    )
+    assert.equal(
+      options.properties.at(-1),
+      sessionCallbacks,
+      `${functionName} must not override onMutate or onSuccess after the session guard`,
     )
 
     const callbackCall = sessionCallbacks.expression

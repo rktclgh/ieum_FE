@@ -291,10 +291,29 @@ test("room socket activation has an active-room guard and deterministic cleanup"
     "cleanup must deactivate the previous STOMP connection",
   )
 
-  const callbackText = compact(callback.getText(sourceFile))
+  const clientCreation = visit(
+    callback,
+    (node) =>
+      ts.isNewExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === "Client",
+  )[0]
+  const activation = visit(
+    callback,
+    (node) =>
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      ts.isIdentifier(node.expression.expression) &&
+      node.expression.expression.text === "client" &&
+      node.expression.name.text === "activate",
+  )[0]
+  assert.ok(clientCreation, "the guarded effect must create the STOMP client")
+  assert.ok(activation, "the guarded effect must activate the STOMP client")
   assert.ok(
-    callbackText.indexOf("client.activate()") < callbackText.indexOf("client.deactivate()"),
-    "activation must be paired with a later cleanup",
+    guard.getStart(sourceFile) < clientCreation.getStart(sourceFile) &&
+      clientCreation.getStart(sourceFile) < activation.getStart(sourceFile) &&
+      activation.getStart(sourceFile) < cleanupReturn.getStart(sourceFile),
+    "socket lifecycle order must be guard, create, activate, then cleanup",
   )
   assert.equal(
     compact(connectionEffect.arguments[1]?.getText(sourceFile) ?? ""),
