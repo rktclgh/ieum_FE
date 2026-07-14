@@ -26,7 +26,7 @@ interface ChatSocketHandlers {
 // - /topic/rooms/{roomId} 구독 → 메시지 수신
 // - /user/queue/errors 구독 → 검증/세션 에러 수신
 // - send()로 /app/rooms/{roomId}/send 발행
-function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) {
+function useChatRoomSocket(activeRoomId: number | null, handlers: ChatSocketHandlers) {
   const clientRef = React.useRef<Client | null>(null)
   const [connected, setConnected] = React.useState(false)
 
@@ -38,7 +38,7 @@ function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) 
   }, [handlers])
 
   React.useEffect(() => {
-    if (roomId == null) return
+    if (activeRoomId == null) return
 
     const client = new Client({
       brokerURL: resolveBrokerUrl(),
@@ -49,7 +49,7 @@ function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) 
         setConnected(true)
         handlersRef.current.onConnectedChange?.(true)
 
-        client.subscribe(`/topic/rooms/${roomId}`, (message: IMessage) => {
+        client.subscribe(`/topic/rooms/${activeRoomId}`, (message: IMessage) => {
           try {
             const event = JSON.parse(message.body) as WsMessageEvent
             handlersRef.current.onMessage?.(event)
@@ -84,19 +84,19 @@ function useChatRoomSocket(roomId: number | null, handlers: ChatSocketHandlers) 
       clientRef.current = null
       void client.deactivate()
     }
-  }, [roomId])
+  }, [activeRoomId])
 
   const send = React.useCallback(
     (payload: SendChatMessageRequest) => {
       const client = clientRef.current
-      if (!client || !client.connected || roomId == null) return false
+      if (!client || !client.connected || activeRoomId == null) return false
       client.publish({
-        destination: `/app/rooms/${roomId}/send`,
+        destination: `/app/rooms/${activeRoomId}/send`,
         body: JSON.stringify(payload),
       })
       return true
     },
-    [roomId]
+    [activeRoomId]
   )
 
   return { connected, send }
