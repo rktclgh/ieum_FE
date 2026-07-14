@@ -51,12 +51,14 @@ function SearchOverlay({
   const showPlaces = tab === "all" || tab === "place"
   const cap = (length: number) => (tab === "all" ? Math.min(length, PREVIEW_LIMIT) : length)
 
+  // 선택된 탭에서 보이는 섹션이 모두 비었을 때만 "결과 없음"을 노출한다.
+  // (예: 모임 탭에서 모임 0건이면 장소 결과가 있어도 화면이 비므로 빈 상태를 보여야 한다.)
   const isEmpty =
     !isLoading &&
     q.length > 0 &&
-    meetups.length === 0 &&
-    questions.length === 0 &&
-    places.length === 0
+    (!showMeetups || meetups.length === 0) &&
+    (!showQuestions || questions.length === 0) &&
+    (!showPlaces || places.length === 0)
 
   return (
     <div className="fixed inset-0 z-40 mx-auto flex w-full max-w-sm flex-col bg-white">
