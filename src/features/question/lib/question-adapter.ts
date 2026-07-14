@@ -94,7 +94,7 @@ function adaptQuestionSummary(detail: QuestionDetailResponse): QuestionSummary {
 }
 
 // 질문 내역 목록 카드용 뷰모델. 썸네일 URL은 same-origin 경로로 정규화.
-// 부제(본문 미리보기) 필드는 BE MyQuestionItem에 없어 목록은 제목+답변수+시각만 노출한다.
+// 부제(본문 미리보기) 필드는 BE MyQuestionItem에서 오면 노출, 없으면 undefined(줄 생략).
 interface MyQuestionListItemView {
   questionId: number
   title: string
@@ -102,6 +102,7 @@ interface MyQuestionListItemView {
   thumbnailSrc?: string
   answerCount: number
   createdAt: string
+  contentPreview?: string
 }
 
 function adaptMyQuestionItem(item: MyQuestionItem): MyQuestionListItemView {
@@ -112,6 +113,7 @@ function adaptMyQuestionItem(item: MyQuestionItem): MyQuestionListItemView {
     thumbnailSrc: resolveFileUrl(item.thumbnailUrl),
     answerCount: item.answerCount,
     createdAt: item.createdAt,
+    contentPreview: item.contentPreview?.trim() || undefined,
   }
 }
 

@@ -33,9 +33,11 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-title-semibold-16 text-gray-900">{item.title}</span>
-        <span className="truncate text-body-regular-14 text-gray-500">
-          {messages.question.answerCountLabel(item.answerCount)}
-        </span>
+        {item.contentPreview ? (
+          <span className="truncate text-body-regular-14 text-gray-500">
+            {item.contentPreview}
+          </span>
+        ) : null}
         {timeLabel ? <span className="text-body-regular-13 text-gray-400">{timeLabel}</span> : null}
       </div>
       <ChevronRight className="size-5 shrink-0 text-gray-300" />
