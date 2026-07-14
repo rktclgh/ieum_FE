@@ -14,6 +14,7 @@ concurrency:
 jobs:
   validate-and-notify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
       NEXT_PUBLIC_KAKAO_REST_API_KEY: ${{ vars.NEXT_PUBLIC_KAKAO_REST_API_KEY }}
@@ -58,6 +59,7 @@ jobs:
 
       - name: Notify backend
         env:
+          # fine-grained PAT with Contents read/write on rktclgh/ieum_BE
           CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           event_type: "frontend-updated"
         run: |

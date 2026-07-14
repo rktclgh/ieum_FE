@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
-workflow=.github/workflows/notify-app-main.yml
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd -- "$script_dir/../.." && pwd)"
+workflow="$repo_root/.github/workflows/notify-app-main.yml"
 test -f "$workflow"
 grep -Fq 'branches: ["main"]' "$workflow"
+grep -Fq 'timeout-minutes: 20' "$workflow"
 grep -Fq 'CI_GITHUB_TOKEN' "$workflow"
+grep -Fq 'fine-grained PAT with Contents read/write on rktclgh/ieum_BE' "$workflow"
 grep -Fq 'event_type: "frontend-updated"' "$workflow"
 grep -Fq '"fe_sha": "${{ github.sha }}"' "$workflow"
 grep -Fq 'cancel-in-progress: true' "$workflow"
