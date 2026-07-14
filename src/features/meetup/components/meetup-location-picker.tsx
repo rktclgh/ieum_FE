@@ -47,7 +47,6 @@ function MeetupLocationPicker({ value, onConfirm, onClose }: MeetupLocationPicke
       {step.name === "map" && (
         <MeetupLocationMap
           position={position}
-          onRequestLocation={() => {}}
           onBack={onClose}
           onOpenSearch={() => setStep({ name: "search" })}
           onCreateName={(address, coords) => setStep({ name: "create", address, coords })}

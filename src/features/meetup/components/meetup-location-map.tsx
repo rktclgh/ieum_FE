@@ -21,8 +21,6 @@ const MapCanvas = dynamic(
 interface MeetupLocationMapProps {
   /** 내 위치 (상위에서 관리) */
   position: Coordinates | null
-  /** GPS 재조회 요청 */
-  onRequestLocation: () => void
   onBack: () => void
   /** 검색바 탭 → 검색 화면 전환 */
   onOpenSearch: () => void
@@ -38,7 +36,6 @@ interface MeetupLocationMapProps {
  */
 function MeetupLocationMap({
   position,
-  onRequestLocation,
   onBack,
   onOpenSearch,
   onCreateName,
@@ -49,12 +46,29 @@ function MeetupLocationMap({
 
   // clicked: 지도에서 직접 고른 지점(Figma 핀 표시). 없으면 내 위치를 기준으로 역지오코딩한다.
   const [clicked, setClicked] = React.useState<Coordinates | null>(null)
-  // 내 위치가 지도 중심. 사용자가 팬해도 position 식별자가 그대로라 되돌아가지 않고,
-  // GPS 탭(위치 재조회) 시에만 position이 새 객체로 바뀌어 flyTo 애니메이션이 실행된다.
-  const center = position
+  // 지도 뷰 이동은 recenterKey(nonce)로만 구동한다. position은 실시간 갱신되어도 뷰를 움직이지 않는다.
+  const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
+  const [recenterKey, setRecenterKey] = React.useState(0)
+  const recenterTo = React.useCallback((t: Coordinates) => {
+    setRecenterTarget(t)
+    setRecenterKey((key) => key + 1)
+  }, [])
+
+  // 최초 위치 확보 1회: 내 위치로 자동 중심 이동.
+  const hasCenteredRef = React.useRef(false)
+  React.useEffect(() => {
+    if (hasCenteredRef.current || !position) return
+    hasCenteredRef.current = true
+    recenterTo(position)
+  }, [position, recenterTo])
+
+  // 역지오코딩·주변 검색 기준점: 지도에서 고른 지점 우선, 없으면 내 위치.
   const target = clicked ?? position
 
-  const handleGps = () => onRequestLocation()
+  // GPS 버튼: 내 위치를 drawer/헤더 제외한 보이는 영역 정중앙으로.
+  const handleGps = () => {
+    if (position) recenterTo(position)
+  }
 
   const { data: reverseGeocoded } = useReverseGeocode(target)
   const currentAddress = reverseGeocoded?.fullAddress ?? reverseGeocoded?.shortLabel ?? null
@@ -84,7 +98,8 @@ function MeetupLocationMap({
   return (
     <div className="relative flex size-full flex-col overflow-hidden bg-white">
       <MapCanvas
-        center={center}
+        center={recenterTarget}
+        recenterKey={recenterKey}
         centerZoom={DEFAULT_MAP_ZOOM}
         animateCenter
         topInset={topInset}
