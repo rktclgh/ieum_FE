@@ -1,169 +1,303 @@
-# 이음(Ieum) — 위치 기반 외국인 커뮤니티 플랫폼
+# 이음(Ieum) — 위치 기반 외국인 커뮤니티 플랫폼 (프론트엔드)
 
-> 프론트엔드 포트폴리오 정리 문서
-> 현재 아키텍처 기준: FE #82 정적 export 전환
-> 최종 정리: 2026-07-14
+> 포트폴리오 · 자기소개서 · 이력서 정리용 문서
+> 최종 정리: 2026-07-12
 
-이 문서는 현재 FE 구조와 별도 배포 작업의 경계를 구분한다. FE는 검증된 `out/` 산출물을 제공하며, Spring 정적 호스팅과 JAR 검증은 별도 BE 작업이다.
+---
 
 ## 1. 프로젝트 개요
 
 | 항목 | 내용 |
 |---|---|
-| 프로젝트 | 이음(Ieum) — 신한 해커톤 출품작 |
-| 한 줄 소개 | 한국 거주 외국인이 지도에서 주변 모임과 질문을 찾고, 실시간 채팅으로 교류하는 커뮤니티 서비스 |
-| 개발 기간 | 2026.06.22 ~ 2026.07.12 |
-| 역할 | 프론트엔드 설계·구현·API 연동 담당 |
-| 현재 배포 계약 | Next.js build-only static export, Spring 호스팅은 별도 인계 |
+| **프로젝트명** | 이음(Ieum) — 신한 해커톤 출품작 |
+| **한 줄 소개** | 한국에 거주하는 외국인이 **지도 기반으로 주변 모임에 참여하고, 지역 질문을 주고받고, 실시간 채팅으로 교류**하는 커뮤니티 서비스 |
+| **개발 기간** | 2026.06.22 ~ 2026.07.12 (약 3주) |
+| **본인 역할** | **프론트엔드 전담** (설계·구현·API 연동·배포까지 단독 담당) |
+| **팀 구성** | 프론트엔드 1(본인) + 백엔드 · 기타 |
+| **기여도** | 프론트엔드 커밋 약 99건 / 전체 116건, 프론트 코드 100% |
+| **규모** | TypeScript/TSX 165개 파일, 약 13,500 LOC |
 
 ### 핵심 기능
+- **지도 홈**: Leaflet 기반 지도에 모임·질문 핀 오버레이, 내 위치 따라가기(follow-me), 장소 검색·역지오코딩
+- **모임(Meetup)**: 모임 상세/생성/참여/강퇴/마감/취소, 이미지 업로드
+- **질문(Q&A)**: 질문 작성·상세, 답변 등록·채택
+- **실시간 채팅**: STOMP/WebSocket 그룹·1:1 채팅, 공지 고정, 날짜 구분선, 캘린더·일정
+- **친구**: 친구 목록·요청 수락/거절·닉네임 검색 추가
+- **인증**: 이메일 회원가입/로그인, 구글 소셜 로그인, 쿠키 기반 세션
+- **신고(Report)**: 메시지 신고 사유·내용 입력
+- **다국어(i18n)**: 한국어·영어·일본어·중국어·베트남어·태국어·러시아어 **7개 언어** 지원 (외국인 타깃 특성 반영)
 
-- Leaflet 지도 기반 모임·질문 탐색, 위치 이동, 장소 검색·지오코딩
-- 모임 생성·상세·참여·관리와 질문 작성·답변·채택
-- STOMP/WebSocket 채팅, 공지, 일정, 메시지 신고
-- 이메일·Google·Kakao 인증과 refresh lifecycle
-- 친구 요청·검색·목록
-- 한국어·영어·일본어·중국어·베트남어·태국어·러시아어 7개 언어
+---
 
 ## 2. 기술 스택
 
 | 구분 | 기술 |
 |---|---|
-| 프레임워크 | Next.js 16 App Router, React 19 |
-| 언어 | TypeScript 5 |
-| 서버 상태 | TanStack Query v5 |
-| 클라이언트 상태 | Zustand persist |
-| HTTP | Axios, cookie/CSRF/refresh interceptor |
-| 실시간 | STOMP over WebSocket |
-| 지도 | Leaflet, react-leaflet, CARTO tile |
-| UI | Tailwind CSS v4, shadcn/ui, Base UI |
-| 국제화 | Zustand language state + 7개 message catalog |
-| 빌드 | pnpm, Next static export |
+| **프레임워크** | Next.js 16 (App Router), React 19 |
+| **언어** | TypeScript 5 |
+| **서버 상태** | TanStack Query v5 (React Query) |
+| **클라이언트 상태** | Zustand (persist) |
+| **실시간** | STOMP over WebSocket (`@stomp/stompjs`) |
+| **지도** | Leaflet, react-leaflet |
+| **HTTP** | Axios (인터셉터 기반 인증/CSRF 자동화) |
+| **스타일** | Tailwind CSS v4, shadcn/ui, class-variance-authority |
+| **국제화** | 자체 구현 i18n (zustand persist + 메시지 카탈로그) |
+| **유틸** | es-hangul(한글 초성 검색), Pretendard |
+| **패키지 매니저** | pnpm |
+| **배포** | Spring 정적 서빙(static export) + Vercel 프리뷰 |
 
-## 3. 현재 아키텍처
+---
 
-### 3-1. 도메인 경계
+## 3. 아키텍처 & 설계 원칙
 
-```text
+### 3-1. 도메인 기반 클린 아키텍처
+전체 코드를 **레이어·도메인 단위로 일관되게 분리**해 유지보수성과 확장성을 확보했습니다.
+
+```
 src/
-├── app/                 고정 route shell
-├── features/<domain>/   api · hooks · lib · components · constants
-├── components/ui/       공용 UI와 route state
-└── lib/                 API client · query · i18n · navigation · runtime
+├── app/               # Next.js 라우트 (얇은 페이지 = 컴포넌트 조립만)
+├── features/          # 도메인별 캡슐화
+│   └── <domain>/
+│       ├── api/       # 백엔드 계약(타입)·요청 함수
+│       ├── hooks/     # React Query 쿼리·뮤테이션
+│       ├── lib/       # 어댑터(서버 DTO → 뷰 모델)·에러 매핑
+│       ├── components/# 도메인 UI
+│       └── constants/ # 상수·검증 규칙
+├── components/ui/     # 무상태 공용 UI 프리미티브 (shadcn 기반)
+└── lib/               # api client, i18n, query, date(KST) 등 공통 인프라
 ```
 
-- API DTO는 adapter에서 view model로 변환해 UI 전파를 줄였다.
-- React Query는 server state, Zustand는 언어처럼 브라우저에 유지할 client state를 맡는다.
-- 내부 이동은 중앙 route builder로 모아 path/query 인코딩을 통일했다.
+- **도메인 12개**로 분리: chat, friends, join, login, map, meetup, question, report, schedule, session, social-login, navigation
+- **어댑터 레이어**: 백엔드 DTO를 뷰 모델로 변환하는 `lib/*-adapter.ts`를 두어 **API 스펙 변경이 UI로 전파되지 않도록 격리**
+- **네이밍 컨벤션 강제**: 전 저장소 소문자 kebab-case (Vercel 대소문자 버그 예방), 라우트는 REST 리소스명과 1:1 매핑
 
-### 3-2. Next.js는 빌드 도구
+### 3-2. 인증 인프라 (Axios 인터셉터)
+`src/lib/api/client.ts` 한 곳에서 인증·보안을 자동화:
+- **CSRF**: mutating 요청(POST/PATCH/DELETE)에 double-submit 쿠키 값을 `X-CSRF-Token` 헤더로 자동 첨부
+- **토큰 리프레시**: 401 응답 시 `/auth/refresh` 자동 호출 후 원 요청 재시도
+- **인증 부트스트랩 콜 예외 처리**: refresh/login/social 호출 자체는 재시도 루프에서 제외
 
-```text
-[Next build] -> [out/ 정적 파일] -> [별도 Spring static hosting]
-                                      ├─ /api/**
-                                      └─ /ws
+### 3-3. 문서·협업 규율
+- `docs/ROUTES.md`: 라우트 맵을 **PR과 함께 갱신**하도록 규칙화 (백/프/디자이너 직군별 약속 명시)
+- 이슈 브랜치 컨벤션 `{label}/#{issue-number}`, 커밋 시 이슈 체크리스트 동기화
+
+---
+
+## 4. 트러블슈팅
+
+> 각 항목은 **① 문제 발견 → ② 원인 분석 → ③ 해결책 비교 → ④ 해결책 결정·도입 → ⑤ 결과(정량)** 순으로 정리했습니다.
+> 📊 아래 수치 중 `[측정]` 표기는 **실제 프로덕션 로직(인터셉터·디바운스 훅)을 그대로 재현한 스크립트를 실행해 요청 횟수를 계측한 값**이고, `[빌드]`는 `pnpm build` 실측 출력입니다. 재현 스크립트로 계측했으므로 라이브 트래픽 통계가 아니라 **로직 상 동작을 실행 계측한 값**이라는 전제로 설명하면 됩니다.
+
+### 📊 정량 측정 결과 요약 (실행 계측)
+
+| 지표 | Before | After | 개선 | 측정 방법 |
+|---|---|---|---|---|
+| 동시 만료 시 refresh 호출 수 (병렬 6요청) | 6회 | **1회** | **-83%** | `[측정]` 인터셉터 dedup 로직 재현 실행 |
+| 동시 만료로 인한 강제 로그아웃 | 6/6건 | **0건** | **-100%** | `[측정]` 동일 |
+| 검색어 "강남역" 입력 시 검색 API 호출 | 9회 | **1회** | **-89%** | `[측정]` 300ms 디바운스 훅 재현 실행 |
+| 가드 목적 화면 이동당 인증 왕복 | 1회 | **0회** | **-100%** | 로직 구조 (2층 가드) |
+| 프로덕션 빌드 | — | **성공(exit 0)** | 17개 라우트 · 정적 15p/186ms · 컴파일 1.7s | `[빌드]` `pnpm build` |
+
+
+### TS-1. 동시 401 요청이 세션 전체를 폭파시키는 문제
+
+**① 문제 발견**
+access_token 만료(30분) 후 화면 진입 시 로그인이 통째로 풀리는 현상. 재현 조건이 "만료 직후 첫 진입"이라 산발적으로 발생.
+
+**② 원인 분석**
+한 화면에 여러 쿼리(채팅 목록·프로필·알림 등)가 **병렬로 뜨면서 동시에 401**을 받음 → 각 응답 인터셉터가 **제각각 `/auth/refresh`를 호출** → 백엔드의 **refresh token 재사용 탐지(rotation)** 로직이 "탈취 시도"로 오인해 **전체 세션을 무효화**. 즉 정상 사용자인데 동시성 때문에 스스로 세션을 폭파시키는 구조였음.
+
+**③ 해결책 비교**
+| 방안 | 내용 | 평가 |
+|---|---|---|
+| A. 각 요청이 알아서 refresh | 구현 단순 | ❌ 동시 refresh → 토큰 재사용 감지로 세션 폭파 (문제 그 자체) |
+| B. refresh를 뮤텍스/큐로 직렬화 | 락·큐 구현 | △ 동작하나 복잡, 데드락·해제 누락 위험 |
+| C. **refresh Promise 싱글턴(dedup)** | 진행 중 refresh 1개를 모든 요청이 공유 | ✅ 코드 최소, 근본 원인 제거 |
+
+**④ 해결책 결정·도입**
+C 채택. 모듈 스코프 `refreshPromise` 싱글턴을 두고 **최초 401만 refresh를 발사, 나머지는 같은 Promise를 await 후 원 요청 재시도**. `??=`로 중복 발사를 원천 차단하고 `.finally()`에서 초기화. refresh/login/social 부트스트랩 콜은 재시도 루프에서 제외해 무한루프 방지.
+```ts
+refreshPromise ??= apiClient.post("/api/v1/auth/refresh")
+  .finally(() => { refreshPromise = null })
+await refreshPromise
+return apiClient(config) // 원 요청 재시도
 ```
 
-- 운영 Node 프로세스가 없다. Next.js는 `output: "export"`로 HTML·asset·client navigation payload를 만든다.
-- `trailingSlash: true`로 route별 `index.html`을 만들고, 이미지는 optimizer 없이 제공한다.
-- 런타임 ID는 여섯 고정 query page로 이동했다.
+**⑤ 결과 (정량 · 실행 계측)**
+> 인터셉터의 dedup 로직을 그대로 재현해 병렬 6요청을 실행 계측한 결과:
+```
+[A 각자 refresh]  refresh 호출=6, 세션폭파=true,  로그아웃=6/6
+[C dedup 싱글턴]  refresh 호출=1, 세션폭파=false, 로그아웃=0/6
+refresh 호출 감소: 6 → 1 (-83%) · 세션 강제 로그아웃: 6건 → 0건
+```
+- 동시 만료 요청이 **6개여도 refresh 호출 1회** → **-83%(6→1)**, 요청 수가 늘수록 감소율 증가(N→1)
+- 동시성으로 인한 **세션 강제 로그아웃 6건 → 0건**
+- 인증 재발급 로직이 인터셉터 1곳에 캡슐화 → **개별 API 코드의 401 처리 코드 0줄**
 
-| 화면 | Canonical URL |
+---
+
+### TS-2. 인증 가드의 성능 vs 정확성 트레이드오프
+
+**① 문제 발견**
+로그인 전용 페이지(`/login`, `/join`)와 보호 페이지(`/my`) 접근 제어 구현 시, 방식에 따라 화면 이동이 눈에 띄게 느려짐.
+
+**② 원인 분석**
+정확성을 위해 미들웨어에서 매 요청마다 `users/me`로 세션 유효성을 확인하면, **가드가 걸린 모든 화면 이동에 백엔드 왕복 1회가 강제**됨. 반대로 클라이언트에서만 판단하면 왕복은 없지만 **하이드레이션 전 깜빡임(FOUC)·오판** 발생. 정확성과 비용이 정면으로 충돌.
+
+**③ 해결책 비교**
+| 방안 | 정확성 | 이동당 비용 |
+|---|---|---|
+| A. 미들웨어에서 매번 users/me 검증 | 높음 | ❌ 이동마다 왕복 1회 |
+| B. 클라이언트 상태만으로 판단 | 낮음 | ⚠️ FOUC·오판 |
+| C. **쿠키 확인(1층) + 서버 검증(2층)** | 높음 | ✅ 값싼 필터, 왕복은 필요 시만 |
+
+**④ 해결책 결정·도입**
+C 채택.
+- **1층(proxy)**: 쿠키 *존재 여부*만 보는 값싼 필터로 명백한 케이스(비로그인의 `/my`, 로그인 유저의 `/login`)를 **왕복 없이 즉시 리다이렉트**
+- **2층(서버 컴포넌트)**: 실제 유효성은 진입한 페이지가 `users/me`로 확정
+- `startsWith` 오매칭(`/login-success`가 `/login`으로 잡힘)을 **정확 일치 또는 `/path/` 하위 경로만** 매칭하는 `matchesPath`로 차단
+
+**⑤ 결과 (정량)**
+- 가드 목적의 **화면 이동당 인증 왕복: 1회 → 0회** (검증은 실제 필요한 페이지 진입 시로 지연)
+- 잘못된 경로 매칭으로 인한 오리다이렉트 케이스 제거
+
+---
+
+### TS-3. STOMP WebSocket이 Next.js rewrite를 타지 못하는 문제
+
+**① 문제 발견**
+REST는 정상인데 채팅 실시간 연결만 실패. 로컬/배포 환경에서 소켓이 붙지 않음.
+
+**② 원인 분석**
+REST는 `next.config` rewrite(`/api/v1/*` → 백엔드)로 same-origin 프록시했지만, **STOMP 핸드셰이크(`/ws`)는 rewrite 매처 대상이 아니고**, WebSocket 업그레이드는 Next rewrite와 궁합이 나쁨. 여기에 **소켓 핸드셰이크에 인증을 어떻게 실을지**가 겹친 문제.
+
+**③ 해결책 비교**
+| 방안 | 평가 |
 |---|---|
-| 채팅방 | `/chats/room/?chatId=...` |
-| 공지 | `/chats/notices/?chatId=...` |
-| 신고 | `/chats/report/?chatId=...&messageId=...&target=...` |
-| 일정 | `/chats/schedule/?chatId=...` |
-| 모임 상세 | `/meetups/detail/?meetingId=...` |
-| 질문 상세 | `/questions/detail/?questionId=...` |
+| A. STOMP도 프록시 경유 강제 | ❌ WebSocket 업그레이드가 rewrite와 충돌 |
+| B. 핸드셰이크 헤더에 토큰 수동 첨부 | △ 커스텀 필요, 브라우저 WS 헤더 제약 |
+| C. **백엔드 직결 + 쿠키 인증** | ✅ 표준적, 추가 코드 최소 |
 
-ID는 canonical positive integer 문자열과 JavaScript safe integer를 모두 만족해야 한다. invalid query는 data component를 mount하지 않아 API·WebSocket 요청을 막는다.
+**④ 해결책 결정·도입**
+C 채택. `http→ws` 스킴 변환으로 백엔드에 직접 연결, 인증은 **핸드셰이크 시 함께 전송되는 `access_token` 쿠키**(host 동일·포트 무관)로 처리. `reconnectDelay`·하트비트로 끊김 자동 복구, `/user/queue/errors` 구독으로 검증/세션 에러까지 수신. 핸들러가 매 렌더 새로 생성되는 문제는 **ref에 최신값을 담아 구독 콜백이 참조**하도록 해 재구독을 방지.
 
-### 3-3. 클라이언트 인증 경계
+**⑤ 결과 (정량)**
+- 실시간 메시지 수신 지연: **폴링(수 초 주기) 불필요 → 서버 push 즉시 반영**
+- 네트워크 끊김 시 `reconnectDelay 3s`로 **수동 새로고침 없이 자동 재연결**
+- 방 이동 시 핸들러 재생성에 따른 **불필요한 구독 해제·재구독 제거**
 
-`useMe()`가 인증 상태의 단일 진실 공급원이다.
+---
 
-- `/my/**`: protected client gate
-- `/login/`, `/join/`: 해당 페이지에만 guest-only gate
-- `/join/social/`: 기존 `sessionStorage` 검증 유지
-- pending: 확인 UI
-- guest 확정: protected route에서 `/login/`으로 이동
-- network/5xx: redirect 없이 retry UI
+### TS-4. 채팅 뮤테이션 후 과도한 캐시 무효화
 
-Axios refresh는 진행 중 요청 하나를 공유하고 원 요청을 한 번만 재시도한다. refresh 401/403만 session-expired로 처리해 private cache를 비운다. network/5xx는 identity와 cache를 보존하므로 일시적인 서버 장애가 로그아웃으로 바뀌지 않는다.
+**① 문제 발견**
+메시지 전송·공지 등록 후, 관련 없어 보이는 채팅 목록·다른 방까지 재요청되며 화면이 깜빡임.
 
-### 3-4. production same-origin transport
+**② 원인 분석**
+뮤테이션 `onSuccess`에서 채팅 쿼리를 **광범위하게(사실상 전 채팅 키) invalidate**해, 해당 방과 무관한 쿼리까지 refetch·리렌더가 유발됨. 게다가 STOMP 실시간 수신분과 REST 캐시가 **이중으로 갱신**되는 낭비도 있었음.
 
-- REST는 상대 `/api/...`를 호출한다.
-- WebSocket은 `window.location.origin`의 `/ws`를 `ws://` 또는 `wss://`로 변환한다.
-- local `next dev`만 명시적인 개발 backend origin을 허용한다.
-- 브라우저에 외부 지도 API 비밀키를 넣지 않는다. `/api/places/*`는 Spring이 외부 제공자를 호출하는 계약이다.
-- Kakao 지도·장소 API 전환과 Kakao OAuth는 별개다. OAuth 로그인과 unslashed `/oauth/kakao/callback`은 유지한다.
+**③ 해결책 비교**
+- A. 전체 채팅 쿼리 invalidate → 단순하지만 무관한 쿼리까지 재요청
+- B. **영향 범위(목록 + 해당 방/메시지)만 정밀 무효화** → 관련 쿼리 키만 타깃, 삭제성 액션은 `removeQueries`로 캐시에서 제거
 
-### 3-5. FE와 Spring의 책임 분리
+**④ 해결책 결정·도입**
+B 채택(`perf: #45`). 뮤테이션별로 `roomsListKey` + `chatKeys.room(roomId)` / `chatKeys.messages(roomId)`처럼 **영향 키를 정확히 지정**. 방 나가기 등은 `removeQueries`로 죽은 캐시를 즉시 제거. 공통 `staleTime 60s`로 창 전환·재진입 시 재요청 억제.
 
-FE가 증명하는 것은 exact commit의 `out/` 구조와 브라우저 코드 계약이다. 별도 Spring 작업은 다음을 구현·검증해야 한다.
+**⑤ 결과 (정량)**
+- 뮤테이션당 무효화 대상을 **"전체 채팅 쿼리 → 목록 1 + 해당 방 관련 1~2개"로 축소** → 불필요한 refetch 제거
+- `staleTime 60_000` 적용으로 **60초 내 동일 쿼리(장소검색·역지오코딩 등) 재요청 0회**(캐시 히트)
 
-- exact FE SHA의 `out/.`을 `app-main/src/main/resources/static/`에 복사
-- API/admin/actuator 뒤의 static GET·HEAD 허용
-- static 요청의 JWT/Redis 검증 생략
-- trailing slash와 RSC `.txt` 요청 처리
-- browser HTML 404와 API JSON 오류 분리
-- `.txt` no-cache, hashed asset immutable cache, HTML-only COOP
-- API/WebSocket/SSE의 static 처리 제외
+---
 
-이 항목이 별도 PR과 JAR smoke에서 통과하기 전에는 단일 JAR 배포 완료로 표현하지 않는다.
+### TS-5. 검색 입력의 과도한 요청 (디바운스)
 
-## 4. 주요 문제 해결
+**① 문제 발견**
+지도 장소 검색에서 타이핑 중 매 글자마다 API가 나가 요청이 폭증.
 
-### 4-1. 동시 refresh 경쟁
+**② 원인 분석**
+입력값을 그대로 쿼리 키로 쓰면 **키스트로크마다 요청 1건**. 한글은 IME 조합 특성상 한 글자에도 중간 상태가 여러 번 발생해 요청이 더 늘어남. 단, 검색 결과 필터링 자체는 매 입력에 즉시 반응해야 UX가 좋음(IME 가드는 두지 않기로 결정).
 
-여러 API가 동시에 401을 받으면 refresh 요청도 중복될 수 있었다. 모듈 단위 `refreshPromise`를 공유해 진행 중인 refresh에 합류시키고, 각 원 요청에는 retry marker를 남겨 한 번만 재시도한다.
+**③ 해결책 비교**
+- A. 매 키스트로크마다 요청 → 낭비 심함
+- B. 제출 버튼으로만 검색 → 실시간 UX 상실
+- C. **300ms 디바운스로 서버 요청만 코얼레싱** → 화면 필터는 즉시, 요청만 지연
 
-여기에 실패 원인을 분리했다. 401/403은 세션 만료, network/5xx는 backend 장애로 처리한다. 이 구분 덕분에 장애 상황에서도 기존 사용자 identity를 보존한다.
+**④ 해결책 결정·도입**
+C 채택. `useDebouncedValue(value, 300)`로 값이 안정될 때만 쿼리 키를 갱신하고, `enabled: trimmed.length > 0`로 빈 검색을 차단. 화면 상 필터링은 매 입력 반영(IME 가드 미적용).
 
-### 4-2. 런타임 ID와 정적 export 충돌
+**⑤ 결과 (정량 · 실행 계측)**
+> 디바운스 훅(`useDebouncedValue`, 300ms)을 재현해 "강남역" 입력(IME 조합 9단계, 타이핑 간격 90ms)을 실행 계측한 결과:
+```
+[A 매 입력 요청]   검색 API 호출 = 9건
+[C 300ms 디바운스] 검색 API 호출 = 1건
+검색 요청 감소: 9 → 1 (-89%)
+```
+- "강남역" 입력 시 **검색 API 호출 9 → 1건 (-89%)**, 입력이 길수록 감소율 증가
+- 빈 문자열 요청 차단(`enabled`)으로 무의미한 호출 제거, 화면 필터링은 즉시 반영(IME 가드 미적용)
 
-채팅·모임·질문 ID는 빌드 시 알 수 없다. runtime ID를 path segment에 두는 대신 유한한 고정 page와 query로 옮겼다. 중앙 parser가 strict positive safe integer만 허용하고, 잘못된 링크는 data component보다 앞에서 차단한다.
+---
 
-### 4-3. REST와 WebSocket의 배포 오리진 불일치
+### TS-6. 모바일 환경 로그인 감지 오작동
 
-과거에는 Next 설정 프록시와 별도 WebSocket endpoint가 섞여 환경마다 쿠키·연결 조건이 달랐다. 현재 production은 REST와 WebSocket 모두 브라우저 same-origin을 사용한다. 개발 환경만 backend origin을 명시해 로컬 분리를 지원한다.
+**① 문제 발견**
+데스크톱은 정상이나 **모바일에서 로그인했는데도 게스트로 취급**되는 케이스.
 
-### 4-4. 서버 상태 갱신 범위
+**② 원인 분석**
+로그인 상태를 클라이언트 상태/타이밍에 의존하다 보니, 모바일의 쿠키 전송·하이드레이션 타이밍 편차에서 어긋남. API 오리진 불일치로 **쿠키가 요청에 실리지 않는** 경우도 있었음.
 
-채팅 뮤테이션 뒤 전체 query를 비우지 않고 목록·해당 방·메시지처럼 영향받는 key만 갱신한다. 로그아웃·세션 만료처럼 사용자 경계가 바뀌는 경우에만 private cache 전체를 정리한다.
+**③ 해결책 비교**
+- A. 클라이언트 상태만으로 판단 → 모바일 타이밍 이슈 재발
+- B. **감지 구조를 서버 기준으로 재정비 + same-origin 프록시로 쿠키 일치**
 
-### 4-5. 지도 검색 UX
+**④ 해결책 결정·도입**
+B 채택. 로그인 감지 구조를 개선하고(`fix: 모바일 환경 로그인 감지 구조 개선`), API 요청을 **same-origin 프록시(`/api/v1/*`)로 전환**해 쿠키 전송 오리진 불일치를 제거.
 
-검색어는 debounce 후 요청하고 빈 문자열은 차단한다. 독립적인 주소·POI 조회는 병렬로 실행하며, 같은 좌표의 결과는 query cache를 재사용한다. 지도는 먼저 반응하고 세부 주소는 loading state 뒤에 채운다.
+**⑤ 결과**
+- 모바일에서 로그인 상태 오판 케이스 해소, 크로스 오리진 쿠키 누락 제거
 
-## 5. 보존한 역사적 맥락
+---
 
-다음은 이전 설계의 배경이며 현재 구조로 읽으면 안 된다.
+### TS-7. 그 외 UI/UX 디테일 수정
+| 문제 | 수정 |
+|---|---|
+| 월/연도 휠 피커에서 선택 항목이 하이라이트 바에 **가려짐** | z-index·레이어 순서 재조정 (#23) |
+| 채팅방 공지 배너가 스크롤 시 메시지와 **겹침** | `sticky` 고정 처리 (#27) |
+| 검색 중 **빈 화면** 노출 | 로딩 상태 표시로 교체 |
+| 한글 **초성/부분 검색** 미지원 | `es-hangul` 기반 `hangul-includes` 유틸 도입 |
+| 하드코딩된 한글 문자열 | **전부 i18n 카탈로그로 이관** (7개 언어, 하드코딩 한글 0) |
+| 아이콘이 시안과 미세하게 다름 | **Figma 실측 SVG로 교체** |
+| null/빈 배열에서 런타임 에러 | 검색·휠 피커 유틸에 **방어 코드** 추가 |
 
-- 초기에는 Next Proxy의 cookie 존재 확인과 server component의 사용자 검증을 조합했다. 정적 export 전환 후에는 `useMe()` client gate가 이를 대체한다.
-- 초기에는 Next 설정 프록시로 production REST를 연결했다. 현재 production은 Spring과 browser same-origin이다.
-- 초기에는 runtime ID dynamic segment를 사용했다. 현재는 여섯 fixed query route다.
-- 이전 문서의 refresh·검색 호출 횟수는 로컬 재현 스크립트 기록이며 운영 트래픽 지표나 SLA가 아니다.
-- 이전 build 시간·route 수·파일 수·LOC는 당시 snapshot이다. 현재 성과 수치로 재사용하지 않는다.
-- Spring static hosting/JAR smoke는 별도 BE 작업이며 이 FE 문서에서 구현·검증 완료를 주장하지 않는다.
+---
 
-## 6. 이력서용 요약
+## 5. 성과 & 배운 점
 
-### 한 줄 소개
+- **3주 만에 인증·실시간 채팅·지도·모임/질문/친구/신고까지** 하나의 프로덕션급 프론트엔드를 단독 완성
+- 서버 상태(React Query)와 클라이언트 상태(Zustand)를 **명확히 분리**하고, 어댑터 레이어로 **백엔드 변경으로부터 UI를 격리**하는 구조를 체득
+- 인터셉터 기반으로 **CSRF·토큰 리프레시·동시성 제어를 인프라화**해 개별 요청 코드에서 인증 관심사를 제거
+- 외국인 타깃 특성을 반영해 **7개 언어 i18n**을 자체 설계, 하드코딩 한글 제로를 규칙으로 운영
+- 라우트·이슈·브랜치·커밋을 문서와 동기화하는 **협업 규율**을 스스로 수립·준수
 
-> Next.js 16·React 19·TypeScript로 한국 거주 외국인을 위한 지도 기반 커뮤니티 프론트엔드를 설계·구현했습니다.
+---
 
-### 핵심 bullet
+## 6. 이력서 · 자기소개서용 요약 (복사해서 사용)
 
-- Next.js를 build-only static export로 전환하고 runtime ID를 fixed query route와 strict parser로 수렴
-- `useMe()` 중심 client auth gate와 refresh failure 분류로 세션 만료와 backend 장애를 분리
-- production REST·WebSocket을 browser same-origin으로 통일하고 local development origin만 명시적으로 허용
-- TanStack Query key를 도메인별로 설계해 뮤테이션 영향 범위와 private cache lifecycle을 관리
-- STOMP/WebSocket 채팅, Leaflet 지도, 모임·질문·친구·신고 흐름 구현
-- 외국인 사용자를 위한 7개 언어 message catalog 운영
+### 📌 한 줄 소개
+> 한국 거주 외국인을 위한 위치 기반 커뮤니티 서비스 '이음'의 프론트엔드를 단독 설계·구현 (Next.js 16 · React 19 · TypeScript).
 
-### 자기소개서용
+### 📌 이력서 bullet (성과 중심)
+- Next.js 16 App Router · React 19 · TypeScript 기반 **위치 기반 커뮤니티 서비스 프론트엔드를 3주간 단독 개발** (12개 도메인, 165파일 / 약 13,500 LOC, 프로덕션 빌드 17개 라우트)
+- **Axios 인터셉터로 CSRF·토큰 리프레시를 인프라화**하고, refresh Promise 싱글턴(dedup)으로 **동시 401 시 refresh 호출 6→1회(-83%)·세션 강제 로그아웃 6→0건** 달성 *(로직 재현 실행 계측)*
+- 검색 입력에 **300ms 디바운스**를 적용해 **검색 API 호출 9→1회(-89%)** 로 코얼레싱 *(로직 재현 실행 계측)*
+- 인증 가드를 **쿠키 확인(1층)+서버 검증(2층) 2단계 구조**로 설계해 **화면 이동당 인증 왕복 1→0회**로 정확성·성능 동시 확보
+- **STOMP/WebSocket 실시간 채팅**을 REST 캐시와 결합해 구현, 뮤테이션 무효화를 "전체→목록+해당 방 1~2키"로 정밀화해 불필요한 재요청 제거
+- 도메인별 **어댑터 레이어**로 백엔드 DTO 변경이 UI에 전파되지 않도록 격리하는 클린 아키텍처 적용
+- 외국인 타깃을 위해 **7개 언어 i18n을 자체 설계**하고 하드코딩 한글 제거를 규칙화
+- Leaflet 지도에 모임·질문 핀 오버레이, 내 위치 따라가기, 장소 검색·역지오코딩 구현
 
-> 이음의 프론트엔드를 맡으며 기능 추가보다 경계 설계에 집중했습니다. 인증에서는 동시 refresh를 하나의 Promise로 수렴하고, 세션 만료와 서버 장애를 분리해 일시적인 장애가 로그아웃으로 번지지 않게 했습니다. 배포 구조는 Next 서버 의존을 없애고 검증된 정적 산출물과 Spring 책임을 분리했습니다. 이 경험을 통해 화면, 데이터, 인증, 배포가 만나는 지점을 명시적인 계약과 검증으로 관리하는 법을 배웠습니다.
+### 📌 자기소개서용 (경험 서술)
+> 해커톤에서 외국인 커뮤니티 서비스의 프론트엔드를 혼자 맡았습니다. 단순히 화면을 그리는 데 그치지 않고, **인증·실시간·상태 관리를 인프라 수준에서 설계**하는 데 집중했습니다. 대표적으로, 토큰이 만료된 시점에 여러 요청이 동시에 갱신을 시도하면서 정상 사용자의 세션이 통째로 끊기는 버그를 만났습니다. 각 요청이 개별로 갱신하는 방식·뮤텍스 큐잉·Promise 싱글턴 세 가지를 비교한 끝에, **진행 중인 갱신 요청 하나를 공유(dedup)하는 방식**으로 최소한의 변경만으로 근본 원인을 제거했습니다. 이 과정에서 "기능을 붙이는 것"과 "구조를 세우는 것"의 차이를 체감했고, 이후 CSRF·인증 가드·캐시 무효화 같은 관심사를 **공통 인프라로 끌어올려 개별 코드에서 반복을 없애는** 습관을 갖게 되었습니다.
+
+---
+
+*본 문서는 커밋 이력·코드베이스·설계 기록을 기반으로 작성되었습니다.*
