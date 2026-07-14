@@ -164,7 +164,7 @@ function MeetupLocationMap({
               title={t.createPlaceTitle}
               subtitle={currentAddress ?? t.loadingAddress}
               actionLabel={t.createPlaceButton}
-              actionVariant="outlined"
+              actionVariant="filled"
               onAction={() => currentAddress && target && onCreateName(currentAddress, target)}
             />
 
