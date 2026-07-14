@@ -1,5 +1,10 @@
 import axios from "axios"
 
+import { notifySessionExpired } from "@/features/session/lib/session-events"
+import {
+  claimRefreshRetry,
+  classifyRefreshFailure,
+} from "@/features/session/lib/session-retry"
 import { DEV_BACKEND_ORIGIN } from "@/lib/runtime/dev-backend-origin"
 
 export const apiClient = axios.create({
@@ -32,17 +37,34 @@ apiClient.interceptors.response.use(
       config?.url?.includes("/auth/login") ||
       config?.url?.includes("/auth/social")
 
-    if (response?.status !== 401 || config._retried || isAuthBootstrapCall) {
+    if (
+      response?.status !== 401 ||
+      !config ||
+      isAuthBootstrapCall ||
+      !claimRefreshRetry(config)
+    ) {
       return Promise.reject(error)
     }
-    config._retried = true
 
     try {
-      refreshPromise ??= apiClient
-        .post("/api/v1/auth/refresh")
-        .finally(() => {
-          refreshPromise = null
-        })
+      if (!refreshPromise) {
+        refreshPromise = apiClient
+          .post("/api/v1/auth/refresh")
+          .catch((refreshError: unknown) => {
+            const status = axios.isAxiosError(refreshError)
+              ? refreshError.response?.status
+              : undefined
+
+            if (classifyRefreshFailure(status) === "expired") {
+              notifySessionExpired()
+            }
+
+            throw refreshError
+          })
+          .finally(() => {
+            refreshPromise = null
+          })
+      }
       await refreshPromise
       return apiClient(config)
     } catch (refreshError) {

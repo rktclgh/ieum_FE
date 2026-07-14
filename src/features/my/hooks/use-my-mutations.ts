@@ -4,15 +4,22 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { updateLocation, updateMe, updateSettings } from "@/features/my/api/my-api"
 import type { UserMeResponse, UserSettings } from "@/features/session/api/session-api"
+import {
+  getSessionGeneration,
+  isSessionGenerationCurrent,
+  ME_QUERY_KEY,
+} from "@/features/session/lib/session-cache"
 
 // PATCH /users/me 는 전체 UserMeResponse 를 authoritative 로 되돌려주므로,
-// 재요청(invalidate) 대신 응답으로 ["me"] 캐시를 바로 갱신해 화면 깜빡임을 없앤다.
+// 재요청(invalidate) 대신 ME_QUERY_KEY 캐시를 바로 갱신해 화면 깜빡임을 없앤다.
 function useUpdateMe() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateMe,
-    onSuccess: (data) => {
-      queryClient.setQueryData<UserMeResponse>(["me"], data)
+    onMutate: () => getSessionGeneration(queryClient),
+    onSuccess: (data, _variables, sessionGeneration) => {
+      if (!isSessionGenerationCurrent(queryClient, sessionGeneration)) return
+      queryClient.setQueryData<UserMeResponse>(ME_QUERY_KEY, data)
     },
   })
 }
@@ -22,8 +29,14 @@ function useUpdateSettings() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateSettings,
-    onSuccess: (settings: UserSettings) => {
-      queryClient.setQueryData<UserMeResponse>(["me"], (previous) =>
+    onMutate: () => getSessionGeneration(queryClient),
+    onSuccess: (
+      settings: UserSettings,
+      _variables,
+      sessionGeneration,
+    ) => {
+      if (!isSessionGenerationCurrent(queryClient, sessionGeneration)) return
+      queryClient.setQueryData<UserMeResponse>(ME_QUERY_KEY, (previous) =>
         previous ? { ...previous, settings } : previous
       )
     },

@@ -49,8 +49,7 @@ function SettingsContent() {
   const { data: user } = useMe()
   const location = useLocationUpdate()
 
-  // useMe 데이터는 상위 서버 컴포넌트에서 하이드레이트되므로 이 화면 진입 시 항상 존재한다.
-  // (훅 규칙상 조건부 호출을 피하려 항상 호출하되, settings 미도착 시 안전한 기본값을 넘긴다.)
+  // Keep the form hook unconditional while the client auth query settles.
   const form = useSettingsForm(user?.settings ?? DEFAULT_SETTINGS)
 
   if (!user) return null
