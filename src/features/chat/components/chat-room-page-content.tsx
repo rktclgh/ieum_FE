@@ -27,7 +27,11 @@ import { ChatRoomMemberItem } from "@/features/chat/components/chat-room-member-
 import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-danger-actions"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
-import { useChatMessages, useChatRoom } from "@/features/chat/hooks/use-chat-queries"
+import {
+  useChatMessages,
+  useChatRoom,
+  useChatSessionAccess,
+} from "@/features/chat/hooks/use-chat-queries"
 import {
   useDisbandRoom,
   useLeaveRoom,
@@ -42,7 +46,7 @@ import {
   resolveRoomTitle,
   type ChatBubbleMessage,
 } from "@/features/chat/lib/chat-adapter"
-import { useMe } from "@/features/session/hooks/use-me"
+import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { getKstDateKey, formatKstFullDate, formatKstShortDate } from "@/lib/date/kst"
@@ -106,6 +110,10 @@ interface ChatRoomPageContentProps {
   roomId: number
 }
 
+interface ChatRoomSessionContentProps extends ChatRoomPageContentProps {
+  session: ChatSessionAccess
+}
+
 // createdAt + messageId 기준으로 중복 제거 후 오래된→최신 정렬한다(초기 로드 + 실시간 수신 병합).
 function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): ChatBubbleMessage[] {
   const byId = new Map<number, ChatBubbleMessage>()
@@ -118,14 +126,13 @@ function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): Ch
   })
 }
 
-function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
+function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps) {
   const router = useRouter()
   const { messages } = useTranslation()
-  const { data: me } = useMe()
-  const myUserId = me?.userId ?? -1
+  const myUserId = session.userId ?? -1
 
-  const { data: room } = useChatRoom(roomId)
-  const { messages: initialMessages } = useChatMessages(roomId)
+  const { data: room } = useChatRoom(roomId, session)
+  const { messages: initialMessages } = useChatMessages(roomId, session)
 
   const [liveMessages, setLiveMessages] = React.useState<ChatBubbleMessage[]>([])
   const [notice, setNotice] = React.useState<string | null>(null)
@@ -152,7 +159,7 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
     [initialMessages, liveMessages]
   )
 
-  const { connected, send } = useChatRoomSocket(roomId, {
+  const { connected, send } = useChatRoomSocket(session.activeRoomId, {
     onMessage: (event) => {
       if (myUserId < 0) return
       setLiveMessages((prev) => [...prev, adaptMessage(event, myUserId)])
@@ -165,9 +172,9 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
 
   // 방 진입 시 읽음 처리.
   React.useEffect(() => {
-    if (myUserId > 0) markReadMutation.mutate(roomId)
+    if (session.activeRoomId !== null) markReadMutation.mutate(session.activeRoomId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, myUserId])
+  }, [session.activeRoomId])
 
   const roomTitle = room ? resolveRoomTitle(room.members, myUserId, room.roomType) : ""
   const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
@@ -246,6 +253,7 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
   const activeDateBadgeText = activeDateKey ? formatKstShortDate(activeDateKey) : undefined
 
   const handleSend = (value: string) => {
+    if (!session.authenticated) return
     const text = value.trim()
     if (!text) return
     if (!send({ content: text })) {
@@ -299,15 +307,16 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
         <AppBar
           title={roomTitle}
           onLeadingClick={() => router.back()}
-          onTrailingClick={() => setMoreOpen(true)}
+          trailingIcon={session.authenticated ? undefined : null}
+          onTrailingClick={session.authenticated ? () => setMoreOpen(true) : undefined}
           className={!notice ? "border-b border-gray-50 bg-white" : undefined}
         />
-        {!connected && (
+        {session.authenticated && !connected && (
           <div className="bg-amber-50 py-1 text-center text-body-regular-12 text-amber-600">
             연결 중…
           </div>
         )}
-        {socketError && (
+        {session.authenticated && socketError && (
           <div className="bg-red-50 py-1 text-center text-body-regular-12 text-red-500">
             {socketError}
           </div>
@@ -370,11 +379,20 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
               <ChatContextMenu items={cameraMenuItems} className="bottom-full left-4 mb-2" />
             </>
           )}
-          <ChatMessageInput onSend={handleSend} onCameraClick={() => setCameraMenuOpen((prev) => !prev)} />
+          <ChatMessageInput
+            disabled={!session.authenticated}
+            onSend={handleSend}
+            onCameraClick={() => setCameraMenuOpen((prev) => !prev)}
+          />
         </div>
       </main>
 
-      <SidePanel open={moreOpen} onOpenChange={setMoreOpen}>
+      <SidePanel
+        open={session.authenticated && moreOpen}
+        onOpenChange={(open) => {
+          if (session.authenticated) setMoreOpen(open)
+        }}
+      >
         <SidePanelPortal>
           <SidePanelBackdrop />
           <SidePanelViewport>
@@ -382,11 +400,15 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
               <ChatRoomMoreHeader
                 onBack={() => setMoreOpen(false)}
                 notificationOn={notificationOn}
-                onToggleNotification={() =>
+                onToggleNotification={() => {
+                  if (!session.authenticated) return
                   setNotifyMutation.mutate({ roomId, enabled: !notificationOn })
-                }
+                }}
                 pinned={roomPinned}
-                onTogglePin={() => setPinnedMutation.mutate({ roomId, pinned: !roomPinned })}
+                onTogglePin={() => {
+                  if (!session.authenticated) return
+                  setPinnedMutation.mutate({ roomId, pinned: !roomPinned })
+                }}
               />
               <SidePanelContent className="items-center gap-3 px-4 pb-6">
                 <ChatRoomProfile title={roomTitle} />
@@ -408,8 +430,14 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
                 </div>
                 <ChatRoomDangerActions
                   className="w-full"
-                  onLeave={() => setConfirmLeaveOpen(true)}
-                  onDisband={isGroup ? () => setConfirmDisbandOpen(true) : undefined}
+                  onLeave={() => {
+                    if (session.authenticated) setConfirmLeaveOpen(true)
+                  }}
+                  onDisband={
+                    isGroup && session.authenticated
+                      ? () => setConfirmDisbandOpen(true)
+                      : undefined
+                  }
                 />
               </SidePanelContent>
             </SidePanelPopup>
@@ -418,34 +446,52 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
       </SidePanel>
 
       <ConfirmDialog
-        open={confirmLeaveOpen}
-        onOpenChange={setConfirmLeaveOpen}
+        open={session.authenticated && confirmLeaveOpen}
+        onOpenChange={(open) => {
+          if (session.authenticated) setConfirmLeaveOpen(open)
+        }}
         title={messages.chat.leaveChatConfirmTitle}
         description={messages.chat.leaveChatConfirmDescription}
         cancelLabel={messages.chat.cancelButton}
         confirmLabel={messages.chat.leaveChatAction}
-        onConfirm={() =>
+        onConfirm={() => {
+          if (!session.authenticated) return
           leaveRoomMutation.mutate(roomId, {
             onSuccess: () => router.push(routes.chats()),
             onError: () => setSocketError(messages.chat.leaveFailed),
           })
-        }
+        }}
       />
       <ConfirmDialog
-        open={confirmDisbandOpen}
-        onOpenChange={setConfirmDisbandOpen}
+        open={session.authenticated && confirmDisbandOpen}
+        onOpenChange={(open) => {
+          if (session.authenticated) setConfirmDisbandOpen(open)
+        }}
         title={messages.chat.disbandChatConfirmTitle}
         description={messages.chat.disbandChatConfirmDescription}
         cancelLabel={messages.chat.cancelButton}
         confirmLabel={messages.chat.disbandChatAction}
-        onConfirm={() =>
+        onConfirm={() => {
+          if (!session.authenticated) return
           disbandRoomMutation.mutate(roomId, {
             onSuccess: () => router.push(routes.chats()),
             onError: () => setSocketError(messages.chat.disbandFailed),
           })
-        }
+        }}
       />
     </>
+  )
+}
+
+function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
+  const session = useChatSessionAccess(roomId)
+
+  return (
+    <ChatRoomSessionContent
+      key={session.scopeKey}
+      roomId={roomId}
+      session={session}
+    />
   )
 }
 
