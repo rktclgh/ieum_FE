@@ -1,0 +1,52 @@
+name: Notify backend after frontend main update
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Notify backend
+        env:
+          CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          event_type: "frontend-updated"
+        run: |
+          if [[ -z "$CI_GITHUB_TOKEN" ]]; then
+            echo "CI_GITHUB_TOKEN is required" >&2
+            exit 1
+          fi
+
+          curl --fail-with-body \
+            --request POST \
+            --url https://api.github.com/repos/rktclgh/ieum_BE/dispatches \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $CI_GITHUB_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --data '{"event_type": "${{ env.event_type }}", "client_payload": {"fe_sha": "${{ github.sha }}", "fe_ref": "${{ github.ref }}", "fe_repo": "${{ github.repository }}"}}'
