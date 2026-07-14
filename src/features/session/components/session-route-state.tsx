@@ -3,18 +3,19 @@
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
-function SessionLoading() {
+function SessionLoading({ refreshing = false }: { refreshing?: boolean }) {
   const { messages } = useTranslation()
 
   return (
     <main
       aria-busy="true"
+      data-refreshing={refreshing || undefined}
       className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center px-4"
     >
       <div className="flex flex-col items-center gap-3 text-center">
         <span
           aria-hidden="true"
-          className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-600"
+          className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-400"
         />
         <p className="text-body-medium-16 text-gray-900">{messages.session.checking}</p>
       </div>

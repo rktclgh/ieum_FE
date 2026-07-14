@@ -62,7 +62,7 @@ function QuestionAnswerAuthorItem({
             {messages.question.personalChatLabel}
           </Button>
         ) : answer.isAccepted ? (
-          <span className="shrink-0 rounded-full bg-primary-600 px-2.5 py-1 text-body-medium-14 text-white">
+          <span className="shrink-0 rounded-full bg-primary-400 px-2.5 py-1 text-body-medium-14 text-white">
             {messages.question.acceptedBadge}
           </span>
         ) : (

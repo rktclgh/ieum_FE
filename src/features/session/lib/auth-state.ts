@@ -1,11 +1,14 @@
 type AuthState<TUser> =
   | { kind: "loading" }
+  | { kind: "refreshing" }
   | { kind: "authenticated"; user: TUser }
   | { kind: "guest" }
   | { kind: "backend-down"; error: unknown }
 
 interface AuthSnapshot<TUser> {
   isPending?: boolean
+  isFetching?: boolean
+  isRefreshing?: boolean
   data?: TUser | null
   backendUnavailableError?: unknown
 }
@@ -13,6 +16,13 @@ interface AuthSnapshot<TUser> {
 function resolveAuthState<TUser>(snapshot: AuthSnapshot<TUser>): AuthState<TUser> {
   if (snapshot.data !== undefined && snapshot.data !== null) {
     return { kind: "authenticated", user: snapshot.data }
+  }
+
+  if (
+    snapshot.isRefreshing ||
+    (snapshot.data === null && snapshot.isFetching)
+  ) {
+    return { kind: "refreshing" }
   }
 
   if (snapshot.isPending) {

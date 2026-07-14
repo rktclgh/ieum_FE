@@ -12,7 +12,10 @@ import axios, {
 } from "axios"
 import ts from "typescript"
 
-import { subscribeSessionExpired } from "../../src/features/session/lib/session-events.js"
+import {
+  refreshStore,
+  subscribeSessionExpired,
+} from "../../src/features/session/lib/session-events.js"
 import { installSessionInterceptor } from "../../src/lib/api/session-interceptor.js"
 
 const REFRESH_URL = "/api/v1/auth/refresh"
@@ -147,6 +150,10 @@ test("concurrent 401 responses share one refresh and retry each request once", a
   const refreshGate = new Promise<void>((resolve) => {
     releaseRefresh = resolve
   })
+  let releaseRetries!: () => void
+  const retryGate = new Promise<void>((resolve) => {
+    releaseRetries = resolve
+  })
   const adapter: AxiosAdapter = async (config) => {
     if (config.url === REFRESH_URL) {
       refreshCalls += 1
@@ -162,31 +169,57 @@ test("concurrent 401 responses share one refresh and retry each request once", a
       throw createStatusError(config, 401)
     }
 
+    await retryGate
     return createResponse(config, 200, { url })
   }
   const client = axios.create({ adapter })
   installSessionInterceptor(client)
 
-  const firstRequest = client.get("/api/v1/private/one")
-  const secondRequest = client.get("/api/v1/private/two")
+  const refreshStates: string[] = []
+  const unsubscribeRefresh = refreshStore.subscribe(() => {
+    refreshStates.push(refreshStore.getSnapshot())
+  })
 
-  await waitUntil(
-    () =>
-      attempts.get("/api/v1/private/one") === 1 &&
-      attempts.get("/api/v1/private/two") === 1 &&
-      refreshCalls === 1,
-  )
-  releaseRefresh()
+  try {
+    const firstRequest = client.get("/api/v1/private/one")
+    const secondRequest = client.get("/api/v1/private/two")
 
-  const responses = await Promise.all([firstRequest, secondRequest])
+    await waitUntil(
+      () =>
+        attempts.get("/api/v1/private/one") === 1 &&
+        attempts.get("/api/v1/private/two") === 1 &&
+        refreshCalls === 1,
+    )
+    assert.equal(refreshStore.getSnapshot(), "refreshing")
+    releaseRefresh()
+    await waitUntil(
+      () =>
+        attempts.get("/api/v1/private/one") === 2 &&
+        attempts.get("/api/v1/private/two") === 2,
+    )
+    assert.equal(
+      refreshStore.getSnapshot(),
+      "refreshing",
+      "auth must remain refreshing until the original requests settle",
+    )
+    releaseRetries()
 
-  assert.deepEqual(
-    responses.map((response) => response.status),
-    [200, 200],
-  )
-  assert.equal(refreshCalls, 1)
-  assert.equal(attempts.get("/api/v1/private/one"), 2)
-  assert.equal(attempts.get("/api/v1/private/two"), 2)
+    const responses = await Promise.all([firstRequest, secondRequest])
+
+    assert.deepEqual(
+      responses.map((response) => response.status),
+      [200, 200],
+    )
+    assert.equal(refreshCalls, 1)
+    assert.equal(attempts.get("/api/v1/private/one"), 2)
+    assert.equal(attempts.get("/api/v1/private/two"), 2)
+    assert.equal(refreshStore.getSnapshot(), "idle")
+    assert.deepEqual(refreshStates, ["refreshing", "idle"])
+  } finally {
+    releaseRefresh()
+    releaseRetries()
+    unsubscribeRefresh()
+  }
 })
 
 test("production apiClient installs the exported session interceptor", () => {

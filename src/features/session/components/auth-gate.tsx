@@ -37,8 +37,13 @@ function AuthGate({
     return <SessionUnavailable onRetry={() => void refetch()} />
   }
 
-  if (state.kind === "loading" || shouldRedirectToLogin || shouldRedirectHome) {
-    return <SessionLoading />
+  if (
+    state.kind === "loading" ||
+    state.kind === "refreshing" ||
+    shouldRedirectToLogin ||
+    shouldRedirectHome
+  ) {
+    return <SessionLoading refreshing={state.kind === "refreshing"} />
   }
 
   return children

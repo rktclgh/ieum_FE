@@ -30,7 +30,7 @@ function Input({
     <div
       data-slot="input-wrapper"
       className={cn(
-        "flex h-[3.375rem] w-full items-center gap-2 rounded-2xl border border-gray-100 p-4 transition-colors focus-within:border-primary-600 has-disabled:cursor-not-allowed has-disabled:opacity-50",
+        "flex h-[3.375rem] w-full items-center gap-2 rounded-2xl border border-gray-100 p-4 transition-colors focus-within:border-primary-400 has-disabled:cursor-not-allowed has-disabled:opacity-50",
         error && "border-red focus-within:border-red",
         className
       )}
@@ -46,7 +46,7 @@ function Input({
         }}
         onFocus={onFocus}
         onBlur={onBlur}
-        className="w-full bg-transparent text-body-medium-16 text-gray-900 caret-primary-600 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
+        className="w-full bg-transparent text-body-medium-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
         {...props}
       />
       {endAdornment ?? (hasValue && <ClearButton inputRef={inputRef} />)}

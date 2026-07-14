@@ -78,9 +78,10 @@
 - Create: `src/features/session/lib/session-retry.ts`
 
 **Interfaces:**
-- Produces: `resolveAuthState`, `notifySessionExpired`, `subscribeSessionExpired`, `classifyRefreshFailure`, `claimRefreshRetry`.
+- Produces: `resolveAuthState`, `refreshStore`, `setRefreshState`, `notifySessionExpired`, `subscribeSessionExpired`, `classifyRefreshFailure`, `claimRefreshRetry`.
 
 - [ ] Implement only the pure contracts required by Task 1.
+- [ ] Distinguish initial `loading` from no-user `refreshing`, while keeping a cached user authenticated during background refresh.
 - [ ] Give cached user precedence over background errors; only no-user network/5xx is `backend-down`.
 - [ ] Run `bash scripts/ci/test-session-contracts.sh`; expect all TAP tests passing.
 - [ ] Commit `test: #82 브라우저 세션 전이 계약 고정`.

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import test from "node:test"
 
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
@@ -11,6 +12,145 @@ import {
   PUBLIC_QUERY_META,
   resetSessionCache,
 } from "../../src/features/session/lib/session-cache.js"
+
+async function waitUntil(predicate: () => boolean) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (predicate()) return
+    await new Promise<void>((resolve) => setImmediate(resolve))
+  }
+
+  assert.fail("timed out while waiting for session cache activity")
+}
+
+test("overlapping session resets share one reset and a later call starts a new one", async () => {
+  const queryClient = new QueryClient()
+  const publicQueryKey = ["public", "session-reset-guard"] as const
+  const publicFetchResolvers: Array<
+    (value: { owner: string }) => void
+  > = []
+  let publicFetches = 0
+
+  queryClient.setQueryData(publicQueryKey, { owner: "previous-session" })
+  const publicObserver = new QueryObserver(queryClient, {
+    queryKey: publicQueryKey,
+    queryFn: () => {
+      publicFetches += 1
+      return new Promise<{ owner: string }>((resolve) => {
+        publicFetchResolvers.push(resolve)
+      })
+    },
+    meta: PUBLIC_QUERY_META,
+    staleTime: Infinity,
+  })
+  const unsubscribePublic = publicObserver.subscribe(() => undefined)
+
+  try {
+    const initialGeneration = getSessionGeneration(queryClient)
+    const firstReset = resetSessionCache(queryClient)
+    const overlappingReset = resetSessionCache(queryClient)
+    const resetAfterSettlement = firstReset.then(() =>
+      resetSessionCache(queryClient),
+    )
+    assert.equal(overlappingReset, firstReset)
+
+    await new Promise<void>((resolve) => setImmediate(resolve))
+
+    assert.equal(getSessionGeneration(queryClient), initialGeneration + 1)
+    assert.equal(publicFetches, 1)
+
+    publicFetchResolvers[0]?.({ owner: "first-reset" })
+    await waitUntil(() => publicFetches >= 2)
+
+    assert.equal(getSessionGeneration(queryClient), initialGeneration + 2)
+    assert.equal(publicFetches, 2)
+
+    publicFetchResolvers[1]?.({ owner: "later-reset" })
+    await Promise.all([overlappingReset, resetAfterSettlement])
+  } finally {
+    for (const resolve of publicFetchResolvers) {
+      resolve({ owner: "cleanup" })
+    }
+    unsubscribePublic()
+    queryClient.clear()
+  }
+})
+
+test("a reset requested during public refetch clears data created after the first scan", async () => {
+  const queryClient = new QueryClient()
+  const publicQueryKey = ["public", "late-session-reset"] as const
+  const privateQueryKey = ["private", "late-session-data"] as const
+  const publicFetchResolvers: Array<
+    (value: { owner: string }) => void
+  > = []
+  let publicFetches = 0
+
+  queryClient.setQueryData(publicQueryKey, { owner: "previous-session" })
+  const publicObserver = new QueryObserver(queryClient, {
+    queryKey: publicQueryKey,
+    queryFn: () => {
+      publicFetches += 1
+      return new Promise<{ owner: string }>((resolve) => {
+        publicFetchResolvers.push(resolve)
+      })
+    },
+    meta: PUBLIC_QUERY_META,
+    staleTime: Infinity,
+  })
+  const unsubscribePublic = publicObserver.subscribe(() => undefined)
+
+  try {
+    const initialGeneration = getSessionGeneration(queryClient)
+    const firstReset = resetSessionCache(queryClient)
+
+    await waitUntil(() => publicFetches >= 1)
+
+    queryClient.setQueryData(ME_QUERY_KEY, {
+      userId: 2,
+      nickname: "new-session",
+    })
+    queryClient.setQueryData(privateQueryKey, { owner: "new-session" })
+    queryClient.getMutationCache().build(queryClient, {
+      mutationKey: ["new-session", "mutation"],
+      mutationFn: async () => undefined,
+    })
+
+    const lateReset = resetSessionCache(queryClient)
+    assert.equal(lateReset, firstReset)
+    publicFetchResolvers[0]?.({ owner: "first-reset" })
+
+    await waitUntil(() => publicFetches >= 2)
+
+    assert.equal(getSessionGeneration(queryClient), initialGeneration + 2)
+    assert.equal(queryClient.getQueryData(privateQueryKey), undefined)
+    assert.equal(queryClient.getMutationCache().getAll().length, 0)
+
+    publicFetchResolvers[1]?.({ owner: "queued-reset" })
+    await Promise.all([firstReset, lateReset])
+    assert.equal(queryClient.getQueryData(ME_QUERY_KEY), null)
+  } finally {
+    for (const resolve of publicFetchResolvers) {
+      resolve({ owner: "cleanup" })
+    }
+    unsubscribePublic()
+    queryClient.clear()
+  }
+})
+
+test("the session-expired provider callback reports reset rejections", () => {
+  const providerSource = readFileSync(
+    "src/lib/query/query-provider.tsx",
+    "utf8",
+  )
+
+  assert.match(
+    providerSource,
+    /resetSessionCache\(queryClient\)\.catch\(\(error\)\s*=>\s*\{/,
+  )
+  assert.match(
+    providerSource,
+    /console\.error\("Failed to reset session cache",\s*error\)/,
+  )
+})
 
 test("session reset refetches active public queries and empties active private observers", async () => {
   const queryClient = new QueryClient()

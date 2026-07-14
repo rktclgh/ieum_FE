@@ -98,12 +98,14 @@
 
 | 상태 | `/my/**` | `/login/`, `/join/**` |
 |---|---|---|
-| 확인 중 | 확인 UI | 확인 UI |
-| 사용자 있음 | content | `/`로 replace |
+| 최초 확인 중 | 확인 UI | 확인 UI |
+| refresh 중, cached user 없음 | 확인 UI | 확인 UI |
+| 사용자 있음 (background refresh 포함) | content | `/`로 replace |
 | guest 확정 | `/login/`으로 replace | content |
 | network/5xx | retry UI, redirect 없음 | retry UI, redirect 없음 |
 
 - guest-only 정책은 `/login/`과 `/join/**`에 적용한다. `/join/social/`은 layout gate 뒤에서 sessionStorage 토큰도 별도로 검증한다.
+- users/me 401 뒤 refresh 및 재시도 결과 반영이 진행되는 동안 cached user가 없으면 `refreshing` 상태로 content를 숨기고, cached user가 있으면 authenticated 상태를 유지한다.
 - refresh 401/403만 세션 만료로 처리한다. private query data를 비우고 active public query를 새 세션 기준으로 refetch한 뒤 `['me'] = null`로 둔다.
 - refresh network/5xx는 사용자 identity와 cache를 보존한다. 서버 장애를 로그아웃으로 바꾸지 않는다.
 - chats, friends, meetups, questions, OAuth callback은 정적 public shell이다. 정적 페이지 노출은 데이터 접근 권한을 뜻하지 않는다.

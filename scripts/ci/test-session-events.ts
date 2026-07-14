@@ -3,8 +3,31 @@ import test from "node:test"
 
 import {
   notifySessionExpired,
+  refreshStore,
+  setRefreshState,
   subscribeSessionExpired,
 } from "../../src/features/session/lib/session-events.js"
+
+test("refresh store publishes only real state transitions", () => {
+  const observedStates: string[] = []
+  const unsubscribe = refreshStore.subscribe(() => {
+    observedStates.push(refreshStore.getSnapshot())
+  })
+
+  try {
+    assert.equal(refreshStore.getSnapshot(), "idle")
+    assert.equal(refreshStore.getServerSnapshot(), "idle")
+
+    setRefreshState("refreshing")
+    setRefreshState("refreshing")
+    setRefreshState("idle")
+
+    assert.deepEqual(observedStates, ["refreshing", "idle"])
+  } finally {
+    setRefreshState("idle")
+    unsubscribe()
+  }
+})
 
 test("session-expired subscribers receive notifications until unsubscribe", () => {
   let calls = 0

@@ -259,7 +259,7 @@ test("auth gates, session reset subscription, and login invalidation stay wired"
   )
   assert.match(
     blockingBranch?.thenStatement.getText(authGateFile) ?? "",
-    /<SessionLoading\s*\/>/,
+    /<SessionLoading\s+refreshing=\{state\.kind === "refreshing"\}\s*\/>/,
     "loading and redirect transitions must not expose gated children",
   )
   assert.deepEqual(
@@ -268,8 +268,13 @@ test("auth gates, session reset subscription, and login invalidation stay wired"
           .map((expression) => compact(expression.getText(authGateFile)))
           .sort()
       : [],
-    ['state.kind==="loading"', "shouldRedirectHome", "shouldRedirectToLogin"].sort(),
-    "loading and both redirect transitions must block children with OR semantics",
+    [
+      'state.kind==="loading"',
+      'state.kind==="refreshing"',
+      "shouldRedirectHome",
+      "shouldRedirectToLogin",
+    ].sort(),
+    "loading, refreshing, and both redirect transitions must block children with OR semantics",
   )
   const finalStatement = authGate.body.statements.at(-1)
   assert.ok(
@@ -385,6 +390,34 @@ test("public data hooks opt into the public session query scope", () => {
     assert.match(source, /import \{ PUBLIC_QUERY_META \}/, relativePath)
     assert.equal(source.match(/meta: PUBLIC_QUERY_META/g)?.length, expectedCount, relativePath)
   }
+})
+
+test("meetup date picker lets the Drawer portal own content remounting", () => {
+  const relativePath = "src/features/meetup/components/meetup-date-picker.tsx"
+  const sourceFile = parse(relativePath)
+  const picker = findFunction(sourceFile, "MeetupDatePicker")
+  assert.ok(picker?.body, "MeetupDatePicker implementation is missing")
+
+  const content = visit(
+    picker,
+    (node) =>
+      ts.isJsxSelfClosingElement(node) &&
+      node.tagName.getText(sourceFile) === "MeetupDatePickerContent",
+  )[0]
+  assert.ok(
+    content && ts.isJsxSelfClosingElement(content),
+    "MeetupDatePickerContent mount is missing",
+  )
+
+  const keyAttribute = content.attributes.properties.find(
+    (attribute) =>
+      ts.isJsxAttribute(attribute) && attribute.name.getText(sourceFile) === "key",
+  )
+  assert.equal(
+    Boolean(keyAttribute),
+    false,
+    "DrawerPortal unmounts after its exit transition; content must not remount early from a key change",
+  )
 })
 
 test("REST, map, and WebSocket consumers keep the same-origin transport contract", () => {

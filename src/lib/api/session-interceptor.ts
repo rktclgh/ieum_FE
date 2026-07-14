@@ -4,10 +4,14 @@ import {
   claimRefreshRetry,
   classifyRefreshFailure,
 } from "../../features/session/lib/session-retry"
-import { notifySessionExpired } from "../../features/session/lib/session-events"
+import {
+  notifySessionExpired,
+  setRefreshState,
+} from "../../features/session/lib/session-events"
 
 function installSessionInterceptor(client: AxiosInstance) {
   let refreshPromise: Promise<unknown> | null = null
+  let activeRefreshRequests = 0
 
   return client.interceptors.response.use(
     (response) => response,
@@ -29,6 +33,7 @@ function installSessionInterceptor(client: AxiosInstance) {
 
       try {
         if (!refreshPromise) {
+          setRefreshState("refreshing")
           refreshPromise = client
             .post("/api/v1/auth/refresh")
             .catch((refreshError: unknown) => {
@@ -42,13 +47,25 @@ function installSessionInterceptor(client: AxiosInstance) {
 
               throw refreshError
             })
-            .finally(() => {
-              refreshPromise = null
-            })
         }
 
-        await refreshPromise
-        return client(config)
+        const currentRefreshPromise = refreshPromise
+        activeRefreshRequests += 1
+
+        try {
+          await currentRefreshPromise
+          return await client(config)
+        } finally {
+          activeRefreshRequests -= 1
+
+          if (
+            activeRefreshRequests === 0 &&
+            refreshPromise === currentRefreshPromise
+          ) {
+            refreshPromise = null
+            setRefreshState("idle")
+          }
+        }
       } catch (refreshError) {
         return Promise.reject(refreshError)
       }

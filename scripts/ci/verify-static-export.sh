@@ -20,9 +20,6 @@ assert_absent src/proxy.ts
 assert_absent src/features/session/api/session-server-api.ts
 assert_absent src/lib/api/config.ts
 
-dynamic_directory=$(find src/app -type d -name '[[]*[]]' -print -quit)
-[[ -z "$dynamic_directory" ]] || fail "runtime dynamic app directory remains: $dynamic_directory"
-
 route_handler=$(find src/app -type f \( \
   -name 'route.js' -o \
   -name 'route.jsx' -o \
@@ -53,8 +50,9 @@ fi
 
 node scripts/ci/verify-static-export-config.mjs || fail "source config does not match the static export contract"
 
-assert_file out/index.html
-assert_file out/index.txt
+route_inventory=$(node scripts/ci/static-export-routes.mjs src/app) || \
+  fail "could not derive static routes from the app page tree"
+
 assert_file out/404.html
 assert_file out/manifest.webmanifest
 assert_file out/favicon.ico
@@ -64,29 +62,13 @@ assert_file out/icons/pwa/icon-maskable-192.png
 assert_file out/icons/pwa/icon-maskable-512.png
 assert_file out/icons/pwa/apple-touch-icon.png
 
-routes=(
-  chats
-  chats/notices
-  chats/report
-  chats/room
-  chats/schedule
-  friends
-  join
-  join/social
-  login
-  meetups/detail
-  my
-  my/edit
-  my/settings
-  oauth/kakao/callback
-  questions
-  questions/detail
-)
+while IFS= read -r route; do
+  route_directory=out
+  [[ -z "$route" ]] || route_directory+="/$route"
 
-for route in "${routes[@]}"; do
-  assert_file "out/$route/index.html"
-  assert_file "out/$route/index.txt"
-done
+  assert_file "$route_directory/index.html"
+  assert_file "$route_directory/index.txt"
+done <<< "$route_inventory"
 
 static_asset=$(find out/_next/static -type f -size +0c -print -quit 2>/dev/null || true)
 [[ -n "$static_asset" ]] || fail "missing Next static assets"

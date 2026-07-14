@@ -26,7 +26,9 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   useEffect(
     () =>
       subscribeSessionExpired(() => {
-        void resetSessionCache(queryClient);
+        void resetSessionCache(queryClient).catch((error) => {
+          console.error("Failed to reset session cache", error);
+        });
       }),
     [queryClient]
   );

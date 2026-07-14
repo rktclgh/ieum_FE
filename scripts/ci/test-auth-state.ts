@@ -1,4 +1,6 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import test from "node:test"
 
 import { resolveAuthState } from "../../src/features/session/lib/auth-state.js"
@@ -15,6 +17,16 @@ test("pending auth without a cached user stays loading", () => {
   )
 })
 
+test("refreshing auth without a cached user stays behind the loading gate", () => {
+  assert.deepEqual(
+    resolveAuthState({
+      isPending: true,
+      isRefreshing: true,
+    }),
+    { kind: "refreshing" },
+  )
+})
+
 test("a cached user takes precedence over a background error", () => {
   assert.deepEqual(
     resolveAuthState({
@@ -22,6 +34,27 @@ test("a cached user takes precedence over a background error", () => {
       backendUnavailableError: new Error("background backend outage"),
     }),
     { kind: "authenticated", user },
+  )
+})
+
+test("a cached user stays authenticated during a background refresh", () => {
+  assert.deepEqual(
+    resolveAuthState({
+      data: user,
+      isRefreshing: true,
+      isFetching: true,
+    }),
+    { kind: "authenticated", user },
+  )
+})
+
+test("a cached guest stays refreshing until the me refetch publishes its result", () => {
+  assert.deepEqual(
+    resolveAuthState({
+      data: null,
+      isFetching: true,
+    }),
+    { kind: "refreshing" },
   )
 })
 
@@ -47,4 +80,21 @@ test("an unclassified error cannot produce a backend outage", () => {
 
 test("an unresolved snapshot defaults to loading", () => {
   assert.deepEqual(resolveAuthState({}), { kind: "loading" })
+})
+
+test("the auth hook and gate consume the refresh store without exposing children", () => {
+  const hook = readFileSync(
+    resolve(process.cwd(), "src/features/session/hooks/use-auth-state.ts"),
+    "utf8",
+  ).replace(/\s+/g, "")
+  const gate = readFileSync(
+    resolve(process.cwd(), "src/features/session/components/auth-gate.tsx"),
+    "utf8",
+  ).replace(/\s+/g, "")
+
+  assert.match(hook, /useSyncExternalStore\(refreshStore\.subscribe,refreshStore\.getSnapshot,refreshStore\.getServerSnapshot,?\)/)
+  assert.match(hook, /isRefreshing:refreshState==="refreshing"/)
+  assert.match(hook, /isFetching,/)
+  assert.match(gate, /state\.kind==="loading"\|\|state\.kind==="refreshing"/)
+  assert.match(gate, /<SessionLoadingrefreshing=\{state\.kind==="refreshing"\}\/>/)
 })
