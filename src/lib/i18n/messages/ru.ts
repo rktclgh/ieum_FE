@@ -327,6 +327,7 @@ export const ru: Messages = {
     sendFailed: "Не удалось отправить сообщение. Проверьте подключение.",
     leaveFailed: "Не удалось выйти из чата.",
     disbandFailed: "Не удалось распустить чат.",
+    connecting: "Подключение…",
     leaveChatConfirmTitle: "Покинуть этот чат",
     leaveChatConfirmDescription: "Вы уверены, что хотите выйти?",
     disbandChatConfirmTitle: "Распустить этот чат",

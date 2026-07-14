@@ -326,6 +326,7 @@ export const th: Messages = {
     sendFailed: "ไม่สามารถส่งข้อความได้ กรุณาตรวจสอบการเชื่อมต่อ",
     leaveFailed: "ออกจากห้องแชทไม่สำเร็จ",
     disbandFailed: "ยุบห้องแชทไม่สำเร็จ",
+    connecting: "กำลังเชื่อมต่อ…",
     leaveChatConfirmTitle: "ออกจากห้องแชทนี้",
     leaveChatConfirmDescription: "คุณแน่ใจหรือไม่ว่าต้องการออก?",
     disbandChatConfirmTitle: "ยุบห้องแชทนี้",

@@ -189,6 +189,7 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
   const notificationOn = room?.notifyEnabled ?? true
   const roomPinned = room?.pinned ?? false
   const isGroup = room?.roomType === "group"
+  const isQuestionRoom = room?.roomType === "question"
 
   // 메시지를 한국 날짜(KST) 단위로 묶어서 날짜가 바뀔 때마다 구분선을 표시한다.
   const dateGroups = React.useMemo(() => {
@@ -321,7 +322,7 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
         />
         {!connected && (
           <div className="bg-amber-50 py-1 text-center text-body-regular-12 text-amber-600">
-            연결 중…
+            {messages.chat.connecting}
           </div>
         )}
         {socketError && (
@@ -398,6 +399,7 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
             <SidePanelPopup>
               <ChatRoomMoreHeader
                 onBack={() => setMoreOpen(false)}
+                showActions={!isQuestionRoom}
                 notificationOn={notificationOn}
                 onToggleNotification={() =>
                   setNotifyMutation.mutate({ roomId, enabled: !notificationOn })
@@ -406,12 +408,17 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
                 onTogglePin={() => setPinnedMutation.mutate({ roomId, pinned: !roomPinned })}
               />
               <SidePanelContent className="items-center gap-3 px-4 pb-6">
-                <ChatRoomProfile title={roomTitle} />
-                <ChatRoomInfoSection
-                  className="w-full"
-                  onNoticeClick={() => router.push(`/chats/${roomId}/notices`)}
-                  onScheduleClick={() => router.push(`/chats/${roomId}/schedule`)}
+                <ChatRoomProfile
+                  title={roomTitle}
+                  avatarSrc={isQuestionRoom ? questionSummary?.imageUrl : undefined}
                 />
+                {!isQuestionRoom && (
+                  <ChatRoomInfoSection
+                    className="w-full"
+                    onNoticeClick={() => router.push(`/chats/${roomId}/notices`)}
+                    onScheduleClick={() => router.push(`/chats/${roomId}/schedule`)}
+                  />
+                )}
                 <div className="flex w-full flex-col rounded-2xl bg-gray-50">
                   <SectionTitle title={messages.chat.membersTitle} count={roomMembers.length} padding="12" />
                   {roomMembers.map((member) => (

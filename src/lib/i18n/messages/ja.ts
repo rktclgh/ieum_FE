@@ -326,6 +326,7 @@ export const ja: Messages = {
     sendFailed: "メッセージを送信できません。接続を確認してください。",
     leaveFailed: "チャットルームの退出に失敗しました。",
     disbandFailed: "チャットルームの解散に失敗しました。",
+    connecting: "接続中…",
     leaveChatConfirmTitle: "チャットルームを退出します",
     leaveChatConfirmDescription: "本当に退出しますか?",
     disbandChatConfirmTitle: "チャットルームを解散します",

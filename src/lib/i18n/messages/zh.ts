@@ -326,6 +326,7 @@ export const zh: Messages = {
     sendFailed: "无法发送消息，请检查网络连接。",
     leaveFailed: "退出聊天室失败。",
     disbandFailed: "解散聊天室失败。",
+    connecting: "连接中…",
     leaveChatConfirmTitle: "退出聊天室",
     leaveChatConfirmDescription: "确定要退出吗?",
     disbandChatConfirmTitle: "解散聊天室",

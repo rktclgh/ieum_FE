@@ -327,6 +327,7 @@ export interface Messages {
     sendFailed: string
     leaveFailed: string
     disbandFailed: string
+    connecting: string
     leaveChatConfirmTitle: string
     leaveChatConfirmDescription: string
     disbandChatConfirmTitle: string
@@ -724,6 +725,7 @@ export const ko: Messages = {
     sendFailed: "메시지를 보낼 수 없습니다. 연결을 확인해주세요.",
     leaveFailed: "채팅방 나가기에 실패했습니다.",
     disbandFailed: "채팅방 해체에 실패했습니다.",
+    connecting: "연결 중…",
     leaveChatConfirmTitle: "채팅방을 나갑니다",
     leaveChatConfirmDescription: "정말로 나가시겠습니까?",
     disbandChatConfirmTitle: "채팅방을 해체합니다",

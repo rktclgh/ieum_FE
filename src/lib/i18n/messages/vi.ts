@@ -327,6 +327,7 @@ export const vi: Messages = {
     sendFailed: "Không thể gửi tin nhắn. Vui lòng kiểm tra kết nối.",
     leaveFailed: "Rời phòng chat thất bại.",
     disbandFailed: "Giải tán phòng chat thất bại.",
+    connecting: "Đang kết nối…",
     leaveChatConfirmTitle: "Rời khỏi phòng chat",
     leaveChatConfirmDescription: "Bạn có chắc chắn muốn rời khỏi không?",
     disbandChatConfirmTitle: "Giải tán phòng chat",

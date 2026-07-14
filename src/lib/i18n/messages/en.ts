@@ -327,6 +327,7 @@ export const en: Messages = {
     sendFailed: "Couldn't send the message. Check your connection.",
     leaveFailed: "Failed to leave the chat.",
     disbandFailed: "Failed to disband the chat.",
+    connecting: "Connecting…",
     leaveChatConfirmTitle: "Leave this chat",
     leaveChatConfirmDescription: "Are you sure you want to leave?",
     disbandChatConfirmTitle: "Disband this chat",
