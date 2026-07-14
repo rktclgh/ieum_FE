@@ -2,6 +2,7 @@ import { resolveFileUrl } from "@/lib/api/file-url"
 import { flagFromIso2, fromIso2 } from "@/features/join/lib/nationality-map"
 import type {
   AnswerResponse,
+  LocationSnapshot,
   MyQuestionItem,
   QuestionDetailResponse,
 } from "@/features/question/api/question-types"
@@ -34,6 +35,7 @@ interface QuestionDetailView {
   authorName: string
   authorAvatarUrl?: string
   address: string
+  location: LocationSnapshot
   imageUrls: string[]
   answers: QuestionAnswerView[]
 }
@@ -66,6 +68,7 @@ function adaptQuestionDetail(detail: QuestionDetailResponse): QuestionDetailView
     authorName: detail.author.nickname,
     authorAvatarUrl: resolveFileUrl(detail.author.profileImageUrl),
     address: detail.location.address,
+    location: detail.location,
     imageUrls: detail.imageUrls
       .map((url) => resolveFileUrl(url))
       .filter((url): url is string => Boolean(url)),
