@@ -38,7 +38,9 @@ test("fixed route builders preserve the static export path contract", () => {
       friends: routes.friends(),
       my: routes.my(),
       myEdit: routes.myEdit(),
-      mySettings: routes.mySettings(),
+      myNotifications: routes.myNotifications(),
+      myPermissions: routes.myPermissions(),
+      myInquiry: routes.myInquiry(),
     },
     {
       home: "/",
@@ -51,7 +53,9 @@ test("fixed route builders preserve the static export path contract", () => {
       friends: "/friends/",
       my: "/my/",
       myEdit: "/my/edit/",
-      mySettings: "/my/settings/",
+      myNotifications: "/my/notifications/",
+      myPermissions: "/my/permissions/",
+      myInquiry: "/my/inquiry/",
     }
   )
 })
