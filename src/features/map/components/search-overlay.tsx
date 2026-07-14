@@ -43,7 +43,7 @@ function SearchOverlay({
     return () => clearTimeout(timer)
   }, [query])
 
-  const { meetups, questions, places } = useSearchResults(debounced, near)
+  const { meetups, questions, places, isLoading } = useSearchResults(debounced, near)
   const q = debounced.trim()
 
   const showMeetups = tab === "all" || tab === "meetup"
@@ -52,7 +52,11 @@ function SearchOverlay({
   const cap = (length: number) => (tab === "all" ? Math.min(length, PREVIEW_LIMIT) : length)
 
   const isEmpty =
-    q.length > 0 && meetups.length === 0 && questions.length === 0 && places.length === 0
+    !isLoading &&
+    q.length > 0 &&
+    meetups.length === 0 &&
+    questions.length === 0 &&
+    places.length === 0
 
   return (
     <div className="fixed inset-0 z-40 mx-auto flex w-full max-w-sm flex-col bg-white">
@@ -79,6 +83,12 @@ function SearchOverlay({
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-8">
+        {isLoading && q.length > 0 ? (
+          <div className="mt-16 flex justify-center">
+            <div className="size-6 animate-spin rounded-full border-2 border-gray-200 border-t-primary-600" />
+          </div>
+        ) : null}
+
         {isEmpty ? (
           <p className="mt-16 text-center text-body-regular-14 text-gray-400">
             {messages.home.searchEmpty}
