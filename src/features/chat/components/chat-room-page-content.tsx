@@ -42,6 +42,7 @@ import {
   resolveRoomTitle,
   type ChatBubbleMessage,
 } from "@/features/chat/lib/chat-adapter"
+import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -168,7 +169,14 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, myUserId])
 
-  const roomTitle = room ? resolveRoomTitle(room.members, myUserId, room.roomType) : ""
+  const questionId = room?.roomType === "question" ? room.questionId ?? undefined : undefined
+  const { data: questionSummary } = useQuestionSummary(questionId ?? 0, questionId != null)
+
+  const roomTitle = room
+    ? room.roomType === "question" && questionSummary?.title
+      ? questionSummary.title
+      : resolveRoomTitle(room.members, myUserId, room.roomType)
+    : ""
   const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
   const notificationOn = room?.notifyEnabled ?? true
   const roomPinned = room?.pinned ?? false
@@ -404,6 +412,8 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
                       name={member.name}
                       avatarSrc={member.avatarSrc}
                       isMe={member.isMe}
+                      flagSrc={member.countryFlagSrc}
+                      nation={member.nationalityCode ? messages.countries[member.nationalityCode] : undefined}
                     />
                   ))}
                 </div>

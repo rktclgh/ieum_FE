@@ -28,6 +28,8 @@ interface ChatRoomMemberResponse {
   userId: number
   nickname: string
   profileImageUrl: string | null
+  // 국적(ISO 3166-1 alpha-2). BE 이슈 #70 전까지 없을 수 있음.
+  nationality?: string | null
 }
 
 interface ChatRoomDetailResponse {
@@ -68,6 +70,12 @@ interface SendChatMessageRequest {
   imageFileId?: string
 }
 
+// 답변 보기 → 답변자와의 꼬리질문 1:1 방 생성 요청 (BE 이슈 #68).
+interface QuestionRoomRequest {
+  questionId: number
+  targetUserId: number
+}
+
 // /user/queue/errors 로 내려오는 WebSocket 에러
 interface ChatWebSocketErrorResponse {
   code: string
@@ -86,4 +94,5 @@ export type {
   WsMessageEvent,
   SendChatMessageRequest,
   ChatWebSocketErrorResponse,
+  QuestionRoomRequest,
 }

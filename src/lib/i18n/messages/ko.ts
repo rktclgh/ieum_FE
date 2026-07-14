@@ -204,6 +204,22 @@ export interface Messages {
     timeHoursAgo: (hours: number) => string
     timeDaysAgo: (days: number) => string
     addImageLabel: string
+    historyTitle: string
+    historyEmpty: string
+    deleteAction: string
+    deleteConfirmTitle: string
+    deleteConfirmDescription: string
+    deleteConfirmCancel: string
+    deleteConfirmConfirm: string
+    startChatLabel: string
+    personalChatLabel: string
+    reportAction: string
+    reportConfirmTitle: string
+    reportConfirmDescription: string
+    reportSubmitted: string
+    chatStartFailed: string
+    answerCountLabel: (count: number) => string
+    aiAnswerTitle: string
     errors: {
       FORBIDDEN: string
       QUESTION_NOT_FOUND: string
@@ -211,6 +227,8 @@ export interface Messages {
       SELF_ACCEPT_NOT_ALLOWED: string
       QUESTION_ALREADY_RESOLVED: string
       VALIDATION_FAILED: string
+      ROOM_CREATE_FAILED: string
+      REPORT_FAILED: string
       default: string
     }
   }
@@ -580,6 +598,22 @@ export const ko: Messages = {
     timeHoursAgo: (hours) => `${hours}시간 전`,
     timeDaysAgo: (days) => `${days}일 전`,
     addImageLabel: "사진 첨부",
+    historyTitle: "질문 내역",
+    historyEmpty: "아직 등록한 질문이 없어요.",
+    deleteAction: "삭제",
+    deleteConfirmTitle: "이 질문을 삭제할까요?",
+    deleteConfirmDescription: "삭제하면 답변과 함께 사라지며 되돌릴 수 없어요.",
+    deleteConfirmCancel: "취소",
+    deleteConfirmConfirm: "삭제",
+    startChatLabel: "채팅 시작",
+    personalChatLabel: "개인 채팅",
+    reportAction: "신고",
+    reportConfirmTitle: "이 답변을 신고할까요?",
+    reportConfirmDescription: "신고하면 검토 후 조치될 수 있어요.",
+    reportSubmitted: "신고가 접수되었어요.",
+    chatStartFailed: "채팅을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.",
+    answerCountLabel: (count) => `답변 ${count}`,
+    aiAnswerTitle: "AI답변",
     errors: {
       FORBIDDEN: "권한이 없어요.",
       QUESTION_NOT_FOUND: "질문을 찾을 수 없어요.",
@@ -587,6 +621,8 @@ export const ko: Messages = {
       SELF_ACCEPT_NOT_ALLOWED: "내 답변은 채택할 수 없어요.",
       QUESTION_ALREADY_RESOLVED: "이미 채택된 질문이에요.",
       VALIDATION_FAILED: "입력값을 확인해 주세요.",
+      ROOM_CREATE_FAILED: "채팅을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.",
+      REPORT_FAILED: "신고에 실패했어요. 잠시 후 다시 시도해 주세요.",
       default: "잠시 후 다시 시도해 주세요.",
     },
   },

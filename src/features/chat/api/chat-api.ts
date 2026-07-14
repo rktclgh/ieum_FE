@@ -6,6 +6,7 @@ import type {
   ChatRoomDetailResponse,
   ChatRoomResponse,
   ChatRoomSummaryResponse,
+  QuestionRoomRequest,
   RoomType,
 } from "@/features/chat/api/chat-types"
 
@@ -38,6 +39,12 @@ async function createDirectRoom(friendId: number) {
   return data
 }
 
+// 답변자와의 꼬리질문 1:1 방 생성/조회(멱등). BE 이슈 #68 계약. (CSRF 필요)
+async function createQuestionRoom(body: QuestionRoomRequest) {
+  const { data } = await apiClient.post<ChatRoomResponse>("/api/v1/chat/rooms/question", body)
+  return data
+}
+
 async function markRead(roomId: number) {
   await apiClient.post(`/api/v1/chat/rooms/${roomId}/read`)
 }
@@ -63,6 +70,7 @@ export {
   getRoom,
   getMessages,
   createDirectRoom,
+  createQuestionRoom,
   markRead,
   setPinned,
   setNotify,

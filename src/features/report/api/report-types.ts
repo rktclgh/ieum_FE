@@ -12,4 +12,10 @@ interface CreateReportResponse {
   reportId: number
 }
 
-export type { ReportReason, CreateReportRequest, CreateReportResponse }
+// 답변 신고 (BE 이슈 #69). chat 메시지 신고와 달리 answerId로 대상 지정.
+interface AnswerReportRequest {
+  reason: ReportReason
+  detail?: string
+}
+
+export type { ReportReason, CreateReportRequest, CreateReportResponse, AnswerReportRequest }
