@@ -10,6 +10,7 @@ import { LogoutButton } from "@/features/session/components/logout-button"
 import { useMe } from "@/features/session/hooks/use-me"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 function MyPageContent() {
   const router = useRouter()
@@ -22,10 +23,10 @@ function MyPageContent() {
   React.useEffect(() => {
     if (isPending || user) return
     if (!error) {
-      router.replace("/login")
+      router.replace(routes.login())
       return
     }
-    if (axios.isAxiosError(error) && error.response) router.replace("/login")
+    if (axios.isAxiosError(error) && error.response) router.replace(routes.login())
   }, [isPending, user, error, router])
 
   if (!user) return null
@@ -65,14 +66,14 @@ function MyPageContent() {
 
         <nav className="flex flex-col">
           <Link
-            href="/my/edit"
+            href={routes.myEdit()}
             className="flex w-full items-center justify-between py-3.5 text-body-medium-16 text-gray-900 transition-colors active:bg-gray-50"
           >
             {messages.my.editInfoLabel}
             <Image src="/icons/arrow/left.svg" alt="" width={20} height={20} className="size-5 -rotate-180" />
           </Link>
           <Link
-            href="/my/settings"
+            href={routes.mySettings()}
             className="flex w-full items-center justify-between py-3.5 text-body-medium-16 text-gray-900 transition-colors active:bg-gray-50"
           >
             {messages.my.settingsLabel}

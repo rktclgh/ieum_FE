@@ -46,6 +46,7 @@ import { useMe } from "@/features/session/hooks/use-me"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { getKstDateKey, formatKstFullDate, formatKstShortDate } from "@/lib/date/kst"
+import { routes } from "@/lib/navigation/routes"
 import { cn } from "@/lib/utils"
 
 // 롱프레스 메뉴(최대 3개 항목) 높이 추정치 + 하단 입력창과 겹치지 않기 위한 여유 공간
@@ -273,9 +274,7 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
         tone: "destructive",
         onClick: () => {
           setActiveMessageId(null)
-          const params = new URLSearchParams({ messageId: String(message.messageId) })
-          if (message.name) params.set("target", message.name)
-          router.push(`/chats/${roomId}/report?${params.toString()}`)
+          router.push(routes.chatReport(roomId, message.messageId, message.name || undefined))
         },
       },
     ]
@@ -393,8 +392,8 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
                 <ChatRoomProfile title={roomTitle} />
                 <ChatRoomInfoSection
                   className="w-full"
-                  onNoticeClick={() => router.push(`/chats/${roomId}/notices`)}
-                  onScheduleClick={() => router.push(`/chats/${roomId}/schedule`)}
+                  onNoticeClick={() => router.push(routes.chatNotices(roomId))}
+                  onScheduleClick={() => router.push(routes.chatSchedule(roomId))}
                 />
                 <div className="flex w-full flex-col rounded-2xl bg-gray-50">
                   <SectionTitle title={messages.chat.membersTitle} count={roomMembers.length} padding="12" />
@@ -427,7 +426,7 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
         confirmLabel={messages.chat.leaveChatAction}
         onConfirm={() =>
           leaveRoomMutation.mutate(roomId, {
-            onSuccess: () => router.push("/chats"),
+            onSuccess: () => router.push(routes.chats()),
             onError: () => setSocketError(messages.chat.leaveFailed),
           })
         }
@@ -441,7 +440,7 @@ function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
         confirmLabel={messages.chat.disbandChatAction}
         onConfirm={() =>
           disbandRoomMutation.mutate(roomId, {
-            onSuccess: () => router.push("/chats"),
+            onSuccess: () => router.push(routes.chats()),
             onError: () => setSocketError(messages.chat.disbandFailed),
           })
         }
