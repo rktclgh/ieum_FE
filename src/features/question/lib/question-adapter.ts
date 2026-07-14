@@ -1,13 +1,16 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
-import { flagFromIso2 } from "@/features/join/lib/nationality-map"
+import { flagFromIso2, fromIso2 } from "@/features/join/lib/nationality-map"
 import type {
   AnswerResponse,
   MyQuestionItem,
   QuestionDetailResponse,
 } from "@/features/question/api/question-types"
 import type { QuestionSummary } from "@/features/question/types"
+import type { CountryCode } from "@/lib/constants/countries"
 
 // UI(질문 상세 화면/시트)가 쓰는 뷰 모델. 파일 URL은 same-origin 경로로 정규화한다.
+// 국적 표시명은 i18n(messages.countries) 의존이라 어댑터가 아닌 컴포넌트(Task 10)가
+// nationalityCode로 조회한다. BE가 nationality를 안 주면 둘 다 undefined(국기 미표시).
 interface QuestionAnswerView {
   answerId: number
   isAi: boolean
@@ -15,6 +18,8 @@ interface QuestionAnswerView {
   authorUserId: number
   authorName: string
   authorAvatarUrl?: string
+  countryFlagSrc?: string
+  nationalityCode?: CountryCode
   content: string
   createdAt: string
   imageUrls: string[]
@@ -41,6 +46,8 @@ function adaptAnswer(answer: AnswerResponse): QuestionAnswerView {
     authorUserId: answer.author.userId,
     authorName: answer.author.nickname,
     authorAvatarUrl: resolveFileUrl(answer.author.profileImageUrl),
+    countryFlagSrc: flagFromIso2(answer.author.nationality),
+    nationalityCode: fromIso2(answer.author.nationality),
     content: answer.content ?? "",
     createdAt: answer.createdAt,
     imageUrls: answer.imageUrls
