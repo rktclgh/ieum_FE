@@ -92,6 +92,11 @@ export const vi: Messages = {
     clusterMarkerLabel: (count) => `${count} ở khu vực này`,
     attributionButtonLabel: "Bản quyền bản đồ",
     pinsTruncatedNotice: "Khu vực này có nhiều ghim. Phóng to để xem tất cả",
+    categoryPlace: "Địa điểm",
+    listTitle: "Danh sách",
+    listParticipantCount: (count) => `${count} người`,
+    searchEmpty: "Không tìm thấy kết quả",
+    listEmpty: "Không có mục nào trong khu vực này",
   },
   meetup: {
     joinButton: "Tham gia",

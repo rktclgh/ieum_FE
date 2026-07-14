@@ -10,6 +10,7 @@ interface MapControlsProps {
   isFollowing?: boolean
   onCreateMeetup?: () => void
   onCreateQuestion?: () => void
+  onListView?: () => void
   className?: string
 }
 
@@ -18,6 +19,7 @@ function MapControls({
   isFollowing = false,
   onCreateMeetup,
   onCreateQuestion,
+  onListView,
   className,
 }: MapControlsProps) {
   const { messages } = useTranslation()
@@ -31,7 +33,11 @@ function MapControls({
         className={isFollowing ? "outline-2 outline-primary-600" : undefined}
         onClick={onToggleFollow}
       />
-      <Circle iconSrc="/icons/circle/list.svg" aria-label={messages.home.listViewLabel} />
+      <Circle
+        iconSrc="/icons/circle/list.svg"
+        aria-label={messages.home.listViewLabel}
+        onClick={onListView}
+      />
       <MapFab onCreateMeetup={onCreateMeetup} onCreateQuestion={onCreateQuestion} />
     </div>
   )

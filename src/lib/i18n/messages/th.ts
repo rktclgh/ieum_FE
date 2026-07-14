@@ -91,6 +91,11 @@ export const th: Messages = {
     clusterMarkerLabel: (count) => `${count} รายการในพื้นที่นี้`,
     attributionButtonLabel: "ข้อมูลลิขสิทธิ์แผนที่",
     pinsTruncatedNotice: "บริเวณนี้มีหมุดจำนวนมาก ซูมเข้าเพื่อดูทั้งหมด",
+    categoryPlace: "สถานที่",
+    listTitle: "รายการ",
+    listParticipantCount: (count) => `${count} คน`,
+    searchEmpty: "ไม่พบผลลัพธ์",
+    listEmpty: "ไม่มีรายการในพื้นที่นี้",
   },
   meetup: {
     joinButton: "เข้าร่วม",

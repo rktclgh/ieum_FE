@@ -91,6 +91,11 @@ export const zh: Messages = {
     clusterMarkerLabel: (count) => `本地区${count}个`,
     attributionButtonLabel: "地图版权信息",
     pinsTruncatedNotice: "该区域标记较多，请放大查看",
+    categoryPlace: "地点",
+    listTitle: "列表",
+    listParticipantCount: (count) => `当前${count}人`,
+    searchEmpty: "没有搜索结果",
+    listEmpty: "该区域没有可显示的内容",
   },
   meetup: {
     joinButton: "参加",

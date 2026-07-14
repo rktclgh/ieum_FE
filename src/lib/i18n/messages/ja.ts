@@ -91,6 +91,11 @@ export const ja: Messages = {
     clusterMarkerLabel: (count) => `この地域に${count}件`,
     attributionButtonLabel: "地図の著作権情報",
     pinsTruncatedNotice: "このエリアはピンが多いです。拡大してご覧ください",
+    categoryPlace: "場所",
+    listTitle: "リスト",
+    listParticipantCount: (count) => `現在${count}人`,
+    searchEmpty: "検索結果がありません",
+    listEmpty: "このエリアに表示する項目がありません",
   },
   meetup: {
     joinButton: "参加する",
