@@ -68,6 +68,12 @@ interface SendChatMessageRequest {
   imageFileId?: string
 }
 
+// 답변 보기 → 답변자와의 꼬리질문 1:1 방 생성 요청 (BE 이슈 #68).
+interface QuestionRoomRequest {
+  questionId: number
+  targetUserId: number
+}
+
 // /user/queue/errors 로 내려오는 WebSocket 에러
 interface ChatWebSocketErrorResponse {
   code: string
@@ -86,4 +92,5 @@ export type {
   WsMessageEvent,
   SendChatMessageRequest,
   ChatWebSocketErrorResponse,
+  QuestionRoomRequest,
 }

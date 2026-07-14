@@ -2,6 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
+import { createQuestionRoom } from "@/features/chat/api/chat-api"
+import type { QuestionRoomRequest } from "@/features/chat/api/chat-types"
+import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
 import {
   acceptAnswer,
   createQuestion,
@@ -99,10 +102,22 @@ function useDeleteQuestion() {
   })
 }
 
+// 답변 보기의 "채팅 시작" — 방 생성 성공 시 채팅 목록 캐시를 갱신한다.
+function useCreateQuestionRoom() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: QuestionRoomRequest) => createQuestionRoom(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: chatKeys.rooms() })
+    },
+  })
+}
+
 export {
   useCreateQuestion,
   useUpdateQuestion,
   usePostAnswer,
   useAcceptAnswer,
   useDeleteQuestion,
+  useCreateQuestionRoom,
 }
