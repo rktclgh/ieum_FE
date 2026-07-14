@@ -62,6 +62,14 @@ function EditProfileForm({ user }: { user: MeUser }) {
     }
   }
 
+  const handleDelete = async () => {
+    try {
+      await remove()
+    } catch {
+      // 삭제 실패 시 me 캐시는 그대로 — 아바타를 현재 상태로 유지한다
+    }
+  }
+
   const [nickname, setNickname] = React.useState(user.nickname)
   const [birthDateDigits, setBirthDateDigits] = React.useState(
     (user.birthDate ?? "").replaceAll("-", "")
@@ -123,7 +131,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
           {user.profileImageUrl && (
             <button
               type="button"
-              onClick={() => remove()}
+              onClick={handleDelete}
               className="mt-2 text-body-regular-14 text-gray-500"
             >
               {messages.profileImage.deleteLabel}
