@@ -2,6 +2,7 @@ import { resolveFileUrl } from "@/lib/api/file-url"
 import { flagFromIso2 } from "@/features/join/lib/nationality-map"
 import type {
   AnswerResponse,
+  MyQuestionItem,
   QuestionDetailResponse,
 } from "@/features/question/api/question-types"
 import type { QuestionSummary } from "@/features/question/types"
@@ -85,5 +86,27 @@ function adaptQuestionSummary(detail: QuestionDetailResponse): QuestionSummary {
   }
 }
 
-export { adaptAnswer, adaptQuestionDetail, adaptQuestionSummary }
-export type { QuestionAnswerView, QuestionDetailView }
+// 질문 내역 목록 카드용 뷰모델. 썸네일 URL은 same-origin 경로로 정규화.
+// 부제(본문 미리보기) 필드는 BE MyQuestionItem에 없어 목록은 제목+답변수+시각만 노출한다.
+interface MyQuestionListItemView {
+  questionId: number
+  title: string
+  isResolved: boolean
+  thumbnailSrc?: string
+  answerCount: number
+  createdAt: string
+}
+
+function adaptMyQuestionItem(item: MyQuestionItem): MyQuestionListItemView {
+  return {
+    questionId: item.questionId,
+    title: item.title,
+    isResolved: item.isResolved,
+    thumbnailSrc: resolveFileUrl(item.thumbnailUrl),
+    answerCount: item.answerCount,
+    createdAt: item.createdAt,
+  }
+}
+
+export { adaptAnswer, adaptQuestionDetail, adaptQuestionSummary, adaptMyQuestionItem }
+export type { QuestionAnswerView, QuestionDetailView, MyQuestionListItemView }
