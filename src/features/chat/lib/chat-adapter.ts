@@ -30,6 +30,7 @@ interface ChatListEntry {
 interface ChatBubbleMessage {
   id: string
   messageId: number
+  senderId: number
   sender: "me" | "others"
   variant: "long" | "short"
   name?: string
@@ -109,6 +110,7 @@ function adaptMessage(
   return {
     id: String(message.messageId),
     messageId: message.messageId,
+    senderId: message.senderId,
     sender: isMe ? "me" : "others",
     variant: content.length > 30 ? "long" : "short",
     name: isMe ? undefined : message.senderNickname,

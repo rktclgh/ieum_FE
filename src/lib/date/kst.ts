@@ -75,6 +75,21 @@ function getKstTimeParts(
   return { period, hour: hour12, minute }
 }
 
+/** 그룹핑용 분 단위 키: KST 기준 "2026-07-09 08:21". */
+function getKstMinuteKey(input: Date | string | number): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: KST_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(input))
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? ""
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`
+}
+
 export {
   getKstDateKey,
   formatKstFullDate,
@@ -83,4 +98,5 @@ export {
   formatKstTime,
   formatKstDateTimeLabel,
   getKstTimeParts,
+  getKstMinuteKey,
 }
