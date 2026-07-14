@@ -5,7 +5,7 @@
 >
 > - 와이어프레임: [Figma – 신한해커톤 와이어프레임](https://www.figma.com/design/FPRPYHC1ukJph6hjRiyU0Z/?node-id=782-1049)
 > - 생성: 2026-07-02
-> - 최종 수정: 2026-07-08 (채팅방 공지 라우트 확정)
+> - 최종 수정: 2026-07-14 (질문 내역·답변 보기·꼬리질문 채팅 라우트 확정)
 
 
 ## 네이밍 규칙
@@ -50,9 +50,11 @@ src/app/
 
 | URL | 화면 이름 | 와이어프레임 | 백엔드 API (예상) | 로그인 |
 |---|---|---|---|---|
-| `/questions` | 내 질문 내역 (`?status=answering\|accepted`) | ⑦ 질문 내역 1) | `GET /users/me/questions` | O |
+| `/questions` | 내 질문 내역 (롱프레스 삭제) | ⑦ 질문 내역 1) | `GET /api/v1/questions/me`, `DELETE /api/v1/questions/{id}` | O |
+| `/questions/[questionId]` | 질문 상세 · 답변 보기 (작성자 뷰: 채택·채팅 시작·신고 / 답변자 뷰: 답변 입력) | ⑦ 질문 내역 2) | `GET /questions/{id}`, `POST /questions/{id}/answer`, `POST /answers/{id}/accept`, `POST /chat/rooms/question`(BE #68), `POST /answers/{id}/report`(BE #69) | X (답변·채택·채팅·신고는 O) |
 
-> 모임 상세·모임 만들기·질문 상세·질문 작성은 하위 화면(2단계 이상)이라 URL 미확정. [하위 화면](#하위-화면-url-미확정) 참고.
+> 모임 상세·모임 만들기·질문 작성은 하위 화면(2단계 이상)이라 URL 미확정. [하위 화면](#하위-화면-url-미확정) 참고.
+> 질문 상세(`/questions/[questionId]`)는 `useMe`로 작성자/답변자 뷰를 분기한다. 작성자 국기·작성시각은 BE #64 대기(FE는 필드만 준비). 채팅 시작·답변 신고는 BE #68/#69 배포 전까지 계약우선 스텁(미구현 시 안내 토스트).
 > 하단 탭 가운데 **글쓰기(+) 버튼**은 모달로 열고, 모임/질문 토글에 따라 각각의 작성 화면으로 이동한다 (라우트는 미확정).
 
 ### (main) — 채팅 & 소셜
@@ -61,6 +63,8 @@ src/app/
 |---|---|---|---|---|
 | `/chats` | 채팅 목록 (그룹 + 1:1 꼬리질문) | ⑤ 모임채팅 1) | `GET /chats` | O |
 | `/chats/[chatId]` | 채팅방 (그룹채팅 · 꼬리질문 채팅 공용) | ⑤ 5) / ⑦ 3) | `GET /chats/{id}/messages` (+ WebSocket) | O |
+
+> 꼬리질문 방(`roomType:"question"`)은 제목을 연결된 질문 제목으로 표시한다(`useQuestionSummary`). 더보기 드로어 대화상대 국기는 BE #70 대기(FE는 null-safe 배선 완료).
 | `/chats/[chatId]/notices` | 채팅방 공지 (메시지를 공지로 등록 · 채팅방 공지 고정/해지) | ⑤ 모임채팅 7) | `GET /chats/{id}/notices` | O |
 | `/chats/[chatId]/schedule` | 채팅방 캘린더 · 일정 | ⑤ 모임채팅 6) | `GET /chats/{id}/events` | O |
 | `/friends` | 친구 목록 (받은 요청 · 내 친구 · 닉네임 검색으로 친구 추가) | ⑤ 모임채팅 2) 3) | `GET /friends`, `GET /friend-requests`, `POST /friend-requests/{id}/accept`, `POST /friend-requests/{id}/reject`, `GET /users?nickname=`, `POST /friends` | O |
@@ -85,7 +89,6 @@ src/app/
 | `/join` | 회원가입 2/2 — 프로필 설정 (닉네임·국적·성별·생일) | ② 회원가입 | `PATCH /users/me` | X |
 | `/meetups` | 모임 상세 (참여하기 → 그룹채팅 입장) | ④ 홈 2) | `GET /meetups/{id}`, `POST /meetups/{id}/join` | X (참여는 O) |
 | `/meetups` | 모임 만들기 | ⑥ 글쓰기 1) | `POST /meetups` | O |
-| `/questions` | 질문 상세 · 답변 목록 · 답변 채택 | ⑦ 질문 내역 2) | `GET /questions/{id}`, `POST /questions/{id}/answers`, `POST /answers/{id}/accept` | X (답변·채택은 O) |
 | `/questions` | 질문 작성 (비슷한 질문·답변 확인 단계 포함) | ⑥ 글쓰기 2) 3) | `POST /questions`, `GET /questions/similar?q=` | O |
 | — | 다른 사용자 프로필 | ⑤ 모임채팅 4) | `GET /users/{id}` | O |
 | `/my` | 내 정보 수정 (닉네임·국적·비밀번호) | ③ 마이페이지 2) | `PATCH /users/me` | O |
