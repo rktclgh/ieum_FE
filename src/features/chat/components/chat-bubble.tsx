@@ -141,7 +141,7 @@ function ChatBubble({
               "px-4 py-3",
               isMe ? "bg-primary-400" : "bg-gray-50",
               radiusMap[bubblePosition(index, texts.length)],
-              isLong && "max-w-full",
+              isLong && "w-[253px] max-w-full",
               index === highlightedIndex && "relative z-10 animate-message-jump-highlight"
             )}
           >
