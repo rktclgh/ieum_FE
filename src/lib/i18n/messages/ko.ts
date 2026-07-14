@@ -292,7 +292,7 @@ export interface Messages {
   }
   tabBar: {
     home: string
-    meetups: string
+    chat: string
     questions: string
     my: string
   }
@@ -706,7 +706,7 @@ export const ko: Messages = {
   },
   tabBar: {
     home: "홈",
-    meetups: "모임",
+    chat: "채팅",
     questions: "질문",
     my: "마이",
   },

@@ -292,7 +292,7 @@ export const ru: Messages = {
   },
   tabBar: {
     home: "Главная",
-    meetups: "Встречи",
+    chat: "Чат",
     questions: "Вопросы",
     my: "Профиль",
   },

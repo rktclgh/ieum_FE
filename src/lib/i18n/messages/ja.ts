@@ -291,7 +291,7 @@ export const ja: Messages = {
   },
   tabBar: {
     home: "ホーム",
-    meetups: "集まり",
+    chat: "チャット",
     questions: "質問",
     my: "マイ",
   },
