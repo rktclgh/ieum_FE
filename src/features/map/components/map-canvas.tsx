@@ -89,8 +89,10 @@ function MapCenterUpdater({
   React.useEffect(() => {
     // recenterKey가 실제로 바뀌었을 때만 이동. center 실시간 갱신/인셋 변화에는 반응하지 않는다.
     if (appliedKeyRef.current === recenterKey) return
-    appliedKeyRef.current = recenterKey
+    // center가 아직 없으면 key를 소비하지 않는다. center는 deps에 있어 값이 채워지면 이 effect가
+    // 다시 실행되고, 그때 비로소 재중심 후 key를 소비한다(요청 유실 방지).
     if (!center) return
+    appliedKeyRef.current = recenterKey
 
     const targetZoom = zoom ?? map.getZoom()
 
