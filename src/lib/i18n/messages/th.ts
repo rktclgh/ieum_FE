@@ -322,7 +322,6 @@ export const th: Messages = {
     removeFriendConfirmDescription: "คุณแน่ใจหรือไม่ว่าต้องการลบเพื่อนคนนี้?",
     addFriendButton: "ขอเป็นเพื่อน",
     requestedButton: "ส่งคำขอแล้ว",
-    startChatButton: "เริ่มแชท",
     pinAction: "ปักหมุด",
     muteAction: "ปิดการแจ้งเตือน",
     notificationLabel: "การแจ้งเตือน",

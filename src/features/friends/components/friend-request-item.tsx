@@ -67,17 +67,40 @@ function FriendRequestItem({
 }: FriendRequestItemProps) {
   const { messages } = useTranslation()
 
+  // 친구 행은 버튼 없이 행 전체를 눌러 채팅방으로 입장한다. (롱프레스 메뉴는 useLongPress가 별도 처리)
+  const isTappable = variant === "friend"
+  // props로 넘어온 onClick/onKeyDown을 덮어쓰지 않고 합성한다. (spread 순서에 의존하지 않도록 분리)
+  const { onClick: onClickProp, onKeyDown: onKeyDownProp, ...restProps } = props
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    onClickProp?.(event)
+    if (isTappable) onStartChat?.()
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    onKeyDownProp?.(event)
+    if (isTappable && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault()
+      onStartChat?.()
+    }
+  }
+
   return (
     <div
       data-slot="friend-request-item"
+      role={isTappable ? "button" : undefined}
+      tabIndex={isTappable ? 0 : undefined}
+      onClick={isTappable || onClickProp ? handleClick : undefined}
+      onKeyDown={isTappable || onKeyDownProp ? handleKeyDown : undefined}
       className={cn(
         "flex w-full items-center justify-between py-3 transition-all duration-200 ease-out",
+        isTappable && "cursor-pointer active:opacity-70",
         active
           ? "relative z-50 -translate-y-1 scale-[1.02] gap-2 rounded-2xl bg-white px-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
           : "translate-y-0 scale-100",
         className
       )}
-      {...props}
+      {...restProps}
     >
       <div className="flex items-center gap-3">
         <ChatProfile src={avatarSrc} size={active ? 40 : 44} className="transition-all duration-200 ease-out" />
@@ -107,9 +130,6 @@ function FriendRequestItem({
         <PillButton tone="outline" className="w-[73px]">
           {messages.chat.requestedButton}
         </PillButton>
-      )}
-      {variant === "friend" && (
-        <PillButton onClick={onStartChat}>{messages.chat.startChatButton}</PillButton>
       )}
       {variant === "sent" && (
         <PillButton tone="outline" onClick={onCancel}>
