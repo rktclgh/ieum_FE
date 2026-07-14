@@ -1,5 +1,7 @@
 "use client"
 
+import * as React from "react"
+
 import { ChevronRight } from "lucide-react"
 
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
@@ -10,16 +12,23 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 interface QuestionHistoryItemProps {
   item: MyQuestionListItemView
   onOpen: () => void
-  onLongPress: () => void
+  onLongPress: (rect: DOMRect) => void
 }
 
 function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemProps) {
   const { messages } = useTranslation()
-  const longPress = useLongPress({ onLongPress })
+  const ref = React.useRef<HTMLButtonElement>(null)
+  const longPress = useLongPress({
+    onLongPress: () => {
+      const rect = ref.current?.getBoundingClientRect()
+      if (rect) onLongPress(rect)
+    },
+  })
   const timeLabel = formatRelativeTime(item.createdAt, messages.question)
 
   return (
     <button
+      ref={ref}
       type="button"
       onClick={onOpen}
       {...longPress}
