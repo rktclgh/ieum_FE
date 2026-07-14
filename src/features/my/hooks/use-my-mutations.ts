@@ -5,8 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { updateLocation, updateMe, updateSettings } from "@/features/my/api/my-api"
 import type { UserMeResponse, UserSettings } from "@/features/session/api/session-api"
 import {
-  getSessionGeneration,
-  isSessionGenerationCurrent,
+  createSessionMutationCallbacks,
   ME_QUERY_KEY,
 } from "@/features/session/lib/session-cache"
 
@@ -16,11 +15,9 @@ function useUpdateMe() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateMe,
-    onMutate: () => getSessionGeneration(queryClient),
-    onSuccess: (data, _variables, sessionGeneration) => {
-      if (!isSessionGenerationCurrent(queryClient, sessionGeneration)) return
+    ...createSessionMutationCallbacks(queryClient, (data: UserMeResponse) => {
       queryClient.setQueryData<UserMeResponse>(ME_QUERY_KEY, data)
-    },
+    }),
   })
 }
 
@@ -29,17 +26,11 @@ function useUpdateSettings() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateSettings,
-    onMutate: () => getSessionGeneration(queryClient),
-    onSuccess: (
-      settings: UserSettings,
-      _variables,
-      sessionGeneration,
-    ) => {
-      if (!isSessionGenerationCurrent(queryClient, sessionGeneration)) return
+    ...createSessionMutationCallbacks(queryClient, (settings: UserSettings) => {
       queryClient.setQueryData<UserMeResponse>(ME_QUERY_KEY, (previous) =>
         previous ? { ...previous, settings } : previous
       )
-    },
+    }),
   })
 }
 

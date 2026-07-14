@@ -4,8 +4,8 @@ import test from "node:test"
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
 
 import {
+  createSessionMutationCallbacks,
   getSessionGeneration,
-  isSessionGenerationCurrent,
   ME_QUERY_KEY,
   resetSessionCache,
 } from "../../src/features/session/lib/session-cache.js"
@@ -134,11 +134,9 @@ test("a mutation from an expired session cannot overwrite a new identity", async
       profileMutationStarted = true
       return profileMutationResponse
     },
-    onMutate: () => getSessionGeneration(queryClient),
-    onSuccess: (data, _variables, sessionGeneration) => {
-      if (!isSessionGenerationCurrent(queryClient, sessionGeneration)) return
+    ...createSessionMutationCallbacks(queryClient, (data: typeof lateUser) => {
       queryClient.setQueryData(ME_QUERY_KEY, data)
-    },
+    }),
   })
 
   const lateMutation = profileMutation.execute(undefined)

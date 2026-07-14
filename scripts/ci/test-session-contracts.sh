@@ -19,10 +19,12 @@ pnpm exec tsc \
   scripts/ci/test-auth-state.ts \
   scripts/ci/test-session-cache.ts \
   scripts/ci/test-session-events.ts \
+  scripts/ci/test-session-interceptor.ts \
   scripts/ci/test-session-retry.ts
 
 NODE_PATH="$repo_root/node_modules" node --test \
   "$tmp_dir/scripts/ci/test-auth-state.js" \
   "$tmp_dir/scripts/ci/test-session-cache.js" \
   "$tmp_dir/scripts/ci/test-session-events.js" \
+  "$tmp_dir/scripts/ci/test-session-interceptor.js" \
   "$tmp_dir/scripts/ci/test-session-retry.js"
