@@ -16,6 +16,9 @@ import {
 } from "@/features/join/hooks/use-join-mutations"
 import { useProfileForm } from "@/features/join/hooks/use-profile-form"
 import type { JoinStep } from "@/features/join/types"
+import { login } from "@/features/login/api/auth-api"
+import { updateProfileImage } from "@/features/profile-image/api/profile-image-api"
+import { uploadImage } from "@/lib/files/upload-image"
 
 type VerificationStatus = "idle" | "sent" | "verified"
 
@@ -37,6 +40,9 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
   const [isEmailDuplicate, setIsEmailDuplicate] = React.useState(false)
   // 이메일 형식 에러는 타이핑 중이 아니라 "인증하기" 버튼을 눌렀을 때만 표출한다.
   const [showEmailError, setShowEmailError] = React.useState(false)
+  const [croppedBlob, setCroppedBlob] = React.useState<Blob | null>(null)
+  const [avatarPreview, setAvatarPreview] = React.useState<string | null>(null)
+  const [editorSrc, setEditorSrc] = React.useState<string | null>(null)
 
   const checkEmailMutation = useCheckEmailDuplicate()
   const sendCodeMutation = useSendEmailVerificationCode()
@@ -135,16 +141,45 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
     setStep("profile")
   }
 
+  const handleAvatarFileSelected = (file: File) => {
+    setEditorSrc(URL.createObjectURL(file))
+  }
+
+  const handleCropped = (blob: Blob) => {
+    setCroppedBlob(blob)
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview)
+    setAvatarPreview(URL.createObjectURL(blob))
+  }
+
+  const handleEditorClose = () => {
+    if (editorSrc) URL.revokeObjectURL(editorSrc)
+    setEditorSrc(null)
+  }
+
   const handleSignupSubmit = () => {
     if (!profile.values) return
     signupMutation.mutate(
+      { email, password, ...profile.values, emailVerificationToken },
       {
-        email,
-        password,
-        ...profile.values,
-        emailVerificationToken,
-      },
-      { onSuccess: onSignupSuccess }
+        onSuccess: async () => {
+          try {
+            await login({ email, password })
+          } catch {
+            // 자동로그인 실패 시 사진 업로드는 건너뛰고 상위 콜백(로그인 페이지 폴백)만 호출
+            onSignupSuccess?.()
+            return
+          }
+          if (croppedBlob) {
+            try {
+              const fileId = await uploadImage(croppedBlob, "profile")
+              await updateProfileImage(fileId)
+            } catch {
+              // 사진 업로드 실패는 가입/로그인 완료를 막지 않는다(마이에서 재시도 가능)
+            }
+          }
+          onSignupSuccess?.()
+        },
+      }
     )
   }
 
@@ -182,6 +217,11 @@ function useJoinFlow({ onSignupSuccess }: UseJoinFlowOptions = {}) {
       isNextEnabled: profile.isValid,
       onSubmit: handleSignupSubmit,
       signupMutation,
+      avatarPreview,
+      onAvatarFileSelected: handleAvatarFileSelected,
+      editorSrc,
+      onEditorClose: handleEditorClose,
+      onCropped: handleCropped,
     },
   }
 }

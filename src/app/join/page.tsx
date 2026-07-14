@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 export default function JoinPage() {
   const router = useRouter()
   const { messages } = useTranslation()
-  const flow = useJoinFlow({ onSignupSuccess: () => router.push("/login") })
+  const flow = useJoinFlow({ onSignupSuccess: () => router.push("/") })
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center">
