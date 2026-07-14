@@ -11,6 +11,48 @@ const repoRoot = path.resolve(currentDirectory, "../..")
 const contractPath = path.join(repoRoot, "src/features/chat/lib/chat-session.ts")
 const contractExists = fs.existsSync(contractPath)
 
+function read(relativePath) {
+  return fs.readFileSync(path.join(repoRoot, relativePath), "utf8")
+}
+
+function parse(relativePath) {
+  return ts.createSourceFile(
+    relativePath,
+    read(relativePath),
+    ts.ScriptTarget.ES2022,
+    true,
+    relativePath.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  )
+}
+
+function visit(node, predicate) {
+  const matches = []
+  const walk = (current) => {
+    if (predicate(current)) matches.push(current)
+    ts.forEachChild(current, walk)
+  }
+  walk(node)
+  return matches
+}
+
+function findFunction(sourceFile, name) {
+  return visit(
+    sourceFile,
+    (node) => ts.isFunctionDeclaration(node) && node.name?.text === name,
+  )[0]
+}
+
+function isNamedCall(call, name) {
+  return (
+    (ts.isIdentifier(call.expression) && call.expression.text === name) ||
+    (ts.isPropertyAccessExpression(call.expression) && call.expression.name.text === name)
+  )
+}
+
+function compact(text) {
+  return text.replace(/\s+/g, "")
+}
+
 function loadContract() {
   const source = fs.readFileSync(contractPath, "utf8")
   const transpiled = ts.transpileModule(source, {
@@ -105,23 +147,9 @@ test("the private state scope changes when the user or authentication state chan
   assert.notEqual(firstUser.scopeKey, guest.scopeKey)
 })
 
-test("queries, socket, local state, and input consume the session boundary", () => {
-  const queriesSource = fs.readFileSync(
-    path.join(repoRoot, "src/features/chat/hooks/use-chat-queries.ts"),
-    "utf8",
-  )
-  const roomSource = fs.readFileSync(
-    path.join(repoRoot, "src/features/chat/components/chat-room-page-content.tsx"),
-    "utf8",
-  )
-  const socketSource = fs.readFileSync(
-    path.join(repoRoot, "src/features/chat/lib/chat-socket.ts"),
-    "utf8",
-  )
-  const inputSource = fs.readFileSync(
-    path.join(repoRoot, "src/features/chat/components/chat-message-input.tsx"),
-    "utf8",
-  )
+test("private chat queries and input consume the authenticated room boundary", () => {
+  const queriesSource = read("src/features/chat/hooks/use-chat-queries.ts")
+  const inputSource = read("src/features/chat/components/chat-message-input.tsx")
 
   assert.match(queriesSource, /resolveChatSessionAccess/)
   assert.equal(
@@ -134,15 +162,143 @@ test("queries, socket, local state, and input consume the session boundary", () 
     /const room = session\.activeRoomId === roomId \? query\.data : undefined/,
   )
   assert.match(queriesSource, /session\.activeRoomId === roomId && query\.data/)
-  assert.match(roomSource, /key=\{session\.scopeKey\}/)
-  assert.match(roomSource, /useChatRoomSocket\(session\.activeRoomId/)
-  assert.match(roomSource, /disabled=\{!session\.authenticated\}/)
-  assert.match(roomSource, /trailingIcon=\{session\.authenticated \? undefined : null\}/)
-  assert.match(socketSource, /function useChatRoomSocket\(activeRoomId: number \| null/)
   assert.match(inputSource, /disabled\?: boolean/)
   assert.equal(
     inputSource.match(/^\s+disabled=\{disabled\}$/gm)?.length,
     3,
     "camera, message input, and send button must all be disabled",
+  )
+})
+
+test("identity-scoped remount owns every private room state and socket", () => {
+  const relativePath = "src/features/chat/components/chat-room-page-content.tsx"
+  const sourceFile = parse(relativePath)
+  const outer = findFunction(sourceFile, "ChatRoomPageContent")
+  const scoped = findFunction(sourceFile, "ChatRoomSessionContent")
+
+  assert.ok(outer?.body, "ChatRoomPageContent session boundary is missing")
+  assert.ok(scoped?.body, "ChatRoomSessionContent keyed child is missing")
+
+  const outerText = compact(outer.getText(sourceFile))
+  assert.ok(
+    outerText.includes("constsession=useChatSessionAccess(roomId)"),
+    "the outer boundary must derive identity and room scope",
+  )
+  assert.ok(
+    outerText.includes("<ChatRoomSessionContentkey={session.scopeKey}roomId={roomId}session={session}"),
+    "identity or room changes must remount the private child",
+  )
+  assert.equal(
+    visit(outer, (node) => ts.isCallExpression(node) && isNamedCall(node, "useState")).length,
+    0,
+    "private local state must not escape the keyed child",
+  )
+  assert.equal(
+    visit(outer, (node) => ts.isCallExpression(node) && isNamedCall(node, "useChatRoomSocket")).length,
+    0,
+    "the private socket must not escape the keyed child",
+  )
+
+  const privateStateNames = new Set(
+    visit(scoped, ts.isVariableDeclaration)
+      .filter(
+        (declaration) =>
+          ts.isArrayBindingPattern(declaration.name) &&
+          declaration.initializer &&
+          ts.isCallExpression(declaration.initializer) &&
+          isNamedCall(declaration.initializer, "useState"),
+      )
+      .map((declaration) => declaration.name.elements[0]?.name?.getText(sourceFile)),
+  )
+  for (const stateName of [
+    "liveMessages",
+    "notice",
+    "moreOpen",
+    "cameraMenuOpen",
+    "activeMessageId",
+    "confirmLeaveOpen",
+    "confirmDisbandOpen",
+    "socketError",
+    "activeDateKey",
+    "scrollThumbCenter",
+  ]) {
+    assert.ok(privateStateNames.has(stateName), `${stateName} must reset with the identity scope`)
+  }
+
+  const scopedSocketCalls = visit(
+    scoped,
+    (node) => ts.isCallExpression(node) && isNamedCall(node, "useChatRoomSocket"),
+  )
+  assert.equal(scopedSocketCalls.length, 1, "the keyed child must own exactly one room socket")
+  assert.equal(
+    compact(scopedSocketCalls[0].arguments[0].getText(sourceFile)),
+    "session.activeRoomId",
+    "the socket must receive only the authenticated active room",
+  )
+
+  const scopedText = scoped.getText(sourceFile)
+  assert.match(scopedText, /disabled=\{!session\.authenticated\}/)
+  assert.match(scopedText, /trailingIcon=\{session\.authenticated \? undefined : null\}/)
+})
+
+test("room socket activation has an active-room guard and deterministic cleanup", () => {
+  const relativePath = "src/features/chat/lib/chat-socket.ts"
+  const sourceFile = parse(relativePath)
+  const socketHook = findFunction(sourceFile, "useChatRoomSocket")
+  assert.ok(socketHook?.body, "useChatRoomSocket is missing")
+
+  const effects = visit(
+    socketHook,
+    (node) => ts.isCallExpression(node) && isNamedCall(node, "useEffect"),
+  )
+  const connectionEffect = effects.find((effect) =>
+    effect.arguments[0]?.getText(sourceFile).includes("new Client"),
+  )
+  assert.ok(connectionEffect, "the room socket connection effect is missing")
+
+  const callback = connectionEffect.arguments[0]
+  assert.ok(
+    (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) &&
+      ts.isBlock(callback.body),
+    "the room socket effect must use a block callback",
+  )
+  const callbackBody = callback.body
+  const guard = callbackBody.statements.find(
+    (statement) =>
+      ts.isIfStatement(statement) &&
+      compact(statement.expression.getText(sourceFile)) === "activeRoomId==null",
+  )
+  assert.ok(
+    guard && compact(guard.thenStatement.getText(sourceFile)).includes("return"),
+    "guest or unknown sessions must not activate a socket",
+  )
+
+  const cleanupReturn = callbackBody.statements.find(
+    (statement) =>
+      ts.isReturnStatement(statement) &&
+      statement.expression &&
+      (ts.isArrowFunction(statement.expression) || ts.isFunctionExpression(statement.expression)),
+  )
+  assert.ok(cleanupReturn?.expression, "the room socket effect must return cleanup")
+  const cleanup = cleanupReturn.expression
+  const cleanupText = compact(cleanup.getText(sourceFile))
+  assert.ok(
+    cleanupText.includes("clientRef.current=null"),
+    "cleanup must stop later sends from using the previous client",
+  )
+  assert.ok(
+    cleanupText.includes("client.deactivate()"),
+    "cleanup must deactivate the previous STOMP connection",
+  )
+
+  const callbackText = compact(callback.getText(sourceFile))
+  assert.ok(
+    callbackText.indexOf("client.activate()") < callbackText.indexOf("client.deactivate()"),
+    "activation must be paired with a later cleanup",
+  )
+  assert.equal(
+    compact(connectionEffect.arguments[1]?.getText(sourceFile) ?? ""),
+    "[activeRoomId]",
+    "room or identity deactivation must rerun the connection cleanup",
   )
 })

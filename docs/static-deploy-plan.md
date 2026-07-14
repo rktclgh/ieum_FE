@@ -42,7 +42,7 @@ const nextConfig = {
 - `/my/**`는 `useMe()` 기반 protected client gate다.
 - `/login/`과 `/join/`만 exact guest-only다. `/join/social/`의 기존 자체 검증은 그대로 둔다.
 - refresh network/5xx는 retry UI를 보여주고 logout시키지 않는다. refresh 401/403만 session-expired로 분류한다.
-- `/questions/` 탭과 unslashed `/oauth/kakao/callback` 계약은 유지한다.
+- `/questions/` 탭과 unslashed `/oauth/kakao/callback` 계약은 유지한다. Kakao callback의 `code`, `state`, `error` query는 경로 보정 과정에서도 유실하면 안 된다.
 
 ## 3. FE 빌드·검증
 
@@ -84,6 +84,7 @@ FE 완료 증거는 정확한 commit SHA, `pnpm verify` 결과, 생성된 `out/`
 
 - `trailingSlash: true` 산출물의 slash canonical을 지킨다.
 - no-slash 요청은 slash URL로 redirect하거나, 실제 Next client navigation 요청을 검증한 alias만 제공한다.
+- 예외인 unslashed `/oauth/kakao/callback`은 그대로 제공한다. slash alias 또는 redirect를 추가한다면 `code`, `state`, `error`를 포함한 원본 query string을 그대로 보존해야 한다.
 - RSC navigation의 `.txt` 요청을 임의로 HTML에 forward하지 않는다.
 
 ### 오류·헤더·캐시
@@ -96,6 +97,7 @@ FE 완료 증거는 정확한 commit SHA, `pnpm verify` 결과, 생성된 `out/`
 ### BE 검증 기준
 
 - static GET·HEAD, slash canonical, RSC `.txt`, HTML 404를 통합 테스트한다.
+- Kakao callback의 unslashed 경로와 slash 보정 경로에서 `code`, `state`, `error` query가 보존되는지 통합 테스트한다.
 - API/admin/actuator 우선순위와 API/WS/SSE 제외를 통합 테스트한다.
 - 정적 요청이 JWT/Redis를 호출하지 않는지 확인한다.
 - 실제 JAR에서 exact FE SHA의 asset과 route를 smoke test한다.
