@@ -21,7 +21,7 @@ function SectionTitle({ className, title, count, padding = "none", ...props }: S
       {...props}
     >
       <p className="text-body-medium-14 text-gray-900">{title}</p>
-      {count !== undefined && <p className="text-body-semibold-15 text-primary-600">{count}</p>}
+      {count !== undefined && <p className="text-body-semibold-15 text-primary-400">{count}</p>}
     </div>
   )
 }

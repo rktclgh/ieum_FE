@@ -73,7 +73,7 @@ function PinListOverlay({
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         {isLoading ? (
           <div className="mt-16 flex justify-center">
-            <div className="size-6 animate-spin rounded-full border-2 border-gray-200 border-t-primary-600" />
+            <div className="size-6 animate-spin rounded-full border-2 border-gray-200 border-t-primary-400" />
           </div>
         ) : filtered.length === 0 ? (
           <p className="mt-16 text-center text-body-regular-14 text-gray-400">
