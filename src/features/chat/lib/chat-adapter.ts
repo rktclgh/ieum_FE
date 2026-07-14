@@ -1,5 +1,5 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
-import { formatKstTime } from "@/lib/date/kst"
+import { formatKstTime, getKstMinuteKey } from "@/lib/date/kst"
 import type { ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import type {
   ChatMessageResponse,
@@ -30,6 +30,7 @@ interface ChatListEntry {
 interface ChatBubbleMessage {
   id: string
   messageId: number
+  senderId: number
   sender: "me" | "others"
   variant: "long" | "short"
   name?: string
@@ -109,6 +110,7 @@ function adaptMessage(
   return {
     id: String(message.messageId),
     messageId: message.messageId,
+    senderId: message.senderId,
     sender: isMe ? "me" : "others",
     variant: content.length > 30 ? "long" : "short",
     name: isMe ? undefined : message.senderNickname,
@@ -117,6 +119,38 @@ function adaptMessage(
     time: formatKstTime(message.createdAt),
     createdAt: message.createdAt,
   }
+}
+
+interface ChatMessageRun {
+  runKey: string
+  sender: "me" | "others"
+  name?: string
+  time: string
+  messages: ChatBubbleMessage[]
+}
+
+// 연속된 같은 발신자(senderId)·같은 분(minute) 메시지를 하나의 run으로 묶는다.
+// 입력은 이미 오래된→최신 정렬 + 같은 날짜 그룹 내 메시지를 가정한다.
+function buildMessageRuns(messages: ChatBubbleMessage[]): ChatMessageRun[] {
+  const runs: ChatMessageRun[] = []
+  let currentKey: string | null = null
+  for (const message of messages) {
+    const minuteKey = `${message.senderId}|${getKstMinuteKey(message.createdAt)}`
+    const lastRun = runs[runs.length - 1]
+    if (lastRun && currentKey === minuteKey) {
+      lastRun.messages.push(message)
+    } else {
+      runs.push({
+        runKey: message.id,
+        sender: message.sender,
+        name: message.name,
+        time: message.time,
+        messages: [message],
+      })
+    }
+    currentKey = minuteKey
+  }
+  return runs
 }
 
 function adaptMember(member: ChatRoomMemberResponse, myUserId: number): ChatMemberEntry {
@@ -138,5 +172,6 @@ export {
   adaptMessage,
   adaptMember,
   messagePreview,
+  buildMessageRuns,
 }
-export type { ChatListEntry, ChatBubbleMessage, ChatMemberEntry }
+export type { ChatListEntry, ChatBubbleMessage, ChatMemberEntry, ChatMessageRun }

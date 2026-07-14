@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { ChatProfile } from "@/features/chat/components/chat-profile"
+import { ME_RADIUS, OTHERS_RADIUS, bubblePosition } from "@/features/chat/components/chat-bubble-segment"
 
 type ChatBubbleSender = "me" | "others"
 type ChatBubbleVariant = "long" | "short" | "multiple" | "reply"
@@ -24,27 +25,6 @@ interface ChatBubbleProps extends React.ComponentProps<"div"> {
   highlightedIndex?: number
   onHighlightAnimationEnd?: () => void
   time?: string
-}
-
-const OTHERS_RADIUS = {
-  solo: "rounded-tl-3xl rounded-tr-3xl rounded-br-3xl",
-  first: "rounded-tl-3xl rounded-tr-3xl rounded-br-3xl",
-  middle: "rounded-tl-[4px] rounded-tr-3xl rounded-bl-[4px] rounded-br-3xl",
-  last: "rounded-tr-3xl rounded-bl-3xl rounded-br-3xl",
-} as const
-
-const ME_RADIUS = {
-  solo: "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl",
-  first: "rounded-tl-3xl rounded-bl-3xl rounded-tr-[4px] rounded-br-[4px]",
-  middle: "rounded-tl-3xl rounded-bl-3xl",
-  last: "rounded-tl-3xl rounded-bl-3xl rounded-br-3xl",
-} as const
-
-function bubblePosition(index: number, total: number): "solo" | "first" | "middle" | "last" {
-  if (total <= 1) return "solo"
-  if (index === 0) return "first"
-  if (index === total - 1) return "last"
-  return "middle"
 }
 
 function ChatBubble({

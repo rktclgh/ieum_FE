@@ -18,7 +18,8 @@ import {
 import { NoticeBanner } from "@/features/chat/components/notice-banner"
 import { ChatDateDivider } from "@/features/chat/components/chat-date-divider"
 import { ChatScrollDateBadge } from "@/features/chat/components/chat-scroll-date-badge"
-import { ChatBubble } from "@/features/chat/components/chat-bubble"
+import { ChatBubbleSegment, bubblePosition } from "@/features/chat/components/chat-bubble-segment"
+import { ChatMessageGroup } from "@/features/chat/components/chat-message-group"
 import { ChatMessageInput } from "@/features/chat/components/chat-message-input"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { ChatRoomMoreHeader } from "@/features/chat/components/chat-room-more-header"
@@ -45,6 +46,7 @@ import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
 import {
   adaptMember,
   adaptMessage,
+  buildMessageRuns,
   resolveRoomTitle,
   type ChatBubbleMessage,
 } from "@/features/chat/lib/chat-adapter"
@@ -62,13 +64,14 @@ const MESSAGE_BOTTOM_SAFE_AREA = 96
 
 interface MessageRowProps {
   message: ChatBubbleMessage
+  position: "solo" | "first" | "middle" | "last"
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
   onOpenMenu: () => void
   onCloseMenu: () => void
 }
 
-function MessageRow({ message, menuOpen, menuItems, onOpenMenu, onCloseMenu }: MessageRowProps) {
+function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onCloseMenu }: MessageRowProps) {
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const isMe = message.sender === "me"
@@ -86,12 +89,11 @@ function MessageRow({ message, menuOpen, menuItems, onOpenMenu, onCloseMenu }: M
 
   return (
     <div ref={rowRef} className="relative" {...longPress}>
-      <ChatBubble
+      <ChatBubbleSegment
         sender={message.sender}
+        text={message.texts[0] ?? ""}
+        position={position}
         variant={message.variant}
-        name={message.name}
-        texts={message.texts}
-        time={message.time}
         className={cn(menuOpen && "relative z-50")}
       />
       {menuOpen && (
@@ -100,7 +102,7 @@ function MessageRow({ message, menuOpen, menuItems, onOpenMenu, onCloseMenu }: M
           dimmed
           onDismiss={onCloseMenu}
           className={cn(
-            isMe ? "right-0" : "left-[34px]",
+            isMe ? "right-0" : "left-0",
             placement === "top" ? "bottom-full mb-3" : "top-full mt-2"
           )}
         />
@@ -360,15 +362,25 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                   className="flex flex-col"
                 >
                   <ChatDateDivider text={group.label} />
-                  {group.messages.map((message) => (
-                    <MessageRow
-                      key={message.id}
-                      message={message}
-                      menuOpen={activeMessageId === message.id}
-                      menuItems={messageMenuItems(message)}
-                      onOpenMenu={() => setActiveMessageId(message.id)}
-                      onCloseMenu={() => setActiveMessageId(null)}
-                    />
+                  {buildMessageRuns(group.messages).map((run) => (
+                    <ChatMessageGroup
+                      key={run.runKey}
+                      sender={run.sender}
+                      name={run.name}
+                      time={run.time}
+                    >
+                      {run.messages.map((message, index) => (
+                        <MessageRow
+                          key={message.id}
+                          message={message}
+                          position={bubblePosition(index, run.messages.length)}
+                          menuOpen={activeMessageId === message.id}
+                          menuItems={messageMenuItems(message)}
+                          onOpenMenu={() => setActiveMessageId(message.id)}
+                          onCloseMenu={() => setActiveMessageId(null)}
+                        />
+                      ))}
+                    </ChatMessageGroup>
                   ))}
                 </div>
               ))}
