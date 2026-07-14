@@ -30,7 +30,7 @@
 | `/my/edit/` | 내 정보 수정 | protected client gate |
 | `/my/settings/` | 설정 | protected client gate |
 
-`/questions/`의 목록 화면·탭 정책은 FE #82에서 바꾸지 않는다.
+`/questions/`는 기존 하단 탭 href만 보존한다. 목록 page와 해당 정적 산출물은 원래 없었으며 FE #82 범위에도 추가하지 않는다.
 
 ## 런타임 ID 상세 페이지
 

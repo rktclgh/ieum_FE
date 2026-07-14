@@ -61,7 +61,7 @@ pnpm verify
 - 구현된 각 page의 HTML과 non-empty client navigation payload
 - `/_next/static/**`와 local WOFF2
 - runtime dynamic app directory, server-only API, Proxy, 금지 환경변수·설정이 소스에 없는지
-- `out/` 내부에 server bundle이나 비밀값이 포함되지 않는지
+- `out/` 내부에 server bundle이 포함되지 않고 source에 금지된 server-runtime 설정이 남지 않는지
 
 FE 완료 증거는 정확한 commit SHA, `pnpm verify` 결과, 생성된 `out/`이다. 이 증거만으로 Spring/JAR 배포 완료를 주장하지 않는다.
 

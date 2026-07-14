@@ -1,3 +1,5 @@
+import { apiClient } from "@/lib/api/client"
+
 interface GeocodedAddress {
   roadAddress: string
   jibunAddress: string
@@ -12,12 +14,10 @@ async function geocodeAddress(query: string): Promise<GeocodedAddress[]> {
   const trimmed = query.trim()
   if (!trimmed) return []
 
-  const params = new URLSearchParams({ query: trimmed })
-
-  const response = await fetch(`/api/places/geocode?${params.toString()}`)
-  if (!response.ok) throw new Error("Failed to geocode address")
-
-  const data: { addresses: GeocodedAddress[] } = await response.json()
+  const { data } = await apiClient.get<{ addresses: GeocodedAddress[] }>(
+    "/api/places/geocode",
+    { params: { query: trimmed } },
+  )
   return data.addresses
 }
 
