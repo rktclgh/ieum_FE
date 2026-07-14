@@ -14,6 +14,23 @@ function isSessionGenerationCurrent(
   return generation !== undefined && getSessionGeneration(queryClient) === generation
 }
 
+function createSessionMutationCallbacks<TData>(
+  queryClient: QueryClient,
+  onCurrentSessionSuccess: (data: TData) => void,
+) {
+  return {
+    onMutate: () => getSessionGeneration(queryClient),
+    onSuccess: (
+      data: TData,
+      _variables: unknown,
+      sessionGeneration: number | undefined,
+    ) => {
+      if (!isSessionGenerationCurrent(queryClient, sessionGeneration)) return
+      onCurrentSessionSuccess(data)
+    },
+  }
+}
+
 function isExactMeQuery(queryKey: QueryKey) {
   return queryKey.length === 1 && queryKey[0] === ME_QUERY_KEY[0]
 }
@@ -46,6 +63,7 @@ async function resetSessionCache(queryClient: QueryClient) {
 }
 
 export {
+  createSessionMutationCallbacks,
   getSessionGeneration,
   isSessionGenerationCurrent,
   ME_QUERY_KEY,
