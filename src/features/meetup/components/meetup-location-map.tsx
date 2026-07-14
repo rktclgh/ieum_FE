@@ -11,6 +11,7 @@ import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { usePlaceSearch } from "@/features/map/hooks/use-place-search"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { LocationListItem } from "@/features/meetup/components/location-list-item"
+import { FAB_BOTTOM_FLOOR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 const MapCanvas = dynamic(
@@ -145,7 +146,7 @@ function MeetupLocationMap({
             type="button"
             aria-label={t.currentLocationLabel}
             onClick={handleGps}
-            className="pointer-events-auto absolute bottom-2 right-4 flex size-[46px] items-center justify-center rounded-full bg-white shadow-[0px_2px_2px_0px_rgba(0,0,0,0.1)]"
+            className={`pointer-events-auto absolute ${FAB_BOTTOM_FLOOR} right-4 flex size-[46px] items-center justify-center rounded-full bg-white shadow-[0px_2px_2px_0px_rgba(0,0,0,0.1)]`}
           >
             <Image src="/icons/circle/location.svg" alt="" width={24} height={24} className="size-6" />
           </button>
