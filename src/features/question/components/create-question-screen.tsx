@@ -45,17 +45,36 @@ interface CreateQuestionScreenProps {
  * setState 없이 초기값을 확정한다(edit-profile-content.tsx와 동일한 패턴).
  */
 function CreateQuestionScreen({ onClose, mode = "create", questionId }: CreateQuestionScreenProps) {
+  const { messages } = useTranslation()
   const detail = useQuestionDetail(questionId ?? 0, mode === "edit")
+
+  if (mode === "edit" && detail.isError) {
+    // 상세 fetch 실패 시 null을 반환하면 AppBar도 없는 먹통 화면이 되므로,
+    // question-detail-screen.tsx와 동일하게 닫기 가능한 에러 상태를 보여준다.
+    return (
+      <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-sm flex-col bg-white">
+        <AppBar
+          title={messages.question.editTitle}
+          leadingIcon={null}
+          trailingVariant="close"
+          onTrailingClick={onClose}
+          className="shrink-0"
+        />
+        <p className="w-full px-4 pt-10 text-center text-body-regular-14 text-gray-400">
+          {getQuestionErrorMessage(detail.error, messages) || messages.question.loadError}
+        </p>
+      </div>
+    )
+  }
 
   if (mode === "edit" && !detail.data) return null
 
+  // 위 가드를 통과하면 mode="edit"일 때 detail.data가 반드시 채워져 있다.
+  // TS는 이 사실을 dotted-name까지 narrowing하지 못하므로 `as` 대신 `?? null`로 안전하게 좁힌다.
+  const editDetail = mode === "edit" ? (detail.data ?? null) : null
+
   return (
-    <CreateQuestionForm
-      onClose={onClose}
-      mode={mode}
-      questionId={questionId}
-      initial={mode === "edit" ? (detail.data as QuestionDetailView) : null}
-    />
+    <CreateQuestionForm onClose={onClose} mode={mode} questionId={questionId} initial={editDetail} />
   )
 }
 
@@ -88,6 +107,9 @@ function CreateQuestionForm({ onClose, mode, questionId, initial }: CreateQuesti
   const [existingImageUrl, setExistingImageUrl] = React.useState<string | null>(
     initial?.imageUrls[0] ?? null
   )
+  // edit 모드에서 prefill된 이미지를 제거하고 새 이미지를 고르지 않은 채 저장하면,
+  // 서버에 imageFileIds를 아예 보내지 않아 기존 이미지가 그대로 남는다 → 명시적 clear 플래그로 [] 전송.
+  const [imageCleared, setImageCleared] = React.useState(false)
   const [locationPickerOpen, setLocationPickerOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -129,6 +151,9 @@ function CreateQuestionForm({ onClose, mode, questionId, initial }: CreateQuesti
         setError(t.imageUploadFailed)
         return
       }
+    } else if (mode === "edit" && imageCleared) {
+      // 새 이미지 없이 기존 이미지만 제거한 경우: 빈 배열을 명시적으로 보내 서버 쪽 이미지도 지운다.
+      imageFileIds = []
     }
 
     if (mode === "edit" && questionId != null) {
@@ -216,6 +241,7 @@ function CreateQuestionForm({ onClose, mode, questionId, initial }: CreateQuesti
             onTakePhoto={() => cameraInputRef.current?.click()}
             onChooseAlbum={() => albumInputRef.current?.click()}
             onRemove={() => {
+              if (existingImageUrl && !image) setImageCleared(true)
               setImage(null)
               setExistingImageUrl(null)
             }}
