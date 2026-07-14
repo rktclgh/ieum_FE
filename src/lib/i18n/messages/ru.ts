@@ -7,6 +7,14 @@ export const ru: Messages = {
     back: "Назад",
     close: "Закрыть",
     more: "Ещё",
+    retry: "Повторить",
+  },
+  route: {
+    invalidLink: "Эта ссылка недействительна.",
+  },
+  session: {
+    checking: "Проверяем статус входа.",
+    backendUnavailable: "Не удалось подключиться к серверу. Попробуйте ещё раз чуть позже.",
   },
   login: {
     logoAlt: "Логотип",

@@ -7,6 +7,14 @@ export const vi: Messages = {
     back: "Quay lại",
     close: "Đóng",
     more: "Thêm",
+    retry: "Thử lại",
+  },
+  route: {
+    invalidLink: "Liên kết này không hợp lệ.",
+  },
+  session: {
+    checking: "Đang kiểm tra trạng thái đăng nhập.",
+    backendUnavailable: "Không thể kết nối với máy chủ. Vui lòng thử lại sau.",
   },
   login: {
     logoAlt: "Logo",

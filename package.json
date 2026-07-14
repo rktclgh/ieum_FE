@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "test:contracts": "bash scripts/ci/test-client-contracts.sh",
+    "verify:out": "bash scripts/ci/verify-static-export.sh",
+    "verify": "pnpm test:contracts && pnpm lint && pnpm typecheck && pnpm build && pnpm verify:out"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

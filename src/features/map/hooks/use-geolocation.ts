@@ -25,10 +25,7 @@ function useGeolocation() {
   const isSupported = typeof navigator !== "undefined" && Boolean(navigator.geolocation)
 
   React.useEffect(() => {
-    if (!isSupported) {
-      setStatus("error")
-      return
-    }
+    if (!isSupported) return
 
     const watchId = navigator.geolocation.watchPosition(
       (result) => {
@@ -43,7 +40,7 @@ function useGeolocation() {
     return () => navigator.geolocation.clearWatch(watchId)
   }, [isSupported])
 
-  return { position, accuracy, status, isSupported }
+  return { position, accuracy, status: isSupported ? status : "error", isSupported }
 }
 
 export { useGeolocation }

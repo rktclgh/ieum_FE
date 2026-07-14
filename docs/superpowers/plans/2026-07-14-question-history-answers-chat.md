@@ -1,5 +1,8 @@
 # 질문 내역 · 답변 보기 · 꼬리 질문 채팅 Implementation Plan
 
+> [!IMPORTANT]
+> 이 계획은 #76 구현 당시 기록이다. #82 정적 export 전환 이후 현행 canonical URL은 `/questions/detail/?questionId={questionId}`와 `/chats/room/?chatId={chatId}`이며, 아래의 동적 path 및 직접 `router.push` 예시는 실행 지침이 아니다. 현재 계약은 `docs/ROUTES.md`를 기준으로 한다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 내 질문 목록(삭제 포함), 작성자용 답변 보기(채택·채팅시작·신고), 꼬리질문 1:1 채팅 3개 화면을 구현하고 기존 API를 재사용하며 누락 API는 계약우선 스텁으로 배선한다.

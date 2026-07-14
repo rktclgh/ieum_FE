@@ -25,32 +25,29 @@ interface MeetupDatePickerProps {
   onConfirm: (value: MeetupDateValue) => void
 }
 
-/** 년/월/일 3열 휠 피커 바텀시트. 확정 전까지는 draft 상태로만 굴리고 완료 시 onConfirm. */
-function MeetupDatePicker({ open, onOpenChange, value, onConfirm }: MeetupDatePickerProps) {
+interface MeetupDatePickerContentProps {
+  initialValue: MeetupDateValue
+  todayYear: number
+  onCancel: () => void
+  onConfirm: (value: MeetupDateValue) => void
+}
+
+function MeetupDatePickerContent({
+  initialValue,
+  todayYear,
+  onCancel,
+  onConfirm,
+}: MeetupDatePickerContentProps) {
   const { messages } = useTranslation()
   const t = messages.createMeetup
 
-  const today = React.useMemo<MeetupDateValue>(() => {
-    const [year, month, day] = getKstDateKey().split("-").map(Number)
-    return { year, month, day }
-  }, [])
-
-  const [draftYear, setDraftYear] = React.useState(today.year)
-  const [draftMonth, setDraftMonth] = React.useState(today.month)
-  const [draftDay, setDraftDay] = React.useState(today.day)
-
-  // 시트를 열 때마다 현재 값(없으면 오늘)으로 draft 초기화
-  React.useEffect(() => {
-    if (!open) return
-    const base = value ?? today
-    setDraftYear(base.year)
-    setDraftMonth(base.month)
-    setDraftDay(base.day)
-  }, [open, value, today])
+  const [draftYear, setDraftYear] = React.useState(initialValue.year)
+  const [draftMonth, setDraftMonth] = React.useState(initialValue.month)
+  const [draftDay, setDraftDay] = React.useState(initialValue.day)
 
   const years = React.useMemo(
-    () => Array.from({ length: YEAR_SPAN + 1 }, (_, index) => today.year + index),
-    [today.year]
+    () => Array.from({ length: YEAR_SPAN + 1 }, (_, index) => todayYear + index),
+    [todayYear]
   )
   const months = React.useMemo(() => Array.from({ length: 12 }, (_, index) => index + 1), [])
   const maxDay = daysInMonth(draftYear, draftMonth)
@@ -65,6 +62,70 @@ function MeetupDatePicker({ open, onOpenChange, value, onConfirm }: MeetupDatePi
 
   const handleConfirm = () => {
     onConfirm({ year: draftYear, month: draftMonth, day: selectedDay })
+  }
+
+  return (
+    <DrawerContent className="gap-6 pb-2">
+      <div className="relative flex w-full items-center justify-center gap-2 py-1">
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 h-10 -translate-y-1/2 rounded-lg bg-gray-50" />
+        <WheelPicker
+          options={yearLabels}
+          value={t.yearLabel(draftYear)}
+          onChange={(label) => {
+            const index = yearLabels.indexOf(label)
+            if (index >= 0) setDraftYear(years[index])
+          }}
+          className="relative z-10 flex-1"
+        />
+        <WheelPicker
+          options={monthLabels}
+          value={t.monthLabel(draftMonth)}
+          onChange={(label) => {
+            const index = monthLabels.indexOf(label)
+            if (index >= 0) setDraftMonth(months[index])
+          }}
+          className="relative z-10 flex-1"
+        />
+        <WheelPicker
+          options={dayLabels}
+          value={t.dayLabel(selectedDay)}
+          onChange={(label) => {
+            const index = dayLabels.indexOf(label)
+            if (index >= 0) setDraftDay(days[index])
+          }}
+          className="relative z-10 flex-1"
+        />
+      </div>
+      <div className="flex w-full items-center gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 rounded-full border border-primary-400 px-4 py-3 text-center text-body-medium-14 text-primary-400"
+        >
+          {t.cancelButton}
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          className="flex-1 rounded-full bg-primary-400 px-4 py-3 text-center text-body-medium-14 text-white"
+        >
+          {t.confirmButton}
+        </button>
+      </div>
+    </DrawerContent>
+  )
+}
+
+/** 년/월/일 3열 휠 피커 바텀시트. 확정 전까지는 draft 상태로만 굴리고 완료 시 onConfirm. */
+function MeetupDatePicker({ open, onOpenChange, value, onConfirm }: MeetupDatePickerProps) {
+  const today = React.useMemo<MeetupDateValue>(() => {
+    const [year, month, day] = getKstDateKey().split("-").map(Number)
+    return { year, month, day }
+  }, [])
+  const initialValue = value ?? today
+
+  const handleConfirm = (nextValue: MeetupDateValue) => {
+    onConfirm(nextValue)
     onOpenChange(false)
   }
 
@@ -74,54 +135,12 @@ function MeetupDatePicker({ open, onOpenChange, value, onConfirm }: MeetupDatePi
         <DrawerBackdrop />
         <DrawerViewport>
           <DrawerPopup>
-            <DrawerContent className="gap-6 pb-2">
-              <div className="relative flex w-full items-center justify-center gap-2 py-1">
-                <div className="pointer-events-none absolute inset-x-0 top-1/2 h-10 -translate-y-1/2 rounded-lg bg-gray-50" />
-                <WheelPicker
-                  options={yearLabels}
-                  value={t.yearLabel(draftYear)}
-                  onChange={(label) => {
-                    const index = yearLabels.indexOf(label)
-                    if (index >= 0) setDraftYear(years[index])
-                  }}
-                  className="relative z-10 flex-1"
-                />
-                <WheelPicker
-                  options={monthLabels}
-                  value={t.monthLabel(draftMonth)}
-                  onChange={(label) => {
-                    const index = monthLabels.indexOf(label)
-                    if (index >= 0) setDraftMonth(months[index])
-                  }}
-                  className="relative z-10 flex-1"
-                />
-                <WheelPicker
-                  options={dayLabels}
-                  value={t.dayLabel(selectedDay)}
-                  onChange={(label) => {
-                    const index = dayLabels.indexOf(label)
-                    if (index >= 0) setDraftDay(days[index])
-                  }}
-                  className="relative z-10 flex-1"
-                />
-              </div>
-              <div className="flex w-full items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onOpenChange(false)}
-                  className="flex-1 rounded-full border border-primary-400 px-4 py-3 text-center text-body-medium-14 text-primary-400"
-                >
-                  {t.cancelButton}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  className="flex-1 rounded-full bg-primary-400 px-4 py-3 text-center text-body-medium-14 text-white"
-                >
-                  {t.confirmButton}
-                </button>
-              </div>
-            </DrawerContent>
+            <MeetupDatePickerContent
+              initialValue={initialValue}
+              todayYear={today.year}
+              onCancel={() => onOpenChange(false)}
+              onConfirm={handleConfirm}
+            />
           </DrawerPopup>
         </DrawerViewport>
       </DrawerPortal>

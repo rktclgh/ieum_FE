@@ -19,7 +19,7 @@
 src/
 ├─ lib/
 │  └─ api/
-│     └─ client.ts                   # axios 인스턴스 — baseURL: NEXT_PUBLIC_API_BASE_URL, withCredentials: true
+│     └─ client.ts                   # axios 인스턴스 — 운영 same-origin, 로컬 NEXT_PUBLIC_DEV_BACKEND_ORIGIN, withCredentials: true
 │
 └─ features/
    └─ join/

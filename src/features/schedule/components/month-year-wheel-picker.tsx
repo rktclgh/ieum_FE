@@ -24,7 +24,19 @@ interface MonthYearWheelPickerProps {
   onConfirm: (year: number, month: number) => void
 }
 
-function MonthYearWheelPicker({ open, onOpenChange, year, month, onConfirm }: MonthYearWheelPickerProps) {
+interface MonthYearWheelPickerContentProps {
+  year: number
+  month: number
+  onCancel: () => void
+  onConfirm: (year: number, month: number) => void
+}
+
+function MonthYearWheelPickerContent({
+  year,
+  month,
+  onCancel,
+  onConfirm,
+}: MonthYearWheelPickerContentProps) {
   const { messages } = useTranslation()
 
   const yearLabels = React.useMemo(
@@ -35,14 +47,50 @@ function MonthYearWheelPicker({ open, onOpenChange, year, month, onConfirm }: Mo
   const [draftYear, setDraftYear] = React.useState(`${year}년`)
   const [draftMonth, setDraftMonth] = React.useState(MONTH_LABELS[month - 1])
 
-  React.useEffect(() => {
-    if (!open) return
-    setDraftYear(`${year}년`)
-    setDraftMonth(MONTH_LABELS[month - 1])
-  }, [open, year, month])
-
   const handleConfirm = () => {
     onConfirm(Number(draftYear.replace("년", "")), MONTH_LABELS.indexOf(draftMonth) + 1)
+  }
+
+  return (
+    <DrawerContent className="gap-6 pb-2">
+      <div className="relative flex w-full items-center justify-center gap-4 py-1">
+        <div className="pointer-events-none absolute inset-x-6 top-1/2 h-10 -translate-y-1/2 rounded-xl bg-gray-50" />
+        <WheelPicker
+          options={yearLabels}
+          value={draftYear}
+          onChange={setDraftYear}
+          className="relative z-10 w-28"
+        />
+        <WheelPicker
+          options={MONTH_LABELS}
+          value={draftMonth}
+          onChange={setDraftMonth}
+          className="relative z-10 w-16"
+        />
+      </div>
+      <div className="flex w-full items-center gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 rounded-full border border-primary-400 px-4 py-3 text-center text-body-medium-14 text-primary-400"
+        >
+          {messages.chat.cancelButton}
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          className="flex-1 rounded-full bg-primary-400 px-4 py-3 text-center text-body-medium-14 text-white"
+        >
+          {messages.schedule.confirmButton}
+        </button>
+      </div>
+    </DrawerContent>
+  )
+}
+
+function MonthYearWheelPicker({ open, onOpenChange, year, month, onConfirm }: MonthYearWheelPickerProps) {
+  const handleConfirm = (nextYear: number, nextMonth: number) => {
+    onConfirm(nextYear, nextMonth)
     onOpenChange(false)
   }
 
@@ -52,39 +100,13 @@ function MonthYearWheelPicker({ open, onOpenChange, year, month, onConfirm }: Mo
         <DrawerBackdrop />
         <DrawerViewport>
           <DrawerPopup>
-            <DrawerContent className="gap-6 pb-2">
-              <div className="relative flex w-full items-center justify-center gap-4 py-1">
-                <div className="pointer-events-none absolute inset-x-6 top-1/2 h-10 -translate-y-1/2 rounded-xl bg-gray-50" />
-                <WheelPicker
-                  options={yearLabels}
-                  value={draftYear}
-                  onChange={setDraftYear}
-                  className="relative z-10 w-28"
-                />
-                <WheelPicker
-                  options={MONTH_LABELS}
-                  value={draftMonth}
-                  onChange={setDraftMonth}
-                  className="relative z-10 w-16"
-                />
-              </div>
-              <div className="flex w-full items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onOpenChange(false)}
-                  className="flex-1 rounded-full border border-primary-400 px-4 py-3 text-center text-body-medium-14 text-primary-400"
-                >
-                  {messages.chat.cancelButton}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  className="flex-1 rounded-full bg-primary-400 px-4 py-3 text-center text-body-medium-14 text-white"
-                >
-                  {messages.schedule.confirmButton}
-                </button>
-              </div>
-            </DrawerContent>
+            <MonthYearWheelPickerContent
+              key={open ? `${year}-${month}` : "closed"}
+              year={year}
+              month={month}
+              onCancel={() => onOpenChange(false)}
+              onConfirm={handleConfirm}
+            />
           </DrawerPopup>
         </DrawerViewport>
       </DrawerPortal>

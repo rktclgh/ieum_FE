@@ -12,6 +12,7 @@ import {
   type SocialSignupStoragePayload,
 } from "@/features/social-login/lib/social-signup-storage"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 export default function SocialJoinPage() {
   const router = useRouter()
@@ -24,7 +25,7 @@ export default function SocialJoinPage() {
     const storedPayload = load()
     if (!storedPayload) {
       saveSocialLoginError("tokenExpired")
-      router.replace("/login")
+      router.replace(routes.login())
       return
     }
 
@@ -51,7 +52,7 @@ export default function SocialJoinPage() {
         title={messages.join.infoAppBarTitle}
         trailingVariant="close"
         leadingIcon={null}
-        onTrailingClick={() => router.push("/login")}
+        onTrailingClick={() => router.push(routes.login())}
         className="w-full"
       />
       <ProfileForm flow={flow.profile} />

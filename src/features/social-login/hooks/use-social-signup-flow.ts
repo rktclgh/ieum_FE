@@ -7,6 +7,7 @@ import { useCompleteSocialSignup } from "@/features/social-login/hooks/use-socia
 import { getApiCode } from "@/features/social-login/lib/api-error"
 import { saveSocialLoginError } from "@/features/social-login/lib/oauth-state-storage"
 import * as socialSignupStorage from "@/features/social-login/lib/social-signup-storage"
+import { routes } from "@/lib/navigation/routes"
 
 function useSocialSignupFlow(socialSignupToken: string) {
   const router = useRouter()
@@ -24,7 +25,7 @@ function useSocialSignupFlow(socialSignupToken: string) {
       {
         onSuccess: () => {
           socialSignupStorage.clear()
-          router.push("/")
+          router.push(routes.home())
         },
         onError: (error) => {
           const code = getApiCode(error)
@@ -33,7 +34,7 @@ function useSocialSignupFlow(socialSignupToken: string) {
             saveSocialLoginError(
               code === "SOCIAL_ALREADY_REGISTERED" ? "socialAlreadyRegistered" : "tokenExpired"
             )
-            router.push("/login")
+            router.push(routes.login())
           }
         },
       }

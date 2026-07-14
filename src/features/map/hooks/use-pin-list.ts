@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 
 import { getPinList } from "@/features/map/api/pin-list-api"
 import type { MapPin } from "@/features/map/api/pin-types"
+import { PUBLIC_QUERY_META } from "@/features/session/lib/session-cache"
 
 const PAGE_SIZE = 50
 // 최대 20페이지(1000핀)까지만 로드한다. 초과분은 검색 대상에서 빠지므로,
@@ -31,6 +32,7 @@ function usePinList(enabled = true) {
     queryKey: ["pins", "list", "all"],
     queryFn: loadAllPins,
     enabled,
+    meta: PUBLIC_QUERY_META,
     staleTime: 60_000,
   })
 }

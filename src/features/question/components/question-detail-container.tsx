@@ -10,6 +10,7 @@ import { useQuestionSummary } from "@/features/question/hooks/use-question-queri
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 interface QuestionDetailContainerProps {
   questionId: number
@@ -81,7 +82,7 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
         question={summary}
         bottomVariant={bottomVariant}
         onSend={handleSend}
-        onViewAnswers={() => router.push(`/questions/${questionId}`)}
+        onViewAnswers={() => router.push(routes.questionDetail(questionId))}
         onImageTooLarge={() => setActionError(messages.question.imageTooLarge)}
       />
 

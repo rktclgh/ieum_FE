@@ -19,6 +19,7 @@ import { useQuestionDetail } from "@/features/question/hooks/use-question-querie
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { routes } from "@/lib/navigation/routes"
 
 interface QuestionDetailScreenProps {
   questionId: number
@@ -76,7 +77,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
     createRoom.mutate(
       { questionId: question.questionId, targetUserId },
       {
-        onSuccess: (room) => router.push(`/chats/${room.roomId}`),
+        onSuccess: (room) => router.push(routes.chatRoom(room.roomId)),
         onError: () => setActionError(messages.question.chatStartFailed),
       }
     )
