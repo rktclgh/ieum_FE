@@ -22,8 +22,15 @@ test("ignores a configured backend origin outside development", () => {
   assert.equal(resolveDevBackendOrigin("production", "not a URL"), undefined)
 })
 
-test("treats a blank development backend origin as unset", () => {
-  assert.equal(resolveDevBackendOrigin("development", "   "), undefined)
+test("defaults local development to the Spring server when no override is configured", () => {
+  assert.equal(
+    resolveDevBackendOrigin("development", undefined),
+    "http://localhost:8080"
+  )
+  assert.equal(
+    resolveDevBackendOrigin("development", "   "),
+    "http://localhost:8080"
+  )
 })
 
 test("normalizes a development backend URL to its HTTP origin", () => {

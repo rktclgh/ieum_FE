@@ -20,7 +20,7 @@ const nextConfig = {
 - Next 설정의 rewrite, header, redirect로 운영 동작을 만들지 않는다.
 - 기본 이미지 optimizer API를 사용하지 않는다. 정적 파일과 API 원본 URL을 그대로 로드한다.
 - production REST는 상대 `/api/...`, production WebSocket은 `window.location.origin`의 `/ws`를 사용한다.
-- local `next dev`만 `NEXT_PUBLIC_DEV_BACKEND_ORIGIN=http://localhost:8080`처럼 명시적인 backend origin을 허용한다.
+- local `next dev`는 기본적으로 `http://localhost:8080`의 Spring을 사용하고, 필요할 때만 `NEXT_PUBLIC_DEV_BACKEND_ORIGIN`으로 다른 backend origin을 지정한다.
 - `NEXT_PUBLIC_API_BASE_URL`과 `API_BASE_URL`은 사용하지 않는다.
 
 ## 2. 라우트와 인증

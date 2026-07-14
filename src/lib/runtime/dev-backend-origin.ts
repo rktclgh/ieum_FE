@@ -4,8 +4,7 @@ function resolveDevBackendOrigin(
 ): string | undefined {
   if (nodeEnv !== "development") return undefined
 
-  const trimmedOrigin = configuredOrigin?.trim()
-  if (!trimmedOrigin) return undefined
+  const trimmedOrigin = configuredOrigin?.trim() || "http://localhost:8080"
 
   const url = new URL(trimmedOrigin)
   if (url.protocol !== "http:" && url.protocol !== "https:") {
