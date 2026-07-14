@@ -42,7 +42,8 @@ function PinListOverlay({
   const filtered = pins.filter((pin) => {
     const typeOk =
       category === "all" ||
-      (category === "meetup" ? pin.pinType === "meeting" : pin.pinType === "question")
+      (category === "meetup" && pin.pinType === "meeting") ||
+      (category === "question" && pin.pinType === "question")
     return typeOk && hangulIncludes(pin.title, trimmed)
   })
 
