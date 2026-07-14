@@ -270,6 +270,18 @@ export const ru: Messages = {
       default: "Повторите попытку позже.",
     },
   },
+  profileImage: {
+    takePhoto: "Сделать фото",
+    chooseAlbum: "Выбрать из галереи",
+    editLabel: "Изменить фото профиля",
+    deleteLabel: "Удалить фото",
+    uploadFailed: "Не удалось загрузить фото. Повторите попытку позже.",
+    invalidType: "Можно загружать только изображения.",
+    tooLarge: "Используйте изображение до 10 МБ.",
+    cropTitle: "Редактировать фото",
+    cropConfirm: "Готово",
+    cropCancel: "Отмена",
+  },
   tabBar: {
     home: "Главная",
     meetups: "Встречи",
