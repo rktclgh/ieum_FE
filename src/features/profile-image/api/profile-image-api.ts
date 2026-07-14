@@ -5,7 +5,7 @@ interface ProfileImageResponse {
 }
 
 // 업로드 완료된 fileId를 내 프로필 사진으로 연결한다. 계약: api-endpoints.md §2 (/users/me/profile-image).
-async function updateProfileImage(fileId: number): Promise<ProfileImageResponse> {
+async function updateProfileImage(fileId: string): Promise<ProfileImageResponse> {
   const { data } = await apiClient.put<ProfileImageResponse>(
     "/api/v1/users/me/profile-image",
     { fileId }

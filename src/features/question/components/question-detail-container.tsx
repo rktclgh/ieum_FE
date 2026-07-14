@@ -56,7 +56,7 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
   const handleSend = async (value: string, imageFile?: File | null) => {
     if (postAnswer.isPending) return
     // 사진 첨부 실패와 답변 등록 실패를 구분해 원인에 맞는 메시지를 노출한다.
-    let imageFileIds: number[] | undefined
+    let imageFileIds: string[] | undefined
     if (imageFile) {
       try {
         imageFileIds = [await uploadImage(imageFile)]

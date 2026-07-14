@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/api/client"
 export type UploadPurpose = "profile" | "meeting" | "question"
 
 interface PresignResponse {
-  fileId: number
+  fileId: string
   uploadUrl: string
 }
 
@@ -34,12 +34,12 @@ async function putToS3(uploadUrl: string, blob: Blob): Promise<void> {
   })
 }
 
-async function completeFile(fileId: number): Promise<void> {
+async function completeFile(fileId: string): Promise<void> {
   await apiClient.post(`/api/v1/files/${fileId}/complete`)
 }
 
-// 이미지 1건을 업로드하고 완료 처리된 fileId를 반환한다.
-export async function uploadImage(blob: Blob, purpose: UploadPurpose): Promise<number> {
+// 이미지 1건을 업로드하고 완료 처리된 fileId(UUID 문자열)를 반환한다.
+export async function uploadImage(blob: Blob, purpose: UploadPurpose): Promise<string> {
   const { fileId, uploadUrl } = await presign(blob, purpose)
   await putToS3(uploadUrl, blob)
   await completeFile(fileId)

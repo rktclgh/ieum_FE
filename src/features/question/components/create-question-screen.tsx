@@ -74,7 +74,7 @@ function CreateQuestionScreen({ onClose }: CreateQuestionScreenProps) {
     setError(null)
 
     // 이미지 업로드 실패와 질문 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
-    let imageFileIds: number[] | undefined
+    let imageFileIds: string[] | undefined
     if (image) {
       try {
         imageFileIds = [await uploadImage(image.file)]
