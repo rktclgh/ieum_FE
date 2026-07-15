@@ -61,6 +61,8 @@ import { cn } from "@/lib/utils"
 // 롱프레스 메뉴(최대 3개 항목) 높이 추정치 + 하단 입력창과 겹치지 않기 위한 여유 공간
 const MESSAGE_MENU_HEIGHT_ESTIMATE = 180
 const MESSAGE_BOTTOM_SAFE_AREA = 96
+// 낙관적 말풍선을 서버 메시지와 같은 것으로 볼 시간 창(에코를 놓쳐 백필로 들어온 경우 매칭용).
+const PENDING_MATCH_WINDOW_MS = 60_000
 
 interface MessageRowProps {
   message: ChatBubbleMessage
@@ -119,13 +121,38 @@ interface ChatRoomSessionContentProps extends ChatRoomPageContentProps {
   session: ChatSessionAccess
 }
 
-// createdAt + messageId 기준으로 중복 제거 후 오래된→최신 정렬한다(초기 로드 + 실시간 수신 병합).
+// 초기 로드(base) + 실시간 수신(live)을 병합한다.
+// 1) 서버 메시지(양수 id)는 messageId로 중복 제거 — 에코(live)와 재연결 백필(base)에 같은 id가 겹칠 수 있다.
+// 2) 낙관적(pending) 말풍선은 대응하는 서버 메시지가 이미 있으면 버린다.
+//    에코를 정상 수신하면 onMessage가 pending을 제거하므로, 이 필터는 "에코를 놓치고 백필로 들어온" 경우의 안전망이다.
+//    서버가 clientNonce를 주지 않아 (내가 보냄 + 같은 내용 + 시간 창 이내)로 매칭한다. 한 서버 메시지는 최대 한 pending만 흡수.
 function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): ChatBubbleMessage[] {
   const byId = new Map<number, ChatBubbleMessage>()
   for (const message of [...base, ...live]) {
+    if (message.pending) continue
     byId.set(message.messageId, message)
   }
-  return [...byId.values()].sort((a, b) => {
+  const server = [...byId.values()]
+
+  const pendings = live
+    .filter((message) => message.pending)
+    .sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : a.messageId - b.messageId))
+  const claimed = new Set<number>()
+  const survivingPending: ChatBubbleMessage[] = []
+  for (const pending of pendings) {
+    const pendingAt = new Date(pending.createdAt).getTime()
+    const match = server.find(
+      (message) =>
+        !claimed.has(message.messageId) &&
+        message.sender === "me" &&
+        message.texts[0] === pending.texts[0] &&
+        Math.abs(new Date(message.createdAt).getTime() - pendingAt) < PENDING_MATCH_WINDOW_MS
+    )
+    if (match) claimed.add(match.messageId)
+    else survivingPending.push(pending)
+  }
+
+  return [...server, ...survivingPending].sort((a, b) => {
     if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? -1 : 1
     return a.messageId - b.messageId
   })
