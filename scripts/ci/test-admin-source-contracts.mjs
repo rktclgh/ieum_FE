@@ -721,6 +721,391 @@ function assertAdminReportSemanticLabels(source) {
   )
 }
 
+function assertAdminInquiryApiContracts(source) {
+  const compact = compactSource(source)
+  const list = compactSource(asyncFunctionSource(source, "getAdminInquiries"))
+  const recovery = compactSource(
+    asyncFunctionSource(source, "findAnsweredAdminInquiry"),
+  )
+  const answer = compactSource(asyncFunctionSource(source, "answerAdminInquiry"))
+
+  assert.match(
+    compact,
+    /interface AdminInquiryItem \{ inquiryId: number userId: number userEmail: string \| null title: string content: string status: AdminInquiryStatus answer: string \| null answeredBy: number \| null answeredAt: string \| null createdAt: string \}/,
+  )
+  assert.match(
+    compact,
+    /interface AdminInquiriesParams \{ status\?: AdminInquiryStatus \| "" cursor\?: string \| null size: number \}/,
+  )
+  assert.match(compact, /interface AnswerInquiryRequest \{ answer: string \}/)
+  assert.match(
+    list,
+    /apiClient\.get<CursorPage<AdminInquiryItem>>\( "\/api\/v1\/admin\/inquiries", \{ params: compactQuery\(\{ status: params\.status, cursor: params\.cursor, size: params\.size, \}\), \}, \)/,
+  )
+  assert.match(
+    answer,
+    /apiClient\.post\(`\/api\/v1\/admin\/inquiries\/\$\{inquiryId\}\/answer`, body\)/,
+  )
+  assertOrdered(recovery, [
+    "let cursor: string | null = null",
+    "const seenCursors = new Set<string>()",
+    'getAdminInquiries({ status: "answered", cursor, size: 20 })',
+    "page.items.find((item) => item.inquiryId === inquiryId)",
+    "if (inquiry !== undefined) return inquiry",
+    "cursor = page.nextCursor",
+    "seenCursors.has(cursor)",
+    "seenCursors.add(cursor)",
+    "while (cursor !== null)",
+    "return null",
+  ])
+  assert.equal((list.match(/apiClient\.get/g) ?? []).length, 1)
+  assert.equal((recovery.match(/getAdminInquiries/g) ?? []).length, 1)
+  assert.equal((answer.match(/apiClient\.post/g) ?? []).length, 1)
+}
+
+function assertAdminInquiryHooks(source) {
+  const compact = compactSource(source)
+  const invalidation = compactSource(
+    boundedSource(
+      source,
+      "function invalidateAdminInquiryQueries(",
+      "function useAdminInquiries(",
+    ),
+  )
+  const listHook = compactSource(
+    boundedSource(
+      source,
+      "function useAdminInquiries(",
+      "function useAnswerAdminInquiry(",
+    ),
+  )
+  const answerHook = compactSource(
+    boundedSource(source, "function useAnswerAdminInquiry(", "export {"),
+  )
+
+  assert.match(compact, /all: \["admin", "inquiries"\] as const/)
+  assert.match(compact, /lists: \(\) => \[\.\.\.adminInquiryKeys\.all, "list"\] as const/)
+  assert.match(
+    compact,
+    /list: \(\{ status, size \}: Omit<AdminInquiriesParams, "cursor">\) => \[ \.\.\.adminInquiryKeys\.lists\(\), \{ status, size \}, \] as const/,
+  )
+  assert.match(
+    invalidation,
+    /queryClient\.invalidateQueries\(\{ queryKey: adminInquiryKeys\.all, refetchType: "none", \}\)/,
+  )
+  assert.match(listHook, /queryKey: adminInquiryKeys\.list\(\{ status, size \}\)/)
+  assert.match(
+    listHook,
+    /getAdminInquiries\(\{ status, cursor: pageParam, size \}\)/,
+  )
+  assert.match(listHook, /initialPageParam: null as string \| null/)
+  assert.match(listHook, /getNextPageParam: \(page\) => page\.nextCursor/)
+  assert.match(answerHook, /mutationFn: \(body: AnswerInquiryRequest\) => answerAdminInquiry\(inquiryId, body\)/)
+  assert.match(
+    answerHook,
+    /onSettled: \(\) => invalidateAdminInquiryQueries\(queryClient\)/,
+  )
+  assert.doesNotMatch(answerHook, /onSuccess:/)
+}
+
+function assertAdminInquiryCursorRetry(source) {
+  const compact = compactSource(source)
+  const pagination = compactSource(
+    boundedSource(
+      source,
+      "{inquiriesQuery.isFetchNextPageError ? (",
+      "\n      )}\n    </section>",
+    ),
+  )
+
+  assert.match(
+    compact,
+    /inquiriesQuery\.isError && !inquiriesQuery\.isFetchNextPageError && answerBusyInquiryId === null && \(/,
+  )
+  assert.match(
+    compact,
+    /inquiriesQuery\.isError && inquiries\.length === 0 && answerBusyInquiryId === null \? \(/,
+  )
+  assertOrdered(pagination, [
+    "inquiriesQuery.isFetchNextPageError ? (",
+    '<AdminAsyncState kind="error"',
+    "inquiriesQuery.fetchNextPage({ cancelRefetch: false })",
+    ") : inquiriesQuery.hasNextPage ? (",
+    "<Button",
+    "inquiriesQuery.fetchNextPage({ cancelRefetch: false })",
+  ])
+  assert.equal(
+    (pagination.match(/inquiriesQuery\.fetchNextPage\(\{ cancelRefetch: false \}\)/g) ?? [])
+      .length,
+    2,
+  )
+  assert.equal((pagination.match(/<AdminAsyncState/g) ?? []).length, 1)
+  assert.doesNotMatch(pagination, /inquiriesQuery\.refetch\(\)/)
+  assert.match(pagination, /retryDisabled=\{listBusy\}/)
+  assert.match(pagination, /isRetrying=\{listBusy\}/)
+  assert.match(pagination, /disabled=\{listBusy\}/)
+  assert.match(pagination, /aria-busy=\{listBusy \|\| undefined\}/)
+  assert.doesNotMatch(pagination, /disabled=\{inquiriesQuery\.isFetchingNextPage\}/)
+}
+
+function assertAdminInquiryAnswerConvergenceState(source) {
+  const compact = compactSource(source)
+
+  assert.match(
+    compact,
+    /type AdminInquiryAnswerConvergenceReason = \| "success" \| "conflict" \| "uncertain"/,
+  )
+  assert.match(
+    compact,
+    /if \(event\.type === "refetch-failed"\) \{ return \{ kind: "retry", reason: state\.reason \} \}/,
+  )
+  assert.match(
+    compact,
+    /if \(event\.inquiryStatus === "missing"\) \{ return state\.reason === "uncertain" \? initialAdminInquiryAnswerConvergenceState : \{ kind: "retry", reason: state\.reason \} \}/,
+  )
+  assert.match(
+    compact,
+    /if \(state\.reason === "uncertain"\) \{ return initialAdminInquiryAnswerConvergenceState \}/,
+  )
+  assert.match(
+    compact,
+    /if \(event\.inquiryStatus !== "answered"\) \{ return \{ kind: "retry", reason: state\.reason \} \}/,
+  )
+  assert.match(
+    compact,
+    /return state\.reason === "conflict" \? \{ kind: "conflict-refreshed" \} : initialAdminInquiryAnswerConvergenceState/,
+  )
+  assert.match(
+    compact,
+    /return state\.kind === "refreshing" \|\| state\.kind === "retry"/,
+  )
+  assert.match(compact, /return state\.kind === "conflict-refreshed"/)
+}
+
+function assertAdminInquiryExpansion(source) {
+  const compact = compactSource(source)
+  const tableHeader = compactSource(
+    boundedSource(source, '<thead className="bg-gray-50', "</thead>"),
+  )
+  const selectionReconciliation = compactSource(
+    boundedSource(
+      source,
+      "if (previousVisibleInquiryIds !== visibleInquiryIds) {",
+      "const handleStatusChange = (",
+    ),
+  )
+  const statusHandler = compactSource(
+    boundedSource(
+      source,
+      "const handleStatusChange = (",
+      "return (",
+    ),
+  )
+
+  assert.match(
+    source,
+    /const \[selectedInquiryId, setSelectedInquiryId\] = React\.useState<number \| null>\(null\)/,
+  )
+  assert.match(source, /const visibleInquiryIds = inquiries\.map\(\(inquiry\) => inquiry\.inquiryId\)\.join\(","\)/)
+  assert.match(
+    compact,
+    /const \[previousVisibleInquiryIds, setPreviousVisibleInquiryIds\] = React\.useState\(visibleInquiryIds\)/,
+  )
+  assertOrdered(selectionReconciliation, [
+    "setPreviousVisibleInquiryIds(visibleInquiryIds)",
+    "if (selectedInquiryId !== null && !selectedInquiryExists)",
+    "setSelectedInquiryId(null)",
+  ])
+  assert.doesNotMatch(source, /React\.useEffect/)
+  assertOrdered(statusHandler, ["setSelectedInquiryId(null)", "setStatus("])
+  assert.match(source, /<React\.Fragment key=\{inquiry\.inquiryId\}>/)
+  assert.match(
+    compact,
+    /<button type="button"[\s\S]*aria-expanded=\{isExpanded\}[\s\S]*aria-controls=\{`admin-inquiry-detail-\$\{inquiry\.inquiryId\}`\}/,
+  )
+  assert.match(
+    source,
+    /id=\{`admin-inquiry-detail-\$\{inquiry\.inquiryId\}`\}/,
+  )
+  assert.doesNotMatch(source, /<tr[^>]*onClick=/)
+  assert.match(
+    source,
+    /<AdminInquiryExpandedRow\s+key=\{inquiry\.inquiryId\}/,
+  )
+  assert.match(source, /inquiry\.userEmail \?\? messages\.admin\.inquiries\.missingUser/)
+  assert.match(source, /inquiry\.title/)
+  assert.match(source, /inquiry\.status/)
+  assert.match(source, /inquiry\.createdAt/)
+  assert.match(source, /inquiry\.content/)
+  assert.match(source, /inquiry\.answer/)
+  assert.match(source, /inquiry\.answeredBy/)
+  assert.match(source, /inquiry\.answeredAt/)
+  assert.match(
+    compact,
+    /const \[resolvedAnswer, setResolvedAnswer\] = React\.useState<AdminInquiryAnswerResolution \| null>\(null\)/,
+  )
+  assert.match(
+    compact,
+    /resolvedAnswer !== null && !inquiries\.some\( \(inquiry\) => inquiry\.inquiryId === resolvedAnswer\.inquiry\.inquiryId, \) && \(/,
+  )
+  assert.match(
+    source,
+    /<AdminInquiryAnsweredDetails\s+inquiry=\{resolvedAnswer\.inquiry\}[\s\S]*showConflict=\{resolvedAnswer\.showConflict\}/,
+  )
+  assert.match(source, /<table/)
+  assert.match(source, /<textarea/)
+  assert.match(source, /maxLength=\{2000\}/)
+  assert.match(source, /inquiry\.status === "answered"/)
+  assert.match(source, /disabled=\{answerBusy \|\| normalizedAnswer === null\}/)
+  assert.match(source, /messages\.admin\.inquiries\.invalidAnswer/)
+  assertOrdered(tableHeader, [
+    "messages.admin.inquiries.userEmail",
+    "messages.admin.inquiries.subject",
+    "messages.admin.inquiries.status",
+    "messages.admin.inquiries.createdAt",
+  ])
+  assert.doesNotMatch(tableHeader, /messages\.admin\.inquiries\.content/)
+}
+
+function assertAdminInquiryAnswerConvergence(source) {
+  const compact = compactSource(source)
+  const expanded = compactSource(
+    boundedSource(
+      source,
+      "function AdminInquiryExpandedRow(",
+      "function AdminInquiriesPage()",
+    ),
+  )
+  const page = compactSource(
+    boundedSource(source, "function AdminInquiriesPage()", "export {"),
+  )
+  const refresh = compactSource(
+    boundedSource(
+      source,
+      "const refreshAnswerConvergence = async (",
+      "const beginAnswerConvergence = (",
+    ),
+  )
+  const retry = compactSource(
+    boundedSource(
+      source,
+      "const retryAnswerConvergence = () =>",
+      "const handleAnswerSubmit = (",
+    ),
+  )
+  const submit = compactSource(
+    boundedSource(
+      source,
+      "const handleAnswerSubmit = (",
+      "const handleInquiryToggle = (",
+    ),
+  )
+  const formSubmit = compactSource(
+    boundedSource(
+      source,
+      "const handleAnswerFormSubmit = (",
+      'if (inquiry.status === "answered")',
+    ),
+  )
+
+  assert.match(
+    source,
+    /type AnswerLatchState = "idle" \| "mutation" \| "refreshing" \| "retry"/,
+  )
+  assert.match(source, /const answerLatch = React\.useRef<AnswerLatchState>\("idle"\)/)
+  assert.match(
+    source,
+    /const \[answerBusyInquiryId, setAnswerBusyInquiryId\] = React\.useState<number \| null>\(null\)/,
+  )
+  assert.match(
+    page,
+    /const answerBusy = answerBusyInquiryId !== null \|\| answerMutation\.isPending \|\| isAdminInquiryAnswerConvergenceLocked\(convergenceState\)/,
+  )
+  assert.equal(
+    (refresh.match(/inquiriesQuery\.refetch\(\{ cancelRefetch: true \}\)/g) ?? []).length,
+    1,
+  )
+  assert.match(refresh, /refreshResult\.isError \|\| refreshResult\.data === undefined/)
+  assert.match(
+    refresh,
+    /refreshedInquiry === undefined && status === "pending" \? await findAnsweredAdminInquiry\(targetInquiry\.inquiryId\) : null/,
+  )
+  assert.match(
+    refresh,
+    /if \(canonicalInquiry === null \|\| canonicalInquiry === undefined\) \{ nextState = reduceAdminInquiryAnswerConvergence\(refreshingState, \{ type: "refetch-failed", \}\) \}/,
+  )
+  assert.match(
+    refresh,
+    /const canonicalInquiry = refreshedInquiry \?\? recoveredInquiry/,
+  )
+  assert.match(refresh, /inquiryStatus: canonicalInquiry\.status/)
+  assert.match(
+    refresh,
+    /if \(canonicalInquiry\.status === "answered"\) \{ setResolvedAnswer\(\{ inquiry: canonicalInquiry, showConflict: refreshingState\.reason === "conflict", \}\) \}/,
+  )
+  assertOrdered(refresh, [
+    "setConvergenceState(nextState)",
+    "if (isAdminInquiryAnswerConvergenceLocked(nextState)) {",
+    'answerLatch.current = "retry"',
+    "return",
+    "releaseAnswerLock()",
+  ])
+  assert.match(
+    retry,
+    /answerLatch\.current !== "retry" \|\| convergenceState\.kind !== "retry" \|\| answerTarget === null/,
+  )
+  assert.match(retry, /type: "retry"/)
+  assert.match(retry, /void refreshAnswerConvergence\(refreshingState, answerTarget\)/)
+  assertOrdered(formSubmit, [
+    "event.preventDefault()",
+    "const answer = normalizeInquiryAnswer(draft)",
+    "if (answer === null) return",
+    "onAnswerSubmit(inquiry, answer)",
+  ])
+  assertOrdered(submit, [
+    'if (answerLatch.current !== "idle") return',
+    "setResolvedAnswer(null)",
+    "setAnswerTarget(inquiry)",
+    "answerMutation.reset()",
+    'answerLatch.current = "mutation"',
+    "setAnswerBusyInquiryId(inquiry.inquiryId)",
+    "answerMutation.mutate({ answer }, {",
+    "onSettled: (_data, error) => {",
+    "const reason =",
+    "beginAnswerConvergence(reason, inquiry)",
+  ])
+  assert.match(
+    submit,
+    /const reason = error === null \? "success" : isInquiryAlreadyAnsweredError\(error\) \? "conflict" : "uncertain"/,
+  )
+  assert.doesNotMatch(submit, /releaseAnswerLock\(\)/)
+  assert.equal((submit.match(/answerMutation\.mutate\(/g) ?? []).length, 1)
+  assertOrdered(page, [
+    'answerLatch.current = "idle"',
+    "setAnswerBusyInquiryId(null)",
+    "setAnswerTarget(null)",
+  ])
+  assert.match(
+    page,
+    /const answerError = answerMutation\.isError && !isInquiryAlreadyAnsweredError\(answerMutation\.error\) && !isAdminInquiryAnswerConvergenceLocked\(convergenceState\) \? getApiErrorMessage\(answerMutation\.error, messages\.admin\.common\.loadError\) : null/,
+  )
+  assert.match(expanded, /convergenceState\.kind === "retry" && \(/)
+  assert.equal(
+    (expanded.match(/onRetry=\{onConvergenceRetry\}/g) ?? []).length,
+    1,
+  )
+  assert.match(expanded, /shouldShowAdminInquiryAnsweredConflict\(convergenceState\)/)
+  assert.match(
+    page,
+    /answerTarget !== null && !answerTargetIsVisible && \( convergenceState\.kind === "retry" \? \( <AdminAsyncState kind="error" message=\{messages\.admin\.inquiries\.convergenceError\} onRetry=\{retryAnswerConvergence\}/,
+  )
+  assert.equal(
+    (page.match(/onRetry=\{retryAnswerConvergence\}/g) ?? []).length,
+    1,
+  )
+  assert.match(compact, /getApiErrorCode\(error\) === "INQUIRY_ALREADY_ANSWERED"/)
+}
+
 const statsApiBindings = [
   ["getAdminUserStats", "UserStatsResponse", "/api/v1/admin/stats/users"],
   ["getAdminContentStats", "ContentStatsResponse", "/api/v1/admin/stats/content"],
@@ -1784,4 +2169,249 @@ test("admin report decisions use one detail refetch owner and one synchronous la
   }
   assert.notEqual(automaticDetailRefetchMutant, hookSource)
   assert.throws(() => assertAdminReportHooks(automaticDetailRefetchMutant))
+})
+
+test("each admin inquiry API owns the exact nullable DTO, filters, body, and endpoints", () => {
+  const source = readSource(
+    "src/features/admin/inquiries/api/admin-inquiries-api.ts",
+  )
+
+  assertAdminInquiryApiContracts(source)
+
+  const nonNullableEmailMutant = source.replace(
+    "userEmail: string | null",
+    "userEmail: string",
+  )
+  const droppedCursorMutant = source.replace("cursor: params.cursor,", "")
+  const droppedBodyMutant = source.replace(", body)", ")")
+  const wrongMethodMutant = source.replace(
+    "apiClient.post(`",
+    "apiClient.get(`",
+  )
+  const pendingRecoveryMutant = source.replace(
+    'getAdminInquiries({ status: "answered", cursor, size: 20 })',
+    'getAdminInquiries({ status: "pending", cursor, size: 20 })',
+  )
+  const firstPageOnlyMutant = source.replace(
+    "cursor = page.nextCursor",
+    "cursor = null",
+  )
+
+  for (const mutant of [
+    nonNullableEmailMutant,
+    droppedCursorMutant,
+    droppedBodyMutant,
+    wrongMethodMutant,
+    pendingRecoveryMutant,
+    firstPageOnlyMutant,
+  ]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminInquiryApiContracts(mutant))
+  }
+})
+
+test("admin inquiry hooks keep cursor keys stale-only and invalidate every settled answer", () => {
+  const source = readSource(
+    "src/features/admin/inquiries/hooks/use-admin-inquiries.ts",
+  )
+
+  assertAdminInquiryHooks(source)
+
+  const successOnlyMutant = source.replace("onSettled:", "onSuccess:")
+  const automaticRefetchMutant = source.replace('refetchType: "none",', "")
+  const wrongPrefixMutant = source.replace(
+    "queryKey: adminInquiryKeys.all",
+    "queryKey: adminInquiryKeys.lists()",
+  )
+  const droppedStatusKeyMutant = source.replace("{ status, size },", "{ size },")
+
+  for (const mutant of [
+    successOnlyMutant,
+    automaticRefetchMutant,
+    wrongPrefixMutant,
+    droppedStatusKeyMutant,
+  ]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminInquiryHooks(mutant))
+  }
+})
+
+test("admin inquiry answer convergence keeps every failed canonical refresh locked", () => {
+  const source = readSource(
+    "src/features/admin/inquiries/lib/admin-inquiry.ts",
+  )
+
+  assertAdminInquiryAnswerConvergenceState(source)
+
+  const failedUnlockMutant = source.replace(
+    'return { kind: "retry", reason: state.reason }',
+    "return initialAdminInquiryAnswerConvergenceState",
+  )
+  const missingUnlockMutant = source.replace(
+    'return state.reason === "uncertain"\n      ? initialAdminInquiryAnswerConvergenceState\n      : { kind: "retry", reason: state.reason }',
+    "return initialAdminInquiryAnswerConvergenceState",
+  )
+  const uncertainRetryMutant = source.replace(
+    'if (state.reason === "uncertain") {\n    return initialAdminInquiryAnswerConvergenceState\n  }',
+    'if (state.reason === "uncertain") {\n    return { kind: "retry", reason: state.reason }\n  }',
+  )
+  const pendingUnlockMutant = source.replace(
+    'if (event.inquiryStatus !== "answered") {',
+    'if (false) {',
+  )
+
+  for (const mutant of [
+    failedUnlockMutant,
+    missingUnlockMutant,
+    uncertainRetryMutant,
+    pendingUnlockMutant,
+  ]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminInquiryAnswerConvergenceState(mutant))
+  }
+})
+
+test("admin inquiries preserve isolated row state and recover filtered canonical answers", () => {
+  const source = readSource(
+    "src/features/admin/inquiries/components/admin-inquiries-page.tsx",
+  )
+  const pageSource = readSource(
+    "src/app/admin/(protected)/inquiries/page.tsx",
+  )
+
+  assertAdminInquiryExpansion(source)
+  assertAdminInquiryAnswerConvergence(source)
+  assert.match(source, /useAdminInquiries\(\{ status, size: 20 \}\)/)
+  assert.match(source, /inquiriesQuery\.isPending/)
+  assert.match(source, /inquiriesQuery\.isError/)
+  assert.match(source, /inquiries\.length === 0/)
+  assert.match(source, /inquiriesQuery\.isFetchingNextPage/)
+  assert.match(pageSource, /<AdminInquiriesPage \/>/)
+
+  const missingExpandedMutant = source.replace(" aria-expanded={isExpanded}", "")
+  const missingControlsMutant = source.replace(
+    " aria-controls={`admin-inquiry-detail-${inquiry.inquiryId}`}",
+    "",
+  )
+  const rowClickMutant = source.replace("<tr>", '<tr onClick={() => undefined}>')
+  const sharedDraftMutant = source.replace(" key={inquiry.inquiryId}", "")
+  const missingFallbackMutant = source.replace(
+    "inquiry.userEmail ?? messages.admin.inquiries.missingUser",
+    'inquiry.userEmail ?? "—"',
+  )
+  const answeredFormMutant = source.replace(
+    'inquiry.status === "answered"',
+    'inquiry.status === "pending"',
+  )
+  const unguardedMutant = source.replace(
+    'if (answerLatch.current !== "idle") return',
+    "if (false) return",
+  )
+  const duplicateMutationMutant = source.replace(
+    "answerMutation.mutate({ answer }, {",
+    "answerMutation.mutate({ answer })\n    answerMutation.mutate({ answer }, {",
+  )
+  const duplicateRefetchMutant = source.replace(
+    "await inquiriesQuery.refetch({ cancelRefetch: true })",
+    "await inquiriesQuery.refetch({ cancelRefetch: true })\n      await inquiriesQuery.refetch({ cancelRefetch: true })",
+  )
+  const staleRefetchMutant = source.replace(
+    "await inquiriesQuery.refetch({ cancelRefetch: true })",
+    "await inquiriesQuery.refetch({ cancelRefetch: false })",
+  )
+  const uncertainUnlockMutant = source.replace(
+    '            : "uncertain"\n        beginAnswerConvergence(reason, inquiry)',
+    '            : "uncertain"\n        if (reason === "uncertain") {\n          releaseAnswerLock()\n          return\n        }\n        beginAnswerConvergence(reason, inquiry)',
+  )
+  const duplicateRetryMutant = source.replace(
+    "onRetry={retryAnswerConvergence}",
+    "onRetry={retryAnswerConvergence} />\n        <AdminAsyncState kind=\"error\" onRetry={retryAnswerConvergence}",
+  )
+  const staleSelectionMutant = source.replace(
+    "if (previousVisibleInquiryIds !== visibleInquiryIds) {",
+    "if (false) {",
+  )
+  const swappedSubjectMutant = swapFirst(
+    source,
+    "messages.admin.inquiries.subject",
+    "messages.admin.inquiries.content",
+  )
+  const droppedAnsweredRecoveryMutant = source.replace(
+    "await findAnsweredAdminInquiry(targetInquiry.inquiryId)",
+    "null",
+  )
+  const droppedResolvedSnapshotMutant = source.replace(
+    "resolvedAnswer !== null &&",
+    "false &&",
+  )
+  const droppedDetachedRetryMutant = source.replace(
+    "answerTarget !== null && !answerTargetIsVisible &&",
+    "false &&",
+  )
+
+  for (const mutant of [
+    missingExpandedMutant,
+    missingControlsMutant,
+    rowClickMutant,
+    sharedDraftMutant,
+    missingFallbackMutant,
+    answeredFormMutant,
+    unguardedMutant,
+    duplicateMutationMutant,
+    duplicateRefetchMutant,
+    staleRefetchMutant,
+    uncertainUnlockMutant,
+    duplicateRetryMutant,
+    staleSelectionMutant,
+    swappedSubjectMutant,
+    droppedAnsweredRecoveryMutant,
+    droppedResolvedSnapshotMutant,
+    droppedDetachedRetryMutant,
+  ]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => {
+      assertAdminInquiryExpansion(mutant)
+      assertAdminInquiryAnswerConvergence(mutant)
+    })
+  }
+})
+
+test("admin inquiry cursor failures retry one page without a second generic error", () => {
+  const source = readSource(
+    "src/features/admin/inquiries/components/admin-inquiries-page.tsx",
+  )
+
+  assertAdminInquiryCursorRetry(source)
+
+  const refetchMutant = source.replace(
+    "inquiriesQuery.fetchNextPage({ cancelRefetch: false })",
+    "inquiriesQuery.refetch()",
+  )
+  const cancellationMutant = source.replace(
+    "inquiriesQuery.fetchNextPage({ cancelRefetch: false })",
+    "inquiriesQuery.fetchNextPage({ cancelRefetch: true })",
+  )
+  const raceMutant = source.replace(
+    "disabled={listBusy}",
+    "disabled={inquiriesQuery.isFetchingNextPage}",
+  )
+  const duplicateErrorMutant = source.replace(
+    "inquiriesQuery.isError &&\n              !inquiriesQuery.isFetchNextPageError &&\n              answerBusyInquiryId === null",
+    "inquiriesQuery.isError",
+  )
+  const emptyDuplicateErrorMutant = source.replace(
+    "inquiriesQuery.isError &&\n          inquiries.length === 0 &&\n          answerBusyInquiryId === null",
+    "inquiriesQuery.isError && inquiries.length === 0",
+  )
+
+  for (const mutant of [
+    refetchMutant,
+    cancellationMutant,
+    raceMutant,
+    duplicateErrorMutant,
+    emptyDuplicateErrorMutant,
+  ]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminInquiryCursorRetry(mutant))
+  }
 })

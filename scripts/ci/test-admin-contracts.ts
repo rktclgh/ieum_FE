@@ -8,8 +8,21 @@ import {
   reduceAdminReportDecisionConvergence,
   shouldShowAdminReportResolvedConflict,
 } from "../../src/features/admin/reports/lib/admin-report-decision-convergence.js"
+import {
+  initialAdminInquiryAnswerConvergenceState,
+  isAdminInquiryAnswerConvergenceLocked,
+  normalizeInquiryAnswer,
+  reduceAdminInquiryAnswerConvergence,
+  shouldShowAdminInquiryAnsweredConflict,
+} from "../../src/features/admin/inquiries/lib/admin-inquiry.js"
 import { compactQuery } from "../../src/features/admin/shared/lib/admin-query.js"
 import { validateSanctionDraft } from "../../src/features/admin/users/lib/admin-sanction.js"
+import type {
+  AdminInquiriesParams,
+  AdminInquiryItem,
+  AdminInquiryStatus,
+  AnswerInquiryRequest,
+} from "../../src/features/admin/inquiries/api/admin-inquiries-api.js"
 import type {
   AdminUserActivity,
   AdminUserDetailResponse,
@@ -77,6 +90,19 @@ type ExpectedAdminUserItem = {
   grade: UserGrade
   provider: AuthProvider
   lastActiveAt: string | null
+}
+
+type ExpectedAdminInquiryItem = {
+  inquiryId: number
+  userId: number
+  userEmail: string | null
+  title: string
+  content: string
+  status: AdminInquiryStatus
+  answer: string | null
+  answeredBy: number | null
+  answeredAt: string | null
+  createdAt: string
 }
 
 type ExpectedAdminUserProfile = {
@@ -251,6 +277,7 @@ type ExpectedAdminMessages = {
     | "missingUser"
     | "createdAt"
     | "status"
+    | "subject"
     | "content"
     | "answer"
     | "answeredBy"
@@ -259,6 +286,7 @@ type ExpectedAdminMessages = {
     | "answerSubmit"
     | "invalidAnswer"
     | "answeredConflict"
+    | "convergenceError"
   >
 }
 
@@ -310,6 +338,22 @@ const adminUserDtoTypeContracts: [
   >,
 ] = [true, true, true, true, true, true, true, true, true, true, true]
 
+const adminInquiryDtoTypeContracts: [
+  Expect<Exact<AdminInquiryStatus, "pending" | "answered">>,
+  Expect<Exact<AdminInquiryItem, ExpectedAdminInquiryItem>>,
+  Expect<Exact<AnswerInquiryRequest, { answer: string }>>,
+  Expect<
+    Exact<
+      AdminInquiriesParams,
+      {
+        status?: AdminInquiryStatus | ""
+        cursor?: string | null
+        size: number
+      }
+    >
+  >,
+] = [true, true, true, true]
+
 const expectedAdminMessageKeys = {
   common: ["all", "cancel", "empty", "loadError", "loadMore", "loading", "retry", "save"],
   auth: [
@@ -337,7 +381,7 @@ const expectedAdminMessageKeys = {
   ],
   inquiries: [
     "answer", "answerPlaceholder", "answerSubmit", "answeredAt", "answeredBy", "answeredConflict", "content",
-    "createdAt", "invalidAnswer", "missingUser", "status", "title", "userEmail",
+    "convergenceError", "createdAt", "invalidAnswer", "missingUser", "status", "subject", "title", "userEmail",
   ],
 } as const
 
@@ -561,6 +605,120 @@ test("uncertain decision errors unlock only after a successful canonical refresh
   assert.equal(isAdminReportDecisionConvergenceLocked(refreshedPending), false)
   assert.equal(shouldShowAdminReportResolvedConflict(refreshedAiReviewed), false)
   assert.equal(shouldShowAdminReportResolvedConflict(refreshedPending), false)
+})
+
+test("inquiry answers normalize the exact backend length contract", () => {
+  assert.equal(normalizeInquiryAnswer("  답변  "), "답변")
+  assert.equal(normalizeInquiryAnswer("   "), null)
+  assert.equal(normalizeInquiryAnswer("가".repeat(2000)), "가".repeat(2000))
+  assert.equal(normalizeInquiryAnswer(` ${"가".repeat(2000)} `), "가".repeat(2000))
+  assert.equal(normalizeInquiryAnswer("가".repeat(2001)), null)
+})
+
+test("inquiry DTOs preserve every nullable backend field exactly", () => {
+  assert.deepEqual(adminInquiryDtoTypeContracts, [true, true, true, true])
+})
+
+test("successful inquiry answers stay locked until canonical answered data arrives", () => {
+  const refreshing = reduceAdminInquiryAnswerConvergence(
+    initialAdminInquiryAnswerConvergenceState,
+    { type: "begin", reason: "success" },
+  )
+  const failed = reduceAdminInquiryAnswerConvergence(refreshing, {
+    type: "refetch-failed",
+  })
+  const filteredMissing = reduceAdminInquiryAnswerConvergence(refreshing, {
+    type: "refetch-succeeded",
+    inquiryStatus: "missing",
+  })
+  const retrying = reduceAdminInquiryAnswerConvergence(failed, { type: "retry" })
+  const stalePending = reduceAdminInquiryAnswerConvergence(retrying, {
+    type: "refetch-succeeded",
+    inquiryStatus: "pending",
+  })
+  const finalRetry = reduceAdminInquiryAnswerConvergence(stalePending, {
+    type: "retry",
+  })
+  const answered = reduceAdminInquiryAnswerConvergence(finalRetry, {
+    type: "refetch-succeeded",
+    inquiryStatus: "answered",
+  })
+
+  for (const state of [
+    refreshing,
+    failed,
+    filteredMissing,
+    retrying,
+    stalePending,
+    finalRetry,
+  ]) {
+    assert.equal(isAdminInquiryAnswerConvergenceLocked(state), true)
+    assert.equal(shouldShowAdminInquiryAnsweredConflict(state), false)
+  }
+  assert.deepEqual(answered, { kind: "idle" })
+  assert.equal(isAdminInquiryAnswerConvergenceLocked(answered), false)
+})
+
+test("inquiry conflicts show copy only after canonical answered data arrives", () => {
+  const refreshing = reduceAdminInquiryAnswerConvergence(
+    initialAdminInquiryAnswerConvergenceState,
+    { type: "begin", reason: "conflict" },
+  )
+  const stalePending = reduceAdminInquiryAnswerConvergence(refreshing, {
+    type: "refetch-succeeded",
+    inquiryStatus: "pending",
+  })
+  const filteredMissing = reduceAdminInquiryAnswerConvergence(refreshing, {
+    type: "refetch-succeeded",
+    inquiryStatus: "missing",
+  })
+  const retrying = reduceAdminInquiryAnswerConvergence(stalePending, {
+    type: "retry",
+  })
+  const answered = reduceAdminInquiryAnswerConvergence(retrying, {
+    type: "refetch-succeeded",
+    inquiryStatus: "answered",
+  })
+
+  assert.equal(isAdminInquiryAnswerConvergenceLocked(stalePending), true)
+  assert.equal(isAdminInquiryAnswerConvergenceLocked(filteredMissing), true)
+  assert.equal(shouldShowAdminInquiryAnsweredConflict(stalePending), false)
+  assert.equal(shouldShowAdminInquiryAnsweredConflict(filteredMissing), false)
+  assert.deepEqual(answered, { kind: "conflict-refreshed" })
+  assert.equal(isAdminInquiryAnswerConvergenceLocked(answered), false)
+  assert.equal(shouldShowAdminInquiryAnsweredConflict(answered), true)
+})
+
+test("uncertain inquiry errors require one canonical refresh before retrying", () => {
+  const refreshing = reduceAdminInquiryAnswerConvergence(
+    initialAdminInquiryAnswerConvergenceState,
+    { type: "begin", reason: "uncertain" },
+  )
+  const failed = reduceAdminInquiryAnswerConvergence(refreshing, {
+    type: "refetch-failed",
+  })
+  const retrying = reduceAdminInquiryAnswerConvergence(failed, { type: "retry" })
+  const pending = reduceAdminInquiryAnswerConvergence(retrying, {
+    type: "refetch-succeeded",
+    inquiryStatus: "pending",
+  })
+  const answered = reduceAdminInquiryAnswerConvergence(refreshing, {
+    type: "refetch-succeeded",
+    inquiryStatus: "answered",
+  })
+  const missing = reduceAdminInquiryAnswerConvergence(refreshing, {
+    type: "refetch-succeeded",
+    inquiryStatus: "missing",
+  })
+
+  for (const state of [refreshing, failed, retrying]) {
+    assert.equal(isAdminInquiryAnswerConvergenceLocked(state), true)
+  }
+  for (const state of [pending, answered, missing]) {
+    assert.deepEqual(state, { kind: "idle" })
+    assert.equal(isAdminInquiryAnswerConvergenceLocked(state), false)
+    assert.equal(shouldShowAdminInquiryAnsweredConflict(state), false)
+  }
 })
 
 test("admin range messages interpolate both backend dates", () => {

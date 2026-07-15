@@ -132,6 +132,7 @@ interface AdminMessages {
     missingUser: string
     createdAt: string
     status: string
+    subject: string
     content: string
     answer: string
     answeredBy: string
@@ -140,6 +141,7 @@ interface AdminMessages {
     answerSubmit: string
     invalidAnswer: string
     answeredConflict: string
+    convergenceError: string
   }
 }
 
@@ -277,6 +279,7 @@ const adminKo: AdminMessages = {
     missingUser: "회원 정보 없음",
     createdAt: "문의 일시",
     status: "처리 상태",
+    subject: "문의 제목",
     content: "문의 내용",
     answer: "답변",
     answeredBy: "답변 운영자",
@@ -285,6 +288,7 @@ const adminKo: AdminMessages = {
     answerSubmit: "답변 등록",
     invalidAnswer: "답변을 1자 이상 2000자 이하로 입력해 주세요.",
     answeredConflict: "이미 답변된 문의입니다. 서버의 최신 답변을 불러왔습니다.",
+    convergenceError: "서버의 최신 문의 상태를 확인하지 못했습니다.",
   },
 }
 
@@ -422,6 +426,7 @@ const adminEn: AdminMessages = {
     missingUser: "User information unavailable",
     createdAt: "Submitted at",
     status: "Status",
+    subject: "Subject",
     content: "Inquiry",
     answer: "Answer",
     answeredBy: "Answered by",
@@ -430,6 +435,7 @@ const adminEn: AdminMessages = {
     answerSubmit: "Submit answer",
     invalidAnswer: "Enter an answer between 1 and 2000 characters.",
     answeredConflict: "This inquiry was already answered. The latest server answer is now displayed.",
+    convergenceError: "Unable to confirm the latest inquiry state from the server.",
   },
 }
 
