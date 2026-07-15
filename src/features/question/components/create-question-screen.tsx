@@ -31,6 +31,8 @@ interface CreateQuestionScreenProps {
   mode?: "create" | "edit"
   /** mode="edit"일 때 필수 — 수정 대상 질문 id */
   questionId?: number
+  /** 지도 홈 핀에서 넘어온 초기 장소 — create 모드에서 장소 칸을 프리필한다 */
+  initialPlace?: MeetupPlaceValue | null
 }
 
 /**
@@ -44,7 +46,7 @@ interface CreateQuestionScreenProps {
  * 컨테이너: edit 모드에서는 상세가 로드된 뒤에만 폼을 마운트해, 프리필용 렌더 중
  * setState 없이 초기값을 확정한다(edit-profile-content.tsx와 동일한 패턴).
  */
-function CreateQuestionScreen({ onClose, mode = "create", questionId }: CreateQuestionScreenProps) {
+function CreateQuestionScreen({ onClose, mode = "create", questionId, initialPlace = null }: CreateQuestionScreenProps) {
   const { messages } = useTranslation()
   const detail = useQuestionDetail(questionId ?? 0, mode === "edit")
 
@@ -74,7 +76,13 @@ function CreateQuestionScreen({ onClose, mode = "create", questionId }: CreateQu
   const editDetail = mode === "edit" ? (detail.data ?? null) : null
 
   return (
-    <CreateQuestionForm onClose={onClose} mode={mode} questionId={questionId} initial={editDetail} />
+    <CreateQuestionForm
+      onClose={onClose}
+      mode={mode}
+      questionId={questionId}
+      initial={editDetail}
+      initialPlace={initialPlace}
+    />
   )
 }
 
@@ -83,9 +91,10 @@ interface CreateQuestionFormProps {
   mode: "create" | "edit"
   questionId?: number
   initial: QuestionDetailView | null
+  initialPlace: MeetupPlaceValue | null
 }
 
-function CreateQuestionForm({ onClose, mode, questionId, initial }: CreateQuestionFormProps) {
+function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }: CreateQuestionFormProps) {
   const { messages } = useTranslation()
   const t = messages.question
   const createQuestion = useCreateQuestion()
@@ -101,7 +110,7 @@ function CreateQuestionForm({ onClose, mode, questionId, initial }: CreateQuesti
           address: initial.location.address,
           label: initial.location.label ?? initial.location.address,
         }
-      : null
+      : (initialPlace ?? null)
   )
   const [image, setImage] = React.useState<{ preview: string; file: File } | null>(null)
   const [existingImageUrl, setExistingImageUrl] = React.useState<string | null>(
