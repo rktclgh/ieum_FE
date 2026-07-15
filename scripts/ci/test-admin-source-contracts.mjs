@@ -359,7 +359,7 @@ test("Intl percent formatting owns locale-specific percent sign spacing", () => 
   assert.match(formatter.format(0.456), /^45,6\s%$/u)
 })
 
-test("admin dashboard keeps cached cards during refetch errors and disables active retry", () => {
+test("admin dashboard keeps cached cards with one adjacent retry state on refetch errors", () => {
   const componentSource = readSource(
     "src/features/admin/dashboard/components/admin-dashboard-page.tsx",
   )
@@ -381,6 +381,24 @@ test("admin dashboard keeps cached cards during refetch errors and disables acti
   )
   assert.match(componentSource, /if \(isPending && !isError\)/)
   assert.match(componentSource, /<AdminAsyncState kind="loading" \/>/)
+  const dataPresentSource = componentSource.slice(
+    componentSource.indexOf("const countFormatter"),
+  )
+  const cachedErrorStart = dataPresentSource.indexOf("{isError &&")
+  const cardsStart = dataPresentSource.indexOf("<dl")
+
+  assert.notEqual(cachedErrorStart, -1, "cached-data render must consume isError")
+  assert.ok(cardsStart > cachedErrorStart, "retry state must render adjacent before KPI cards")
+  assert.equal((componentSource.match(/kind="error"/g) ?? []).length, 2)
+  assert.equal((dataPresentSource.match(/kind="error"/g) ?? []).length, 1)
+
+  const cachedErrorSource = dataPresentSource.slice(cachedErrorStart, cardsStart)
+
+  assert.equal((cachedErrorSource.match(/<AdminAsyncState/g) ?? []).length, 1)
+  assert.match(cachedErrorSource, /kind="error"/)
+  assert.match(cachedErrorSource, /onRetry=\{\(\) => void refetch\(\)\}/)
+  assert.match(cachedErrorSource, /retryDisabled=\{isFetching\}/)
+  assert.match(cachedErrorSource, /isRetrying=\{isFetching\}/)
   assert.match(componentSource, /retryDisabled=\{isFetching\}/)
   assert.match(componentSource, /isRetrying=\{isFetching\}/)
   assert.match(componentSource, /aria-busy=\{isFetching \|\| undefined\}/)

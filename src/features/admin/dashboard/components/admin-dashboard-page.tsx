@@ -78,6 +78,15 @@ function AdminDashboardPage() {
         </p>
       </header>
 
+      {isError && (
+        <AdminAsyncState
+          kind="error"
+          onRetry={() => void refetch()}
+          retryDisabled={isFetching}
+          isRetrying={isFetching}
+        />
+      )}
+
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
           <div
