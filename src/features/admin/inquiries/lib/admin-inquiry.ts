@@ -19,7 +19,7 @@ type AdminInquiryAnswerConvergenceEvent =
   | { type: "refetch-failed" }
   | {
       type: "refetch-succeeded"
-      inquiryStatus: AdminInquiryStatus | "missing"
+      inquiryStatus: AdminInquiryStatus
     }
 
 const initialAdminInquiryAnswerConvergenceState = { kind: "idle" } as const
@@ -59,12 +59,6 @@ function reduceAdminInquiryAnswerConvergence(
     return { kind: "retry", reason: state.reason }
   }
 
-  if (event.inquiryStatus === "missing") {
-    return state.reason === "uncertain"
-      ? initialAdminInquiryAnswerConvergenceState
-      : { kind: "retry", reason: state.reason }
-  }
-
   if (state.reason === "uncertain") {
     return initialAdminInquiryAnswerConvergenceState
   }
@@ -94,12 +88,26 @@ function shouldShowAdminInquiryAnsweredConflict(
   return state.kind === "conflict-refreshed"
 }
 
+function shouldShowAdminInquiryPageConvergence(
+  state: AdminInquiryAnswerConvergenceState,
+  targetInquiryId: number | null,
+  selectedInquiryId: number | null,
+  targetIsVisible: boolean,
+) {
+  return (
+    isAdminInquiryAnswerConvergenceLocked(state) &&
+    targetInquiryId !== null &&
+    (!targetIsVisible || targetInquiryId !== selectedInquiryId)
+  )
+}
+
 export {
   initialAdminInquiryAnswerConvergenceState,
   isAdminInquiryAnswerConvergenceLocked,
   normalizeInquiryAnswer,
   reduceAdminInquiryAnswerConvergence,
   shouldShowAdminInquiryAnsweredConflict,
+  shouldShowAdminInquiryPageConvergence,
 }
 export type {
   AdminInquiryAnswerConvergenceReason,

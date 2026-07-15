@@ -12,9 +12,19 @@ import {
   claimAdminInquiryAnswer,
   createAdminInquiryAnswerMutationOptions,
   getAdminInquiryAnswerLifecycle,
+  refetchActiveAdminInquiryLists,
+  retryAdminInquiryAnswerConvergence,
 } from "../../src/features/admin/inquiries/lib/admin-inquiry-answer-lifecycle.js"
-import { isAdminInquiryAnswerConvergenceLocked } from "../../src/features/admin/inquiries/lib/admin-inquiry.js"
+import {
+  isAdminInquiryAnswerConvergenceLocked,
+  shouldShowAdminInquiryPageConvergence,
+} from "../../src/features/admin/inquiries/lib/admin-inquiry.js"
 import type { AdminInquiryItem } from "../../src/features/admin/inquiries/api/admin-inquiries-api.js"
+
+interface InquiryPage {
+  items: AdminInquiryItem[]
+  nextCursor: null
+}
 
 function createDeferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void
@@ -51,8 +61,15 @@ function createInquiry(status: "pending" | "answered"): AdminInquiryItem {
   }
 }
 
+function createInfiniteData(items: AdminInquiryItem[]): InfiniteData<InquiryPage, string | null> {
+  return {
+    pages: [{ items, nextCursor: null }],
+    pageParams: [null],
+  }
+}
+
 for (const scenario of ["success", "conflict"] as const) {
-  test(`mutation-cache lifecycle converges ${scenario} after submit -> unmount -> remount -> settle`, async () => {
+  test(`mutation-cache lifecycle converges ${scenario} across pending -> unmount -> all-list remount -> settle`, async () => {
     const queryClient = new QueryClient({
       defaultOptions: {
         mutations: { retry: false },
@@ -60,48 +77,51 @@ for (const scenario of ["success", "conflict"] as const) {
       },
     })
     const post = createDeferred<void>()
-    const staleList = createDeferred<{
-      items: AdminInquiryItem[]
-      nextCursor: null
-    }>()
+    const staleAllList = createDeferred<InquiryPage>()
     const conflictError = new Error("already answered")
-    const listKey = ["admin", "inquiries", "list", { status: "pending", size: 20 }] as const
-    let listFetches = 0
-    let canonicalRefetches = 0
+    const pendingKey = [
+      "admin",
+      "inquiries",
+      "list",
+      { status: "pending", size: 20 },
+    ] as const
+    const allKey = [
+      "admin",
+      "inquiries",
+      "list",
+      { status: "", size: 20 },
+    ] as const
+    const answeredKey = [
+      "admin",
+      "inquiries",
+      "list",
+      { status: "answered", size: 20 },
+    ] as const
+    let pendingFetches = 0
+    let allFetches = 0
+    let answeredFetches = 0
+    let activeListRefetches = 0
+    let detailCalls = 0
     let postCalls = 0
     let perCallSettledCalls = 0
-    let staleListAborted = false
+    let staleAllListAborted = false
 
-    const listOptions = {
-      queryKey: listKey,
-      queryFn: async ({ signal }: { signal: AbortSignal }) => {
-        listFetches += 1
-        if (listFetches === 2) {
-          signal.addEventListener(
-            "abort",
-            () => {
-              staleListAborted = true
-              staleList.reject(signal.reason)
-            },
-            { once: true },
-          )
-          return staleList.promise
-        }
-        return {
-          items: [createInquiry(listFetches === 1 ? "pending" : "answered")],
-          nextCursor: null,
-        }
+    const pendingOptions = {
+      queryKey: pendingKey,
+      queryFn: async () => {
+        pendingFetches += 1
+        return { items: [createInquiry("pending")], nextCursor: null }
       },
       initialPageParam: null as string | null,
-      getNextPageParam: (page: { nextCursor: string | null }) => page.nextCursor,
+      getNextPageParam: (page: InquiryPage) => page.nextCursor,
       staleTime: Infinity,
     }
-    const firstListObserver = new InfiniteQueryObserver(queryClient, listOptions)
+    const firstListObserver = new InfiniteQueryObserver(queryClient, pendingOptions)
     const unsubscribeFirstList = firstListObserver.subscribe(() => undefined)
 
     try {
       await firstListObserver.refetch()
-      assert.equal(listFetches, 1)
+      assert.equal(pendingFetches, 1)
 
       const mutationObserver = new MutationObserver(
         queryClient,
@@ -111,27 +131,21 @@ for (const scenario of ["success", "conflict"] as const) {
             await post.promise
             if (scenario === "conflict") throw conflictError
           },
-          findAnsweredInquiry: async () => null,
+          getCanonicalInquiry: async (inquiryId, { signal } = {}) => {
+            detailCalls += 1
+            assert.equal(inquiryId, 41)
+            assert.equal(signal?.aborted, false)
+            return createInquiry("answered")
+          },
           invalidateInquiries: () =>
             queryClient.invalidateQueries({
               queryKey: ["admin", "inquiries"],
               refetchType: "none",
             }),
           isAlreadyAnsweredError: (error) => error === conflictError,
-          refetchCanonicalList: async () => {
-            canonicalRefetches += 1
-            await queryClient.refetchQueries(
-              { queryKey: listKey, exact: true, type: "all" },
-              { cancelRefetch: true, throwOnError: true },
-            )
-            const result = queryClient.getQueryData<
-              InfiniteData<{
-                items: AdminInquiryItem[]
-                nextCursor: null
-              }, string | null>
-            >(listKey)
-            assert.ok(result)
-            return result.pages.flatMap((page) => page.items)
+          refetchActiveLists: async () => {
+            activeListRefetches += 1
+            await refetchActiveAdminInquiryLists(queryClient)
           },
         }),
       )
@@ -139,8 +153,6 @@ for (const scenario of ["success", "conflict"] as const) {
       const execution = claimAdminInquiryAnswer(queryClient, {
         answer: "Canonical answer",
         inquiry: createInquiry("pending"),
-        size: 20,
-        status: "pending",
       })
 
       assert.ok(execution)
@@ -148,8 +160,6 @@ for (const scenario of ["success", "conflict"] as const) {
         claimAdminInquiryAnswer(queryClient, {
           answer: "Duplicate answer",
           inquiry: createInquiry("pending"),
-          size: 20,
-          status: "pending",
         }),
         null,
       )
@@ -175,21 +185,59 @@ for (const scenario of ["success", "conflict"] as const) {
       unsubscribeMutation()
       unsubscribeFirstList()
 
-      const remountedListObserver = new InfiniteQueryObserver(queryClient, listOptions)
-      const unsubscribeRemountedList = remountedListObserver.subscribe(() => undefined)
-      assert.equal(listFetches, 1)
-      const staleListRequest = remountedListObserver.refetch()
-      await waitUntil(() => listFetches === 2)
+      queryClient.setQueryData(allKey, createInfiniteData([createInquiry("pending")]))
+      queryClient.setQueryData(answeredKey, createInfiniteData([]))
+      const allListObserver = new InfiniteQueryObserver(queryClient, {
+        queryKey: allKey,
+        queryFn: async ({ signal }: { signal: AbortSignal }) => {
+          allFetches += 1
+          if (allFetches === 1) {
+            signal.addEventListener(
+              "abort",
+              () => {
+                staleAllListAborted = true
+                staleAllList.reject(signal.reason)
+              },
+              { once: true },
+            )
+            return staleAllList.promise
+          }
+          return { items: [], nextCursor: null }
+        },
+        initialPageParam: null as string | null,
+        getNextPageParam: (page: InquiryPage) => page.nextCursor,
+        staleTime: Infinity,
+      })
+      const answeredListObserver = new InfiniteQueryObserver(queryClient, {
+        queryKey: answeredKey,
+        queryFn: async () => {
+          answeredFetches += 1
+          return { items: [], nextCursor: null }
+        },
+        initialPageParam: null as string | null,
+        getNextPageParam: (page: InquiryPage) => page.nextCursor,
+        staleTime: Infinity,
+      })
+      const unsubscribeAllList = allListObserver.subscribe(() => undefined)
+      const unsubscribeAnsweredList = answeredListObserver.subscribe(() => undefined)
+      assert.equal(allFetches, 0)
+      assert.equal(answeredFetches, 0)
+
+      const staleAllListRequest = allListObserver.refetch()
+      await waitUntil(() => allFetches === 1)
 
       post.resolve()
       const mutationError = await mutationResult
-      await staleListRequest
+      await staleAllListRequest
 
       assert.equal(postCalls, 1)
       assert.equal(perCallSettledCalls, 0)
-      assert.equal(canonicalRefetches, 1)
-      assert.equal(staleListAborted, true)
-      assert.equal(listFetches, 3)
+      assert.equal(activeListRefetches, 1)
+      assert.equal(staleAllListAborted, true)
+      assert.equal(pendingFetches, 1)
+      assert.equal(allFetches, 2)
+      assert.equal(answeredFetches, 1)
+      assert.equal(detailCalls, 1)
       assert.equal(mutationError, scenario === "conflict" ? conflictError : null)
 
       const lifecycle = getAdminInquiryAnswerLifecycle(queryClient, 41)
@@ -200,12 +248,222 @@ for (const scenario of ["success", "conflict"] as const) {
         isAdminInquiryAnswerConvergenceLocked(lifecycle?.state ?? { kind: "idle" }),
         false,
       )
-      assert.equal(remountedListObserver.getCurrentResult().data?.pages[0]?.items[0]?.status, "answered")
+      assert.deepEqual(allListObserver.getCurrentResult().data?.pages[0]?.items, [])
 
-      unsubscribeRemountedList()
+      unsubscribeAllList()
+      unsubscribeAnsweredList()
     } finally {
       post.resolve()
-      staleList.resolve({ items: [createInquiry("pending")], nextCursor: null })
+      staleAllList.resolve({ items: [createInquiry("pending")], nextCursor: null })
+      queryClient.clear()
+    }
+  })
+}
+
+test("retry remains actionable after remount when the target row is visible but collapsed", async () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      mutations: { retry: false },
+      queries: { retry: false },
+    },
+  })
+  const allKey = [
+    "admin",
+    "inquiries",
+    "list",
+    { status: "", size: 20 },
+  ] as const
+  let listFetches = 0
+  let detailCalls = 0
+  const listOptions = {
+    queryKey: allKey,
+    queryFn: async () => {
+      listFetches += 1
+      if (listFetches === 2) throw new Error("canonical list refresh failed")
+      return {
+        items: listFetches === 1 ? [createInquiry("pending")] : [],
+        nextCursor: null,
+      }
+    },
+    initialPageParam: null as string | null,
+    getNextPageParam: (page: InquiryPage) => page.nextCursor,
+    staleTime: Infinity,
+  }
+  const firstListObserver = new InfiniteQueryObserver(queryClient, listOptions)
+  const unsubscribeFirstList = firstListObserver.subscribe(() => undefined)
+
+  try {
+    await firstListObserver.refetch()
+    const dependencies = {
+      answerInquiry: async () => undefined,
+      getCanonicalInquiry: async () => {
+        detailCalls += 1
+        return createInquiry("answered")
+      },
+      invalidateInquiries: () =>
+        queryClient.invalidateQueries({
+          queryKey: ["admin", "inquiries"],
+          refetchType: "none",
+        }),
+      isAlreadyAnsweredError: () => false,
+      refetchActiveLists: () => refetchActiveAdminInquiryLists(queryClient),
+    }
+    const mutationObserver = new MutationObserver(
+      queryClient,
+      createAdminInquiryAnswerMutationOptions(queryClient, dependencies),
+    )
+    const unsubscribeMutation = mutationObserver.subscribe(() => undefined)
+    const execution = claimAdminInquiryAnswer(queryClient, {
+      answer: "Canonical answer",
+      inquiry: createInquiry("pending"),
+    })
+    assert.ok(execution)
+
+    await mutationObserver.mutate(execution)
+    const failedLifecycle = getAdminInquiryAnswerLifecycle(queryClient, 41)
+    assert.equal(listFetches, 2)
+    assert.equal(detailCalls, 0)
+    assert.equal(failedLifecycle?.state.kind, "retry")
+    assert.equal(
+      isAdminInquiryAnswerConvergenceLocked(failedLifecycle?.state ?? { kind: "idle" }),
+      true,
+    )
+
+    unsubscribeMutation()
+    unsubscribeFirstList()
+    queryClient.setQueryData(allKey, createInfiniteData([createInquiry("pending")]))
+
+    const remountedListObserver = new InfiniteQueryObserver(queryClient, listOptions)
+    const unsubscribeRemountedList = remountedListObserver.subscribe(() => undefined)
+    const visibleItems =
+      remountedListObserver.getCurrentResult().data?.pages.flatMap((page) => page.items) ?? []
+    assert.equal(visibleItems.some((item) => item.inquiryId === 41), true)
+    assert.equal(listFetches, 2)
+    assert.equal(
+      shouldShowAdminInquiryPageConvergence(
+        failedLifecycle?.state ?? { kind: "idle" },
+        41,
+        null,
+        true,
+      ),
+      true,
+    )
+    assert.equal(
+      shouldShowAdminInquiryPageConvergence(
+        failedLifecycle?.state ?? { kind: "idle" },
+        41,
+        41,
+        true,
+      ),
+      false,
+    )
+
+    assert.equal(
+      await retryAdminInquiryAnswerConvergence(queryClient, 41, dependencies),
+      true,
+    )
+    const recoveredLifecycle = getAdminInquiryAnswerLifecycle(queryClient, 41)
+    assert.equal(listFetches, 3)
+    assert.equal(detailCalls, 1)
+    assert.equal(recoveredLifecycle?.snapshot?.status, "answered")
+    assert.equal(recoveredLifecycle?.state.kind, "idle")
+    assert.equal(
+      isAdminInquiryAnswerConvergenceLocked(recoveredLifecycle?.state ?? { kind: "idle" }),
+      false,
+    )
+    assert.equal(
+      shouldShowAdminInquiryPageConvergence(
+        recoveredLifecycle?.state ?? { kind: "idle" },
+        41,
+        null,
+        true,
+      ),
+      false,
+    )
+
+    unsubscribeRemountedList()
+  } finally {
+    queryClient.clear()
+  }
+})
+
+for (const [failureName, detailError] of [
+  [
+    "404",
+    Object.assign(new Error("inquiry not found"), {
+      response: { data: { code: "INQUIRY_NOT_FOUND" }, status: 404 },
+    }),
+  ],
+  ["network", new Error("network unavailable")],
+] as const) {
+  test(`detail ${failureName} failure keeps the lifecycle retry-locked until detail recovery`, async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        mutations: { retry: false },
+        queries: { retry: false },
+      },
+    })
+    let detailCalls = 0
+    let activeListRefetches = 0
+    let detailShouldFail = true
+    const dependencies = {
+      answerInquiry: async () => undefined,
+      getCanonicalInquiry: async () => {
+        detailCalls += 1
+        if (detailShouldFail) throw detailError
+        return createInquiry("answered")
+      },
+      invalidateInquiries: () =>
+        queryClient.invalidateQueries({
+          queryKey: ["admin", "inquiries"],
+          refetchType: "none",
+        }),
+      isAlreadyAnsweredError: () => false,
+      refetchActiveLists: async () => {
+        activeListRefetches += 1
+        await refetchActiveAdminInquiryLists(queryClient)
+      },
+    }
+    const mutationObserver = new MutationObserver(
+      queryClient,
+      createAdminInquiryAnswerMutationOptions(queryClient, dependencies),
+    )
+    const unsubscribeMutation = mutationObserver.subscribe(() => undefined)
+
+    try {
+      const execution = claimAdminInquiryAnswer(queryClient, {
+        answer: "Canonical answer",
+        inquiry: createInquiry("pending"),
+      })
+      assert.ok(execution)
+
+      await mutationObserver.mutate(execution)
+      const failedLifecycle = getAdminInquiryAnswerLifecycle(queryClient, 41)
+      assert.equal(activeListRefetches, 1)
+      assert.equal(detailCalls, 1)
+      assert.equal(failedLifecycle?.snapshot, null)
+      assert.equal(failedLifecycle?.state.kind, "retry")
+      assert.equal(
+        isAdminInquiryAnswerConvergenceLocked(failedLifecycle?.state ?? { kind: "idle" }),
+        true,
+      )
+
+      detailShouldFail = false
+      assert.equal(
+        await retryAdminInquiryAnswerConvergence(queryClient, 41, dependencies),
+        true,
+      )
+      const recoveredLifecycle = getAdminInquiryAnswerLifecycle(queryClient, 41)
+      assert.equal(activeListRefetches, 2)
+      assert.equal(detailCalls, 2)
+      assert.equal(recoveredLifecycle?.snapshot?.status, "answered")
+      assert.equal(recoveredLifecycle?.state.kind, "idle")
+      assert.equal(
+        isAdminInquiryAnswerConvergenceLocked(recoveredLifecycle?.state ?? { kind: "idle" }),
+        false,
+      )
+    } finally {
+      unsubscribeMutation()
       queryClient.clear()
     }
   })

@@ -26,14 +26,6 @@ interface AdminInquiriesParams {
   size: number
 }
 
-interface FindAnsweredAdminInquiryOptions {
-  signal?: AbortSignal
-  maxPages?: number
-}
-
-// P2: replace this bounded cursor fallback when the backend exposes inquiry detail.
-const DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT = 100
-
 async function getAdminInquiries(
   params: AdminInquiriesParams,
   signal?: AbortSignal,
@@ -52,39 +44,15 @@ async function getAdminInquiries(
   return data
 }
 
-async function findAnsweredAdminInquiry(
+async function getAdminInquiry(
   inquiryId: number,
-  options: FindAnsweredAdminInquiryOptions = {},
-): Promise<AdminInquiryItem | null> {
-  let cursor: string | null = null
-  const seenCursors = new Set<string>()
-  const maxPages = Math.max(
-    0,
-    Math.min(
-      options.maxPages ?? DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT,
-      DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT,
-    ),
+  signal?: AbortSignal,
+): Promise<AdminInquiryItem> {
+  const { data } = await apiClient.get<AdminInquiryItem>(
+    `/api/v1/admin/inquiries/${inquiryId}`,
+    { signal },
   )
-
-  for (let pageCount = 0; pageCount < maxPages; pageCount += 1) {
-    if (options.signal?.aborted) {
-      throw options.signal.reason ?? new Error("Admin inquiry scan aborted")
-    }
-
-    const page = await getAdminInquiries(
-      { status: "answered", cursor, size: 20 },
-      options.signal,
-    )
-    const inquiry = page.items.find((item) => item.inquiryId === inquiryId)
-    if (inquiry !== undefined) return inquiry
-
-    cursor = page.nextCursor
-    if (cursor === null) return null
-    if (seenCursors.has(cursor)) return null
-    seenCursors.add(cursor)
-  }
-
-  return null
+  return data
 }
 
 async function answerAdminInquiry(
@@ -94,7 +62,7 @@ async function answerAdminInquiry(
   await apiClient.post(`/api/v1/admin/inquiries/${inquiryId}/answer`, body)
 }
 
-export { answerAdminInquiry, findAnsweredAdminInquiry, getAdminInquiries }
+export { answerAdminInquiry, getAdminInquiries, getAdminInquiry }
 
 export type {
   AdminInquiriesParams,

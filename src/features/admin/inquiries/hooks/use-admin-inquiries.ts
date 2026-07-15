@@ -6,12 +6,12 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
-import type { InfiniteData, QueryClient } from "@tanstack/react-query"
+import type { QueryClient } from "@tanstack/react-query"
 
 import {
   answerAdminInquiry,
-  findAnsweredAdminInquiry,
   getAdminInquiries,
+  getAdminInquiry,
 } from "@/features/admin/inquiries/api/admin-inquiries-api"
 import type {
   AdminInquiriesParams,
@@ -23,6 +23,7 @@ import {
   createAdminInquiryAnswerMutationOptions,
   getAdminInquiryAnswerLifecycleRegistry,
   initialAdminInquiryAnswerLifecycleRegistry,
+  refetchActiveAdminInquiryLists,
   retryAdminInquiryAnswerConvergence,
 } from "@/features/admin/inquiries/lib/admin-inquiry-answer-lifecycle"
 import type {
@@ -70,37 +71,12 @@ function createAdminInquiryAnswerDependencies(
 ): AdminInquiryAnswerLifecycleDependencies {
   return {
     answerInquiry: answerAdminInquiry,
-    findAnsweredInquiry: findAnsweredAdminInquiry,
+    getCanonicalInquiry: (inquiryId, { signal } = {}) =>
+      getAdminInquiry(inquiryId, signal),
     invalidateInquiries: () => invalidateAdminInquiryQueries(queryClient),
     isAlreadyAnsweredError: (error) =>
       getApiErrorCode(error) === "INQUIRY_ALREADY_ANSWERED",
-    refetchCanonicalList: async ({ status, size }) => {
-      const options = adminInquiriesInfiniteQueryOptions({ status, size })
-      const query = queryClient.getQueryCache().find({
-        queryKey: options.queryKey,
-        exact: true,
-      })
-
-      if (query !== undefined) {
-        await queryClient.refetchQueries(
-          { queryKey: options.queryKey, exact: true, type: "all" },
-          { cancelRefetch: true, throwOnError: true },
-        )
-        const data = queryClient.getQueryData<
-          InfiniteData<
-            Awaited<ReturnType<typeof getAdminInquiries>>,
-            string | null
-          >
-        >(options.queryKey)
-        if (data === undefined) {
-          throw new Error("Canonical admin inquiry list was not cached")
-        }
-        return data.pages.flatMap((page) => page.items)
-      }
-
-      const data = await queryClient.fetchInfiniteQuery(options)
-      return data.pages.flatMap((page) => page.items)
-    },
+    refetchActiveLists: () => refetchActiveAdminInquiryLists(queryClient),
   }
 }
 

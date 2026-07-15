@@ -14,6 +14,7 @@ import {
   normalizeInquiryAnswer,
   reduceAdminInquiryAnswerConvergence,
   shouldShowAdminInquiryAnsweredConflict,
+  shouldShowAdminInquiryPageConvergence,
 } from "../../src/features/admin/inquiries/lib/admin-inquiry.js"
 import { compactQuery } from "../../src/features/admin/shared/lib/admin-query.js"
 import { validateSanctionDraft } from "../../src/features/admin/users/lib/admin-sanction.js"
@@ -615,6 +616,22 @@ test("inquiry answers normalize the exact backend length contract", () => {
   assert.equal(normalizeInquiryAnswer("가".repeat(2001)), null)
 })
 
+test("collapsed or detached locked inquiry answers keep one page-level convergence action", () => {
+  const retry = { kind: "retry", reason: "success" } as const
+  const refreshing = { kind: "refreshing", reason: "conflict" } as const
+
+  assert.equal(shouldShowAdminInquiryPageConvergence(retry, 41, null, true), true)
+  assert.equal(shouldShowAdminInquiryPageConvergence(retry, 41, 42, true), true)
+  assert.equal(shouldShowAdminInquiryPageConvergence(refreshing, 41, null, true), true)
+  assert.equal(shouldShowAdminInquiryPageConvergence(retry, 41, 41, true), false)
+  assert.equal(shouldShowAdminInquiryPageConvergence(retry, 41, 41, false), true)
+  assert.equal(
+    shouldShowAdminInquiryPageConvergence({ kind: "idle" }, 41, null, true),
+    false,
+  )
+  assert.equal(shouldShowAdminInquiryPageConvergence(retry, null, null, false), false)
+})
+
 test("inquiry DTOs preserve every nullable backend field exactly", () => {
   assert.deepEqual(adminInquiryDtoTypeContracts, [true, true, true, true])
 })
@@ -627,10 +644,6 @@ test("successful inquiry answers stay locked until canonical answered data arriv
   )
   const failed = reduceAdminInquiryAnswerConvergence(refreshing, {
     type: "refetch-failed",
-  })
-  const filteredMissing = reduceAdminInquiryAnswerConvergence(refreshing, {
-    type: "refetch-succeeded",
-    inquiryStatus: "missing",
   })
   const retrying = reduceAdminInquiryAnswerConvergence(failed, { type: "retry" })
   const stalePending = reduceAdminInquiryAnswerConvergence(retrying, {
@@ -649,7 +662,6 @@ test("successful inquiry answers stay locked until canonical answered data arriv
     mutation,
     refreshing,
     failed,
-    filteredMissing,
     retrying,
     stalePending,
     finalRetry,
@@ -670,10 +682,6 @@ test("inquiry conflicts show copy only after canonical answered data arrives", (
     type: "refetch-succeeded",
     inquiryStatus: "pending",
   })
-  const filteredMissing = reduceAdminInquiryAnswerConvergence(refreshing, {
-    type: "refetch-succeeded",
-    inquiryStatus: "missing",
-  })
   const retrying = reduceAdminInquiryAnswerConvergence(stalePending, {
     type: "retry",
   })
@@ -683,9 +691,7 @@ test("inquiry conflicts show copy only after canonical answered data arrives", (
   })
 
   assert.equal(isAdminInquiryAnswerConvergenceLocked(stalePending), true)
-  assert.equal(isAdminInquiryAnswerConvergenceLocked(filteredMissing), true)
   assert.equal(shouldShowAdminInquiryAnsweredConflict(stalePending), false)
-  assert.equal(shouldShowAdminInquiryAnsweredConflict(filteredMissing), false)
   assert.deepEqual(answered, { kind: "conflict-refreshed" })
   assert.equal(isAdminInquiryAnswerConvergenceLocked(answered), false)
   assert.equal(shouldShowAdminInquiryAnsweredConflict(answered), true)
@@ -708,15 +714,10 @@ test("uncertain inquiry errors require one canonical refresh before retrying", (
     type: "refetch-succeeded",
     inquiryStatus: "answered",
   })
-  const missing = reduceAdminInquiryAnswerConvergence(refreshing, {
-    type: "refetch-succeeded",
-    inquiryStatus: "missing",
-  })
-
   for (const state of [refreshing, failed, retrying]) {
     assert.equal(isAdminInquiryAnswerConvergenceLocked(state), true)
   }
-  for (const state of [pending, answered, missing]) {
+  for (const state of [pending, answered]) {
     assert.deepEqual(state, { kind: "idle" })
     assert.equal(isAdminInquiryAnswerConvergenceLocked(state), false)
     assert.equal(shouldShowAdminInquiryAnsweredConflict(state), false)

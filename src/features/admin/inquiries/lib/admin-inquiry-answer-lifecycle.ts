@@ -2,7 +2,6 @@ import type { QueryClient } from "@tanstack/react-query"
 
 import type {
   AdminInquiryItem,
-  AdminInquiryStatus,
   AnswerInquiryRequest,
 } from "../api/admin-inquiries-api"
 import {
@@ -24,12 +23,11 @@ const adminInquiryAnswerMutationKey = [
   "inquiries",
   "answer",
 ] as const
+const adminInquiryListKey = ["admin", "inquiries", "list"] as const
 
 interface AdminInquiryAnswerInput {
   inquiry: AdminInquiryItem
   answer: string
-  status: AdminInquiryStatus | ""
-  size: number
 }
 
 interface AdminInquiryAnswerExecution extends AdminInquiryAnswerInput {
@@ -40,8 +38,6 @@ interface AdminInquiryAnswerLifecycle {
   operationId: number
   inquiry: AdminInquiryItem
   answer: string
-  status: AdminInquiryStatus | ""
-  size: number
   state: AdminInquiryAnswerConvergenceState
   settledReason: AdminInquiryAnswerConvergenceReason | null
   mutationError: unknown | null
@@ -58,16 +54,13 @@ interface AdminInquiryAnswerLifecycleDependencies {
     inquiryId: number,
     body: AnswerInquiryRequest,
   ) => Promise<void>
-  findAnsweredInquiry: (
+  getCanonicalInquiry: (
     inquiryId: number,
     options?: { signal?: AbortSignal },
-  ) => Promise<AdminInquiryItem | null>
+  ) => Promise<AdminInquiryItem>
   invalidateInquiries: () => Promise<unknown>
   isAlreadyAnsweredError: (error: unknown) => boolean
-  refetchCanonicalList: (params: {
-    status: AdminInquiryStatus | ""
-    size: number
-  }) => Promise<AdminInquiryItem[]>
+  refetchActiveLists: () => Promise<unknown>
 }
 
 const initialAdminInquiryAnswerLifecycleRegistry:
@@ -80,6 +73,13 @@ const convergenceControllers = new WeakMap<
   QueryClient,
   Map<number, { operationId: number; controller: AbortController }>
 >()
+
+function refetchActiveAdminInquiryLists(queryClient: QueryClient) {
+  return queryClient.refetchQueries(
+    { queryKey: adminInquiryListKey, type: "active" },
+    { cancelRefetch: true, throwOnError: true },
+  )
+}
 
 function getAdminInquiryAnswerLifecycleRegistry(queryClient: QueryClient) {
   return (
@@ -245,31 +245,21 @@ async function runAdminInquiryAnswerConvergence(
 
   try {
     await dependencies.invalidateInquiries()
-    const canonicalItems = await dependencies.refetchCanonicalList({
-      status: execution.status,
-      size: execution.size,
-    })
-    const refreshedInquiry = canonicalItems.find(
-      (item) => item.inquiryId === execution.inquiry.inquiryId,
+    await dependencies.refetchActiveLists()
+    const canonicalInquiry = await dependencies.getCanonicalInquiry(
+      execution.inquiry.inquiryId,
+      { signal: controller.signal },
     )
-    const recoveredInquiry =
-      refreshedInquiry === undefined
-        ? await dependencies.findAnsweredInquiry(
-            execution.inquiry.inquiryId,
-            { signal: controller.signal },
-          )
-        : null
-    const canonicalInquiry = refreshedInquiry ?? recoveredInquiry
     const nextState = reduceAdminInquiryAnswerConvergence(refreshingState, {
       type: "refetch-succeeded",
-      inquiryStatus: canonicalInquiry?.status ?? "missing",
+      inquiryStatus: canonicalInquiry.status,
     })
 
     updateAdminInquiryAnswerLifecycle(queryClient, execution, (latest) => ({
       ...latest,
       state: nextState,
       snapshot:
-        canonicalInquiry?.status === "answered" ? canonicalInquiry : null,
+        canonicalInquiry.status === "answered" ? canonicalInquiry : null,
     }))
   } catch {
     updateAdminInquiryAnswerLifecycle(queryClient, execution, (latest) => ({
@@ -349,8 +339,6 @@ async function retryAdminInquiryAnswerConvergence(
         answer: current.answer,
         inquiry: current.inquiry,
         operationId: current.operationId,
-        size: current.size,
-        status: current.status,
       }
       return {
         ...previous,
@@ -374,6 +362,7 @@ export {
   getAdminInquiryAnswerLifecycle,
   getAdminInquiryAnswerLifecycleRegistry,
   initialAdminInquiryAnswerLifecycleRegistry,
+  refetchActiveAdminInquiryLists,
   retryAdminInquiryAnswerConvergence,
 }
 export type {

@@ -19,6 +19,7 @@ import {
   isAdminInquiryAnswerConvergenceLocked,
   normalizeInquiryAnswer,
   shouldShowAdminInquiryAnsweredConflict,
+  shouldShowAdminInquiryPageConvergence,
 } from "@/features/admin/inquiries/lib/admin-inquiry"
 import type { AdminInquiryAnswerConvergenceState } from "@/features/admin/inquiries/lib/admin-inquiry"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
@@ -223,6 +224,12 @@ function AdminInquiriesPage() {
     inquiries.some((inquiry) => inquiry.inquiryId === answerTarget.inquiryId)
   const convergenceState =
     activeAnswerLifecycle?.state ?? initialAdminInquiryAnswerConvergenceState
+  const showPageConvergence = shouldShowAdminInquiryPageConvergence(
+    convergenceState,
+    answerTarget?.inquiryId ?? null,
+    selectedInquiryId,
+    answerTargetIsVisible,
+  )
   const resolvedAnswer: AdminInquiryAnswerResolution | null =
     latestAnswerLifecycle?.snapshot?.status === "answered"
       ? {
@@ -258,8 +265,6 @@ function AdminInquiriesPage() {
     answerMutation.submit({
       answer,
       inquiry,
-      size: 20,
-      status,
     })
   }
 
@@ -302,7 +307,7 @@ function AdminInquiriesPage() {
         </select>
       </div>
 
-      {answerTarget !== null && !answerTargetIsVisible && (
+      {showPageConvergence && (
         convergenceState.kind === "retry" ? (
           <AdminAsyncState
             kind="error"
