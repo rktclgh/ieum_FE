@@ -19,7 +19,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh w-full bg-gray-50">
-      <aside className="flex w-64 shrink-0 flex-col border-r border-gray-200 bg-white px-5 py-6">
+      <aside className="flex w-[240px] shrink-0 flex-col border-r border-gray-200 bg-white px-5 py-6">
         <p className="mb-8 text-title-bold-20 text-gray-900">
           {messages.admin.dashboard.title}
         </p>
@@ -44,7 +44,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         </nav>
         <LogoutButton />
       </aside>
-      <main className="min-w-0 flex-1 p-8">{children}</main>
+      <main className="min-w-0 flex-1 p-8">
+        <div className="mx-auto w-full max-w-[1440px]">{children}</div>
+      </main>
     </div>
   )
 }

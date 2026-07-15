@@ -123,6 +123,33 @@ test("the admin shell has four fixed destinations, current-page semantics, and l
   assert.match(source, /<LogoutButton \/>/)
 })
 
+test("the admin shell fixes the sidebar at 240px and centers bounded content", () => {
+  const source = compactSource(
+    readSource("src/features/admin/shared/components/admin-shell.tsx"),
+  )
+  const asideMatch = source.match(/<aside className="([^"]+)">/)
+  const contentMatch = source.match(
+    /<main className="([^"]+)">\s*<div className="([^"]+)">\s*\{children\}\s*<\/div>\s*<\/main>/,
+  )
+
+  assert.ok(asideMatch, "AdminShell must render a classed sidebar")
+  const asideClasses = asideMatch[1].split(/\s+/)
+  assert.deepEqual(
+    asideClasses.filter((className) => className.startsWith("w-")),
+    ["w-[240px]"],
+  )
+  assert.ok(asideClasses.includes("shrink-0"))
+
+  assert.ok(contentMatch, "fluid main must wrap children in a content container")
+  const mainClasses = contentMatch[1].split(/\s+/)
+  const contentClasses = contentMatch[2].split(/\s+/)
+  assert.ok(mainClasses.includes("min-w-0"))
+  assert.ok(mainClasses.includes("flex-1"))
+  assert.ok(contentClasses.includes("mx-auto"))
+  assert.ok(contentClasses.includes("w-full"))
+  assert.ok(contentClasses.includes("max-w-[1440px]"))
+})
+
 test("ConfirmDialog can disable confirmation without making the prop required", () => {
   const source = readSource("src/components/ui/confirm-dialog.tsx")
 
