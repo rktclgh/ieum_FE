@@ -1,5 +1,5 @@
 // 백엔드 친구/사용자 API 응답 타입. userId는 number, nationality는 ISO2("KR").
-// 주의: 친구 목록/요청/차단 응답에는 nationality가 없다(검색·공개 프로필에만 존재).
+// 친구/요청 응답에도 nationality가 포함된다(BE #97). 차단 응답에는 없다.
 
 type FriendRequestDirection = "received" | "sent"
 
@@ -7,6 +7,7 @@ interface FriendResponse {
   userId: number
   nickname: string
   profileImageUrl: string | null
+  nationality: string
   lastActiveAt: string
   active: boolean
 }
@@ -15,6 +16,7 @@ interface FriendRequestResponse {
   userId: number
   nickname: string
   profileImageUrl: string | null
+  nationality: string
   requestedAt: string
 }
 

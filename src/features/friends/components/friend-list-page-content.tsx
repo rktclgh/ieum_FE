@@ -159,6 +159,7 @@ function FriendListPageContent() {
       key={friend.userId}
       friend={friend}
       highlightQuery={query}
+      flagSrc={friend.flagSrc}
       nation={nationOf(friend)}
       menuOpen={openMenuFriendId === friend.userId}
       menuItems={friendMenuItems}
@@ -190,6 +191,8 @@ function FriendListPageContent() {
                       key={request.userId}
                       name={request.nickname}
                       avatarSrc={request.avatarSrc}
+                      flagSrc={request.flagSrc}
+                      nation={nationOf(request)}
                       variant="request"
                       onAccept={() => handleAccept(request)}
                       onReject={() => setConfirmAction({ type: "reject", target: request })}
@@ -324,6 +327,7 @@ function FriendListPageContent() {
 interface FriendRequestItemWithLongPressProps {
   friend: FriendEntry
   highlightQuery: string
+  flagSrc?: string
   nation?: string
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
@@ -335,6 +339,7 @@ interface FriendRequestItemWithLongPressProps {
 function FriendRequestItemWithLongPress({
   friend,
   highlightQuery,
+  flagSrc,
   nation,
   menuOpen,
   menuItems,
@@ -364,6 +369,7 @@ function FriendRequestItemWithLongPress({
         name={friend.nickname}
         avatarSrc={friend.avatarSrc}
         highlightQuery={highlightQuery}
+        flagSrc={flagSrc}
         nation={nation}
         variant="friend"
         active={menuOpen}
