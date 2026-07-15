@@ -14,6 +14,7 @@ import { fromIso2, flagFromIso2 } from "@/features/join/lib/nationality-map"
 import { useLogoutMutation } from "@/features/session/hooks/use-logout-mutation"
 import { useMe } from "@/features/session/hooks/use-me"
 import { TabBar } from "@/features/navigation/components/tab-bar"
+import { resolveFileUrl } from "@/lib/api/file-url"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
@@ -72,7 +73,7 @@ function MyPageContent() {
               // 백엔드 프로필 이미지 호스트가 next.config remotePatterns에 없어 일반 img로 렌더한다.
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={user.profileImageUrl}
+                src={resolveFileUrl(user.profileImageUrl)}
                 alt=""
                 className="size-full object-cover"
               />
