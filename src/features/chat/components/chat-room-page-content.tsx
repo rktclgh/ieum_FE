@@ -54,7 +54,7 @@ import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { getKstDateKey, formatKstFullDate, formatKstShortDate } from "@/lib/date/kst"
+import { getKstDateKey, formatKstFullDate, formatKstShortDate, formatKstTime } from "@/lib/date/kst"
 import { routes } from "@/lib/navigation/routes"
 import { cn } from "@/lib/utils"
 
@@ -141,6 +141,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const { messages: initialMessages } = useChatMessages(roomId, session)
 
   const [liveMessages, setLiveMessages] = React.useState<ChatBubbleMessage[]>([])
+  // 낙관적 말풍선의 임시 messageId. 서버 id(양수)와 겹치지 않게 음수를 감소시켜 부여한다.
+  const tempMessageIdRef = React.useRef(-1)
   const [notice, setNotice] = React.useState<string | null>(null)
   const [moreOpen, setMoreOpen] = React.useState(false)
   const [cameraMenuOpen, setCameraMenuOpen] = React.useState(false)
@@ -168,7 +170,20 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const { connected, send } = useChatRoomSocket(session.activeRoomId, {
     onMessage: (event) => {
       if (myUserId < 0) return
-      setLiveMessages((prev) => [...prev, adaptMessage(event, myUserId)])
+      const incoming = adaptMessage(event, myUserId)
+      setLiveMessages((prev) => {
+        // 내 메시지 에코면, 먼저 그려둔 pending 낙관 말풍선 중 같은 내용 하나를 제거(대체)한다.
+        // 서버가 clientNonce를 주지 않으므로 내용 일치로 가장 오래된 pending 항목을 매칭한다.
+        if (incoming.sender === "me") {
+          const idx = prev.findIndex(
+            (message) => message.pending && message.texts[0] === incoming.texts[0]
+          )
+          if (idx !== -1) {
+            return [...prev.slice(0, idx), ...prev.slice(idx + 1), incoming]
+          }
+        }
+        return [...prev, incoming]
+      })
       // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
       queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })
     },
@@ -278,7 +293,27 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     if (!text) return
     if (!send({ content: text })) {
       setSocketError(messages.chat.sendFailed)
+      return
     }
+    // 낙관적 반영: 서버 에코를 기다리지 않고 내 말풍선을 즉시 표시한다.
+    // 에코 도착 시 onMessage가 이 pending 항목을 서버 메시지로 대체한다.
+    const nowIso = new Date().toISOString()
+    const tempId = tempMessageIdRef.current
+    tempMessageIdRef.current -= 1
+    setLiveMessages((prev) => [
+      ...prev,
+      {
+        id: `pending-${tempId}`,
+        messageId: tempId,
+        senderId: myUserId,
+        sender: "me",
+        variant: text.length > 30 ? "long" : "short",
+        texts: [text],
+        time: formatKstTime(nowIso),
+        createdAt: nowIso,
+        pending: true,
+      },
+    ])
   }
 
   React.useEffect(() => {
