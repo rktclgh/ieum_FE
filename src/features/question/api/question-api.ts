@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/api/client"
 
 import type {
   CreateQuestionRequest,
+  FinalizeAcceptedAnswersResponse,
   MyQuestionsPage,
   PostAnswerRequest,
   PostAnswerResponse,
@@ -56,9 +57,14 @@ async function postAnswer(questionId: number, body: PostAnswerRequest) {
   return data
 }
 
-// 답변 채택 — 204. 질문 작성자만 가능, 본인 답변 채택 불가(SELF_ACCEPT_NOT_ALLOWED).
-async function acceptAnswer(answerId: number) {
-  await apiClient.post(`/api/v1/answers/${answerId}/accept`)
+// 답변 채택 확정 — 작성자만 가능, 본인 답변 채택 불가(SELF_ACCEPT_NOT_ALLOWED),
+// 이미 확정된 질문이면 409(ANSWER_SELECTION_FINALIZED). 단일 채택이므로 answerIds 길이는 1.
+async function finalizeAcceptedAnswers(questionId: number, answerIds: number[]) {
+  const { data } = await apiClient.put<FinalizeAcceptedAnswersResponse>(
+    `/api/v1/questions/${questionId}/accepted-answers`,
+    { answerIds }
+  )
+  return data
 }
 
 // 질문 삭제 — 204. 작성자만 가능. (BE: DELETE /api/v1/questions/{id})
@@ -72,6 +78,6 @@ export {
   createQuestion,
   updateQuestion,
   postAnswer,
-  acceptAnswer,
+  finalizeAcceptedAnswers,
   deleteQuestion,
 }

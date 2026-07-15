@@ -12,6 +12,8 @@ interface QuestionAnswerAuthorItemProps {
   answer: QuestionAnswerView
   isMine: boolean
   isReported: boolean
+  // 채택 가능 여부. 질문이 이미 채택 확정(resolved)되면 false — 미채택 답변에 채택 버튼을 숨긴다.
+  canAccept: boolean
   onAccept: () => void
   onStartChat: () => void
   onLongPress: (rect: DOMRect) => void
@@ -21,6 +23,7 @@ function QuestionAnswerAuthorItem({
   answer,
   isMine,
   isReported,
+  canAccept,
   onAccept,
   onStartChat,
   onLongPress,
@@ -75,11 +78,11 @@ function QuestionAnswerAuthorItem({
           <Button variant="primary" size="sm" onClick={onStartChat}>
             {messages.question.startChatLabel}
           </Button>
-        ) : (
+        ) : canAccept ? (
           <Button variant="outline" size="sm" onClick={onAccept}>
             {messages.question.acceptButton}
           </Button>
-        )}
+        ) : null}
       </div>
 
       {answer.content ? (
