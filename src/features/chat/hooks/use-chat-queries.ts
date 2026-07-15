@@ -1,6 +1,7 @@
 "use client"
 
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
 
 import { getMessages, getRoom, getRooms } from "@/features/chat/api/chat-api"
 import type { RoomType } from "@/features/chat/api/chat-types"
@@ -116,19 +117,39 @@ function useChatRoom(roomId: number, session: ChatSessionAccess) {
   return { ...query, data: room }
 }
 
-// 최근 메시지 한 페이지(최대 50개). 서버는 최신순으로 내려주므로 화면 표시를 위해 오래된→최신으로 뒤집는다.
+// 한 번에 불러올 메시지 페이지 크기. 서버는 최신순 items + nextCursor(더 과거 페이지 커서)를 내려준다.
+const MESSAGES_PAGE_SIZE = 30
+
+// 커서 페이지네이션. pages[0]=최신 페이지, 뒤 페이지일수록 과거. 화면 표시는 오래된→최신이므로
+// 페이지를 역순으로, 각 페이지의 items(최신순)도 역순으로 평탄화한다.
+// messages 배열은 useMemo로 memoize해 리렌더마다 새 참조가 생기지 않게 한다(스크롤 스냅백 방지).
 function useChatMessages(roomId: number, session: ChatSessionAccess) {
-  const query = useQuery({
+  const enabled = session.activeRoomId === roomId
+  const query = useInfiniteQuery({
     queryKey: chatKeys.messages(roomId),
-    queryFn: () => getMessages(roomId),
-    enabled: session.activeRoomId === roomId,
+    queryFn: ({ pageParam }) => getMessages(roomId, pageParam, MESSAGES_PAGE_SIZE),
+    enabled,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   })
 
-  const messages = session.activeRoomId === roomId && query.data
-    ? [...query.data.items].reverse().map((message) => adaptMessage(message, session.userId ?? -1))
-    : []
+  const userId = session.userId ?? -1
+  const messages = useMemo(() => {
+    if (!enabled || !query.data) return []
+    return query.data.pages
+      .slice()
+      .reverse()
+      .flatMap((page) => [...page.items].reverse().map((message) => adaptMessage(message, userId)))
+  }, [enabled, query.data, userId])
 
-  return { messages, isLoading: query.isLoading, isError: query.isError }
+  return {
+    messages,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    fetchNextPage: query.fetchNextPage,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+  }
 }
 
 export {
