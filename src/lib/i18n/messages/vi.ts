@@ -237,7 +237,7 @@ export const vi: Messages = {
       QUESTION_NOT_FOUND: "Không tìm thấy câu hỏi.",
       ANSWER_NOT_FOUND: "Không tìm thấy câu trả lời.",
       SELF_ACCEPT_NOT_ALLOWED: "Không thể chọn câu trả lời của chính mình.",
-      QUESTION_ALREADY_RESOLVED: "Câu hỏi này đã được chọn.",
+      ANSWER_SELECTION_FINALIZED: "Câu hỏi này đã được chọn.",
       VALIDATION_FAILED: "Vui lòng kiểm tra nội dung nhập.",
       ROOM_CREATE_FAILED: "Không thể bắt đầu trò chuyện. Vui lòng thử lại sau.",
       REPORT_FAILED: "Gửi báo cáo thất bại. Vui lòng thử lại sau.",
