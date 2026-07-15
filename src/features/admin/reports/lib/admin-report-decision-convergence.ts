@@ -1,6 +1,6 @@
 import type { ReportStatus } from "@/features/admin/shared/types/admin-types"
 
-type AdminReportDecisionConvergenceReason = "success" | "conflict"
+type AdminReportDecisionConvergenceReason = "success" | "conflict" | "uncertain"
 
 type AdminReportDecisionConvergenceState =
   | { kind: "idle" }
@@ -45,6 +45,10 @@ function reduceAdminReportDecisionConvergence(
 
   if (state.reason === "conflict") {
     return { kind: "conflict-refreshed" }
+  }
+
+  if (state.reason === "uncertain") {
+    return initialAdminReportDecisionConvergenceState
   }
 
   if (

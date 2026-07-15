@@ -529,6 +529,40 @@ test("409 decisions reveal conflict copy only after a successful canonical refre
   assert.equal(shouldShowAdminReportResolvedConflict(refreshedPending), true)
 })
 
+test("uncertain decision errors unlock only after a successful canonical refresh", () => {
+  const refreshing = reduceAdminReportDecisionConvergence(
+    initialAdminReportDecisionConvergenceState,
+    { type: "begin", reason: "uncertain" },
+  )
+  const failed = reduceAdminReportDecisionConvergence(refreshing, {
+    type: "refetch-failed",
+  })
+  const retrying = reduceAdminReportDecisionConvergence(failed, { type: "retry" })
+  const refreshedPending = reduceAdminReportDecisionConvergence(retrying, {
+    type: "refetch-succeeded",
+    reportStatus: "pending",
+  })
+  const refreshedAiReviewed = reduceAdminReportDecisionConvergence(refreshing, {
+    type: "refetch-succeeded",
+    reportStatus: "ai_reviewed",
+  })
+  const refreshedTerminal = reduceAdminReportDecisionConvergence(refreshing, {
+    type: "refetch-succeeded",
+    reportStatus: "dismissed",
+  })
+
+  for (const state of [refreshing, failed, retrying]) {
+    assert.equal(isAdminReportDecisionConvergenceLocked(state), true)
+    assert.equal(shouldShowAdminReportResolvedConflict(state), false)
+  }
+  assert.deepEqual(refreshedPending, { kind: "idle" })
+  assert.deepEqual(refreshedAiReviewed, { kind: "idle" })
+  assert.deepEqual(refreshedTerminal, { kind: "idle" })
+  assert.equal(isAdminReportDecisionConvergenceLocked(refreshedPending), false)
+  assert.equal(shouldShowAdminReportResolvedConflict(refreshedAiReviewed), false)
+  assert.equal(shouldShowAdminReportResolvedConflict(refreshedPending), false)
+})
+
 test("admin range messages interpolate both backend dates", () => {
   assert.match(adminKo.dashboard.range("2026-06-15", "2026-07-15"), /2026-06-15.*2026-07-15/)
   assert.match(adminEn.dashboard.range("2026-06-15", "2026-07-15"), /2026-06-15.*2026-07-15/)

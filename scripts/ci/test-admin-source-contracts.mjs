@@ -516,7 +516,7 @@ function assertAdminReportDecisionConvergenceState(source) {
 
   assert.match(
     compact,
-    /type AdminReportDecisionConvergenceReason = "success" \| "conflict"/,
+    /type AdminReportDecisionConvergenceReason = "success" \| "conflict" \| "uncertain"/,
   )
   assert.match(
     compact,
@@ -529,6 +529,10 @@ function assertAdminReportDecisionConvergenceState(source) {
   assert.match(
     compact,
     /state\.reason === "conflict"[\s\S]*return \{ kind: "conflict-refreshed" \}/,
+  )
+  assert.match(
+    compact,
+    /if \(state\.reason === "uncertain"\) \{ return initialAdminReportDecisionConvergenceState \}/,
   )
   assert.match(
     compact,
@@ -633,8 +637,9 @@ function assertAdminReportDecisionConvergence(source) {
   ])
   assert.match(
     handler,
-    /onSettled: \(_data, error\) => \{ setPendingDecision\(null\) const reason = error === null \? "success" : isReportDecisionConflict\(error\) \? "conflict" : null if \(reason !== null\) \{ beginDecisionConvergence\(reason\) return \} releaseDecisionLock\(\) \}/,
+    /onSettled: \(_data, error\) => \{ setPendingDecision\(null\) const reason = error === null \? "success" : isReportDecisionConflict\(error\) \? "conflict" : "uncertain" beginDecisionConvergence\(reason\) \}/,
   )
+  assert.doesNotMatch(handler, /releaseDecisionLock\(\)/)
   assert.doesNotMatch(handler, /onError:/)
   assert.doesNotMatch(handler, /detailQuery\.refetch/)
   assert.equal((handler.match(/mutation\.mutate\(/g) ?? []).length, 1)
@@ -649,6 +654,11 @@ function assertAdminReportDecisionConvergence(source) {
     1,
   )
   assert.match(source, /message=\{messages\.admin\.reports\.convergenceError\}/)
+  assert.match(
+    compact,
+    /const decisionError = mutationError && !isReportDecisionConflict\(mutationError\) \? getApiErrorMessage\(mutationError, messages\.admin\.common\.loadError\) : null/,
+  )
+  assert.equal((source.match(/\{decisionError && \(/g) ?? []).length, 1)
   assert.match(source, /onRetry=\{retryDecisionConvergence\}/)
   assert.equal(
     (source.match(/onRetry=\{retryDecisionConvergence\}/g) ?? []).length,
@@ -1655,7 +1665,7 @@ test("admin report detail maps resolution and sanction labels to exact message k
   }
 })
 
-test("admin report convergence state keeps success and 409 refetch failures locked", () => {
+test("admin report convergence state keeps every unresolved refetch failure locked", () => {
   const source = readSource(
     "src/features/admin/reports/lib/admin-report-decision-convergence.ts",
   )
@@ -1674,11 +1684,16 @@ test("admin report convergence state keeps success and 409 refetch failures lock
     'return state.kind === "conflict-refreshed"',
     'return state.kind !== "idle"',
   )
+  const uncertainRetryMutant = source.replace(
+    'if (state.reason === "uncertain") {\n    return initialAdminReportDecisionConvergenceState\n  }',
+    'if (state.reason === "uncertain") {\n    return { kind: "retry", reason: state.reason }\n  }',
+  )
 
   for (const [name, mutant] of [
     ["failed unlock", failedUnlockMutant],
     ["pending unlock", pendingUnlockMutant],
     ["early conflict copy", earlyConflictCopyMutant],
+    ["uncertain retry", uncertainRetryMutant],
   ]) {
     assert.notEqual(mutant, source, `${name} mutant must change the source`)
     assert.throws(
@@ -1743,6 +1758,10 @@ test("admin report decisions use one detail refetch owner and one synchronous la
     "        setPendingDecision(null)\n        const reason =",
     "        const reason =",
   )
+  const uncertainUnlockMutant = source.replace(
+    '              : "uncertain"\n        beginDecisionConvergence(reason)',
+    '              : "uncertain"\n        if (reason === "uncertain") {\n          releaseDecisionLock()\n          return\n        }\n        beginDecisionConvergence(reason)',
+  )
   const duplicateCachedRetryMutant = source.replace(
     "detailQuery.isError &&\n        !isAdminReportDecisionConvergenceLocked(convergenceState) &&",
     "detailQuery.isError &&",
@@ -1758,6 +1777,7 @@ test("admin report decisions use one detail refetch owner and one synchronous la
     earlyConflictCopyMutant,
     duplicateCachedRetryMutant,
     trappedRetryMutant,
+    uncertainUnlockMutant,
   ]) {
     assert.notEqual(mutant, source)
     assert.throws(() => assertAdminReportDecisionConvergence(mutant))

@@ -184,13 +184,8 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
             ? "success"
             : isReportDecisionConflict(error)
               ? "conflict"
-              : null
-        if (reason !== null) {
-          beginDecisionConvergence(reason)
-          return
-        }
-
-        releaseDecisionLock()
+              : "uncertain"
+        beginDecisionConvergence(reason)
       },
     })
   }
