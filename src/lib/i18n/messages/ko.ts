@@ -437,6 +437,19 @@ export interface Messages {
     searchEmpty: string
     searching: string
   }
+  notification: {
+    appBarTitle: string
+    empty: string
+    loadError: string
+    readAllButton: string
+    deleteAction: string
+    deleteConfirmTitle: string
+    deleteConfirmDescription: string
+    deleteConfirmCancel: string
+    deleteConfirmConfirm: string
+    bellLabel: string
+    unreadBadgeLabel: (count: number) => string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -873,6 +886,19 @@ export const ko: Messages = {
     loadError: "친구 목록을 불러오지 못했어요.",
     searchEmpty: "검색 결과가 없어요.",
     searching: "검색 중...",
+  },
+  notification: {
+    appBarTitle: "알림",
+    empty: "받은 알림이 없어요.",
+    loadError: "알림을 불러오지 못했어요.",
+    readAllButton: "전체 읽음",
+    deleteAction: "삭제",
+    deleteConfirmTitle: "알림을 삭제할까요?",
+    deleteConfirmDescription: "삭제한 알림은 복구할 수 없어요.",
+    deleteConfirmCancel: "취소",
+    deleteConfirmConfirm: "삭제",
+    bellLabel: "알림",
+    unreadBadgeLabel: (count) => `읽지 않은 알림 ${count}건`,
   },
   languages: {
     ko: "한국어",
