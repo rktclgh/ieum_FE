@@ -373,6 +373,8 @@ export const th: Messages = {
     disbandChatConfirmDescription: "การยุบห้องแชทจะทำให้สมาชิกทุกคนออกจากห้อง และไม่สามารถย้อนกลับได้",
     messageInputPlaceholder: "พิมพ์ข้อความ",
     sendButtonLabel: "ส่ง",
+    imageAlt: "รูปภาพที่ส่ง",
+    imageUploadFailed: "ส่งรูปภาพไม่สำเร็จ กรุณาลองอีกครั้ง",
   },
   schedule: {
     addButtonLabel: "เพิ่มกำหนดการ",

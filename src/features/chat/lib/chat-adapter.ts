@@ -40,6 +40,8 @@ interface ChatBubbleMessage {
   createdAt: string
   // 낙관적으로 먼저 그린 내 말풍선(서버 에코 전). 에코 도착 시 대체된다.
   pending?: boolean
+  // 이미지 업로드/전송 진행 중인 낙관적 이미지 말풍선. 흐리게 + 스피너로 표시한다.
+  imageUploading?: boolean
 }
 
 interface ChatMemberEntry {

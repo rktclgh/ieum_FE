@@ -43,6 +43,7 @@ import {
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
 import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
+import { uploadChatImage } from "@/features/chat/api/chat-file-api"
 import {
   adaptMember,
   adaptMessage,
@@ -75,6 +76,7 @@ interface MessageRowProps {
 }
 
 function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onCloseMenu }: MessageRowProps) {
+  const { messages } = useTranslation()
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const isMe = message.sender === "me"
@@ -95,6 +97,9 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
       <ChatBubbleSegment
         sender={message.sender}
         text={message.texts[0] ?? ""}
+        imageUrl={message.imageUrl}
+        imageAlt={messages.chat.imageAlt}
+        uploading={message.imageUploading}
         position={position}
         variant={message.variant}
         className={cn(menuOpen && "relative z-50")}
@@ -146,7 +151,9 @@ function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): Ch
       (message) =>
         !claimed.has(message.messageId) &&
         message.sender === "me" &&
-        message.texts[0] === pending.texts[0] &&
+        // 이미지 낙관 말풍선은 서버가 clientNonce를 주지 않아 내용 비교가 불가하므로,
+        // "내가 보낸 이미지 메시지"끼리 시간 창 이내로 매칭한다. 텍스트는 종전대로 내용 일치.
+        (pending.imageUploading ? Boolean(message.imageUrl) : message.texts[0] === pending.texts[0]) &&
         Math.abs(new Date(message.createdAt).getTime() - pendingAt) < PENDING_MATCH_WINDOW_MS
     )
     if (match) claimed.add(match.messageId)
@@ -186,6 +193,9 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   const bottomRef = React.useRef<HTMLDivElement>(null)
   const topRef = React.useRef<HTMLDivElement>(null)
+  // 카메라 촬영(capture)·앨범 선택용 숨김 file input. 카메라 메뉴 항목이 각각 트리거한다.
+  const cameraInputRef = React.useRef<HTMLInputElement>(null)
+  const albumInputRef = React.useRef<HTMLInputElement>(null)
   const dateGroupRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
   // 사용자가 하단 근처를 보고 있는지. 새 메시지 도착 시 이 값이 true일 때만 자동으로 맨 아래로 내린다.
@@ -215,8 +225,9 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         // 내 메시지 에코면, 먼저 그려둔 pending 낙관 말풍선 중 같은 내용 하나를 제거(대체)한다.
         // 서버가 clientNonce를 주지 않으므로 내용 일치로 가장 오래된 pending 항목을 매칭한다.
         if (incoming.sender === "me") {
-          const idx = prev.findIndex(
-            (message) => message.pending && message.texts[0] === incoming.texts[0]
+          const idx = prev.findIndex((message) =>
+            message.pending &&
+            (message.imageUploading ? Boolean(incoming.imageUrl) : message.texts[0] === incoming.texts[0])
           )
           if (idx !== -1) {
             return [...prev.slice(0, idx), ...prev.slice(idx + 1), incoming]
@@ -375,6 +386,46 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     ])
   }
 
+  // 카메라/앨범에서 고른 이미지를 presign 업로드 → imageFileId로 WS 전송한다.
+  // 업로드는 비동기라, 먼저 로컬 미리보기로 낙관적 말풍선(업로드 중 스피너)을 그려두고
+  // 성공 시 서버 에코가 대체, 실패 시 낙관적 말풍선을 제거하고 에러를 표시한다.
+  const handleImageSelected = async (input: HTMLInputElement | null) => {
+    const file = input?.files?.[0]
+    if (input) input.value = ""
+    if (!file || !session.authenticated) return
+
+    const previewUrl = URL.createObjectURL(file)
+    const nowIso = new Date().toISOString()
+    const tempId = tempMessageIdRef.current
+    tempMessageIdRef.current -= 1
+    isAtBottomRef.current = true
+    setLiveMessages((prev) => [
+      ...prev,
+      {
+        id: `pending-${tempId}`,
+        messageId: tempId,
+        senderId: myUserId,
+        sender: "me",
+        variant: "short",
+        texts: [""],
+        imageUrl: previewUrl,
+        imageUploading: true,
+        time: formatKstTime(nowIso),
+        createdAt: nowIso,
+        pending: true,
+      },
+    ])
+
+    try {
+      const fileId = await uploadChatImage(file)
+      if (!send({ imageFileId: fileId })) throw new Error("send failed")
+    } catch {
+      setLiveMessages((prev) => prev.filter((message) => message.messageId !== tempId))
+      URL.revokeObjectURL(previewUrl)
+      setSocketError(messages.chat.imageUploadFailed)
+    }
+  }
+
   const lastMessageId = chatMessages[chatMessages.length - 1]?.messageId
 
   // 자동 하단 스크롤: 최초 진입 시 1회, 이후엔 새 메시지가 도착했고(마지막 messageId 변화)
@@ -448,12 +499,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     {
       icon: <Image src="/icons/chat/camera-line.svg" alt="" width={24} height={24} />,
       label: messages.chat.takePhotoAction,
-      onClick: () => setCameraMenuOpen(false),
+      onClick: () => {
+        setCameraMenuOpen(false)
+        cameraInputRef.current?.click()
+      },
     },
     {
       icon: <Image src="/icons/chat/image.svg" alt="" width={24} height={24} />,
       label: messages.chat.chooseAlbumAction,
-      onClick: () => setCameraMenuOpen(false),
+      onClick: () => {
+        setCameraMenuOpen(false)
+        albumInputRef.current?.click()
+      },
     },
   ]
 
@@ -542,6 +599,21 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           </div>
         </div>
         <div className="relative px-4 pt-2 pb-4">
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(event) => handleImageSelected(event.currentTarget)}
+          />
+          <input
+            ref={albumInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => handleImageSelected(event.currentTarget)}
+          />
           {cameraMenuOpen && (
             <>
               <div

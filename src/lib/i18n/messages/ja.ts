@@ -373,6 +373,8 @@ export const ja: Messages = {
     disbandChatConfirmDescription: "解散すると参加者全員が退出することになり、元に戻せません。",
     messageInputPlaceholder: "メッセージを入力",
     sendButtonLabel: "送信",
+    imageAlt: "送信した写真",
+    imageUploadFailed: "写真を送信できませんでした。もう一度お試しください。",
   },
   schedule: {
     addButtonLabel: "予定を追加",

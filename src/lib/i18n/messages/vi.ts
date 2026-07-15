@@ -374,6 +374,8 @@ export const vi: Messages = {
     disbandChatConfirmDescription: "Giải tán sẽ khiến mọi thành viên rời khỏi phòng chat và không thể hoàn tác.",
     messageInputPlaceholder: "Nhập tin nhắn",
     sendButtonLabel: "Gửi",
+    imageAlt: "Ảnh đã gửi",
+    imageUploadFailed: "Không thể gửi ảnh. Vui lòng thử lại.",
   },
   schedule: {
     addButtonLabel: "Thêm lịch trình",

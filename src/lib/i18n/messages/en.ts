@@ -374,6 +374,8 @@ export const en: Messages = {
     disbandChatConfirmDescription: "Disbanding will remove everyone from the chat and cannot be undone.",
     messageInputPlaceholder: "Type a message",
     sendButtonLabel: "Send",
+    imageAlt: "Sent photo",
+    imageUploadFailed: "Couldn't send the photo. Please try again.",
   },
   schedule: {
     addButtonLabel: "Add schedule",

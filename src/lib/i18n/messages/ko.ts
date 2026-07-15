@@ -376,6 +376,8 @@ export interface Messages {
     disbandChatConfirmDescription: string
     messageInputPlaceholder: string
     sendButtonLabel: string
+    imageAlt: string
+    imageUploadFailed: string
   }
   schedule: {
     addButtonLabel: string
@@ -813,6 +815,8 @@ export const ko: Messages = {
     disbandChatConfirmDescription: "채팅방을 해체하면 모든 대화 상대가 채팅방에서 나가게 되며, 되돌릴 수 없습니다.",
     messageInputPlaceholder: "메시지 입력",
     sendButtonLabel: "전송",
+    imageAlt: "전송한 사진",
+    imageUploadFailed: "사진 전송에 실패했어요. 다시 시도해주세요.",
   },
   schedule: {
     addButtonLabel: "일정 추가",
