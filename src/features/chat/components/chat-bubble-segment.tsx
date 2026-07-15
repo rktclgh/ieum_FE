@@ -52,6 +52,14 @@ function ChatBubbleSegment({
   const isMe = sender === "me"
   const radiusMap = isMe ? ME_RADIUS : OTHERS_RADIUS
 
+  // 낙관적 이미지 말풍선의 blob: 미리보기 URL은 서버 에코로 대체되며 언마운트될 때
+  // 해제해야 메모리 누수를 막는다. (전송 성공/실패/페이지 이탈 모든 경로를 커버)
+  React.useEffect(() => {
+    return () => {
+      if (imageUrl?.startsWith("blob:")) URL.revokeObjectURL(imageUrl)
+    }
+  }, [imageUrl])
+
   if (imageUrl) {
     return (
       <div

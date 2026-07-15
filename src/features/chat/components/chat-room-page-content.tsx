@@ -153,7 +153,11 @@ function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): Ch
         message.sender === "me" &&
         // 이미지 낙관 말풍선은 서버가 clientNonce를 주지 않아 내용 비교가 불가하므로,
         // "내가 보낸 이미지 메시지"끼리 시간 창 이내로 매칭한다. 텍스트는 종전대로 내용 일치.
-        (pending.imageUploading ? Boolean(message.imageUrl) : message.texts[0] === pending.texts[0]) &&
+        // 이미지 메시지의 texts는 ["사진"]이라, '사진' 텍스트 메시지가 이미지 에코와
+        // 오매칭되지 않도록 텍스트끼리는 imageUrl 없는 서버 메시지로 한정한다.
+        (pending.imageUploading
+          ? Boolean(message.imageUrl)
+          : !message.imageUrl && message.texts[0] === pending.texts[0]) &&
         Math.abs(new Date(message.createdAt).getTime() - pendingAt) < PENDING_MATCH_WINDOW_MS
     )
     if (match) claimed.add(match.messageId)
@@ -227,7 +231,11 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         if (incoming.sender === "me") {
           const idx = prev.findIndex((message) =>
             message.pending &&
-            (message.imageUploading ? Boolean(incoming.imageUrl) : message.texts[0] === incoming.texts[0])
+            // 이미지 에코는 이미지 낙관 말풍선과, 텍스트 에코는 텍스트 낙관 말풍선과만 매칭한다.
+            // ('사진' 텍스트 메시지가 이미지 에코와 오매칭되는 것을 방지)
+            (incoming.imageUrl
+              ? message.imageUploading
+              : !message.imageUploading && message.texts[0] === incoming.texts[0])
           )
           if (idx !== -1) {
             return [...prev.slice(0, idx), ...prev.slice(idx + 1), incoming]
