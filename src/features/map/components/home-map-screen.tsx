@@ -25,6 +25,10 @@ import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
 import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { cn } from "@/lib/utils"
+
+// 스켈레톤 페이드아웃 시간(ms). CSS transition-opacity duration과 맞춘다.
+const SKELETON_FADE_MS = 500
 
 const MapCanvas = dynamic(
   () => import("@/features/map/components/map-canvas").then((mod) => mod.MapCanvas),
@@ -121,6 +125,15 @@ function HomeMapScreen() {
 
   const canShowMap = isMounted && (status !== "loading" || waitedForLocation)
 
+  // 지도가 마운트되면 스켈레톤을 즉시 걷어내지 않고, 지도 위에 겹친 채 페이드아웃한 뒤 언마운트한다.
+  // 스켈레톤→지도로 뚝 끊기지 않고 부드럽게 크로스페이드된다.
+  const [showSkeleton, setShowSkeleton] = React.useState(true)
+  React.useEffect(() => {
+    if (!canShowMap) return
+    const timer = setTimeout(() => setShowSkeleton(false), SKELETON_FADE_MS)
+    return () => clearTimeout(timer)
+  }, [canShowMap])
+
   // 최초 위치 확보 1회: 내 위치로 자동 중심. 지도는 canShowMap 시점의 최선 좌표(내 위치 또는 기본 좌표)로
   // 마운트되므로, 정상 경로(위치를 알고 마운트)에선 같은 좌표라 이동이 없고,
   // 상한 초과 폴백 후 뒤늦게 위치가 잡힌 경우에만 부드럽게 재중심된다.
@@ -153,9 +166,16 @@ function HomeMapScreen() {
           selectedPosition={selectedLocation}
           onSelectedPositionClick={() => setSelectedLocation(null)}
         />
-      ) : (
-        <MapLoadingSkeleton />
-      )}
+      ) : null}
+
+      {showSkeleton ? (
+        <MapLoadingSkeleton
+          className={cn(
+            "z-[1] transition-opacity duration-500 ease-out",
+            canShowMap ? "opacity-0" : "opacity-100"
+          )}
+        />
+      ) : null}
 
       <div className="relative z-10 mx-auto flex w-full max-w-sm flex-col gap-2 p-4">
         <div className="flex items-center gap-2">

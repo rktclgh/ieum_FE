@@ -258,3 +258,17 @@
 @theme {
   --animate-message-jump-highlight: message-jump-highlight 0.6s ease-in-out;
 }
+
+/* 지도 로딩 스켈레톤: 무채색 빛 띠가 좌→우로 천천히 훑고 지나가며 로딩 상태만 은은히 암시한다. */
+@keyframes map-skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@theme {
+  --animate-map-skeleton-shimmer: map-skeleton-shimmer 1.8s ease-in-out infinite;
+}
