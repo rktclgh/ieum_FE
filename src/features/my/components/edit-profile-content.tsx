@@ -23,6 +23,7 @@ import { ProfileImageEditor } from "@/features/profile-image/components/profile-
 import { useDeleteProfileImage, useProfileImageUpload } from "@/features/profile-image/hooks/use-profile-image"
 import type { Gender } from "@/features/session/api/session-api"
 import { useMe } from "@/features/session/hooks/use-me"
+import { resolveFileUrl } from "@/lib/api/file-url"
 import type { CountryCode } from "@/lib/constants/countries"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -166,7 +167,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
       <div className="flex w-full flex-col gap-3 px-4 pb-32 [&>[data-slot=explanation]]:-mt-3">
         <div className="flex w-full flex-col items-center py-4">
           <ProfileAvatarButton
-            previewUrl={user.profileImageUrl}
+            previewUrl={resolveFileUrl(user.profileImageUrl) ?? null}
             onFileSelected={handleFileSelected}
             className={cn(isUploading && "pointer-events-none opacity-50")}
           />
