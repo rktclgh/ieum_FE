@@ -33,7 +33,13 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
   const [hasEntered, setHasEntered] = React.useState(false)
   React.useEffect(() => {
     const el = ref.current
-    if (!el || hasEntered) return
+    // BE가 미리보기를 이미 주면 상세 로드가 불필요하므로 관찰 자체를 건너뛴다.
+    if (!el || hasEntered || item.contentPreview) return
+    // IntersectionObserver 미지원 환경(구형 브라우저·JSDOM 등)에선 즉시 로드로 우아하게 폴백.
+    if (!("IntersectionObserver" in window)) {
+      setHasEntered(true)
+      return
+    }
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
         setHasEntered(true)
@@ -42,10 +48,11 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [hasEntered])
+  }, [hasEntered, item.contentPreview])
 
   // 상세 화면과 동일한 queryKey/queryFn 이라 React Query가 dedup → 상세 진입 시 재요청 없음.
-  const detail = useQuestionDetail(item.questionId, hasEntered)
+  // 미리보기가 이미 있으면 상세 조회를 건너뛴다(BE 구현 후 N+1 방지).
+  const detail = useQuestionDetail(item.questionId, hasEntered && !item.contentPreview)
   // BE가 미리보기를 주면 우선, 아니면 상세 content 로 FE 파생값을 만든다.
   const contentPreview = item.contentPreview ?? deriveContentPreview(detail.data?.content)
   const isPreviewLoading = hasEntered && detail.isLoading && !item.contentPreview

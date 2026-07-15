@@ -132,7 +132,9 @@ function deriveContentPreview(
 ): string | undefined {
   const normalized = content?.replace(/\s+/g, " ").trim()
   if (!normalized) return undefined
-  return normalized.length > maxLength ? `${normalized.slice(0, maxLength)}…` : normalized
+  // 이모지 등 서로게이트 쌍이 경계에서 깨지지 않도록 코드 포인트 단위로 자른다.
+  const chars = Array.from(normalized)
+  return chars.length > maxLength ? `${chars.slice(0, maxLength).join("")}…` : normalized
 }
 
 export {
