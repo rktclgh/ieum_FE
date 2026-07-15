@@ -82,7 +82,7 @@ function AdminUsersPage() {
         <AdminAsyncState kind="empty" />
       ) : (
         <div className="space-y-4">
-          {usersQuery.isError && (
+          {usersQuery.isError && !usersQuery.isFetchNextPageError && (
             <AdminAsyncState
               kind="error"
               onRetry={() => void usersQuery.refetch()}
@@ -134,21 +134,28 @@ function AdminUsersPage() {
             </table>
           </div>
 
-          {usersQuery.hasNextPage && (
+          {usersQuery.isFetchNextPageError ? (
+            <AdminAsyncState
+              kind="error"
+              onRetry={() => void usersQuery.fetchNextPage({ cancelRefetch: false })}
+              retryDisabled={usersQuery.isFetching}
+              isRetrying={usersQuery.isFetching}
+            />
+          ) : usersQuery.hasNextPage ? (
             <div className="flex justify-center">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => void usersQuery.fetchNextPage()}
-                disabled={usersQuery.isFetchingNextPage}
-                aria-busy={usersQuery.isFetchingNextPage || undefined}
+                onClick={() => void usersQuery.fetchNextPage({ cancelRefetch: false })}
+                disabled={usersQuery.isFetching}
+                aria-busy={usersQuery.isFetching || undefined}
               >
                 {usersQuery.isFetchingNextPage
                   ? messages.admin.common.loading
                   : messages.admin.common.loadMore}
               </Button>
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </section>

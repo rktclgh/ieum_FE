@@ -42,6 +42,210 @@ function asyncFunctionSource(source, functionName) {
   return source.slice(start, end)
 }
 
+function assertAdminUserDetailRemountsByUserId(source) {
+  assert.match(
+    source,
+    /<AdminUserDetailPage key=\{userId\} userId=\{userId\} \/>/,
+  )
+}
+
+function boundedSource(source, startMarker, endMarker) {
+  const start = source.indexOf(startMarker)
+  const end = source.indexOf(endMarker, start + startMarker.length)
+
+  assert.notEqual(start, -1, `${startMarker} must exist`)
+  assert.ok(end > start, `${startMarker} must end before ${endMarker}`)
+
+  return source.slice(start, end)
+}
+
+function assertOrdered(source, markers) {
+  let previousIndex = -1
+
+  for (const marker of markers) {
+    const index = source.indexOf(marker, previousIndex + 1)
+    assert.ok(index > previousIndex, `${marker} must preserve handler order`)
+    previousIndex = index
+  }
+}
+
+function assertAdminUserCursorRetry(source) {
+  const compact = compactSource(source)
+  const pagination = compactSource(
+    boundedSource(
+      source,
+      "{usersQuery.isFetchNextPageError ? (",
+      "\n      )}\n    </section>",
+    ),
+  )
+
+  assert.match(
+    compact,
+    /usersQuery\.isError && !usersQuery\.isFetchNextPageError && \(/,
+  )
+  assertOrdered(pagination, [
+    "usersQuery.isFetchNextPageError ? (",
+    '<AdminAsyncState kind="error"',
+    "usersQuery.fetchNextPage({ cancelRefetch: false })",
+    ") : usersQuery.hasNextPage ? (",
+    "<Button",
+    "usersQuery.fetchNextPage({ cancelRefetch: false })",
+  ])
+  assert.equal(
+    (pagination.match(/usersQuery\.fetchNextPage\(\{ cancelRefetch: false \}\)/g) ?? [])
+      .length,
+    2,
+  )
+  assert.equal((pagination.match(/<AdminAsyncState/g) ?? []).length, 1)
+  assert.equal((pagination.match(/messages\.admin\.common\.loadMore/g) ?? []).length, 1)
+  assert.doesNotMatch(pagination, /usersQuery\.refetch\(\)/)
+  assert.match(pagination, /retryDisabled=\{usersQuery\.isFetching\}/)
+  assert.match(pagination, /isRetrying=\{usersQuery\.isFetching\}/)
+  assert.match(pagination, /disabled=\{usersQuery\.isFetching\}/)
+  assert.match(pagination, /aria-busy=\{usersQuery\.isFetching \|\| undefined\}/)
+  assert.doesNotMatch(pagination, /disabled=\{usersQuery\.isFetchingNextPage\}/)
+}
+
+function assertSanctionConfirmationLatch(source) {
+  const compact = compactSource(source)
+  const handler = compactSource(
+    boundedSource(
+      source,
+      "const handleSanctionConfirm = () =>",
+      "const handleActivateConfirm = () =>",
+    ),
+  )
+
+  assert.match(source, /const sanctionConfirmLatch = React\.useRef\(false\)/)
+  assert.match(
+    source,
+    /const \[sanctionConfirmBusy, setSanctionConfirmBusy\] = React\.useState\(false\)/,
+  )
+  assert.match(
+    compact,
+    /const sanctionBusy = sanctionConfirmBusy \|\| sanctionMutation\.isPending/,
+  )
+  assertOrdered(handler, [
+    "if (!pendingSanction || sanctionConfirmLatch.current) return",
+    "sanctionConfirmLatch.current = true",
+    "setSanctionConfirmBusy(true)",
+    "sanctionMutation.mutate(pendingSanction, {",
+    "onSettled: () => {",
+    "sanctionConfirmLatch.current = false",
+    "setSanctionConfirmBusy(false)",
+  ])
+  assert.equal((handler.match(/sanctionMutation\.mutate\(/g) ?? []).length, 1)
+  assert.ok((source.match(/disabled=\{sanctionBusy\}/g) ?? []).length >= 4)
+  assert.match(source, /confirmDisabled=\{sanctionBusy\}/)
+  assert.match(
+    compact,
+    /if \(!sanctionBusy && !sanctionConfirmLatch\.current\) setSanctionConfirmOpen\(open\)/,
+  )
+  assert.doesNotMatch(source, /disabled=\{sanctionMutation\.isPending\}/)
+  assert.doesNotMatch(source, /confirmDisabled=\{sanctionMutation\.isPending\}/)
+}
+
+function assertActivationConfirmationLatch(source) {
+  const compact = compactSource(source)
+  const handler = compactSource(
+    boundedSource(
+      source,
+      "const handleActivateConfirm = () =>",
+      "if (detailQuery.isPending)",
+    ),
+  )
+
+  assert.match(source, /const activateConfirmLatch = React\.useRef\(false\)/)
+  assert.match(
+    source,
+    /const \[activateConfirmBusy, setActivateConfirmBusy\] = React\.useState\(false\)/,
+  )
+  assert.match(
+    compact,
+    /const activateBusy = activateConfirmBusy \|\| activateMutation\.isPending/,
+  )
+  assertOrdered(handler, [
+    "if (activateConfirmLatch.current) return",
+    "activateConfirmLatch.current = true",
+    "setActivateConfirmBusy(true)",
+    "activateMutation.mutate(undefined, {",
+    "onSettled: () => {",
+    "activateConfirmLatch.current = false",
+    "setActivateConfirmBusy(false)",
+  ])
+  assert.equal((handler.match(/activateMutation\.mutate\(/g) ?? []).length, 1)
+  assert.match(source, /disabled=\{activateBusy\}/)
+  assert.match(source, /confirmDisabled=\{activateBusy\}/)
+  assert.match(
+    compact,
+    /if \(!activateBusy && !activateConfirmLatch\.current\) setActivateConfirmOpen\(open\)/,
+  )
+  assert.doesNotMatch(source, /disabled=\{activateMutation\.isPending\}/)
+  assert.doesNotMatch(source, /confirmDisabled=\{activateMutation\.isPending\}/)
+}
+
+function assertAdminStatsKeyBindings(keysSource, hookSource) {
+  const compactKeys = compactSource(keysSource)
+
+  assert.match(hookSource, /import \{ adminStatsKeys \} from/)
+  for (const key of ["users", "content", "reports"]) {
+    assert.match(
+      compactKeys,
+      new RegExp(
+        `${key}: \\["admin", "stats", "${key}"\\] as const`,
+      ),
+    )
+    assert.match(
+      hookSource,
+      new RegExp(`queryKey:\\s*adminStatsKeys\\.${key}`),
+    )
+  }
+}
+
+function assertAdminSanctionStatsInvalidation(source) {
+  const invalidation = compactSource(
+    boundedSource(
+      source,
+      "function invalidateAdminSanctionQueries(",
+      "function useAdminUsers(",
+    ),
+  )
+  const sanctionHook = compactSource(
+    boundedSource(
+      source,
+      "function useCreateAdminUserSanction(",
+      "function useActivateAdminUser(",
+    ),
+  )
+  const activationHook = compactSource(
+    boundedSource(source, "function useActivateAdminUser(", "\nexport {"),
+  )
+
+  assert.match(invalidation, /invalidateAdminUserQueries\(queryClient, userId\)/)
+  for (const key of ["users", "reports"]) {
+    assert.match(
+      invalidation,
+      new RegExp(
+        `invalidateQueries\\(\\{ queryKey: adminStatsKeys\\.${key}, exact: true,? \\}\\)`,
+      ),
+    )
+  }
+  assert.equal((invalidation.match(/adminStatsKeys\./g) ?? []).length, 2)
+  assert.doesNotMatch(invalidation, /adminStatsKeys\.content/)
+  assert.match(
+    sanctionHook,
+    /onSuccess: \(\) => invalidateAdminSanctionQueries\(queryClient, userId\)/,
+  )
+  assert.match(
+    activationHook,
+    /onSuccess: \(\) => invalidateAdminUserQueries\(queryClient, userId\)/,
+  )
+  assert.doesNotMatch(
+    activationHook,
+    /invalidateAdminSanctionQueries|adminStatsKeys/,
+  )
+}
+
 const statsApiBindings = [
   ["getAdminUserStats", "UserStatsResponse", "/api/v1/admin/stats/users"],
   ["getAdminContentStats", "ContentStatsResponse", "/api/v1/admin/stats/content"],
@@ -284,17 +488,17 @@ test("admin stats API binding contract rejects a swapped-endpoint mutant", () =>
 
 test("admin stats hook owns three parallel keys and one aggregate retry", () => {
   const source = readSource("src/features/admin/dashboard/hooks/use-admin-stats.ts")
+  const keysSource = readSource(
+    "src/features/admin/dashboard/lib/admin-stats-keys.ts",
+  )
 
   assert.equal((source.match(/useQuery\s*\(\s*\{/g) ?? []).length, 3)
-  for (const [suffix, queryFn] of [
-    ["users", "getAdminUserStats"],
-    ["content", "getAdminContentStats"],
-    ["reports", "getAdminReportStats"],
+  assertAdminStatsKeyBindings(keysSource, source)
+  for (const queryFn of [
+    "getAdminUserStats",
+    "getAdminContentStats",
+    "getAdminReportStats",
   ]) {
-    assert.match(
-      source,
-      new RegExp(`queryKey:\\s*\\["admin",\\s*"stats",\\s*"${suffix}"\\]`),
-    )
     assert.match(source, new RegExp(`queryFn:\\s*${queryFn}`))
   }
   assert.match(
@@ -489,12 +693,30 @@ test("admin user hooks preserve cursor semantics and invalidate lists plus exact
   ]) {
     assert.match(source, new RegExp(`function ${hookName}\\(userId: number\\)`))
     assert.match(source, new RegExp(`mutationFn:[^\n]*${apiName}\\(userId`))
-    assert.match(
-      source,
-      new RegExp(
-        `onSuccess:[^\n]*invalidateAdminUserQueries\\(queryClient, userId\\)`,
-      ),
-    )
+  }
+})
+
+test("sanction success invalidates exact user and report KPI caches only", () => {
+  const source = readSource("src/features/admin/users/hooks/use-admin-users.ts")
+
+  assertAdminSanctionStatsInvalidation(source)
+
+  const wrongKeyMutant = source.replace(
+    "adminStatsKeys.reports",
+    "adminStatsKeys.content",
+  )
+  const broadKeyMutant = source.replace(
+    "queryKey: adminStatsKeys.users,\n      exact: true,",
+    "queryKey: adminStatsKeys.users,",
+  )
+  const staleStatsMutant = source.replace(
+    "onSuccess: () => invalidateAdminSanctionQueries(queryClient, userId)",
+    "onSuccess: () => invalidateAdminUserQueries(queryClient, userId)",
+  )
+
+  for (const mutant of [wrongKeyMutant, broadKeyMutant, staleStatsMutant]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminSanctionStatsInvalidation(mutant))
   }
 })
 
@@ -523,21 +745,54 @@ test("admin users list debounces raw q for 300ms and owns every cursor-table sta
   assert.match(source, /onRetry=\{\(\) => void usersQuery\.refetch\(\)\}/)
   assert.match(source, /users\.length === 0/)
   assert.match(source, /usersQuery\.hasNextPage/)
-  assert.match(source, /usersQuery\.fetchNextPage\(\)/)
   assert.match(source, /usersQuery\.isFetchingNextPage/)
-  assert.match(source, /disabled=\{usersQuery\.isFetchingNextPage\}/)
   assert.match(source, /messages\.admin\.common\.loadMore/)
   assert.match(source, /messages\.admin\.common\.loading/)
   assert.match(pageSource, /<AdminUsersPage \/>/)
 })
 
-test("admin user detail route rejects invalid query before mounting data under Suspense", () => {
+test("admin users retries one failed cursor without racing another fetch", () => {
+  const source = readSource(
+    "src/features/admin/users/components/admin-users-page.tsx",
+  )
+
+  assertAdminUserCursorRetry(source)
+
+  const refetchMutant = source.replace(
+    "usersQuery.fetchNextPage({ cancelRefetch: false })",
+    "usersQuery.refetch()",
+  )
+  const cancellationMutant = source.replace(
+    "usersQuery.fetchNextPage({ cancelRefetch: false })",
+    "usersQuery.fetchNextPage({ cancelRefetch: true })",
+  )
+  const raceMutant = source.replace(
+    "disabled={usersQuery.isFetching}",
+    "disabled={usersQuery.isFetchingNextPage}",
+  )
+  const duplicateErrorMutant = source.replace(
+    "usersQuery.isError && !usersQuery.isFetchNextPageError",
+    "usersQuery.isError",
+  )
+
+  for (const mutant of [
+    refetchMutant,
+    cancellationMutant,
+    raceMutant,
+    duplicateErrorMutant,
+  ]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminUserCursorRetry(mutant))
+  }
+})
+
+test("admin user detail route rejects invalid query and remounts drafts per user", () => {
   const source = readSource("src/app/admin/(protected)/users/detail/page.tsx")
   const parseIndex = source.indexOf(
     'parsePositiveInteger(searchParams.get("userId"))',
   )
   const invalidIndex = source.indexOf("if (userId === null)")
-  const detailIndex = source.indexOf("<AdminUserDetailPage userId={userId} />")
+  const detailIndex = source.indexOf("<AdminUserDetailPage")
 
   assert.ok(parseIndex >= 0)
   assert.ok(invalidIndex > parseIndex)
@@ -545,6 +800,55 @@ test("admin user detail route rejects invalid query before mounting data under S
   assert.match(source, /<AdminAsyncState kind="empty"/)
   assert.match(source, /<React\.Suspense/)
   assert.match(source, /fallback=\{<AdminAsyncState kind="loading" \/>\}/)
+  assertAdminUserDetailRemountsByUserId(source)
+
+  const carryoverMutant = source.replace(" key={userId}", "")
+  assert.notEqual(carryoverMutant, source)
+  assert.throws(() => assertAdminUserDetailRemountsByUserId(carryoverMutant))
+})
+
+test("sanction confirmation synchronously rejects duplicate same-tick mutation", () => {
+  const source = readSource(
+    "src/features/admin/users/components/admin-user-detail-page.tsx",
+  )
+
+  assertSanctionConfirmationLatch(source)
+
+  const unguardedMutant = source.replace(
+    "if (!pendingSanction || sanctionConfirmLatch.current) return",
+    "if (!pendingSanction) return",
+  )
+  const duplicateMutateMutant = source.replace(
+    "sanctionMutation.mutate(pendingSanction, {",
+    "sanctionMutation.mutate(pendingSanction, {})\n    sanctionMutation.mutate(pendingSanction, {",
+  )
+
+  for (const mutant of [unguardedMutant, duplicateMutateMutant]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertSanctionConfirmationLatch(mutant))
+  }
+})
+
+test("activation confirmation synchronously rejects duplicate same-tick mutation", () => {
+  const source = readSource(
+    "src/features/admin/users/components/admin-user-detail-page.tsx",
+  )
+
+  assertActivationConfirmationLatch(source)
+
+  const unguardedMutant = source.replace(
+    "if (activateConfirmLatch.current) return",
+    "if (false) return",
+  )
+  const duplicateMutateMutant = source.replace(
+    "activateMutation.mutate(undefined, {",
+    "activateMutation.mutate(undefined, {})\n    activateMutation.mutate(undefined, {",
+  )
+
+  for (const mutant of [unguardedMutant, duplicateMutateMutant]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertActivationConfirmationLatch(mutant))
+  }
 })
 
 test("admin user detail renders backend fields and pending-safe adjacent mutations", () => {
@@ -600,12 +904,6 @@ test("admin user detail renders backend fields and pending-safe adjacent mutatio
   assert.match(source, /getApiErrorMessage\(activateMutation\.error/)
   assert.ok((source.match(/role="alert"/g) ?? []).length >= 2)
   assert.match(source, /messages\.admin\.users\.activationScopeNotice/)
-  assert.match(source, /confirmDisabled=\{sanctionMutation\.isPending\}/)
-  assert.match(source, /confirmDisabled=\{activateMutation\.isPending\}/)
-  assert.ok(
-    (source.match(/disabled=\{sanctionMutation\.isPending\}/g) ?? []).length >= 4,
-  )
-  assert.match(source, /disabled=\{activateMutation\.isPending\}/)
   assert.equal((source.match(/<ConfirmDialog/g) ?? []).length, 2)
   assert.doesNotMatch(source, /apiClient|\/role\b|changeRole|patch\(/i)
 })

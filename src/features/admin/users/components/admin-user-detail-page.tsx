@@ -49,8 +49,14 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
   const [invalidField, setInvalidField] = React.useState<"reason" | "endsAt" | null>(null)
   const [pendingSanction, setPendingSanction] =
     React.useState<CreateSanctionRequest | null>(null)
+  const sanctionConfirmLatch = React.useRef(false)
+  const activateConfirmLatch = React.useRef(false)
   const [sanctionConfirmOpen, setSanctionConfirmOpen] = React.useState(false)
   const [activateConfirmOpen, setActivateConfirmOpen] = React.useState(false)
+  const [sanctionConfirmBusy, setSanctionConfirmBusy] = React.useState(false)
+  const [activateConfirmBusy, setActivateConfirmBusy] = React.useState(false)
+  const sanctionBusy = sanctionConfirmBusy || sanctionMutation.isPending
+  const activateBusy = activateConfirmBusy || activateMutation.isPending
   const dateFormatter = new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -82,7 +88,10 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
   }
 
   const handleSanctionConfirm = () => {
-    if (!pendingSanction) return
+    if (!pendingSanction || sanctionConfirmLatch.current) return
+
+    sanctionConfirmLatch.current = true
+    setSanctionConfirmBusy(true)
 
     sanctionMutation.mutate(pendingSanction, {
       onSuccess: () => {
@@ -92,13 +101,26 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
         setEndsAt("")
       },
       onError: () => setSanctionConfirmOpen(false),
+      onSettled: () => {
+        sanctionConfirmLatch.current = false
+        setSanctionConfirmBusy(false)
+      },
     })
   }
 
   const handleActivateConfirm = () => {
+    if (activateConfirmLatch.current) return
+
+    activateConfirmLatch.current = true
+    setActivateConfirmBusy(true)
+
     activateMutation.mutate(undefined, {
       onSuccess: () => setActivateConfirmOpen(false),
       onError: () => setActivateConfirmOpen(false),
+      onSettled: () => {
+        activateConfirmLatch.current = false
+        setActivateConfirmBusy(false)
+      },
     })
   }
 
@@ -298,7 +320,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
             <select
               value={sanctionType}
               onChange={(event) => setSanctionType(event.target.value as SanctionType)}
-              disabled={sanctionMutation.isPending}
+              disabled={sanctionBusy}
               className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:opacity-50"
             >
               <option value="temporary">{messages.admin.users.temporary}</option>
@@ -313,7 +335,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
                 type="datetime-local"
                 value={endsAt}
                 onChange={(event) => setEndsAt(event.target.value)}
-                disabled={sanctionMutation.isPending}
+                disabled={sanctionBusy}
                 className="h-11 w-full rounded-xl border border-gray-200 px-3 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:opacity-50"
               />
             </label>
@@ -325,7 +347,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               maxLength={500}
-              disabled={sanctionMutation.isPending}
+              disabled={sanctionBusy}
               className="min-h-32 w-full rounded-xl border border-gray-200 p-3 text-body-regular-14 text-gray-900 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:opacity-50"
             />
           </label>
@@ -347,7 +369,8 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
             <Button
               type="submit"
               variant="primary"
-              disabled={sanctionMutation.isPending}
+              disabled={sanctionBusy}
+              aria-busy={sanctionBusy || undefined}
             >
               {messages.admin.users.sanction}
             </Button>
@@ -371,7 +394,8 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
           <Button
             type="button"
             variant="outline"
-            disabled={activateMutation.isPending}
+            disabled={activateBusy}
+            aria-busy={activateBusy || undefined}
             onClick={() => {
               activateMutation.reset()
               setActivateConfirmOpen(true)
@@ -385,27 +409,27 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
       <ConfirmDialog
         open={sanctionConfirmOpen}
         onOpenChange={(open) => {
-          if (!sanctionMutation.isPending) setSanctionConfirmOpen(open)
+          if (!sanctionBusy && !sanctionConfirmLatch.current) setSanctionConfirmOpen(open)
         }}
         title={messages.admin.users.sanction}
         description={pendingSanction?.reason ?? messages.admin.users.reason}
         cancelLabel={messages.admin.common.cancel}
         confirmLabel={messages.admin.users.sanction}
         onConfirm={handleSanctionConfirm}
-        confirmDisabled={sanctionMutation.isPending}
+        confirmDisabled={sanctionBusy}
       />
 
       <ConfirmDialog
         open={activateConfirmOpen}
         onOpenChange={(open) => {
-          if (!activateMutation.isPending) setActivateConfirmOpen(open)
+          if (!activateBusy && !activateConfirmLatch.current) setActivateConfirmOpen(open)
         }}
         title={messages.admin.users.activationConfirm}
         description={messages.admin.users.activationScopeNotice}
         cancelLabel={messages.admin.common.cancel}
         confirmLabel={messages.admin.users.activate}
         onConfirm={handleActivateConfirm}
-        confirmDisabled={activateMutation.isPending}
+        confirmDisabled={activateBusy}
       />
     </section>
   )

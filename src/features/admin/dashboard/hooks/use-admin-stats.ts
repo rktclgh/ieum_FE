@@ -7,18 +7,19 @@ import {
   getAdminReportStats,
   getAdminUserStats,
 } from "@/features/admin/dashboard/api/admin-stats-api"
+import { adminStatsKeys } from "@/features/admin/dashboard/lib/admin-stats-keys"
 
 function useAdminStats() {
   const userQuery = useQuery({
-    queryKey: ["admin", "stats", "users"],
+    queryKey: adminStatsKeys.users,
     queryFn: getAdminUserStats,
   })
   const contentQuery = useQuery({
-    queryKey: ["admin", "stats", "content"],
+    queryKey: adminStatsKeys.content,
     queryFn: getAdminContentStats,
   })
   const reportsQuery = useQuery({
-    queryKey: ["admin", "stats", "reports"],
+    queryKey: adminStatsKeys.reports,
     queryFn: getAdminReportStats,
   })
 

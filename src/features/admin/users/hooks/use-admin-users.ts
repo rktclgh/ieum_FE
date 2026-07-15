@@ -14,6 +14,7 @@ import {
   getAdminUser,
   getAdminUsers,
 } from "@/features/admin/users/api/admin-users-api"
+import { adminStatsKeys } from "@/features/admin/dashboard/lib/admin-stats-keys"
 import type {
   AdminUsersParams,
   CreateSanctionRequest,
@@ -32,6 +33,23 @@ function invalidateAdminUserQueries(queryClient: QueryClient, userId: number) {
     queryClient.invalidateQueries({ queryKey: adminUserKeys.lists() }),
     queryClient.invalidateQueries({
       queryKey: adminUserKeys.detail(userId),
+      exact: true,
+    }),
+  ])
+}
+
+function invalidateAdminSanctionQueries(
+  queryClient: QueryClient,
+  userId: number,
+) {
+  return Promise.all([
+    invalidateAdminUserQueries(queryClient, userId),
+    queryClient.invalidateQueries({
+      queryKey: adminStatsKeys.users,
+      exact: true,
+    }),
+    queryClient.invalidateQueries({
+      queryKey: adminStatsKeys.reports,
       exact: true,
     }),
   ])
@@ -63,7 +81,7 @@ function useCreateAdminUserSanction(userId: number) {
 
   return useMutation({
     mutationFn: (body: CreateSanctionRequest) => createAdminUserSanction(userId, body),
-    onSuccess: () => invalidateAdminUserQueries(queryClient, userId),
+    onSuccess: () => invalidateAdminSanctionQueries(queryClient, userId),
   })
 }
 

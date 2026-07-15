@@ -17,7 +17,7 @@ function AdminUserDetailRoute() {
     return <AdminAsyncState kind="empty" message={messages.route.invalidLink} />
   }
 
-  return <AdminUserDetailPage userId={userId} />
+  return <AdminUserDetailPage key={userId} userId={userId} />
 }
 
 export default function AdminUserDetailRoutePage() {
