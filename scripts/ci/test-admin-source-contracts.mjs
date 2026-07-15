@@ -31,7 +31,7 @@ function swapFirst(source, left, right) {
 }
 
 function asyncFunctionSource(source, functionName) {
-  const start = source.indexOf(`async function ${functionName}()`)
+  const start = source.indexOf(`async function ${functionName}(`)
   const nextFunction = source.indexOf("\nasync function ", start + 1)
   const nextExport = source.indexOf("\nexport ", start + 1)
   const end = nextFunction === -1 ? nextExport : nextFunction
@@ -417,4 +417,195 @@ test("admin dashboard keeps cached cards with one adjacent retry state on refetc
     allDashboardSource,
     /(?:from\s+["'][^"']*(?:chart|recharts)|import\s+["'][^"']*(?:chart|recharts))/i,
   )
+})
+
+test("each admin user API function owns its exact method, endpoint, and backend DTO", () => {
+  const source = readSource("src/features/admin/users/api/admin-users-api.ts")
+  const compact = compactSource(source)
+  const listSource = compactSource(asyncFunctionSource(source, "getAdminUsers"))
+  const detailSource = compactSource(asyncFunctionSource(source, "getAdminUser"))
+  const sanctionSource = compactSource(
+    asyncFunctionSource(source, "createAdminUserSanction"),
+  )
+  const activateSource = compactSource(
+    asyncFunctionSource(source, "activateAdminUser"),
+  )
+
+  assert.match(
+    listSource,
+    /apiClient\.get<CursorPage<AdminUserItem>>/,
+  )
+  assert.match(listSource, /"\/api\/v1\/admin\/users"/)
+  assert.match(
+    listSource,
+    /params: compactQuery\(\{ status: params\.status, q: params\.q, cursor: params\.cursor, size: params\.size,? \}\)/,
+  )
+  assert.match(detailSource, /apiClient\.get<AdminUserDetailResponse>/)
+  assert.match(detailSource, /`\/api\/v1\/admin\/users\/\$\{userId\}`/)
+  assert.match(
+    sanctionSource,
+    /apiClient\.post<CreateSanctionResponse>/,
+  )
+  assert.match(sanctionSource, /`\/api\/v1\/admin\/users\/\$\{userId\}\/sanctions`/)
+  assert.match(sanctionSource, /body,? \)/)
+  assert.match(activateSource, /apiClient\.post/)
+  assert.match(activateSource, /`\/api\/v1\/admin\/users\/\$\{userId\}\/activate`/)
+  assert.equal((source.match(/apiClient\.get/g) ?? []).length, 2)
+  assert.equal((source.match(/apiClient\.post/g) ?? []).length, 2)
+  assert.doesNotMatch(source, /apiClient\.patch|\/role\b/)
+  assert.match(
+    compact,
+    /type UserGrade = "bronze" \| "silver" \| "gold" \| "platinum" \| "diamond"/,
+  )
+  assert.match(compact, /type AuthProvider = "email" \| "google" \| "kakao"/)
+})
+
+test("admin user hooks preserve cursor semantics and invalidate lists plus exact detail", () => {
+  const source = readSource("src/features/admin/users/hooks/use-admin-users.ts")
+  const compact = compactSource(source)
+
+  assert.match(source, /useInfiniteQuery/)
+  assert.match(source, /queryKey:\s*adminUserKeys\.list\(\{ status, q, size \}\)/)
+  assert.match(
+    compact,
+    /queryFn: \(\{ pageParam \}\) => getAdminUsers\(\{ status, q, cursor: pageParam, size \}\)/,
+  )
+  assert.match(source, /initialPageParam:\s*null as string \| null/)
+  assert.match(source, /getNextPageParam:\s*\(page\) => page\.nextCursor/)
+  assert.match(source, /queryKey:\s*adminUserKeys\.detail\(userId\)/)
+  assert.match(source, /queryFn:\s*\(\) => getAdminUser\(userId\)/)
+  assert.match(
+    compact,
+    /invalidateQueries\(\{ queryKey: adminUserKeys\.lists\(\) \}\)/,
+  )
+  assert.match(
+    compact,
+    /invalidateQueries\(\{ queryKey: adminUserKeys\.detail\(userId\), exact: true,? \}\)/,
+  )
+
+  for (const [hookName, apiName] of [
+    ["useCreateAdminUserSanction", "createAdminUserSanction"],
+    ["useActivateAdminUser", "activateAdminUser"],
+  ]) {
+    assert.match(source, new RegExp(`function ${hookName}\\(userId: number\\)`))
+    assert.match(source, new RegExp(`mutationFn:[^\n]*${apiName}\\(userId`))
+    assert.match(
+      source,
+      new RegExp(
+        `onSuccess:[^\n]*invalidateAdminUserQueries\\(queryClient, userId\\)`,
+      ),
+    )
+  }
+})
+
+test("admin users list debounces raw q for 300ms and owns every cursor-table state", () => {
+  const source = readSource(
+    "src/features/admin/users/components/admin-users-page.tsx",
+  )
+  const pageSource = readSource("src/app/admin/(protected)/users/page.tsx")
+
+  assert.match(source, /const \[q, setQ\] = React\.useState\(""\)/)
+  assert.match(source, /useDebouncedValue\(q, 300\)/)
+  assert.match(
+    compactSource(source),
+    /useAdminUsers\(\{ status, q: debouncedQ, size: 20 \}\)/,
+  )
+  assert.match(source, /value=\{q\}/)
+  assert.match(source, /<label[^>]*htmlFor="admin-user-search"/)
+  assert.match(source, /<label[^>]*htmlFor="admin-user-status"/)
+  assert.match(source, /<table/)
+  assert.match(source, /<thead/)
+  assert.ok((source.match(/<th scope="col"/g) ?? []).length >= 8)
+  assert.match(source, /routes\.adminUserDetail\(user\.userId\)/)
+  assert.match(source, /focus-visible:/)
+  assert.match(source, /usersQuery\.isPending/)
+  assert.match(source, /usersQuery\.isError/)
+  assert.match(source, /onRetry=\{\(\) => void usersQuery\.refetch\(\)\}/)
+  assert.match(source, /users\.length === 0/)
+  assert.match(source, /usersQuery\.hasNextPage/)
+  assert.match(source, /usersQuery\.fetchNextPage\(\)/)
+  assert.match(source, /usersQuery\.isFetchingNextPage/)
+  assert.match(source, /disabled=\{usersQuery\.isFetchingNextPage\}/)
+  assert.match(source, /messages\.admin\.common\.loadMore/)
+  assert.match(source, /messages\.admin\.common\.loading/)
+  assert.match(pageSource, /<AdminUsersPage \/>/)
+})
+
+test("admin user detail route rejects invalid query before mounting data under Suspense", () => {
+  const source = readSource("src/app/admin/(protected)/users/detail/page.tsx")
+  const parseIndex = source.indexOf(
+    'parsePositiveInteger(searchParams.get("userId"))',
+  )
+  const invalidIndex = source.indexOf("if (userId === null)")
+  const detailIndex = source.indexOf("<AdminUserDetailPage userId={userId} />")
+
+  assert.ok(parseIndex >= 0)
+  assert.ok(invalidIndex > parseIndex)
+  assert.ok(detailIndex > invalidIndex)
+  assert.match(source, /<AdminAsyncState kind="empty"/)
+  assert.match(source, /<React\.Suspense/)
+  assert.match(source, /fallback=\{<AdminAsyncState kind="loading" \/>\}/)
+})
+
+test("admin user detail renders backend fields and pending-safe adjacent mutations", () => {
+  const source = readSource(
+    "src/features/admin/users/components/admin-user-detail-page.tsx",
+  )
+
+  for (const field of [
+    "user.email",
+    "user.nickname",
+    "user.role",
+    "user.status",
+    "user.grade",
+    "user.provider",
+    "user.lastActiveAt",
+    "user.birthDate",
+    "user.gender",
+    "user.nationality",
+    "user.profileImageUrl",
+    "activity.questionCount",
+    "activity.answerCount",
+    "activity.acceptedCount",
+    "activity.reportedCount",
+    "report.reportId",
+    "report.reason",
+    "report.status",
+    "report.reporterId",
+    "report.reporterNickname",
+    "report.messageId",
+    "report.detail",
+    "report.createdAt",
+    "sanction.sanctionId",
+    "sanction.type",
+    "sanction.reason",
+    "sanction.createdAt",
+    "sanction.createdBy",
+    "sanction.endsAt",
+    "sanction.releasedAt",
+    "sanction.releasedBy",
+  ]) {
+    assert.match(source, new RegExp(escapeRegExp(field)))
+  }
+
+  assert.match(source, /detailQuery\.isPending/)
+  assert.match(source, /detailQuery\.isError/)
+  assert.match(source, /onRetry=\{\(\) => void detailQuery\.refetch\(\)\}/)
+  assert.match(source, /validateSanctionDraft\(/)
+  assert.match(source, /maxLength=\{500\}/)
+  assert.match(source, /type="datetime-local"/)
+  assert.match(source, /sanctionMutation\.isError/)
+  assert.match(source, /getApiErrorMessage\(sanctionMutation\.error/)
+  assert.match(source, /activateMutation\.isError/)
+  assert.match(source, /getApiErrorMessage\(activateMutation\.error/)
+  assert.ok((source.match(/role="alert"/g) ?? []).length >= 2)
+  assert.match(source, /messages\.admin\.users\.activationScopeNotice/)
+  assert.match(source, /confirmDisabled=\{sanctionMutation\.isPending\}/)
+  assert.match(source, /confirmDisabled=\{activateMutation\.isPending\}/)
+  assert.ok(
+    (source.match(/disabled=\{sanctionMutation\.isPending\}/g) ?? []).length >= 4,
+  )
+  assert.match(source, /disabled=\{activateMutation\.isPending\}/)
+  assert.equal((source.match(/<ConfirmDialog/g) ?? []).length, 2)
+  assert.doesNotMatch(source, /apiClient|\/role\b|changeRole|patch\(/i)
 })

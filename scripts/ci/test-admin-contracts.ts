@@ -3,6 +3,20 @@ import test from "node:test"
 
 import { resolveAdminGateDecision } from "../../src/features/admin/auth/lib/admin-access.js"
 import { compactQuery } from "../../src/features/admin/shared/lib/admin-query.js"
+import { validateSanctionDraft } from "../../src/features/admin/users/lib/admin-sanction.js"
+import type {
+  AdminUserActivity,
+  AdminUserDetailResponse,
+  AdminUserItem,
+  AdminUserProfile,
+  AdminUserReportItem,
+  AdminUserSanctionItem,
+  AdminUsersParams,
+  AuthProvider,
+  CreateSanctionRequest,
+  CreateSanctionResponse,
+  UserGrade,
+} from "../../src/features/admin/users/api/admin-users-api.js"
 import { adminEn, adminKo } from "../../src/lib/i18n/messages/admin.js"
 import { en } from "../../src/lib/i18n/messages/en.js"
 import { ja } from "../../src/lib/i18n/messages/ja.js"
@@ -47,6 +61,68 @@ type MutuallyAssignable<Actual, Expected> = [Actual] extends [Expected]
   : false
 
 type StringMessages<Keys extends string> = { [Key in Keys]: string }
+
+type ExpectedAdminUserItem = {
+  userId: number
+  email: string
+  nickname: string
+  role: UserRole
+  status: UserStatus
+  grade: UserGrade
+  provider: AuthProvider
+  lastActiveAt: string | null
+}
+
+type ExpectedAdminUserProfile = {
+  userId: number
+  email: string
+  nickname: string
+  role: UserRole
+  status: UserStatus
+  grade: UserGrade
+  provider: AuthProvider
+  lastActiveAt: string | null
+  birthDate: string | null
+  gender: "male" | "female" | "other" | null
+  nationality: string | null
+  profileImageUrl: string | null
+}
+
+type ExpectedAdminUserActivity = {
+  questionCount: number
+  answerCount: number
+  acceptedCount: number
+  reportedCount: number
+}
+
+type ExpectedAdminUserReportItem = {
+  reportId: number
+  reason: ReportReason
+  status: ReportStatus
+  reporterId: number
+  reporterNickname: string | null
+  messageId: number | null
+  detail: string | null
+  createdAt: string
+}
+
+type ExpectedAdminUserSanctionItem = {
+  sanctionId: number
+  type: SanctionType
+  reason: string
+  createdAt: string
+  createdBy: number | null
+  endsAt: string | null
+  releasedAt: string | null
+  releasedBy: number | null
+}
+
+type ExpectedAdminUserDetailResponse = {
+  user: AdminUserProfile
+  activity: AdminUserActivity
+  reports: AdminUserReportItem[]
+  sanctions: AdminUserSanctionItem[]
+}
 
 type ExpectedAdminMessages = {
   common: StringMessages<
@@ -186,6 +262,35 @@ const responseRoleTypeContracts: [
   Expect<Exact<LoginResponse["role"], UserRole>>,
 ] = [true, true]
 
+const adminUserDtoTypeContracts: [
+  Expect<Exact<UserGrade, "bronze" | "silver" | "gold" | "platinum" | "diamond">>,
+  Expect<Exact<AuthProvider, "email" | "google" | "kakao">>,
+  Expect<Exact<AdminUserItem, ExpectedAdminUserItem>>,
+  Expect<Exact<AdminUserProfile, ExpectedAdminUserProfile>>,
+  Expect<Exact<AdminUserActivity, ExpectedAdminUserActivity>>,
+  Expect<Exact<AdminUserReportItem, ExpectedAdminUserReportItem>>,
+  Expect<Exact<AdminUserSanctionItem, ExpectedAdminUserSanctionItem>>,
+  Expect<Exact<AdminUserDetailResponse, ExpectedAdminUserDetailResponse>>,
+  Expect<
+    Exact<
+      CreateSanctionRequest,
+      { type: SanctionType; reason: string; endsAt?: string }
+    >
+  >,
+  Expect<Exact<CreateSanctionResponse, { sanctionId: number }>>,
+  Expect<
+    Exact<
+      AdminUsersParams,
+      {
+        status?: UserStatus | ""
+        q?: string
+        cursor?: string | null
+        size: number
+      }
+    >
+  >,
+] = [true, true, true, true, true, true, true, true, true, true, true]
+
 const expectedAdminMessageKeys = {
   common: ["all", "cancel", "empty", "loadError", "loadMore", "loading", "retry", "save"],
   auth: [
@@ -297,6 +402,22 @@ test("session and login responses expose the exact canonical role type", () => {
   assert.deepEqual(responseRoleTypeContracts, [true, true])
 })
 
+test("admin user DTOs preserve every backend field and enum exactly", () => {
+  assert.deepEqual(adminUserDtoTypeContracts, [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+  ])
+})
+
 test("all locale objects reuse the intended admin message dictionary reference", () => {
   const localeContracts = [
     [ko.admin, adminKo],
@@ -336,4 +457,94 @@ test("compactQuery omits empty values while preserving supported values", () => 
   )
   assert.equal(compactQuery({ status: "", decision: undefined }).toString(), "")
   assert.equal(compactQuery({ cursor: 0, enabled: false }).toString(), "cursor=0&enabled=false")
+})
+
+const sanctionValidationNow = new Date("2026-07-15T00:00:00.000Z")
+const futureSanctionEnd = "2026-07-16T00:00:00.000Z"
+
+test("sanction validation trims a valid reason", () => {
+  assert.deepEqual(
+    validateSanctionDraft(
+      { type: "temporary", reason: "  반복적인 괴롭힘  ", endsAt: futureSanctionEnd },
+      sanctionValidationNow,
+    ),
+    {
+      ok: true,
+      value: {
+        type: "temporary",
+        reason: "반복적인 괴롭힘",
+        endsAt: futureSanctionEnd,
+      },
+    },
+  )
+})
+
+test("sanction validation rejects a blank reason", () => {
+  assert.deepEqual(
+    validateSanctionDraft(
+      { type: "permanent", reason: "   ", endsAt: futureSanctionEnd },
+      sanctionValidationNow,
+    ),
+    { ok: false, field: "reason" },
+  )
+})
+
+test("sanction validation rejects a reason longer than 500 characters", () => {
+  assert.deepEqual(
+    validateSanctionDraft(
+      { type: "permanent", reason: "가".repeat(501), endsAt: futureSanctionEnd },
+      sanctionValidationNow,
+    ),
+    { ok: false, field: "reason" },
+  )
+})
+
+test("temporary sanctions require an end time", () => {
+  assert.deepEqual(
+    validateSanctionDraft(
+      { type: "temporary", reason: "사유", endsAt: "" },
+      sanctionValidationNow,
+    ),
+    { ok: false, field: "endsAt" },
+  )
+})
+
+test("temporary sanctions require a future end time", () => {
+  assert.deepEqual(
+    validateSanctionDraft(
+      {
+        type: "temporary",
+        reason: "사유",
+        endsAt: sanctionValidationNow.toISOString(),
+      },
+      sanctionValidationNow,
+    ),
+    { ok: false, field: "endsAt" },
+  )
+})
+
+test("temporary sanctions normalize a future end time to ISO", () => {
+  assert.deepEqual(
+    validateSanctionDraft(
+      { type: "temporary", reason: "사유", endsAt: futureSanctionEnd },
+      sanctionValidationNow,
+    ),
+    {
+      ok: true,
+      value: { type: "temporary", reason: "사유", endsAt: futureSanctionEnd },
+    },
+  )
+})
+
+test("permanent sanctions omit endsAt even when the draft contains one", () => {
+  const result = validateSanctionDraft(
+    { type: "permanent", reason: "영구 제재 사유", endsAt: futureSanctionEnd },
+    sanctionValidationNow,
+  )
+
+  assert.deepEqual(result, {
+    ok: true,
+    value: { type: "permanent", reason: "영구 제재 사유" },
+  })
+  assert.equal(result.ok && "endsAt" in result.value, false)
 })
