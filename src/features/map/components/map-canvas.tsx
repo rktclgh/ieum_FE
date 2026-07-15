@@ -38,6 +38,8 @@ interface MapCanvasProps {
   liveAccuracy?: number | null
   /** 사용자가 지도에서 고른 지점 — Figma Location/XL 핀으로 표시 */
   selectedPosition?: Coordinates | null
+  /** 선택 핀 마커를 클릭했을 때 (핀 토글 제거용). 미지정이면 마커 클릭 무반응 */
+  onSelectedPositionClick?: () => void
 }
 
 const LIVE_ACCENT = "#316CED"
@@ -173,6 +175,7 @@ function MapCanvas({
   livePosition,
   liveAccuracy,
   selectedPosition,
+  onSelectedPositionClick,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
 
@@ -203,7 +206,11 @@ function MapCanvas({
         <PinMarker key={pin.pinId} pin={pin} onClick={onPinClick} />
       ))}
       {selectedPosition && (
-        <Marker position={[selectedPosition.lat, selectedPosition.lng]} icon={selectedLocationIcon} />
+        <Marker
+          position={[selectedPosition.lat, selectedPosition.lng]}
+          icon={selectedLocationIcon}
+          eventHandlers={onSelectedPositionClick ? { click: onSelectedPositionClick } : undefined}
+        />
       )}
       {livePosition && (
         <>

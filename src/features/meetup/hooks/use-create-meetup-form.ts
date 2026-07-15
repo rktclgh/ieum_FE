@@ -15,12 +15,15 @@ interface MeetupImageValue {
   file: File
 }
 
-/** 새 모임 작성 폼의 로컬 상태·검증 로직. 제출(모임 생성) API 연동은 useCreateMeeting 에서. */
-function useCreateMeetupForm() {
+/**
+ * 새 모임 작성 폼의 로컬 상태·검증 로직. 제출(모임 생성) API 연동은 useCreateMeeting 에서.
+ * @param initialPlace 지도 홈 핀에서 넘어온 초기 장소(있으면 장소 칸 프리필)
+ */
+function useCreateMeetupForm(initialPlace: MeetupPlaceValue | null = null) {
   const [title, setTitle] = React.useState("")
   const [date, setDate] = React.useState<MeetupDateValue | null>(null)
   const [time, setTime] = React.useState<MeetupTimeValue | null>(null)
-  const [place, setPlace] = React.useState<MeetupPlaceValue | null>(null)
+  const [place, setPlace] = React.useState<MeetupPlaceValue | null>(initialPlace)
   const [description, setDescription] = React.useState("")
   const [image, setImage] = React.useState<MeetupImageValue | null>(null)
 
