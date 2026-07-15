@@ -12,6 +12,11 @@ import type {
   AdminInquiryAnswerConvergenceReason,
   AdminInquiryAnswerConvergenceState,
 } from "./admin-inquiry"
+import {
+  getSessionAbortSignal,
+  getSessionGeneration,
+  isSessionGenerationCurrent,
+} from "../../../session/lib/session-cache"
 
 const adminInquiryAnswerLifecycleKey = [
   "admin",
@@ -32,10 +37,12 @@ interface AdminInquiryAnswerInput {
 
 interface AdminInquiryAnswerExecution extends AdminInquiryAnswerInput {
   operationId: number
+  sessionGeneration: number
 }
 
 interface AdminInquiryAnswerLifecycle {
   operationId: number
+  sessionGeneration: number
   inquiry: AdminInquiryItem
   answer: string
   state: AdminInquiryAnswerConvergenceState
@@ -71,7 +78,15 @@ const initialAdminInquiryAnswerLifecycleRegistry:
 
 const convergenceControllers = new WeakMap<
   QueryClient,
-  Map<number, { operationId: number; controller: AbortController }>
+  Map<
+    number,
+    {
+      operationId: number
+      sessionGeneration: number
+      controller: AbortController
+      detachSessionAbort: () => void
+    }
+  >
 >()
 
 function refetchActiveAdminInquiryLists(queryClient: QueryClient) {
@@ -100,12 +115,21 @@ function getAdminInquiryAnswerLifecycle(
 
 function updateAdminInquiryAnswerLifecycle(
   queryClient: QueryClient,
-  execution: Pick<AdminInquiryAnswerExecution, "inquiry" | "operationId">,
+  execution: Pick<
+    AdminInquiryAnswerExecution,
+    "inquiry" | "operationId" | "sessionGeneration"
+  >,
   update: (
     current: AdminInquiryAnswerLifecycle,
   ) => AdminInquiryAnswerLifecycle,
 ) {
   let updated = false
+
+  if (
+    !isSessionGenerationCurrent(queryClient, execution.sessionGeneration)
+  ) {
+    return updated
+  }
 
   queryClient.setQueryData<AdminInquiryAnswerLifecycleRegistry>(
     adminInquiryAnswerLifecycleKey,
@@ -114,7 +138,12 @@ function updateAdminInquiryAnswerLifecycle(
 
       const key = String(execution.inquiry.inquiryId)
       const current = previous.records[key]
-      if (current?.operationId !== execution.operationId) return previous
+      if (
+        current?.operationId !== execution.operationId ||
+        current.sessionGeneration !== execution.sessionGeneration
+      ) {
+        return previous
+      }
 
       updated = true
       return {
@@ -135,6 +164,7 @@ function claimAdminInquiryAnswer(
   input: AdminInquiryAnswerInput,
 ): AdminInquiryAnswerExecution | null {
   let execution: AdminInquiryAnswerExecution | null = null
+  const sessionGeneration = getSessionGeneration(queryClient)
 
   queryClient.setQueryData<AdminInquiryAnswerLifecycleRegistry>(
     adminInquiryAnswerLifecycleKey,
@@ -151,6 +181,7 @@ function claimAdminInquiryAnswer(
       execution = {
         ...input,
         operationId: registry.nextOperationId,
+        sessionGeneration,
       }
       return {
         nextOperationId: registry.nextOperationId + 1,
@@ -159,6 +190,7 @@ function claimAdminInquiryAnswer(
           [String(input.inquiry.inquiryId)]: {
             ...input,
             operationId: registry.nextOperationId,
+            sessionGeneration,
             state: { kind: "mutation" },
             settledReason: null,
             mutationError: null,
@@ -203,11 +235,26 @@ function getConvergenceController(
     convergenceControllers.set(queryClient, controllers)
   }
 
-  controllers.get(execution.inquiry.inquiryId)?.controller.abort()
+  const previous = controllers.get(execution.inquiry.inquiryId)
+  previous?.controller.abort()
+  previous?.detachSessionAbort()
+
   const controller = new AbortController()
+  const sessionSignal = getSessionAbortSignal(queryClient)
+  const abortForSessionReset = () => controller.abort(sessionSignal.reason)
+  if (sessionSignal.aborted) {
+    abortForSessionReset()
+  } else {
+    sessionSignal.addEventListener("abort", abortForSessionReset, {
+      once: true,
+    })
+  }
   controllers.set(execution.inquiry.inquiryId, {
     operationId: execution.operationId,
+    sessionGeneration: execution.sessionGeneration,
     controller,
+    detachSessionAbort: () =>
+      sessionSignal.removeEventListener("abort", abortForSessionReset),
   })
   return controller
 }
@@ -218,10 +265,36 @@ function releaseConvergenceController(
 ) {
   const controllers = convergenceControllers.get(queryClient)
   const active = controllers?.get(execution.inquiry.inquiryId)
-  if (active?.operationId !== execution.operationId) return
+  if (
+    active?.operationId !== execution.operationId ||
+    active.sessionGeneration !== execution.sessionGeneration
+  ) {
+    return
+  }
 
+  active.detachSessionAbort()
   controllers?.delete(execution.inquiry.inquiryId)
   if (controllers?.size === 0) convergenceControllers.delete(queryClient)
+}
+
+function isAdminInquiryAnswerExecutionCurrent(
+  queryClient: QueryClient,
+  execution: AdminInquiryAnswerExecution,
+) {
+  if (
+    !isSessionGenerationCurrent(queryClient, execution.sessionGeneration)
+  ) {
+    return false
+  }
+
+  const current = getAdminInquiryAnswerLifecycle(
+    queryClient,
+    execution.inquiry.inquiryId,
+  )
+  return (
+    current?.operationId === execution.operationId &&
+    current.sessionGeneration === execution.sessionGeneration
+  )
 }
 
 async function runAdminInquiryAnswerConvergence(
@@ -235,6 +308,8 @@ async function runAdminInquiryAnswerConvergence(
   )
   if (
     current?.operationId !== execution.operationId ||
+    current.sessionGeneration !== execution.sessionGeneration ||
+    !isSessionGenerationCurrent(queryClient, execution.sessionGeneration) ||
     current.state.kind !== "refreshing"
   ) {
     return
@@ -245,11 +320,29 @@ async function runAdminInquiryAnswerConvergence(
 
   try {
     await dependencies.invalidateInquiries()
+    if (
+      controller.signal.aborted ||
+      !isAdminInquiryAnswerExecutionCurrent(queryClient, execution)
+    ) {
+      return
+    }
     await dependencies.refetchActiveLists()
+    if (
+      controller.signal.aborted ||
+      !isAdminInquiryAnswerExecutionCurrent(queryClient, execution)
+    ) {
+      return
+    }
     const canonicalInquiry = await dependencies.getCanonicalInquiry(
       execution.inquiry.inquiryId,
       { signal: controller.signal },
     )
+    if (
+      controller.signal.aborted ||
+      !isAdminInquiryAnswerExecutionCurrent(queryClient, execution)
+    ) {
+      return
+    }
     const nextState = reduceAdminInquiryAnswerConvergence(refreshingState, {
       type: "refetch-succeeded",
       inquiryStatus: canonicalInquiry.status,
@@ -262,6 +355,7 @@ async function runAdminInquiryAnswerConvergence(
         canonicalInquiry.status === "answered" ? canonicalInquiry : null,
     }))
   } catch {
+    if (!isAdminInquiryAnswerExecutionCurrent(queryClient, execution)) return
     updateAdminInquiryAnswerLifecycle(queryClient, execution, (latest) => ({
       ...latest,
       state: reduceAdminInquiryAnswerConvergence(refreshingState, {
@@ -329,6 +423,9 @@ async function retryAdminInquiryAnswerConvergence(
       const key = String(inquiryId)
       const current = previous.records[key]
       if (current?.state.kind !== "retry") return previous
+      if (!isSessionGenerationCurrent(queryClient, current.sessionGeneration)) {
+        return previous
+      }
 
       const nextState = reduceAdminInquiryAnswerConvergence(current.state, {
         type: "retry",
@@ -339,6 +436,7 @@ async function retryAdminInquiryAnswerConvergence(
         answer: current.answer,
         inquiry: current.inquiry,
         operationId: current.operationId,
+        sessionGeneration: current.sessionGeneration,
       }
       return {
         ...previous,

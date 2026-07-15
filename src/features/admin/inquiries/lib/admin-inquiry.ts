@@ -24,6 +24,16 @@ type AdminInquiryAnswerConvergenceEvent =
 
 const initialAdminInquiryAnswerConvergenceState = { kind: "idle" } as const
 
+function getAdminInquiryExpandedConvergenceKind(
+  state: AdminInquiryAnswerConvergenceState,
+) {
+  if (state.kind === "retry") return "retry" as const
+  if (state.kind === "mutation" || state.kind === "refreshing") {
+    return "loading" as const
+  }
+  return null
+}
+
 function normalizeInquiryAnswer(value: string): string | null {
   const answer = value.trim()
   return answer.length >= 1 && answer.length <= 2000 ? answer : null
@@ -102,6 +112,7 @@ function shouldShowAdminInquiryPageConvergence(
 }
 
 export {
+  getAdminInquiryExpandedConvergenceKind,
   initialAdminInquiryAnswerConvergenceState,
   isAdminInquiryAnswerConvergenceLocked,
   normalizeInquiryAnswer,

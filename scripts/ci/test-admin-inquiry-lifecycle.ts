@@ -16,10 +16,15 @@ import {
   retryAdminInquiryAnswerConvergence,
 } from "../../src/features/admin/inquiries/lib/admin-inquiry-answer-lifecycle.js"
 import {
+  getAdminInquiryExpandedConvergenceKind,
   isAdminInquiryAnswerConvergenceLocked,
   shouldShowAdminInquiryPageConvergence,
 } from "../../src/features/admin/inquiries/lib/admin-inquiry.js"
 import type { AdminInquiryItem } from "../../src/features/admin/inquiries/api/admin-inquiries-api.js"
+import {
+  getSessionGeneration,
+  resetSessionCache,
+} from "../../src/features/session/lib/session-cache.js"
 
 interface InquiryPage {
   items: AdminInquiryItem[]
@@ -387,6 +392,112 @@ test("retry remains actionable after remount when the target row is visible but 
   }
 })
 
+test("expanded answered row keeps retry ownership when list refetch wins before detail failure", async () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      mutations: { retry: false },
+      queries: { retry: false },
+    },
+  })
+  const allKey = [
+    "admin",
+    "inquiries",
+    "list",
+    { status: "", size: 20 },
+  ] as const
+  let listFetches = 0
+  let detailCalls = 0
+  const listOptions = {
+    queryKey: allKey,
+    queryFn: async () => {
+      listFetches += 1
+      return {
+        items: [createInquiry(listFetches === 1 ? "pending" : "answered")],
+        nextCursor: null,
+      }
+    },
+    initialPageParam: null as string | null,
+    getNextPageParam: (page: InquiryPage) => page.nextCursor,
+    staleTime: Infinity,
+  }
+  const listObserver = new InfiniteQueryObserver(queryClient, listOptions)
+  const unsubscribeList = listObserver.subscribe(() => undefined)
+
+  try {
+    await listObserver.refetch()
+    const dependencies = {
+      answerInquiry: async () => undefined,
+      getCanonicalInquiry: async () => {
+        detailCalls += 1
+        if (detailCalls === 1) throw new Error("detail unavailable")
+        return createInquiry("answered")
+      },
+      invalidateInquiries: () =>
+        queryClient.invalidateQueries({
+          queryKey: ["admin", "inquiries"],
+          refetchType: "none",
+        }),
+      isAlreadyAnsweredError: () => false,
+      refetchActiveLists: () => refetchActiveAdminInquiryLists(queryClient),
+    }
+    const mutationObserver = new MutationObserver(
+      queryClient,
+      createAdminInquiryAnswerMutationOptions(queryClient, dependencies),
+    )
+    const unsubscribeMutation = mutationObserver.subscribe(() => undefined)
+    const execution = claimAdminInquiryAnswer(queryClient, {
+      answer: "Canonical answer",
+      inquiry: createInquiry("pending"),
+    })
+    assert.ok(execution)
+
+    await mutationObserver.mutate(execution)
+    const failedLifecycle = getAdminInquiryAnswerLifecycle(queryClient, 41)
+    const answeredListInquiry =
+      listObserver.getCurrentResult().data?.pages[0]?.items[0]
+
+    assert.equal(listFetches, 2)
+    assert.equal(detailCalls, 1)
+    assert.equal(answeredListInquiry?.status, "answered")
+    assert.equal(failedLifecycle?.state.kind, "retry")
+    assert.equal(
+      shouldShowAdminInquiryPageConvergence(
+        failedLifecycle?.state ?? { kind: "idle" },
+        41,
+        41,
+        true,
+      ),
+      false,
+    )
+    assert.equal(
+      getAdminInquiryExpandedConvergenceKind(
+        failedLifecycle?.state ?? { kind: "idle" },
+      ),
+      "retry",
+    )
+
+    assert.equal(
+      await retryAdminInquiryAnswerConvergence(queryClient, 41, dependencies),
+      true,
+    )
+    const recoveredLifecycle = getAdminInquiryAnswerLifecycle(queryClient, 41)
+    assert.equal(listFetches, 3)
+    assert.equal(detailCalls, 2)
+    assert.equal(recoveredLifecycle?.state.kind, "idle")
+    assert.equal(
+      getAdminInquiryExpandedConvergenceKind(
+        recoveredLifecycle?.state ?? { kind: "idle" },
+      ),
+      null,
+    )
+
+    unsubscribeMutation()
+  } finally {
+    unsubscribeList()
+    queryClient.clear()
+  }
+})
+
 for (const [failureName, detailError] of [
   [
     "404",
@@ -468,3 +579,96 @@ for (const [failureName, detailError] of [
     }
   })
 }
+
+test("session reset aborts old op1 and blocks its delayed detail from overwriting new op1", async () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      mutations: { retry: false },
+      queries: { retry: false },
+    },
+  })
+  const oldDetail = createDeferred<AdminInquiryItem>()
+  let detailCalls = 0
+  let oldDetailSignal: AbortSignal | undefined
+  const newSessionInquiry = {
+    ...createInquiry("answered"),
+    answer: "New session answer",
+  }
+  const dependencies = {
+    answerInquiry: async () => undefined,
+    getCanonicalInquiry: async (
+      _inquiryId: number,
+      { signal }: { signal?: AbortSignal } = {},
+    ) => {
+      detailCalls += 1
+      if (detailCalls === 1) {
+        oldDetailSignal = signal
+        return oldDetail.promise
+      }
+      return newSessionInquiry
+    },
+    invalidateInquiries: async () => undefined,
+    isAlreadyAnsweredError: () => false,
+    refetchActiveLists: async () => undefined,
+  }
+  const oldMutationObserver = new MutationObserver(
+    queryClient,
+    createAdminInquiryAnswerMutationOptions(queryClient, dependencies),
+  )
+  const unsubscribeOldMutation = oldMutationObserver.subscribe(() => undefined)
+
+  try {
+    const oldGeneration = getSessionGeneration(queryClient)
+    const oldExecution = claimAdminInquiryAnswer(queryClient, {
+      answer: "Old session answer",
+      inquiry: createInquiry("pending"),
+    })
+    assert.ok(oldExecution)
+    assert.equal(oldExecution.operationId, 1)
+
+    const oldMutationResult = oldMutationObserver.mutate(oldExecution)
+    await waitUntil(() => detailCalls === 1)
+    assert.equal(
+      getAdminInquiryAnswerLifecycle(queryClient, 41)?.state.kind,
+      "refreshing",
+    )
+
+    await resetSessionCache(queryClient)
+    const oldSignalWasAbortedByReset = oldDetailSignal?.aborted ?? false
+    assert.equal(getSessionGeneration(queryClient), oldGeneration + 1)
+
+    const newExecution = claimAdminInquiryAnswer(queryClient, {
+      answer: "New session answer",
+      inquiry: createInquiry("pending"),
+    })
+    assert.ok(newExecution)
+    assert.equal(newExecution.operationId, 1)
+    const newMutationObserver = new MutationObserver(
+      queryClient,
+      createAdminInquiryAnswerMutationOptions(queryClient, dependencies),
+    )
+    const unsubscribeNewMutation = newMutationObserver.subscribe(() => undefined)
+
+    await newMutationObserver.mutate(newExecution)
+    assert.equal(detailCalls, 2)
+    assert.equal(
+      getAdminInquiryAnswerLifecycle(queryClient, 41)?.snapshot?.answer,
+      "New session answer",
+    )
+
+    oldDetail.resolve(createInquiry("pending"))
+    await oldMutationResult
+
+    const finalLifecycle = getAdminInquiryAnswerLifecycle(queryClient, 41)
+    assert.equal(oldSignalWasAbortedByReset, true)
+    assert.equal(finalLifecycle?.operationId, 1)
+    assert.equal(finalLifecycle?.state.kind, "idle")
+    assert.equal(finalLifecycle?.snapshot?.answer, "New session answer")
+
+    unsubscribeNewMutation()
+  } finally {
+    oldDetail.resolve(createInquiry("pending"))
+    unsubscribeOldMutation()
+    queryClient.clear()
+  }
+})

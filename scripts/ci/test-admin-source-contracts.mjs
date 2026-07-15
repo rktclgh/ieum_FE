@@ -860,6 +860,27 @@ function assertAdminInquiryAnswerLifecycle(source) {
   const retry = compactSource(
     boundedSource(source, "async function retryAdminInquiryAnswerConvergence(", "export {"),
   )
+  const controller = compactSource(
+    boundedSource(
+      source,
+      "function getConvergenceController(",
+      "function releaseConvergenceController(",
+    ),
+  )
+  const releaseController = compactSource(
+    boundedSource(
+      source,
+      "function releaseConvergenceController(",
+      "function isAdminInquiryAnswerExecutionCurrent(",
+    ),
+  )
+  const currentExecution = compactSource(
+    boundedSource(
+      source,
+      "function isAdminInquiryAnswerExecutionCurrent(",
+      "async function runAdminInquiryAnswerConvergence(",
+    ),
+  )
 
   assert.match(compact, /"answer-lifecycles"/)
   assert.match(compact, /"answer"/)
@@ -877,12 +898,45 @@ function assertAdminInquiryAnswerLifecycle(source) {
     compact,
     /findAnsweredInquiry|refetchCanonicalList|AdminInquiryStatus|status: current\.status|size: current\.size/,
   )
+  assert.match(
+    compact,
+    /interface AdminInquiryAnswerExecution extends AdminInquiryAnswerInput \{ operationId: number sessionGeneration: number \}/,
+  )
+  assert.match(
+    compact,
+    /interface AdminInquiryAnswerLifecycle \{ operationId: number sessionGeneration: number/,
+  )
   assertOrdered(claim, [
+    "const sessionGeneration = getSessionGeneration(queryClient)",
     "isAdminInquiryAnswerConvergenceLocked(current.state)",
     "operationId: registry.nextOperationId",
+    "sessionGeneration",
     'state: { kind: "mutation" }',
   ])
   assert.match(compact, /current\?\.operationId !== execution\.operationId/)
+  assert.match(
+    compact,
+    /current\.sessionGeneration !== execution\.sessionGeneration/,
+  )
+  assertOrdered(controller, [
+    "previous?.controller.abort()",
+    "previous?.detachSessionAbort()",
+    "const sessionSignal = getSessionAbortSignal(queryClient)",
+    "sessionSignal.addEventListener(\"abort\", abortForSessionReset",
+    "operationId: execution.operationId",
+    "sessionGeneration: execution.sessionGeneration",
+    "detachSessionAbort:",
+  ])
+  assertOrdered(releaseController, [
+    "active?.operationId !== execution.operationId",
+    "active.sessionGeneration !== execution.sessionGeneration",
+    "active.detachSessionAbort()",
+  ])
+  assertOrdered(currentExecution, [
+    "isSessionGenerationCurrent(queryClient, execution.sessionGeneration)",
+    "current?.operationId === execution.operationId",
+    "current.sessionGeneration === execution.sessionGeneration",
+  ])
   assertOrdered(mutation, [
     "mutationKey: adminInquiryAnswerMutationKey",
     "mutationFn:",
@@ -905,12 +959,50 @@ function assertAdminInquiryAnswerLifecycle(source) {
   ])
   assert.doesNotMatch(convergence, /canonicalItems|\.find\(/)
   assert.match(convergence, /type: "refetch-failed"/)
-  assert.match(compact, /controllers\.get\(execution\.inquiry\.inquiryId\)\?\.controller\.abort\(\)/)
+  assert.equal((convergence.match(/controller\.signal\.aborted/g) ?? []).length, 3)
+  assert.ok(
+    (convergence.match(/isAdminInquiryAnswerExecutionCurrent/g) ?? []).length >= 4,
+  )
   assertOrdered(retry, [
     'current?.state.kind !== "retry"',
+    "isSessionGenerationCurrent(queryClient, current.sessionGeneration)",
     'type: "retry"',
     'nextState.kind !== "refreshing"',
+    "sessionGeneration: current.sessionGeneration",
     "await runAdminInquiryAnswerConvergence(",
+  ])
+}
+
+function assertAdminInquirySessionAbortBoundary(source) {
+  const compact = compactSource(source)
+  const rotate = compactSource(
+    boundedSource(
+      source,
+      "function rotateSessionAbortSignal(",
+      "function isSessionGenerationCurrent(",
+    ),
+  )
+  const reset = compactSource(
+    boundedSource(
+      source,
+      "async function runSessionCacheReset(",
+      "function resetSessionCache(",
+    ),
+  )
+
+  assert.match(
+    compact,
+    /const sessionAbortControllers = new WeakMap<QueryClient, AbortController>\(\)/,
+  )
+  assertOrdered(rotate, [
+    "sessionAbortControllers.get(queryClient)?.abort()",
+    "sessionAbortControllers.set(queryClient, new AbortController())",
+  ])
+  assertOrdered(reset, [
+    "rotateSessionAbortSignal(queryClient)",
+    "sessionGenerations.set(",
+    "const queryCache = queryClient.getQueryCache()",
+    "queryClient.getMutationCache().clear()",
   ])
 }
 
@@ -986,6 +1078,10 @@ function assertAdminInquiryAnswerConvergenceState(source) {
   assert.match(
     compact,
     /function shouldShowAdminInquiryPageConvergence\( state: AdminInquiryAnswerConvergenceState, targetInquiryId: number \| null, selectedInquiryId: number \| null, targetIsVisible: boolean, \) \{ return \( isAdminInquiryAnswerConvergenceLocked\(state\) && targetInquiryId !== null && \(!targetIsVisible \|\| targetInquiryId !== selectedInquiryId\) \) \}/,
+  )
+  assert.match(
+    compact,
+    /function getAdminInquiryExpandedConvergenceKind\( state: AdminInquiryAnswerConvergenceState, \) \{ if \(state\.kind === "retry"\) return "retry" as const if \(state\.kind === "mutation" \|\| state\.kind === "refreshing"\) \{ return "loading" as const \} return null \}/,
   )
 }
 
@@ -1144,7 +1240,17 @@ function assertAdminInquiryAnswerConvergence(source) {
     page,
     /lifecycle\?\.settledReason === "uncertain" && lifecycle\.mutationError !== null && !isAdminInquiryAnswerConvergenceLocked\(lifecycle\.state\)/,
   )
-  assert.match(expanded, /convergenceState\.kind === "retry" && \(/)
+  assertOrdered(expanded, [
+    "getAdminInquiryExpandedConvergenceKind(convergenceState)",
+    'expandedConvergenceKind === "retry"',
+    '<AdminAsyncState kind="error"',
+    "onRetry={onConvergenceRetry}",
+    'expandedConvergenceKind === "loading"',
+    '<AdminAsyncState kind="loading"',
+    'if (inquiry.status === "answered")',
+    "{convergenceView}",
+    "<AdminInquiryAnsweredDetails",
+  ])
   assert.equal(
     (expanded.match(/onRetry=\{onConvergenceRetry\}/g) ?? []).length,
     1,
@@ -2288,9 +2394,13 @@ test("admin inquiry hooks and mutation cache own durable settled convergence", (
   const lifecycleSource = readSource(
     "src/features/admin/inquiries/lib/admin-inquiry-answer-lifecycle.ts",
   )
+  const sessionSource = readSource(
+    "src/features/session/lib/session-cache.ts",
+  )
 
   assertAdminInquiryHooks(source)
   assertAdminInquiryAnswerLifecycle(lifecycleSource)
+  assertAdminInquirySessionAbortBoundary(sessionSource)
 
   const automaticRefetchMutant = source.replace('refetchType: "none",', "")
   const wrongPrefixMutant = source.replace(
@@ -2332,8 +2442,8 @@ test("admin inquiry hooks and mutation cache own durable settled convergence", (
     "null",
   )
   const droppedAbortMutant = lifecycleSource.replace(
-    "controllers.get(execution.inquiry.inquiryId)?.controller.abort()",
-    "controllers.get(execution.inquiry.inquiryId)",
+    "previous?.controller.abort()",
+    "previous?.controller",
   )
   const staleInFlightMutant = lifecycleSource.replace(
     "{ cancelRefetch: true, throwOnError: true }",
@@ -2351,6 +2461,22 @@ test("admin inquiry hooks and mutation cache own durable settled convergence", (
     "{ signal: controller.signal }",
     "{}",
   )
+  const droppedGenerationGuardMutant = lifecycleSource.replaceAll(
+    "isSessionGenerationCurrent(queryClient, execution.sessionGeneration)",
+    "true",
+  )
+  const droppedControllerGenerationMutant = lifecycleSource.replace(
+    "sessionGeneration: execution.sessionGeneration,\n    controller,",
+    "controller,",
+  )
+  const droppedSessionAbortListenerMutant = lifecycleSource.replace(
+    'sessionSignal.addEventListener("abort", abortForSessionReset, {',
+    'sessionSignal.removeEventListener("abort", abortForSessionReset, {',
+  )
+  const droppedCurrentExecutionChecksMutant = lifecycleSource.replaceAll(
+    "!isAdminInquiryAnswerExecutionCurrent(queryClient, execution)",
+    "false",
+  )
 
   for (const mutant of [
     successOnlyMutant,
@@ -2362,10 +2488,23 @@ test("admin inquiry hooks and mutation cache own durable settled convergence", (
     inactiveListMutant,
     wrongListPrefixMutant,
     droppedCanonicalSignalMutant,
+    droppedGenerationGuardMutant,
+    droppedControllerGenerationMutant,
+    droppedSessionAbortListenerMutant,
+    droppedCurrentExecutionChecksMutant,
   ]) {
     assert.notEqual(mutant, lifecycleSource)
     assert.throws(() => assertAdminInquiryAnswerLifecycle(mutant))
   }
+
+  const droppedSessionRotationMutant = sessionSource.replace(
+    "  rotateSessionAbortSignal(queryClient)\n",
+    "",
+  )
+  assert.notEqual(droppedSessionRotationMutant, sessionSource)
+  assert.throws(() =>
+    assertAdminInquirySessionAbortBoundary(droppedSessionRotationMutant),
+  )
 })
 
 test("admin inquiry answer convergence keeps every failed canonical refresh locked", () => {
@@ -2395,6 +2534,10 @@ test("admin inquiry answer convergence keeps every failed canonical refresh lock
     "(!targetIsVisible || targetInquiryId !== selectedInquiryId)",
     "targetInquiryId !== selectedInquiryId",
   )
+  const hiddenExpandedLoadingMutant = source.replace(
+    'state.kind === "mutation" || state.kind === "refreshing"',
+    'state.kind === "mutation"',
+  )
 
   for (const mutant of [
     failedUnlockMutant,
@@ -2402,6 +2545,7 @@ test("admin inquiry answer convergence keeps every failed canonical refresh lock
     pendingUnlockMutant,
     mutationUnlockMutant,
     collapsedRetryMutant,
+    hiddenExpandedLoadingMutant,
   ]) {
     assert.notEqual(mutant, source)
     assert.throws(() => assertAdminInquiryAnswerConvergenceState(mutant))
@@ -2473,6 +2617,10 @@ test("admin inquiries preserve isolated row state and converge through canonical
     "showPageConvergence &&",
     "false &&",
   )
+  const droppedAnsweredConvergenceMutant = source.replace(
+    "        {convergenceView}\n        <AdminInquiryAnsweredDetails",
+    "        <AdminInquiryAnsweredDetails",
+  )
 
   for (const mutant of [
     missingExpandedMutant,
@@ -2489,6 +2637,7 @@ test("admin inquiries preserve isolated row state and converge through canonical
     unlockedMutationMutant,
     droppedResolvedSnapshotMutant,
     droppedDetachedRetryMutant,
+    droppedAnsweredConvergenceMutant,
   ]) {
     assert.notEqual(mutant, source)
     assert.throws(() => {

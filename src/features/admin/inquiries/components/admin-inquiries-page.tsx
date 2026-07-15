@@ -15,6 +15,7 @@ import {
   useAnswerAdminInquiry,
 } from "@/features/admin/inquiries/hooks/use-admin-inquiries"
 import {
+  getAdminInquiryExpandedConvergenceKind,
   initialAdminInquiryAnswerConvergenceState,
   isAdminInquiryAnswerConvergenceLocked,
   normalizeInquiryAnswer,
@@ -116,6 +117,18 @@ function AdminInquiryExpandedRow({
   const { messages } = useTranslation()
   const [draft, setDraft] = React.useState("")
   const normalizedAnswer = normalizeInquiryAnswer(draft)
+  const expandedConvergenceKind =
+    getAdminInquiryExpandedConvergenceKind(convergenceState)
+  const convergenceView =
+    expandedConvergenceKind === "retry" ? (
+      <AdminAsyncState
+        kind="error"
+        message={messages.admin.inquiries.convergenceError}
+        onRetry={onConvergenceRetry}
+      />
+    ) : expandedConvergenceKind === "loading" ? (
+      <AdminAsyncState kind="loading" />
+    ) : null
 
   const handleAnswerFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -126,11 +139,14 @@ function AdminInquiryExpandedRow({
 
   if (inquiry.status === "answered") {
     return (
-      <AdminInquiryAnsweredDetails
-        inquiry={inquiry}
-        dateFormatter={dateFormatter}
-        showConflict={shouldShowAdminInquiryAnsweredConflict(convergenceState)}
-      />
+      <div className="space-y-4">
+        {convergenceView}
+        <AdminInquiryAnsweredDetails
+          inquiry={inquiry}
+          dateFormatter={dateFormatter}
+          showConflict={shouldShowAdminInquiryAnsweredConflict(convergenceState)}
+        />
+      </div>
     )
   }
 
@@ -145,13 +161,7 @@ function AdminInquiryExpandedRow({
         </p>
       </div>
 
-      {convergenceState.kind === "retry" && (
-        <AdminAsyncState
-          kind="error"
-          message={messages.admin.inquiries.convergenceError}
-          onRetry={onConvergenceRetry}
-        />
-      )}
+      {convergenceView}
       {answerError && (
         <p role="alert" className="text-body-regular-14 text-red">
           {answerError}

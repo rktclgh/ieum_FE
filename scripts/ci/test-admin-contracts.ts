@@ -9,6 +9,7 @@ import {
   shouldShowAdminReportResolvedConflict,
 } from "../../src/features/admin/reports/lib/admin-report-decision-convergence.js"
 import {
+  getAdminInquiryExpandedConvergenceKind,
   initialAdminInquiryAnswerConvergenceState,
   isAdminInquiryAnswerConvergenceLocked,
   normalizeInquiryAnswer,
@@ -630,6 +631,29 @@ test("collapsed or detached locked inquiry answers keep one page-level convergen
     false,
   )
   assert.equal(shouldShowAdminInquiryPageConvergence(retry, null, null, false), false)
+})
+
+test("expanded inquiry rows expose every locked convergence state before canonical detail settles", () => {
+  assert.equal(
+    getAdminInquiryExpandedConvergenceKind({ kind: "mutation" }),
+    "loading",
+  )
+  assert.equal(
+    getAdminInquiryExpandedConvergenceKind({
+      kind: "refreshing",
+      reason: "success",
+    }),
+    "loading",
+  )
+  assert.equal(
+    getAdminInquiryExpandedConvergenceKind({ kind: "retry", reason: "success" }),
+    "retry",
+  )
+  assert.equal(getAdminInquiryExpandedConvergenceKind({ kind: "idle" }), null)
+  assert.equal(
+    getAdminInquiryExpandedConvergenceKind({ kind: "conflict-refreshed" }),
+    null,
+  )
 })
 
 test("inquiry DTOs preserve every nullable backend field exactly", () => {
