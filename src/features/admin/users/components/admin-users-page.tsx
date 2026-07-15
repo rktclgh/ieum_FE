@@ -21,6 +21,7 @@ function AdminUsersPage() {
   const dateFormatter = new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Asia/Seoul",
   })
 
   return (

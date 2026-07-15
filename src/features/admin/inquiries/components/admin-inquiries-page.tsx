@@ -254,6 +254,7 @@ function AdminInquiriesPage() {
   const dateFormatter = new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Asia/Seoul",
   })
 
   if (previousVisibleInquiryIds !== visibleInquiryIds) {
@@ -312,8 +313,8 @@ function AdminInquiriesPage() {
           className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:cursor-not-allowed disabled:bg-gray-100"
         >
           <option value="">{messages.admin.common.all}</option>
-          <option value="pending">pending</option>
-          <option value="answered">answered</option>
+          <option value="pending">{messages.admin.inquiries.pending}</option>
+          <option value="answered">{messages.admin.inquiries.answered}</option>
         </select>
       </div>
 
@@ -386,6 +387,7 @@ function AdminInquiriesPage() {
                     answerLifecycleRegistry,
                     inquiry,
                   )
+                  const displayedInquiry = lifecycle?.snapshot ?? inquiry
                   const rowConvergenceState =
                     lifecycle?.state ?? initialAdminInquiryAnswerConvergenceState
                   const answerError =
@@ -430,7 +432,7 @@ function AdminInquiriesPage() {
                             <div id={`admin-inquiry-detail-${inquiry.inquiryId}`}>
                               <AdminInquiryExpandedRow
                                 key={inquiry.inquiryId}
-                                inquiry={inquiry}
+                                inquiry={displayedInquiry}
                                 dateFormatter={dateFormatter}
                                 answerBusy={answerBusy}
                                 answerError={answerError}

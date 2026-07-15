@@ -44,7 +44,14 @@ function reduceAdminReportDecisionConvergence(
   }
 
   if (state.reason === "conflict") {
-    return { kind: "conflict-refreshed" }
+    if (
+      event.reportStatus === "confirmed" ||
+      event.reportStatus === "dismissed"
+    ) {
+      return { kind: "conflict-refreshed" }
+    }
+
+    return { kind: "retry", reason: state.reason }
   }
 
   if (state.reason === "uncertain") {

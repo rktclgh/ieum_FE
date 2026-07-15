@@ -246,12 +246,14 @@ function assertAdminSanctionStatsInvalidation(source) {
   )
   assert.match(
     activationHook,
-    /onSuccess: \(\) => invalidateAdminUserQueries\(queryClient, userId\)/,
+    /invalidateAdminUserQueries\(queryClient, userId\)/,
   )
-  assert.doesNotMatch(
+  assert.match(
     activationHook,
-    /invalidateAdminSanctionQueries|adminStatsKeys/,
+    /invalidateQueries\(\{ queryKey: adminStatsKeys\.users, exact: true,? \}\)/,
   )
+  assert.doesNotMatch(activationHook, /invalidateAdminSanctionQueries/)
+  assert.doesNotMatch(activationHook, /adminStatsKeys\.(?:content|reports)/)
 }
 
 function interfaceFields(source, interfaceName) {
@@ -528,7 +530,7 @@ function assertAdminReportDecisionConvergenceState(source) {
   )
   assert.match(
     compact,
-    /state\.reason === "conflict"[\s\S]*return \{ kind: "conflict-refreshed" \}/,
+    /if \(state\.reason === "conflict"\) \{ if \( ?event\.reportStatus === "confirmed" \|\| event\.reportStatus === "dismissed" ?\) \{ return \{ kind: "conflict-refreshed" \} \} return \{ kind: "retry", reason: state\.reason \} \}/,
   )
   assert.match(
     compact,
@@ -1406,6 +1408,11 @@ test("the desktop boundary does not mount children below 1024px", () => {
 
   assert.match(source, /useSyncExternalStore/)
   assert.match(source, /\(min-width: 1024px\)/)
+  assert.match(source, /let cachedMediaQueryList:/)
+  assert.match(
+    compactSource(source),
+    /if \(cachedMediaQueryList !== undefined\) return cachedMediaQueryList/,
+  )
   assert.match(source, /function getServerSnapshot\(\)\s*\{\s*return false\s*\}/)
   assert.ok(unsupportedBranch >= 0)
   assert.ok(childrenReturn > unsupportedBranch)
@@ -1743,8 +1750,17 @@ test("sanction success invalidates exact user and report KPI caches only", () =>
     "onSuccess: () => invalidateAdminSanctionQueries(queryClient, userId)",
     "onSuccess: () => invalidateAdminUserQueries(queryClient, userId)",
   )
+  const staleActivationStatsMutant = source.replace(
+    "queryKey: adminStatsKeys.users,\n          exact: true,",
+    "queryKey: adminStatsKeys.content,\n          exact: true,",
+  )
 
-  for (const mutant of [wrongKeyMutant, broadKeyMutant, staleStatsMutant]) {
+  for (const mutant of [
+    wrongKeyMutant,
+    broadKeyMutant,
+    staleStatsMutant,
+    staleActivationStatsMutant,
+  ]) {
     assert.notEqual(mutant, source)
     assert.throws(() => assertAdminSanctionStatsInvalidation(mutant))
   }
@@ -1778,6 +1794,7 @@ test("admin users list debounces raw q for 300ms and owns every cursor-table sta
   assert.match(source, /usersQuery\.isFetchingNextPage/)
   assert.match(source, /messages\.admin\.common\.loadMore/)
   assert.match(source, /messages\.admin\.common\.loading/)
+  assert.match(source, /timeZone: "Asia\/Seoul"/)
   assert.match(pageSource, /<AdminUsersPage \/>/)
 })
 
@@ -1934,6 +1951,11 @@ test("admin user detail renders backend fields and pending-safe adjacent mutatio
   assert.match(source, /getApiErrorMessage\(activateMutation\.error/)
   assert.ok((source.match(/role="alert"/g) ?? []).length >= 2)
   assert.match(source, /messages\.admin\.users\.activationScopeNotice/)
+  assert.match(source, /timeZone: "Asia\/Seoul"/)
+  assert.match(
+    compactSource(source),
+    /onChange=\{\(event\) => \{ setSanctionType\(event\.target\.value as SanctionType\) setInvalidField\(null\) \}\}/,
+  )
   assert.equal((source.match(/<ConfirmDialog/g) ?? []).length, 2)
   assert.doesNotMatch(source, /apiClient|\/role\b|changeRole|patch\(/i)
 })
@@ -2036,6 +2058,8 @@ test("admin reports list owns three filters, nullable users, table states, and d
   assert.match(source, /report\.reportedUser/)
   assert.match(source, /messages\.admin\.reports\.missingReportedUser/)
   assert.match(source, /report\.target\.deleted/)
+  assert.match(source, /messages\.admin\.reports\.deleted/)
+  assert.match(source, /timeZone: "Asia\/Seoul"/)
   assert.match(source, /routes\.adminReportDetail\(report\.reportId\)/)
   assert.match(source, /<table/)
   assert.match(source, /reportsQuery\.isPending/)
@@ -2155,6 +2179,8 @@ test("admin report detail safely renders every backend field and nullable relati
   assert.match(source, /JSON\.stringify\(contextSnapshot, null, 2\)/)
   assert.match(source, /JSON\.stringify\(ai\.result, null, 2\)/)
   assert.match(source, /messages\.admin\.reports\.missingReportedUser/)
+  assert.match(source, /messages\.admin\.reports\.deleted/)
+  assert.match(source, /timeZone: "Asia\/Seoul"/)
   assert.match(source, /messages\.admin\.reports\.confirmNotice/)
   assert.match(source, /messages\.admin\.reports\.resolution/)
   assert.match(source, /detailQuery\.isPending/)
@@ -2567,6 +2593,17 @@ test("admin inquiries preserve isolated row state and converge through canonical
   assert.match(source, /inquiriesQuery\.isError/)
   assert.match(source, /inquiries\.length === 0/)
   assert.match(source, /inquiriesQuery\.isFetchingNextPage/)
+  assert.match(source, /timeZone: "Asia\/Seoul"/)
+  assert.match(
+    source,
+    /<option value="pending">\{messages\.admin\.inquiries\.pending\}<\/option>/,
+  )
+  assert.match(
+    source,
+    /<option value="answered">\{messages\.admin\.inquiries\.answered\}<\/option>/,
+  )
+  assert.match(source, /const displayedInquiry = lifecycle\?\.snapshot \?\? inquiry/)
+  assert.match(source, /inquiry=\{displayedInquiry\}/)
   assert.match(pageSource, /<AdminInquiriesPage \/>/)
 
   const missingExpandedMutant = source.replace(" aria-expanded={isExpanded}", "")

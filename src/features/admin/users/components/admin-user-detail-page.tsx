@@ -60,6 +60,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
   const dateFormatter = new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Asia/Seoul",
   })
   const numberFormatter = new Intl.NumberFormat(language)
   const sanctionError = sanctionMutation.isError
@@ -319,7 +320,10 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
             <span>{messages.admin.users.sanctionType}</span>
             <select
               value={sanctionType}
-              onChange={(event) => setSanctionType(event.target.value as SanctionType)}
+              onChange={(event) => {
+                setSanctionType(event.target.value as SanctionType)
+                setInvalidField(null)
+              }}
               disabled={sanctionBusy}
               className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:opacity-50"
             >

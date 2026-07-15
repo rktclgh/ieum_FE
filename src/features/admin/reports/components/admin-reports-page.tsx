@@ -24,6 +24,7 @@ function AdminReportsPage() {
   const dateFormatter = new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Asia/Seoul",
   })
 
   return (
@@ -143,7 +144,9 @@ function AdminReportsPage() {
                     <td className="px-4 py-3">{report.reportId}</td>
                     <td className="px-4 py-3">
                       {report.target.type} #{report.target.id}
-                      {report.target.deleted ? " · deleted" : ""}
+                      {report.target.deleted
+                        ? ` · ${messages.admin.reports.deleted}`
+                        : ""}
                     </td>
                     <td className="px-4 py-3">
                       {report.reporter.nickname} #{report.reporter.userId}

@@ -11,10 +11,14 @@ type LegacyMediaQueryList = MediaQueryList & {
   removeListener?: (listener: (event: MediaQueryListEvent) => void) => void
 }
 
+let cachedMediaQueryList: LegacyMediaQueryList | null | undefined
+
 function getMediaQueryList() {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
     return null
   }
+
+  if (cachedMediaQueryList !== undefined) return cachedMediaQueryList
 
   const mediaQueryList = window.matchMedia(DESKTOP_MEDIA_QUERY) as LegacyMediaQueryList
   const supportsModernEvents = typeof mediaQueryList.addEventListener === "function"
@@ -22,7 +26,9 @@ function getMediaQueryList() {
     typeof mediaQueryList.addListener === "function" &&
     typeof mediaQueryList.removeListener === "function"
 
-  return supportsModernEvents || supportsLegacyEvents ? mediaQueryList : null
+  cachedMediaQueryList =
+    supportsModernEvents || supportsLegacyEvents ? mediaQueryList : null
+  return cachedMediaQueryList
 }
 
 function subscribe(onStoreChange: () => void) {

@@ -90,6 +90,7 @@ interface AdminMessages {
     aiState: string
     decision: string
     target: string
+    deleted: string
     reporter: string
     reportedUser: string
     missingReportedUser: string
@@ -132,6 +133,8 @@ interface AdminMessages {
     missingUser: string
     createdAt: string
     status: string
+    pending: string
+    answered: string
     subject: string
     content: string
     answer: string
@@ -237,6 +240,7 @@ const adminKo: AdminMessages = {
     aiState: "AI 검토 상태",
     decision: "AI 권고",
     target: "신고 대상",
+    deleted: "삭제됨",
     reporter: "신고자",
     reportedUser: "신고 대상 회원",
     missingReportedUser: "대상 회원 없음",
@@ -279,6 +283,8 @@ const adminKo: AdminMessages = {
     missingUser: "회원 정보 없음",
     createdAt: "문의 일시",
     status: "처리 상태",
+    pending: "답변 대기",
+    answered: "답변 완료",
     subject: "문의 제목",
     content: "문의 내용",
     answer: "답변",
@@ -384,6 +390,7 @@ const adminEn: AdminMessages = {
     aiState: "AI review state",
     decision: "AI recommendation",
     target: "Target",
+    deleted: "Deleted",
     reporter: "Reporter",
     reportedUser: "Reported user",
     missingReportedUser: "No reported user",
@@ -426,6 +433,8 @@ const adminEn: AdminMessages = {
     missingUser: "User information unavailable",
     createdAt: "Submitted at",
     status: "Status",
+    pending: "Pending",
+    answered: "Answered",
     subject: "Subject",
     content: "Inquiry",
     answer: "Answer",

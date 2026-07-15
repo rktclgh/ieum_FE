@@ -90,7 +90,14 @@ function useActivateAdminUser(userId: number) {
 
   return useMutation({
     mutationFn: () => activateAdminUser(userId),
-    onSuccess: () => invalidateAdminUserQueries(queryClient, userId),
+    onSuccess: () =>
+      Promise.all([
+        invalidateAdminUserQueries(queryClient, userId),
+        queryClient.invalidateQueries({
+          queryKey: adminStatsKeys.users,
+          exact: true,
+        }),
+      ]),
   })
 }
 

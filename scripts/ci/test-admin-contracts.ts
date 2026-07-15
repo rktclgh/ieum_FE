@@ -237,6 +237,7 @@ type ExpectedAdminMessages = {
     | "aiState"
     | "decision"
     | "target"
+    | "deleted"
     | "reporter"
     | "reportedUser"
     | "missingReportedUser"
@@ -279,6 +280,8 @@ type ExpectedAdminMessages = {
     | "missingUser"
     | "createdAt"
     | "status"
+    | "pending"
+    | "answered"
     | "subject"
     | "content"
     | "answer"
@@ -375,7 +378,7 @@ const expectedAdminMessageKeys = {
   ],
   reports: [
     "aiResult", "aiState", "confidence", "confirm", "confirmNotice", "convergenceError", "createdAt", "decision",
-    "detail", "dismiss", "evidence", "evidenceHash", "lastErrorCode", "missingReportedUser", "modelVersion",
+    "deleted", "detail", "dismiss", "evidence", "evidenceHash", "lastErrorCode", "missingReportedUser", "modelVersion",
     "policySetHash", "policyVersion", "reason", "recommendation", "reportedUser", "reporter", "resolution",
     "resolutionDecision", "resolvedAt", "resolvedBy", "resolvedConflict", "reviewedAt", "sanctionAdmin",
     "sanctionCreatedAt", "sanctionEndsAt", "sanctionReason", "sanctionReleasedAt", "sanctionReleasedBy",
@@ -383,7 +386,7 @@ const expectedAdminMessageKeys = {
   ],
   inquiries: [
     "answer", "answerPlaceholder", "answerSubmit", "answeredAt", "answeredBy", "answeredConflict", "content",
-    "convergenceError", "createdAt", "invalidAnswer", "missingUser", "status", "subject", "title", "userEmail",
+    "convergenceError", "createdAt", "invalidAnswer", "missingUser", "pending", "answered", "status", "subject", "title", "userEmail",
   ],
 } as const
 
@@ -552,27 +555,44 @@ test("successful decisions stay locked through refetch failure until terminal da
   assert.equal(isAdminReportDecisionConvergenceLocked(terminal), false)
 })
 
-test("409 decisions reveal conflict copy only after a successful canonical refresh", () => {
+test("409 decisions reveal conflict copy only after a terminal canonical refresh", () => {
   const refreshing = reduceAdminReportDecisionConvergence(
     initialAdminReportDecisionConvergenceState,
     { type: "begin", reason: "conflict" },
   )
-  const failed = reduceAdminReportDecisionConvergence(refreshing, {
-    type: "refetch-failed",
+  const stalePending = reduceAdminReportDecisionConvergence(refreshing, {
+    type: "refetch-succeeded",
+    reportStatus: "pending",
   })
-  const retrying = reduceAdminReportDecisionConvergence(failed, { type: "retry" })
-  const refreshedPending = reduceAdminReportDecisionConvergence(retrying, {
+  const retryingPending = reduceAdminReportDecisionConvergence(stalePending, {
+    type: "retry",
+  })
+  const staleAiReviewed = reduceAdminReportDecisionConvergence(retryingPending, {
     type: "refetch-succeeded",
     reportStatus: "ai_reviewed",
   })
+  const retryingAiReviewed = reduceAdminReportDecisionConvergence(
+    staleAiReviewed,
+    { type: "retry" },
+  )
+  const terminal = reduceAdminReportDecisionConvergence(retryingAiReviewed, {
+    type: "refetch-succeeded",
+    reportStatus: "confirmed",
+  })
 
-  for (const state of [refreshing, failed, retrying]) {
+  for (const state of [
+    refreshing,
+    stalePending,
+    retryingPending,
+    staleAiReviewed,
+    retryingAiReviewed,
+  ]) {
     assert.equal(isAdminReportDecisionConvergenceLocked(state), true)
     assert.equal(shouldShowAdminReportResolvedConflict(state), false)
   }
-  assert.deepEqual(refreshedPending, { kind: "conflict-refreshed" })
-  assert.equal(isAdminReportDecisionConvergenceLocked(refreshedPending), false)
-  assert.equal(shouldShowAdminReportResolvedConflict(refreshedPending), true)
+  assert.deepEqual(terminal, { kind: "conflict-refreshed" })
+  assert.equal(isAdminReportDecisionConvergenceLocked(terminal), false)
+  assert.equal(shouldShowAdminReportResolvedConflict(terminal), true)
 })
 
 test("uncertain decision errors unlock only after a successful canonical refresh", () => {

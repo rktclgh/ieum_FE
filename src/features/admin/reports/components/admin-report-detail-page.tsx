@@ -77,6 +77,7 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
   const dateFormatter = new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Asia/Seoul",
   })
   const numberFormatter = new Intl.NumberFormat(language, {
     maximumFractionDigits: 4,
@@ -245,7 +246,7 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
           <DetailField label="ID" value={report.reportId} />
           <DetailField
             label={messages.admin.reports.target}
-            value={`${target.type} #${target.id}${target.deleted ? " · deleted" : ""}`}
+            value={`${target.type} #${target.id}${target.deleted ? ` · ${messages.admin.reports.deleted}` : ""}`}
           />
           <DetailField
             label={messages.admin.reports.reporter}
