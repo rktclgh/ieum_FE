@@ -105,6 +105,7 @@ export interface Messages {
     listParticipantCount: (count: number) => string
     searchEmpty: string
     listEmpty: string
+    locatingMe: string
   }
   meetup: {
     joinButton: string
@@ -540,6 +541,7 @@ export const ko: Messages = {
     listParticipantCount: (count) => `현재 ${count}명`,
     searchEmpty: "검색 결과가 없습니다",
     listEmpty: "이 지역에 표시할 항목이 없습니다",
+    locatingMe: "내 위치를 찾는 중…",
   },
   meetup: {
     joinButton: "참여하기",

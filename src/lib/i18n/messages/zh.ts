@@ -104,6 +104,7 @@ export const zh: Messages = {
     listParticipantCount: (count) => `当前${count}人`,
     searchEmpty: "没有搜索结果",
     listEmpty: "该区域没有可显示的内容",
+    locatingMe: "正在获取您的位置…",
   },
   meetup: {
     joinButton: "参加",

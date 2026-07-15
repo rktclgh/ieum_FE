@@ -7,9 +7,11 @@ import type { MapBounds, MapPin, PinType } from "@/features/map/api/pin-types"
 import { CategoryChipGroup, type Category } from "@/features/map/components/category-chip-group"
 import { MapAttribution } from "@/features/map/components/map-attribution"
 import { MapControls } from "@/features/map/components/map-controls"
+import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton"
 import { MapSearchBar } from "@/features/map/components/map-search-bar"
 import { PinListOverlay } from "@/features/map/components/pin-list-overlay"
 import { SearchOverlay } from "@/features/map/components/search-overlay"
+import { DEFAULT_MAP_CENTER, MAP_LOCATION_WAIT_MS } from "@/features/map/constants/map"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
@@ -46,7 +48,7 @@ interface SelectedLocation {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
-  const { position, accuracy } = useGeolocation()
+  const { position, accuracy, status } = useGeolocation()
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
   const [selectedLocation, setSelectedLocation] = React.useState<SelectedLocation | null>(null)
@@ -98,7 +100,18 @@ function HomeMapScreen() {
     setRecenterKey((key) => key + 1)
   }, [])
 
-  // 최초 위치 확보 1회: 내 위치로 자동 중심 이동.
+  // 진입 시 내 위치를 확보할 때까지 지도를 그리지 않는다 — 명동(기본 좌표)→내 위치로 날아가는 모션을 없앤다.
+  // 단 상한 시간을 넘기면 기본 좌표로 먼저 띄운다(GPS가 오래 걸리거나 실패해도 무한 대기 방지).
+  const [waitedForLocation, setWaitedForLocation] = React.useState(false)
+  React.useEffect(() => {
+    const timer = setTimeout(() => setWaitedForLocation(true), MAP_LOCATION_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [])
+  const canShowMap = status !== "loading" || waitedForLocation
+
+  // 최초 위치 확보 1회: 내 위치로 자동 중심. 지도는 canShowMap 시점의 최선 좌표(내 위치 또는 기본 좌표)로
+  // 마운트되므로, 정상 경로(위치를 알고 마운트)에선 같은 좌표라 이동이 없고,
+  // 상한 초과 폴백 후 뒤늦게 위치가 잡힌 경우에만 부드럽게 재중심된다.
   const hasCenteredRef = React.useRef(false)
   React.useEffect(() => {
     if (hasCenteredRef.current || !position) return
@@ -113,20 +126,24 @@ function HomeMapScreen() {
 
   return (
     <div className="fixed inset-0 flex w-full flex-col overflow-hidden">
-      <MapCanvas
-        center={recenterTarget}
-        recenterKey={recenterKey}
-        animateCenter
-        className="absolute inset-0 z-0 size-full"
-        onMapClick={(position) => setSelectedLocation({ lat: position.lat, lng: position.lng })}
-        onBoundsChange={setBounds}
-        pins={pins}
-        onPinClick={handlePinClick}
-        livePosition={position}
-        liveAccuracy={accuracy}
-        selectedPosition={selectedLocation}
-        onSelectedPositionClick={() => setSelectedLocation(null)}
-      />
+      {canShowMap ? (
+        <MapCanvas
+          center={recenterTarget ?? position ?? DEFAULT_MAP_CENTER}
+          recenterKey={recenterKey}
+          animateCenter
+          className="absolute inset-0 z-0 size-full"
+          onMapClick={(position) => setSelectedLocation({ lat: position.lat, lng: position.lng })}
+          onBoundsChange={setBounds}
+          pins={pins}
+          onPinClick={handlePinClick}
+          livePosition={position}
+          liveAccuracy={accuracy}
+          selectedPosition={selectedLocation}
+          onSelectedPositionClick={() => setSelectedLocation(null)}
+        />
+      ) : (
+        <MapLoadingSkeleton />
+      )}
 
       <div className="relative z-10 mx-auto flex w-full max-w-sm flex-col gap-2 p-4">
         <div className="flex items-center gap-2">
