@@ -9,6 +9,11 @@ const DEFAULT_MAP_ZOOM = 16
 // 초과하면 기본 좌표로 먼저 띄우고, 이후 위치가 잡히면 조용히 재중심한다.
 const MAP_LOCATION_WAIT_MS = 3500
 
+// 홈 지도에서 오버레이가 지도를 가리는 높이(px). flyToBounds 패딩에 써서 재중심·클러스터 확대 시
+// 핀이 "보이는" 영역(헤더/탭바 제외) 정중앙에 오도록 한다. 대략치이며 실기기 확인 후 조정 가능.
+const MAP_TOP_INSET = 120 // 검색바 + 카테고리 칩 (상단 p-4 포함)
+const MAP_BOTTOM_INSET = 96 // 탭바 + FAB 영역
+
 // OpenFreeMap Positron — 흰색/회색 톤의 미니멀 벡터 베이스맵 (API 키 불필요).
 // 벡터 타일이라 water/landcover/building/transportation을 레이어별로 색칠할 수 있다.
 // provider 교체 시 이 URL만 바꾸면 된다(예: MapTiler 스타일 URL).
@@ -31,6 +36,8 @@ const MAP_CATEGORY_COLORS: ReadonlyArray<{
 export {
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
+  MAP_TOP_INSET,
+  MAP_BOTTOM_INSET,
   MAP_LOCATION_WAIT_MS,
   MAP_STYLE_URL,
   MAP_CATEGORY_COLORS,

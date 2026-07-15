@@ -166,7 +166,12 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const myUserId = session.userId ?? -1
 
   const { data: room } = useChatRoom(roomId, session)
-  const { messages: initialMessages } = useChatMessages(roomId, session)
+  const {
+    messages: initialMessages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useChatMessages(roomId, session)
 
   const [liveMessages, setLiveMessages] = React.useState<ChatBubbleMessage[]>([])
   // 낙관적 말풍선의 임시 messageId. 서버 id(양수)와 겹치지 않게 음수를 감소시켜 부여한다.
@@ -180,8 +185,15 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const [socketError, setSocketError] = React.useState<string | null>(null)
 
   const bottomRef = React.useRef<HTMLDivElement>(null)
+  const topRef = React.useRef<HTMLDivElement>(null)
   const dateGroupRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
+  // 사용자가 하단 근처를 보고 있는지. 새 메시지 도착 시 이 값이 true일 때만 자동으로 맨 아래로 내린다.
+  const isAtBottomRef = React.useRef(true)
+  // 최초 진입 시 1회 맨 아래로 내렸는지.
+  const didInitialScrollRef = React.useRef(false)
+  // 과거 페이지 prepend 직전 scrollHeight. prepend 후 스크롤 위치 보정(anchor)에 쓴다.
+  const prevScrollHeightRef = React.useRef<number | null>(null)
   const { isScrolling, onScroll: handleMessagesScroll } = useFadeScrollbar()
 
   const markReadMutation = useMarkRead()
@@ -302,8 +314,19 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   const scrollTicking = React.useRef(false)
 
+  // 하단에서 이 거리(px) 이내면 "맨 아래를 보고 있다"고 본다.
+  const AT_BOTTOM_THRESHOLD_PX = 80
+
+  const updateIsAtBottom = React.useCallback(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    const { scrollTop, scrollHeight, clientHeight } = container
+    isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < AT_BOTTOM_THRESHOLD_PX
+  }, [])
+
   const handleMessagesAreaScroll = () => {
     handleMessagesScroll()
+    updateIsAtBottom()
     if (!scrollTicking.current) {
       requestAnimationFrame(() => {
         updateActiveDateKey()
@@ -329,6 +352,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       setSocketError(messages.chat.sendFailed)
       return
     }
+    // 내가 보낸 메시지는 위로 스크롤 중이었더라도 항상 맨 아래로 따라 내려간다.
+    isAtBottomRef.current = true
     // 낙관적 반영: 서버 에코를 기다리지 않고 내 말풍선을 즉시 표시한다.
     // 에코 도착 시 onMessage가 이 pending 항목을 서버 메시지로 대체한다.
     const nowIso = new Date().toISOString()
@@ -350,9 +375,51 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     ])
   }
 
+  const lastMessageId = chatMessages[chatMessages.length - 1]?.messageId
+
+  // 자동 하단 스크롤: 최초 진입 시 1회, 이후엔 새 메시지가 도착했고(마지막 messageId 변화)
+  // 사용자가 이미 하단 근처를 보고 있을 때만. 위로 스크롤해 과거를 보는 중엔 강제로 끌어내리지 않는다.
   React.useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: "end" })
+    if (chatMessages.length === 0) return
+    if (!didInitialScrollRef.current) {
+      bottomRef.current?.scrollIntoView({ block: "end" })
+      didInitialScrollRef.current = true
+      return
+    }
+    if (isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ block: "end" })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMessageId])
+
+  // 과거 페이지 prepend 후 스크롤 위치 보정: 늘어난 높이만큼 scrollTop을 더해 보던 위치를 유지한다.
+  React.useLayoutEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container || prevScrollHeightRef.current == null) return
+    const diff = container.scrollHeight - prevScrollHeightRef.current
+    prevScrollHeightRef.current = null
+    if (diff > 0) container.scrollTop += diff
   }, [chatMessages])
+
+  // 상단 도달 감지 → 과거 메시지 다음 페이지 로드. prepend 전 scrollHeight를 기록해 위치 보정에 쓴다.
+  React.useEffect(() => {
+    const container = scrollContainerRef.current
+    const sentinel = topRef.current
+    if (!container || !sentinel) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return
+        // 최초 하단 정렬 전에는 상단 센티넬이 잠시 보일 수 있어, 초기 스크롤 완료 후에만 로드한다.
+        if (!didInitialScrollRef.current) return
+        if (!hasNextPage || isFetchingNextPage) return
+        prevScrollHeightRef.current = container.scrollHeight
+        fetchNextPage()
+      },
+      { root: container, rootMargin: "120px 0px 0px 0px", threshold: 0 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const messageMenuItems = (message: ChatBubbleMessage): ChatContextMenuItem[] => {
     const text = message.texts?.[0]
@@ -423,6 +490,13 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
               </div>
             )}
             <div className="flex flex-col">
+              {/* 상단 도달 감지 센티넬 + 과거 메시지 로딩 표시 */}
+              <div ref={topRef} />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-2">
+                  <span className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+                </div>
+              )}
               {dateGroups.map((group) => (
                 <div
                   key={group.dateKey}

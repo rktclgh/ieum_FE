@@ -1,6 +1,8 @@
 import type { Messages } from "./ko"
+import { adminEn } from "./admin"
 
 export const ja: Messages = {
+  admin: adminEn,
   common: {
     or: "or",
     logout: "ログアウト",

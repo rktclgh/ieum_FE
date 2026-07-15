@@ -6,7 +6,48 @@ import { fileURLToPath } from "node:url"
 
 import ts from "typescript"
 
+import { discoverStaticAppRoutes } from "./static-export-routes.mjs"
+
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
+
+const fixedStaticRoutes = [
+  "",
+  "admin",
+  "admin/inquiries",
+  "admin/login",
+  "admin/reports",
+  "admin/reports/detail",
+  "admin/users",
+  "admin/users/detail",
+  "chats",
+  "chats/notices",
+  "chats/report",
+  "chats/room",
+  "chats/schedule",
+  "friends",
+  "join",
+  "join/social",
+  "login",
+  "meetups/detail",
+  "my",
+  "my/edit",
+  "my/inquiry",
+  "my/notifications",
+  "my/permissions",
+  "oauth/kakao/callback",
+  "questions",
+  "questions/detail",
+]
+
+const fixedAdminRoutes = [
+  "admin",
+  "admin/inquiries",
+  "admin/login",
+  "admin/reports",
+  "admin/reports/detail",
+  "admin/users",
+  "admin/users/detail",
+]
 
 function read(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8")
@@ -85,6 +126,152 @@ function nullCheckedIdentifier(expression) {
 function compact(text) {
   return text.replace(/\s+/g, "")
 }
+
+function directoryPaths(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    if (!entry.isDirectory()) return []
+
+    const entryPath = path.join(directory, entry.name)
+    return [entryPath, ...directoryPaths(entryPath)]
+  })
+}
+
+function markdownSection(source, startHeading, endHeading) {
+  const start = source.indexOf(startHeading)
+  const end = source.indexOf(endHeading, start + startHeading.length)
+  assert.ok(start >= 0, `missing markdown section: ${startHeading}`)
+  assert.ok(end > start, `missing markdown section boundary: ${endHeading}`)
+  return source.slice(start, end)
+}
+
+function normalizeDocumentedRoute(url) {
+  const pathname = url.split("?", 1)[0]
+  return pathname === "/" ? "" : pathname.replace(/^\/+|\/+$/g, "")
+}
+
+function documentedRoutes(section) {
+  return [
+    ...new Set(
+      [...section.matchAll(/^\|\s*`(\/[^`]*)`\s*\|/gm)].map((match) =>
+        normalizeDocumentedRoute(match[1]),
+      ),
+    ),
+  ].sort((left, right) => left.localeCompare(right, "en"))
+}
+
+test("app tree exposes exactly the root and 25 fixed static routes", async () => {
+  const routes = await discoverStaticAppRoutes(path.join(repoRoot, "src/app"))
+
+  assert.deepEqual(routes, fixedStaticRoutes)
+  assert.deepEqual(
+    routes.filter((route) => route === "admin" || route.startsWith("admin/")),
+    fixedAdminRoutes,
+  )
+})
+
+test("admin pages use fixed paths and stay inside the desktop boundary", async () => {
+  const adminRoot = path.join(repoRoot, "src/app/admin")
+  const dynamicDirectories = directoryPaths(adminRoot)
+    .filter((directory) => /^\[.*\]$/.test(path.basename(directory)))
+    .map((directory) => path.relative(repoRoot, directory))
+
+  assert.deepEqual(dynamicDirectories, [], "admin routes must not use runtime ID directories")
+  assert.deepEqual(
+    await discoverStaticAppRoutes(path.join(adminRoot, "(protected)")),
+    ["", "inquiries", "reports", "reports/detail", "users", "users/detail"],
+  )
+
+  const boundaryFile = parse(
+    "src/features/admin/shared/components/admin-desktop-boundary.tsx",
+  )
+  const boundary = findFunction(boundaryFile, "AdminDesktopBoundary")
+  assert.ok(boundary?.body, "AdminDesktopBoundary implementation is missing")
+
+  const boundaryReturns = visit(boundary.body, ts.isReturnStatement)
+  assert.equal(boundaryReturns.length, 2)
+  assert.match(
+    boundaryReturns[0].expression?.getText(boundaryFile) ?? "",
+    /messages\.admin\.auth\.desktopOnly/,
+  )
+  assert.ok(
+    boundaryReturns[0].end < boundaryReturns[1].pos,
+    "the unsupported viewport branch must return before children",
+  )
+  assert.ok(
+    boundaryReturns[1].expression &&
+      ts.isIdentifier(boundaryReturns[1].expression) &&
+      boundaryReturns[1].expression.text === "children",
+    "AdminDesktopBoundary must have one final children return",
+  )
+
+  const protectedLayoutFile = parse("src/app/admin/(protected)/layout.tsx")
+  const protectedLayout = findFunction(protectedLayoutFile, "ProtectedAdminLayout")
+  assert.ok(protectedLayout?.body, "ProtectedAdminLayout implementation is missing")
+  assert.match(
+    compact(protectedLayout.getText(protectedLayoutFile)),
+    /<AdminGatepolicy="protected"><AdminDesktopBoundary><AdminShell>\{children\}<\/AdminShell><\/AdminDesktopBoundary><\/AdminGate>/,
+  )
+
+  assert.match(
+    compact(read("src/app/admin/login/page.tsx")),
+    /<AdminGatepolicy="login"><AdminDesktopBoundary><AdminLoginPage\/><\/AdminDesktopBoundary><\/AdminGate>/,
+  )
+})
+
+test("route documents publish the same complete static inventory", () => {
+  const routesDocument = read("docs/ROUTES.md")
+  const handoffDocument = read("docs/be-map-handoff.md")
+  const routesSection = markdownSection(
+    routesDocument,
+    "## 구현된 라우트",
+    "## 런타임 ID URL 전환표",
+  )
+  const handoffSection = markdownSection(
+    handoffDocument,
+    "### Spring forward/controller/JAR smoke canonical 목록",
+    "### Security와 요청 분기",
+  )
+
+  assert.deepEqual(documentedRoutes(routesSection), fixedStaticRoutes)
+  assert.deepEqual(documentedRoutes(handoffSection), fixedStaticRoutes)
+  assert.doesNotMatch(routesDocument, /\/my\/settings\//)
+  assert.doesNotMatch(handoffDocument, /\/my\/settings\//)
+
+  for (const route of fixedStaticRoutes) {
+    const canonicalUrl = route === "" ? "/" : `/${route}/`
+    const staticTarget = route === "" ? "/index.html" : `/${route}/index.html`
+    assert.ok(
+      handoffSection.includes(`| \`${canonicalUrl}\` | \`${staticTarget}\` |`),
+      `backend handoff must map ${canonicalUrl} to ${staticTarget}`,
+    )
+  }
+
+  for (const apiGroup of [
+    "/api/v1/admin/stats",
+    "/api/v1/admin/users",
+    "/api/v1/admin/reports",
+    "/api/v1/admin/inquiries",
+  ]) {
+    assert.ok(routesDocument.includes(apiGroup), `missing admin API group: ${apiGroup}`)
+  }
+  assert.match(routesDocument, /1024px/)
+  assert.match(routesDocument, /positive safe integer/)
+  assert.match(routesDocument, /StaticPageController/)
+})
+
+test("frontend update dispatch pins one validated commit SHA", () => {
+  const workflow = read(".github/workflows/notify-app-main.yml")
+
+  assert.ok(workflow.includes('frontend_sha="$GITHUB_SHA"'))
+  assert.ok(workflow.includes('[[ ! "$frontend_sha" =~ ^[0-9a-f]{40}$ ]]'))
+  assert.ok(
+    workflow.includes(
+      "printf -v payload '{\"event_type\":\"frontend-updated\",\"client_payload\":{\"frontend_sha\":\"%s\"}}' \"$frontend_sha\"",
+    ),
+  )
+  assert.ok(workflow.includes('--data "$payload"'))
+  assert.doesNotMatch(workflow, /--data '\{"event_type": "frontend-updated"\}'/)
+})
 
 test("fixed query pages validate IDs before mounting data content", () => {
   const pages = [
@@ -184,7 +371,8 @@ test("source contains no legacy runtime-ID navigation templates", () => {
 })
 
 test("fixed query route literals stay centralized in the route builders", () => {
-  const fixedRoutes = /^\/(?:chats\/(?:room|notices|report|schedule)|meetups\/detail|questions\/detail)\//
+  const fixedRoutes =
+    /^\/(?:admin\/(?:users|reports)\/detail|chats\/(?:room|notices|report|schedule)|meetups\/detail|questions\/detail)\//
 
   for (const file of sourceFiles(path.join(repoRoot, "src"))) {
     const relativePath = path.relative(repoRoot, file)

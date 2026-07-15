@@ -3,6 +3,7 @@ import type { QueryClient, QueryKey } from "@tanstack/react-query"
 const ME_QUERY_KEY = ["me"] as const
 const PUBLIC_QUERY_META = { sessionScope: "public" } as const
 const sessionGenerations = new WeakMap<QueryClient, number>()
+const sessionAbortControllers = new WeakMap<QueryClient, AbortController>()
 
 interface InFlightSessionReset {
   acceptsOverlap: boolean
@@ -17,6 +18,20 @@ const inFlightSessionResets = new WeakMap<
 
 function getSessionGeneration(queryClient: QueryClient) {
   return sessionGenerations.get(queryClient) ?? 0
+}
+
+function getSessionAbortSignal(queryClient: QueryClient) {
+  let controller = sessionAbortControllers.get(queryClient)
+  if (controller === undefined) {
+    controller = new AbortController()
+    sessionAbortControllers.set(queryClient, controller)
+  }
+  return controller.signal
+}
+
+function rotateSessionAbortSignal(queryClient: QueryClient) {
+  sessionAbortControllers.get(queryClient)?.abort()
+  sessionAbortControllers.set(queryClient, new AbortController())
 }
 
 function isSessionGenerationCurrent(
@@ -55,6 +70,7 @@ async function runSessionCacheReset(
   queryClient: QueryClient,
   onSnapshotCaptured: () => void,
 ) {
+  rotateSessionAbortSignal(queryClient)
   sessionGenerations.set(
     queryClient,
     getSessionGeneration(queryClient) + 1,
@@ -158,6 +174,7 @@ function resetSessionCache(queryClient: QueryClient) {
 
 export {
   createSessionMutationCallbacks,
+  getSessionAbortSignal,
   getSessionGeneration,
   isSessionGenerationCurrent,
   ME_QUERY_KEY,

@@ -36,6 +36,7 @@ function PasswordInput({
   defaultValue,
   value,
   error,
+  disabled,
   onChange,
   onFocus,
   onBlur,
@@ -57,6 +58,7 @@ function PasswordInput({
       <input
         ref={inputRef}
         data-slot="password-input"
+        disabled={disabled}
         type={isRevealed ? "text" : "password"}
         defaultValue={defaultValue}
         value={value}
@@ -74,13 +76,14 @@ function PasswordInput({
           <button
             type="button"
             data-slot="password-toggle"
+            disabled={disabled}
             aria-label={isRevealed ? "비밀번호 숨기기" : "비밀번호 표시"}
             onClick={() => setIsRevealed((prev) => !prev)}
             className="flex size-6 shrink-0 items-center justify-center"
           >
             <PasswordVisibilityIcon revealed={isRevealed} />
           </button>
-          <ClearButton inputRef={inputRef} />
+          <ClearButton inputRef={inputRef} disabled={disabled} />
         </>
       )}
     </div>
