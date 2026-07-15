@@ -105,6 +105,7 @@ export const en: Messages = {
     listParticipantCount: (count) => `${count} joined`,
     searchEmpty: "No results found",
     listEmpty: "Nothing to show in this area",
+    locatingMe: "Finding your location…",
   },
   meetup: {
     joinButton: "Join",

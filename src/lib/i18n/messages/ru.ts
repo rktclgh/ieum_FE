@@ -105,6 +105,7 @@ export const ru: Messages = {
     listParticipantCount: (count) => `${count} чел.`,
     searchEmpty: "Ничего не найдено",
     listEmpty: "Здесь пока ничего нет",
+    locatingMe: "Определяем ваше местоположение…",
   },
   meetup: {
     joinButton: "Участвовать",

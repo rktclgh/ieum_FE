@@ -105,6 +105,7 @@ export const vi: Messages = {
     listParticipantCount: (count) => `${count} người`,
     searchEmpty: "Không tìm thấy kết quả",
     listEmpty: "Không có mục nào trong khu vực này",
+    locatingMe: "Đang tìm vị trí của bạn…",
   },
   meetup: {
     joinButton: "Tham gia",

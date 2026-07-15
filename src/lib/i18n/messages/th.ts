@@ -104,6 +104,7 @@ export const th: Messages = {
     listParticipantCount: (count) => `${count} คน`,
     searchEmpty: "ไม่พบผลลัพธ์",
     listEmpty: "ไม่มีรายการในพื้นที่นี้",
+    locatingMe: "กำลังค้นหาตำแหน่งของคุณ…",
   },
   meetup: {
     joinButton: "เข้าร่วม",

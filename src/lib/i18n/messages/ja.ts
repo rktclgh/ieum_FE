@@ -104,6 +104,7 @@ export const ja: Messages = {
     listParticipantCount: (count) => `現在${count}人`,
     searchEmpty: "検索結果がありません",
     listEmpty: "このエリアに表示する項目がありません",
+    locatingMe: "現在地を取得中…",
   },
   meetup: {
     joinButton: "参加する",
