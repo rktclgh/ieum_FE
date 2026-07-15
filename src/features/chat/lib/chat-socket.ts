@@ -7,6 +7,7 @@ import type {
   ChatWebSocketErrorResponse,
   SendChatMessageRequest,
   WsMessageEvent,
+  WsRoomEvent,
 } from "@/features/chat/api/chat-types"
 import { DEV_BACKEND_ORIGIN, toWebSocketUrl } from "@/lib/runtime/dev-backend-origin"
 
@@ -102,5 +103,73 @@ function useChatRoomSocket(activeRoomId: number | null, handlers: ChatSocketHand
   return { connected, send }
 }
 
-export { useChatRoomSocket }
-export type { ChatSocketHandlers }
+interface ChatRoomsSocketHandlers {
+  onRoomEvent?: (event: WsRoomEvent) => void
+  onError?: (error: ChatWebSocketErrorResponse) => void
+  onConnectedChange?: (connected: boolean) => void
+}
+
+// 채팅 목록 화면용 STOMP 연결. 사용자 단위 토픽 하나로 내가 속한 모든 방의 요약 변경을 받는다.
+// - /user/queue/rooms 구독 → 방 요약 upsert/remove 이벤트 수신 (BE 이슈 #103)
+// - /user/queue/errors 구독 → 세션/검증 에러 수신
+// 방 개수와 무관하게 구독 1개로 실시간 목록을 구현한다(방별 /topic/rooms 팬아웃·폴링 불필요).
+function useChatRoomsSocket(enabled: boolean, handlers: ChatRoomsSocketHandlers) {
+  const [connected, setConnected] = React.useState(false)
+
+  const handlersRef = React.useRef(handlers)
+  React.useEffect(() => {
+    handlersRef.current = handlers
+  }, [handlers])
+
+  React.useEffect(() => {
+    if (!enabled) return
+
+    const client = new Client({
+      brokerURL: resolveBrokerUrl(),
+      reconnectDelay: 3000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
+      onConnect: () => {
+        setConnected(true)
+        handlersRef.current.onConnectedChange?.(true)
+
+        client.subscribe("/user/queue/rooms", (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as WsRoomEvent
+            handlersRef.current.onRoomEvent?.(event)
+          } catch {
+            // malformed payload는 무시한다.
+          }
+        })
+
+        client.subscribe("/user/queue/errors", (message: IMessage) => {
+          try {
+            const error = JSON.parse(message.body) as ChatWebSocketErrorResponse
+            handlersRef.current.onError?.(error)
+          } catch {
+            // ignore
+          }
+        })
+      },
+      onDisconnect: () => {
+        setConnected(false)
+        handlersRef.current.onConnectedChange?.(false)
+      },
+      onWebSocketClose: () => {
+        setConnected(false)
+        handlersRef.current.onConnectedChange?.(false)
+      },
+    })
+
+    client.activate()
+
+    return () => {
+      void client.deactivate()
+    }
+  }, [enabled])
+
+  return { connected }
+}
+
+export { useChatRoomSocket, useChatRoomsSocket }
+export type { ChatSocketHandlers, ChatRoomsSocketHandlers }

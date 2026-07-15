@@ -1,15 +1,20 @@
 "use client"
 
-import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useInfiniteQuery, useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useCallback, useMemo } from "react"
 
 import { getMessages, getRoom, getRooms } from "@/features/chat/api/chat-api"
-import type { RoomType } from "@/features/chat/api/chat-types"
+import type {
+  ChatRoomSummaryResponse,
+  RoomType,
+  WsRoomEvent,
+} from "@/features/chat/api/chat-types"
 import { adaptMessage, adaptRoomSummary, type ChatListEntry } from "@/features/chat/lib/chat-adapter"
 import {
   resolveChatSessionAccess,
   type ChatSessionAccess,
 } from "@/features/chat/lib/chat-session"
+import { useChatRoomsSocket } from "@/features/chat/lib/chat-socket"
 import { getMeeting } from "@/features/meetup/api/meetup-api"
 import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
 import { getQuestion } from "@/features/question/api/question-api"
@@ -24,10 +29,37 @@ const chatKeys = {
   messages: (roomId: number) => [...chatKeys.all, "messages", roomId] as const,
 }
 
-// 목록엔 실시간 WS 구독이 없어(방 요약 push용 사용자 단위 토픽 미구현) 폴링으로 갱신한다.
-// BE에 /user/queue/rooms 토픽이 생기면 이 폴링을 구독으로 교체한다(FE 이슈 #126, BE 이슈 #103).
-// 상세 설계: docs/superpowers/specs/2026-07-15-chat-list-realtime-design.md
-const ROOMS_POLL_INTERVAL_MS = 5000
+// 방 목록 요약 쿼리는 type별(chatKeys.rooms(type))로 나뉘어 캐시된다. 사용자 단위 토픽
+// (/user/queue/rooms) 이벤트를 받으면 해당하는 모든 요약 캐시를 직접 갱신한다.
+const roomsListKey = [...chatKeys.all, "rooms"] as const
+
+// upsert: 필터(type)에 속하는 캐시에는 기존 항목 제거 후 최상단에 삽입(활동 있는 방을 위로),
+// 속하지 않는 캐시에서는(방 유형 변경 등 예외) 제거만 한다.
+function upsertRoomInCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  room: ChatRoomSummaryResponse
+) {
+  for (const query of queryClient.getQueryCache().findAll({ queryKey: roomsListKey })) {
+    const keyType = query.queryKey[2] as RoomType | "all" | undefined
+    const belongs = keyType === "all" || keyType === room.roomType
+    queryClient.setQueryData<ChatRoomSummaryResponse[]>(query.queryKey, (old) => {
+      const without = (old ?? []).filter((r) => r.roomId !== room.roomId)
+      return belongs ? [room, ...without] : without
+    })
+  }
+}
+
+// remove: 모든 요약 캐시에서 해당 방을 제거한다.
+function removeRoomFromCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  roomId: number
+) {
+  for (const query of queryClient.getQueryCache().findAll({ queryKey: roomsListKey })) {
+    queryClient.setQueryData<ChatRoomSummaryResponse[]>(query.queryKey, (old) =>
+      (old ?? []).filter((r) => r.roomId !== roomId)
+    )
+  }
+}
 
 function useChatSessionAccess(requestedRoomId?: number) {
   const { data: me } = useMe()
@@ -38,17 +70,28 @@ function useChatSessionAccess(requestedRoomId?: number) {
 function useChatRoomsView(type?: RoomType) {
   const session = useChatSessionAccess()
   const myUserId = session.userId ?? -1
+  const queryClient = useQueryClient()
 
   const roomsQuery = useQuery({
     queryKey: chatKeys.rooms(type),
     queryFn: () => getRooms(type),
     enabled: session.authenticated,
-    // 요약(unreadCount·lastMessage·정렬)만 여기서 나오므로 이 쿼리만 폴링하면 된다.
-    // 방 상세(제목/아바타)는 staleTime 60s 유지 → 폴링이 N+1 상세 재조회를 유발하지 않는다.
-    refetchInterval: ROOMS_POLL_INTERVAL_MS,
-    // 탭/앱 복귀 시 60s staleTime을 우회해 즉시 최신화(백그라운드에선 폴링 일시정지됨).
-    refetchOnWindowFocus: "always",
   })
+
+  // 정식 실시간: 사용자 단위 토픽 구독 1개로 방 요약 변경을 받아 캐시를 직접 갱신한다(BE 이슈 #103).
+  // 방 개수와 무관하게 구독 1개. 방 상세(제목/아바타)는 rooms 배열 변화에 반응해 useQueries가 파생한다.
+  // 상세 설계: docs/superpowers/specs/2026-07-15-chat-list-realtime-design.md
+  const onRoomEvent = useCallback(
+    (event: WsRoomEvent) => {
+      if (event.type === "upsert") {
+        upsertRoomInCaches(queryClient, event.room)
+      } else {
+        removeRoomFromCaches(queryClient, event.roomId)
+      }
+    },
+    [queryClient]
+  )
+  useChatRoomsSocket(session.authenticated, { onRoomEvent })
 
   const rooms = session.authenticated ? (roomsQuery.data ?? []) : []
 
