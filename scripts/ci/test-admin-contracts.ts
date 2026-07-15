@@ -4,6 +4,13 @@ import test from "node:test"
 import { resolveAdminGateDecision } from "../../src/features/admin/auth/lib/admin-access.js"
 import { compactQuery } from "../../src/features/admin/shared/lib/admin-query.js"
 import { adminEn, adminKo } from "../../src/lib/i18n/messages/admin.js"
+import { en } from "../../src/lib/i18n/messages/en.js"
+import { ja } from "../../src/lib/i18n/messages/ja.js"
+import { ko } from "../../src/lib/i18n/messages/ko.js"
+import { ru } from "../../src/lib/i18n/messages/ru.js"
+import { th } from "../../src/lib/i18n/messages/th.js"
+import { vi } from "../../src/lib/i18n/messages/vi.js"
+import { zh } from "../../src/lib/i18n/messages/zh.js"
 import type {
   AdminGateDecision,
   AdminGatePolicy,
@@ -19,6 +26,8 @@ import type {
   UserStatus,
 } from "../../src/features/admin/shared/types/admin-types.js"
 import type { UserRole } from "../../src/features/session/types/user-role.js"
+import type { LoginResponse } from "../../src/features/login/api/auth-api.js"
+import type { UserMeResponse } from "../../src/features/session/api/session-api.js"
 import type { AdminMessages } from "../../src/lib/i18n/messages/admin.js"
 
 type Exact<Actual, Expected> =
@@ -164,6 +173,11 @@ const adminMessageTypeContracts: [
   Expect<Exact<typeof adminEn, AdminMessages>>,
 ] = [true, true, true, true, true, true, true, true, true, true, true]
 
+const responseRoleTypeContracts: [
+  Expect<Exact<UserMeResponse["role"], UserRole>>,
+  Expect<Exact<LoginResponse["role"], UserRole>>,
+] = [true, true]
+
 const expectedAdminMessageKeys = {
   common: ["all", "cancel", "empty", "loadError", "loadMore", "loading", "retry", "save"],
   auth: ["description", "desktopOnly", "forbidden", "switchAccount", "title"],
@@ -267,6 +281,26 @@ test("admin message types and both translations expose the exact agreed keys", (
 test("admin range messages interpolate both backend dates", () => {
   assert.match(adminKo.dashboard.range("2026-06-15", "2026-07-15"), /2026-06-15.*2026-07-15/)
   assert.match(adminEn.dashboard.range("2026-06-15", "2026-07-15"), /2026-06-15.*2026-07-15/)
+})
+
+test("session and login responses expose the exact canonical role type", () => {
+  assert.deepEqual(responseRoleTypeContracts, [true, true])
+})
+
+test("all locale objects reuse the intended admin message dictionary reference", () => {
+  const localeContracts = [
+    [ko.admin, adminKo],
+    [en.admin, adminEn],
+    [ja.admin, adminEn],
+    [zh.admin, adminEn],
+    [vi.admin, adminEn],
+    [th.admin, adminEn],
+    [ru.admin, adminEn],
+  ] as const
+
+  for (const [actual, expected] of localeContracts) {
+    assert.equal(actual, expected)
+  }
 })
 
 test("admin gate and shared response contracts expose their agreed shapes", () => {

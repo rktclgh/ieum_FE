@@ -128,7 +128,10 @@ git commit -m "관리자 프론트 계약 테스트 기반 추가"
 - Modify: `src/features/login/api/auth-api.ts`
 - Modify: `src/lib/navigation/routes.ts`
 - Modify: `scripts/ci/test-route-builders.ts`
+- Modify: `scripts/ci/test-admin-contracts.ts`
+- Modify: `scripts/ci/test-admin-contracts.sh`
 - Modify: `scripts/ci/test-admin-source-contracts.mjs`
+- Create: `scripts/ci/tsconfig.admin-contracts.json`
 - Create: `src/lib/i18n/messages/admin.ts`
 - Modify: `src/lib/i18n/messages/ko.ts`
 - Modify: `src/lib/i18n/messages/en.ts`
@@ -142,7 +145,7 @@ git commit -m "관리자 프론트 계약 테스트 기반 추가"
 - Consumes: Task 1 neutral session `UserRole`.
 - Produces: `UserMeResponse.role: UserRole`; typed `LoginResponse.role`; `routes.adminHome`, `adminLogin`, `adminUsers`, `adminUserDetail`, `adminReports`, `adminReportDetail`, `adminInquiries`; `Messages.admin: AdminMessages`.
 
-- [ ] **Step 1: Extend route and source tests first**
+- [ ] **Step 1: Extend route, type, and runtime contract tests first**
 
 Add exact fixed route expectations:
 
@@ -163,7 +166,7 @@ assert.throws(() => routes.adminUserDetail(0), RangeError)
 assert.throws(() => routes.adminReportDetail(Number.NaN), RangeError)
 ```
 
-The source contract must parse `session-api.ts` and assert `UserMeResponse` contains non-optional `role: UserRole`, while `auth-api.ts` imports and uses the same `UserRole` type.
+The TypeScript contract imports `UserMeResponse` and `LoginResponse` and asserts `Expect<Exact<Response["role"], UserRole>>`, so optional or widened roles fail independently of source formatting. It also imports the actual `ko/en/ja/zh/vi/th/ru` locale objects and asserts reference equality with the intended `adminKo` or `adminEn` dictionary. The source runner remains responsible only for structural App Router contracts that require filesystem inspection.
 
 - [ ] **Step 2: Run RED**
 
