@@ -6,7 +6,7 @@ import { Circle, MapContainer, Marker, useMap, useMapEvents } from "react-leafle
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
-import { PinMarker } from "@/features/map/components/pin-marker"
+import { ClusteredPins } from "@/features/map/components/clustered-pins"
 import { VectorTileLayer } from "@/features/map/components/vector-tile-layer"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
@@ -193,9 +193,14 @@ function MapCanvas({
       />
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
-      {pins?.map((pin) => (
-        <PinMarker key={pin.pinId} pin={pin} onClick={onPinClick} />
-      ))}
+      {pins && pins.length > 0 && (
+        <ClusteredPins
+          pins={pins}
+          onPinClick={onPinClick}
+          topInset={topInset}
+          bottomInset={bottomInset}
+        />
+      )}
       {selectedPosition && (
         <Marker
           position={[selectedPosition.lat, selectedPosition.lng]}

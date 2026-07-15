@@ -11,7 +11,12 @@ import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skelet
 import { MapSearchBar } from "@/features/map/components/map-search-bar"
 import { PinListOverlay } from "@/features/map/components/pin-list-overlay"
 import { SearchOverlay } from "@/features/map/components/search-overlay"
-import { DEFAULT_MAP_CENTER, MAP_LOCATION_WAIT_MS } from "@/features/map/constants/map"
+import {
+  DEFAULT_MAP_CENTER,
+  MAP_BOTTOM_INSET,
+  MAP_LOCATION_WAIT_MS,
+  MAP_TOP_INSET,
+} from "@/features/map/constants/map"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
@@ -156,6 +161,8 @@ function HomeMapScreen() {
           center={recenterTarget ?? position ?? DEFAULT_MAP_CENTER}
           recenterKey={recenterKey}
           animateCenter
+          topInset={MAP_TOP_INSET}
+          bottomInset={MAP_BOTTOM_INSET}
           className="absolute inset-0 z-0 size-full"
           onMapClick={(position) => setSelectedLocation({ lat: position.lat, lng: position.lng })}
           onBoundsChange={setBounds}
