@@ -33,6 +33,11 @@ const routes = {
   myNotifications: () => "/my/notifications/",
   myPermissions: () => "/my/permissions/",
   myInquiry: () => "/my/inquiry/",
+  adminHome: () => "/admin/",
+  adminLogin: () => "/admin/login/",
+  adminUsers: () => "/admin/users/",
+  adminReports: () => "/admin/reports/",
+  adminInquiries: () => "/admin/inquiries/",
   chatRoom: (chatId: number) =>
     queryRoute("/chats/room/", { chatId: requirePositiveInteger(chatId, "chatId") }),
   chatNotices: (chatId: number) =>
@@ -52,6 +57,14 @@ const routes = {
   questionDetail: (questionId: number) =>
     queryRoute("/questions/detail/", {
       questionId: requirePositiveInteger(questionId, "questionId"),
+    }),
+  adminUserDetail: (userId: number) =>
+    queryRoute("/admin/users/detail/", {
+      userId: requirePositiveInteger(userId, "userId"),
+    }),
+  adminReportDetail: (reportId: number) =>
+    queryRoute("/admin/reports/detail/", {
+      reportId: requirePositiveInteger(reportId, "reportId"),
     }),
 } as const
 

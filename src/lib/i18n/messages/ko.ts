@@ -1,7 +1,11 @@
 import type { LanguageCode } from "@/lib/i18n/languages"
 import type { CountryCode } from "@/lib/constants/countries"
 
+import { adminKo } from "./admin"
+import type { AdminMessages } from "./admin"
+
 export interface Messages {
+  admin: AdminMessages
   common: {
     or: string
     logout: string
@@ -438,6 +442,7 @@ export interface Messages {
 }
 
 export const ko: Messages = {
+  admin: adminKo,
   common: {
     or: "or",
     logout: "로그아웃",

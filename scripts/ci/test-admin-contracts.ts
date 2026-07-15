@@ -3,6 +3,7 @@ import test from "node:test"
 
 import { resolveAdminGateDecision } from "../../src/features/admin/auth/lib/admin-access.js"
 import { compactQuery } from "../../src/features/admin/shared/lib/admin-query.js"
+import { adminEn, adminKo } from "../../src/lib/i18n/messages/admin.js"
 import type {
   AdminGateDecision,
   AdminGatePolicy,
@@ -18,6 +19,7 @@ import type {
   UserStatus,
 } from "../../src/features/admin/shared/types/admin-types.js"
 import type { UserRole } from "../../src/features/session/types/user-role.js"
+import type { AdminMessages } from "../../src/lib/i18n/messages/admin.js"
 
 type Exact<Actual, Expected> =
   (<Type>() => Type extends Actual ? 1 : 2) extends
@@ -29,6 +31,165 @@ type Exact<Actual, Expected> =
     : false
 
 type Expect<Condition extends true> = Condition
+type MutuallyAssignable<Actual, Expected> = [Actual] extends [Expected]
+  ? [Expected] extends [Actual]
+    ? true
+    : false
+  : false
+
+type StringMessages<Keys extends string> = { [Key in Keys]: string }
+
+type ExpectedAdminMessages = {
+  common: StringMessages<
+    "loading" | "loadError" | "empty" | "retry" | "loadMore" | "all" | "save" | "cancel"
+  >
+  auth: StringMessages<
+    "title" | "description" | "desktopOnly" | "forbidden" | "switchAccount"
+  >
+  navigation: StringMessages<"dashboard" | "users" | "reports" | "inquiries">
+  dashboard: StringMessages<
+    | "title"
+    | "signup"
+    | "activeUsers"
+    | "suspendedUsers"
+    | "pins"
+    | "questions"
+    | "meetings"
+    | "answers"
+    | "acceptedRate"
+    | "messages"
+    | "reports"
+    | "aiReviewed"
+    | "confirmed"
+    | "dismissed"
+    | "sanctions"
+  > & { range: (from: string, to: string) => string }
+  users: StringMessages<
+    | "title"
+    | "search"
+    | "status"
+    | "email"
+    | "nickname"
+    | "role"
+    | "grade"
+    | "provider"
+    | "lastActiveAt"
+    | "birthDate"
+    | "gender"
+    | "nationality"
+    | "profileImage"
+    | "detail"
+    | "activity"
+    | "questions"
+    | "answers"
+    | "accepted"
+    | "reported"
+    | "reports"
+    | "reporter"
+    | "messageId"
+    | "sanctions"
+    | "sanctionType"
+    | "temporary"
+    | "permanent"
+    | "reason"
+    | "createdAt"
+    | "createdBy"
+    | "endsAt"
+    | "releasedAt"
+    | "releasedBy"
+    | "sanction"
+    | "activate"
+    | "activationConfirm"
+    | "activationScopeNotice"
+    | "invalidReason"
+    | "invalidEndsAt"
+  >
+  reports: StringMessages<
+    | "title"
+    | "status"
+    | "aiState"
+    | "decision"
+    | "target"
+    | "reporter"
+    | "reportedUser"
+    | "missingReportedUser"
+    | "reason"
+    | "createdAt"
+    | "detail"
+    | "evidence"
+    | "evidenceHash"
+    | "aiResult"
+    | "recommendation"
+    | "confidence"
+    | "reviewedAt"
+    | "modelVersion"
+    | "policyVersion"
+    | "policySetHash"
+    | "lastErrorCode"
+    | "resolution"
+    | "sanctions"
+    | "confirm"
+    | "dismiss"
+    | "confirmNotice"
+    | "resolvedConflict"
+  >
+  inquiries: StringMessages<
+    | "title"
+    | "userEmail"
+    | "missingUser"
+    | "createdAt"
+    | "status"
+    | "content"
+    | "answer"
+    | "answeredBy"
+    | "answeredAt"
+    | "answerPlaceholder"
+    | "answerSubmit"
+    | "invalidAnswer"
+    | "answeredConflict"
+  >
+}
+
+const adminMessageTypeContracts: [
+  Expect<MutuallyAssignable<AdminMessages, ExpectedAdminMessages>>,
+  Expect<Exact<keyof AdminMessages, keyof ExpectedAdminMessages>>,
+  Expect<Exact<keyof AdminMessages["common"], keyof ExpectedAdminMessages["common"]>>,
+  Expect<Exact<keyof AdminMessages["auth"], keyof ExpectedAdminMessages["auth"]>>,
+  Expect<Exact<keyof AdminMessages["navigation"], keyof ExpectedAdminMessages["navigation"]>>,
+  Expect<Exact<keyof AdminMessages["dashboard"], keyof ExpectedAdminMessages["dashboard"]>>,
+  Expect<Exact<keyof AdminMessages["users"], keyof ExpectedAdminMessages["users"]>>,
+  Expect<Exact<keyof AdminMessages["reports"], keyof ExpectedAdminMessages["reports"]>>,
+  Expect<Exact<keyof AdminMessages["inquiries"], keyof ExpectedAdminMessages["inquiries"]>>,
+  Expect<Exact<typeof adminKo, AdminMessages>>,
+  Expect<Exact<typeof adminEn, AdminMessages>>,
+] = [true, true, true, true, true, true, true, true, true, true, true]
+
+const expectedAdminMessageKeys = {
+  common: ["all", "cancel", "empty", "loadError", "loadMore", "loading", "retry", "save"],
+  auth: ["description", "desktopOnly", "forbidden", "switchAccount", "title"],
+  navigation: ["dashboard", "inquiries", "reports", "users"],
+  dashboard: [
+    "acceptedRate", "activeUsers", "aiReviewed", "answers", "confirmed", "dismissed", "meetings",
+    "messages", "pins", "questions", "range", "reports", "sanctions", "signup", "suspendedUsers", "title",
+  ],
+  users: [
+    "accepted", "activate", "activationConfirm", "activationScopeNotice", "activity", "answers", "birthDate",
+    "createdAt", "createdBy", "detail", "email", "endsAt", "gender", "grade", "invalidEndsAt", "invalidReason",
+    "lastActiveAt", "messageId", "nationality", "nickname", "permanent", "profileImage", "provider", "questions",
+    "reason", "releasedAt", "releasedBy", "reported", "reporter", "reports", "role", "sanction", "sanctions",
+    "sanctionType", "search", "status", "temporary", "title",
+  ],
+  reports: [
+    "aiResult", "aiState", "confidence", "confirm", "confirmNotice", "createdAt", "decision", "detail", "dismiss",
+    "evidence", "evidenceHash", "lastErrorCode", "missingReportedUser", "modelVersion", "policySetHash", "policyVersion",
+    "reason", "recommendation", "reportedUser", "reporter", "resolution", "resolvedConflict", "reviewedAt", "sanctions",
+    "status", "target", "title",
+  ],
+  inquiries: [
+    "answer", "answerPlaceholder", "answerSubmit", "answeredAt", "answeredBy", "answeredConflict", "content",
+    "createdAt", "invalidAnswer", "missingUser", "status", "title", "userEmail",
+  ],
+} as const
 
 const literalUnionContracts: [
   Expect<Exact<UserRole, "user" | "admin">>,
@@ -89,6 +250,23 @@ test("the admin login route resolves every canonical auth state", () => {
 
 test("admin literal unions match the backend contract exactly", () => {
   assert.deepEqual(literalUnionContracts, [true, true, true, true, true, true, true, true, true])
+})
+
+test("admin message types and both translations expose the exact agreed keys", () => {
+  assert.deepEqual(adminMessageTypeContracts, [
+    true, true, true, true, true, true, true, true, true, true, true,
+  ])
+
+  for (const [group, expectedKeys] of Object.entries(expectedAdminMessageKeys)) {
+    const sortedExpectedKeys = [...expectedKeys].sort()
+    assert.deepEqual(Object.keys(adminKo[group as keyof AdminMessages]).sort(), sortedExpectedKeys)
+    assert.deepEqual(Object.keys(adminEn[group as keyof AdminMessages]).sort(), sortedExpectedKeys)
+  }
+})
+
+test("admin range messages interpolate both backend dates", () => {
+  assert.match(adminKo.dashboard.range("2026-06-15", "2026-07-15"), /2026-06-15.*2026-07-15/)
+  assert.match(adminEn.dashboard.range("2026-06-15", "2026-07-15"), /2026-06-15.*2026-07-15/)
 })
 
 test("admin gate and shared response contracts expose their agreed shapes", () => {

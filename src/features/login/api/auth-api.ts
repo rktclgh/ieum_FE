@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client"
+import type { UserRole } from "@/features/session/types/user-role"
 
 interface LoginRequest {
   email: string
@@ -7,7 +8,7 @@ interface LoginRequest {
 
 interface LoginResponse {
   userId: number
-  role: string
+  role: UserRole
   passwordResetRequired: boolean
 }
 

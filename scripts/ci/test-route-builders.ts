@@ -41,6 +41,11 @@ test("fixed route builders preserve the static export path contract", () => {
       myNotifications: routes.myNotifications(),
       myPermissions: routes.myPermissions(),
       myInquiry: routes.myInquiry(),
+      adminHome: routes.adminHome(),
+      adminLogin: routes.adminLogin(),
+      adminUsers: routes.adminUsers(),
+      adminReports: routes.adminReports(),
+      adminInquiries: routes.adminInquiries(),
     },
     {
       home: "/",
@@ -56,11 +61,16 @@ test("fixed route builders preserve the static export path contract", () => {
       myNotifications: "/my/notifications/",
       myPermissions: "/my/permissions/",
       myInquiry: "/my/inquiry/",
+      adminHome: "/admin/",
+      adminLogin: "/admin/login/",
+      adminUsers: "/admin/users/",
+      adminReports: "/admin/reports/",
+      adminInquiries: "/admin/inquiries/",
     }
   )
 })
 
-test("detail route builders produce the six exact canonical query URLs", () => {
+test("detail route builders produce the exact canonical query URLs", () => {
   assert.deepEqual(
     {
       chatRoom: routes.chatRoom(11),
@@ -69,6 +79,8 @@ test("detail route builders produce the six exact canonical query URLs", () => {
       chatSchedule: routes.chatSchedule(11),
       meetupDetail: routes.meetupDetail(37),
       questionDetail: routes.questionDetail(41),
+      adminUserDetail: routes.adminUserDetail(7),
+      adminReportDetail: routes.adminReportDetail(9),
     },
     {
       chatRoom: "/chats/room/?chatId=11",
@@ -77,6 +89,8 @@ test("detail route builders produce the six exact canonical query URLs", () => {
       chatSchedule: "/chats/schedule/?chatId=11",
       meetupDetail: "/meetups/detail/?meetingId=37",
       questionDetail: "/questions/detail/?questionId=41",
+      adminUserDetail: "/admin/users/detail/?userId=7",
+      adminReportDetail: "/admin/reports/detail/?reportId=9",
     }
   )
 })
@@ -92,6 +106,8 @@ test("detail route builders reject invalid numeric input", () => {
     assert.throws(() => routes.questionDetail(value), RangeError)
     assert.throws(() => routes.chatReport(value, 29), RangeError)
     assert.throws(() => routes.chatReport(11, value), RangeError)
+    assert.throws(() => routes.adminUserDetail(value), RangeError)
+    assert.throws(() => routes.adminReportDetail(value), RangeError)
   }
 })
 
