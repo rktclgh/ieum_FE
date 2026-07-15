@@ -237,7 +237,7 @@ export interface Messages {
       QUESTION_NOT_FOUND: string
       ANSWER_NOT_FOUND: string
       SELF_ACCEPT_NOT_ALLOWED: string
-      QUESTION_ALREADY_RESOLVED: string
+      ANSWER_SELECTION_FINALIZED: string
       VALIDATION_FAILED: string
       ROOM_CREATE_FAILED: string
       REPORT_FAILED: string
@@ -673,7 +673,7 @@ export const ko: Messages = {
       QUESTION_NOT_FOUND: "질문을 찾을 수 없어요.",
       ANSWER_NOT_FOUND: "답변을 찾을 수 없어요.",
       SELF_ACCEPT_NOT_ALLOWED: "내 답변은 채택할 수 없어요.",
-      QUESTION_ALREADY_RESOLVED: "이미 채택된 질문이에요.",
+      ANSWER_SELECTION_FINALIZED: "이미 채택된 질문이에요.",
       VALIDATION_FAILED: "입력값을 확인해 주세요.",
       ROOM_CREATE_FAILED: "채팅을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.",
       REPORT_FAILED: "신고에 실패했어요. 잠시 후 다시 시도해 주세요.",

@@ -190,6 +190,8 @@ function FriendListPageContent() {
                       key={request.userId}
                       name={request.nickname}
                       avatarSrc={request.avatarSrc}
+                      flagSrc={request.flagSrc}
+                      nation={nationOf(request)}
                       variant="request"
                       onAccept={() => handleAccept(request)}
                       onReject={() => setConfirmAction({ type: "reject", target: request })}
@@ -364,6 +366,7 @@ function FriendRequestItemWithLongPress({
         name={friend.nickname}
         avatarSrc={friend.avatarSrc}
         highlightQuery={highlightQuery}
+        flagSrc={friend.flagSrc}
         nation={nation}
         variant="friend"
         active={menuOpen}

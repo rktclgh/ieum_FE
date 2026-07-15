@@ -6,9 +6,9 @@ import { createQuestionRoom } from "@/features/chat/api/chat-api"
 import type { QuestionRoomRequest } from "@/features/chat/api/chat-types"
 import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
 import {
-  acceptAnswer,
   createQuestion,
   deleteQuestion,
+  finalizeAcceptedAnswers,
   postAnswer,
   updateQuestion,
 } from "@/features/question/api/question-api"
@@ -60,14 +60,16 @@ function usePostAnswer(questionId: number) {
   })
 }
 
-// 답변 채택 성공 시 질문이 resolved 상태가 되므로 상세를 갱신한다.
+// 답변 채택(단일·1회) 성공 시 질문이 resolved 상태가 되므로 상세를 갱신한다.
+// resolved 질문은 BE가 지도 핀 조회에서 제외하므로 핀 쿼리도 무효화해 재진입 시 핀이 사라지게 한다.
 function useAcceptAnswer(questionId: number) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (answerId: number) => acceptAnswer(answerId),
+    mutationFn: (answerId: number) => finalizeAcceptedAnswers(questionId, [answerId]),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: questionKeys.detail(questionId) })
       queryClient.invalidateQueries({ queryKey: questionKeys.myList() })
+      queryClient.invalidateQueries({ queryKey: ["pins"] })
     },
   })
 }

@@ -236,7 +236,7 @@ export const th: Messages = {
       QUESTION_NOT_FOUND: "ไม่พบคำถาม",
       ANSWER_NOT_FOUND: "ไม่พบคำตอบ",
       SELF_ACCEPT_NOT_ALLOWED: "ไม่สามารถเลือกคำตอบของตนเองได้",
-      QUESTION_ALREADY_RESOLVED: "คำถามนี้ถูกเลือกไปแล้ว",
+      ANSWER_SELECTION_FINALIZED: "คำถามนี้ถูกเลือกไปแล้ว",
       VALIDATION_FAILED: "กรุณาตรวจสอบข้อมูลที่กรอก",
       ROOM_CREATE_FAILED: "ไม่สามารถเริ่มแชทได้ กรุณาลองใหม่อีกครั้งในภายหลัง",
       REPORT_FAILED: "ส่งรายงานไม่สำเร็จ กรุณาลองใหม่อีกครั้งในภายหลัง",

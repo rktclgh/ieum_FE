@@ -177,6 +177,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                         answer={a}
                         isMine={a.authorUserId === me.data?.userId}
                         isReported={false}
+                        canAccept={!question.isResolved}
                         onAccept={() => setPendingAcceptId(a.answerId)}
                         onStartChat={() => handleStartChat(a.authorUserId)}
                         onLongPress={(rect) => setActiveAnswer({ id: a.answerId, rect, view: a })}
@@ -208,7 +209,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
           <div className="flex-1" />
         )}
 
-        {question && !isAuthor ? (
+        {question && !isAuthor && !question.isResolved ? (
           <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm bg-white px-4 pt-2 pb-6">
             <div className="flex w-full items-center justify-between gap-2 rounded-full border border-gray-50 bg-gray-50/95 py-2 pr-2 pl-4">
               <input
@@ -260,6 +261,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
             answer={activeAnswer.view}
             isMine={false}
             isReported={false}
+            canAccept={false}
             onStartChat={() => {}}
             onAccept={() => {}}
             onLongPress={() => {}}
