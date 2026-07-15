@@ -32,6 +32,18 @@ type Expect<Condition extends true> = Condition
 
 const literalUnionContracts: [
   Expect<Exact<UserRole, "user" | "admin">>,
+  Expect<Exact<AdminGatePolicy, "protected" | "login">>,
+  Expect<
+    Exact<
+      AdminGateDecision,
+      | "loading"
+      | "backend-down"
+      | "redirect-login"
+      | "redirect-home"
+      | "forbidden"
+      | "allow"
+    >
+  >,
   Expect<Exact<UserStatus, "active" | "suspended">>,
   Expect<Exact<SanctionType, "temporary" | "permanent">>,
   Expect<Exact<ReportReason, "spam" | "ad" | "abuse" | "obscene" | "harassment" | "etc">>,
@@ -43,7 +55,7 @@ const literalUnionContracts: [
     >
   >,
   Expect<Exact<AdminReportDecision, "suspend" | "hold" | "normal">>,
-] = [true, true, true, true, true, true, true]
+] = [true, true, true, true, true, true, true, true, true]
 
 const protectedCases = [
   [{ kind: "loading" }, "loading"],
@@ -76,7 +88,7 @@ test("the admin login route resolves every canonical auth state", () => {
 })
 
 test("admin literal unions match the backend contract exactly", () => {
-  assert.deepEqual(literalUnionContracts, [true, true, true, true, true, true, true])
+  assert.deepEqual(literalUnionContracts, [true, true, true, true, true, true, true, true, true])
 })
 
 test("admin gate and shared response contracts expose their agreed shapes", () => {
