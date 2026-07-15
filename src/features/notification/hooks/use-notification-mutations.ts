@@ -1,0 +1,155 @@
+"use client"
+
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+  type QueryClient,
+} from "@tanstack/react-query"
+
+import {
+  deleteNotification,
+  readAllNotifications,
+  readNotification,
+} from "@/features/notification/api/notification-api"
+import type { NotificationsPage } from "@/features/notification/api/notification-types"
+import { notificationKeys } from "@/features/notification/hooks/use-notification-queries"
+
+type ListData = InfiniteData<NotificationsPage, string | null>
+
+// 미읽음 수는 목록 각 페이지의 unreadCount(집계값)와 별도 배지 쿼리 양쪽에 담긴다.
+// 낙관적 업데이트가 "새로고침해야 반영"되는 문제(이슈 #125)를 막도록 둘 다 즉시 갱신한다.
+function setUnreadCount(qc: QueryClient, updater: (count: number) => number) {
+  qc.setQueryData<ListData>(notificationKeys.list(), (old) =>
+    old
+      ? {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            unreadCount: Math.max(0, updater(page.unreadCount)),
+          })),
+        }
+      : old
+  )
+  qc.setQueryData<NotificationsPage>(notificationKeys.unreadCount(), (old) =>
+    old ? { ...old, unreadCount: Math.max(0, updater(old.unreadCount)) } : old
+  )
+}
+
+function snapshot(qc: QueryClient) {
+  return {
+    list: qc.getQueryData<ListData>(notificationKeys.list()),
+    count: qc.getQueryData<NotificationsPage>(notificationKeys.unreadCount()),
+  }
+}
+
+function restore(qc: QueryClient, ctx?: ReturnType<typeof snapshot>) {
+  if (!ctx) return
+  qc.setQueryData(notificationKeys.list(), ctx.list)
+  qc.setQueryData(notificationKeys.unreadCount(), ctx.count)
+}
+
+// 단건 읽음 — 목록에서 해당 알림을 읽음으로 표시하고, 원래 미읽음이었다면 배지를 1 감소.
+function useReadNotification() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: readNotification,
+    onMutate: async (id: number) => {
+      await qc.cancelQueries({ queryKey: notificationKeys.all })
+      const ctx = snapshot(qc)
+
+      const wasUnread = ctx.list?.pages.some((page) =>
+        page.items.some((item) => item.notificationId === id && !item.isRead)
+      )
+
+      qc.setQueryData<ListData>(notificationKeys.list(), (old) =>
+        old
+          ? {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                items: page.items.map((item) =>
+                  item.notificationId === id ? { ...item, isRead: true } : item
+                ),
+              })),
+            }
+          : old
+      )
+      if (wasUnread) setUnreadCount(qc, (count) => count - 1)
+
+      return ctx
+    },
+    onError: (_error, _id, ctx) => restore(qc, ctx),
+    // 낙관적 업데이트가 목록을 결정적으로 갱신하므로 목록 전체(모든 페이지) 재조회는
+    // 불필요. 서버 권위값인 미읽음 배지만 무효화한다.
+    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.unreadCount() }),
+  })
+}
+
+// 전체 읽음 — 모든 항목을 읽음으로, 배지를 0 으로.
+function useReadAllNotifications() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: readAllNotifications,
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: notificationKeys.all })
+      const ctx = snapshot(qc)
+
+      qc.setQueryData<ListData>(notificationKeys.list(), (old) =>
+        old
+          ? {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                unreadCount: 0,
+                items: page.items.map((item) => ({ ...item, isRead: true })),
+              })),
+            }
+          : old
+      )
+      qc.setQueryData<NotificationsPage>(notificationKeys.unreadCount(), (old) =>
+        old ? { ...old, unreadCount: 0 } : old
+      )
+
+      return ctx
+    },
+    onError: (_error, _vars, ctx) => restore(qc, ctx),
+    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.all }),
+  })
+}
+
+// 단건 삭제 — 목록에서 제거하고, 읽지 않은 알림이었다면 배지를 1 감소.
+function useDeleteNotification() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: deleteNotification,
+    onMutate: async (id: number) => {
+      await qc.cancelQueries({ queryKey: notificationKeys.all })
+      const ctx = snapshot(qc)
+
+      const wasUnread = ctx.list?.pages.some((page) =>
+        page.items.some((item) => item.notificationId === id && !item.isRead)
+      )
+
+      qc.setQueryData<ListData>(notificationKeys.list(), (old) =>
+        old
+          ? {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                items: page.items.filter((item) => item.notificationId !== id),
+              })),
+            }
+          : old
+      )
+      if (wasUnread) setUnreadCount(qc, (count) => count - 1)
+
+      return ctx
+    },
+    onError: (_error, _id, ctx) => restore(qc, ctx),
+    // 낙관적 업데이트가 목록에서 항목을 이미 제거했으므로, 서버 권위값인 배지만 무효화한다.
+    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.unreadCount() }),
+  })
+}
+
+export { useReadNotification, useReadAllNotifications, useDeleteNotification }
