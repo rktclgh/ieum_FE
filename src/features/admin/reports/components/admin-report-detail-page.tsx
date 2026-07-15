@@ -10,6 +10,16 @@ import {
   useConfirmAdminReport,
   useDismissAdminReport,
 } from "@/features/admin/reports/hooks/use-admin-reports"
+import {
+  initialAdminReportDecisionConvergenceState,
+  isAdminReportDecisionConvergenceLocked,
+  reduceAdminReportDecisionConvergence,
+  shouldShowAdminReportResolvedConflict,
+} from "@/features/admin/reports/lib/admin-report-decision-convergence"
+import type {
+  AdminReportDecisionConvergenceReason,
+  AdminReportDecisionConvergenceState,
+} from "@/features/admin/reports/lib/admin-report-decision-convergence"
 import { getApiErrorCode, getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
@@ -43,22 +53,27 @@ function isReportDecisionConflict(error: unknown) {
   )
 }
 
+type DecisionLatchState = "idle" | "mutation" | "refreshing" | "retry"
+
 function AdminReportDetailPage({ reportId }: { reportId: number }) {
   const { language, messages } = useTranslation()
   const detailQuery = useAdminReportDetail(reportId)
   const reportedUserId = detailQuery.data?.reportedUser?.userId ?? null
   const confirmMutation = useConfirmAdminReport(reportId)
   const dismissMutation = useDismissAdminReport(reportId, reportedUserId)
-  const decisionLatch = React.useRef(false)
+  const decisionLatch = React.useRef<DecisionLatchState>("idle")
   const [decisionBusyState, setDecisionBusyState] = React.useState(false)
   const [pendingDecision, setPendingDecision] =
     React.useState<"confirm" | "dismiss" | null>(null)
-  const [resolvedConflict, setResolvedConflict] = React.useState(false)
+  const [convergenceState, setConvergenceState] =
+    React.useState<AdminReportDecisionConvergenceState>(
+      initialAdminReportDecisionConvergenceState,
+    )
   const decisionBusy =
     decisionBusyState ||
     confirmMutation.isPending ||
     dismissMutation.isPending ||
-    (resolvedConflict && detailQuery.isFetching)
+    isAdminReportDecisionConvergenceLocked(convergenceState)
   const dateFormatter = new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -79,29 +94,103 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
   const openDecisionDialog = (decision: "confirm" | "dismiss") => {
     confirmMutation.reset()
     dismissMutation.reset()
-    setResolvedConflict(false)
+    setConvergenceState(initialAdminReportDecisionConvergenceState)
     setPendingDecision(decision)
   }
 
-  const handleDecisionConfirm = () => {
-    if (!pendingDecision || decisionLatch.current) return
+  const releaseDecisionLock = () => {
+    decisionLatch.current = "idle"
+    setDecisionBusyState(false)
+    setPendingDecision(null)
+  }
 
-    decisionLatch.current = true
+  const refreshDecisionConvergence = async (
+    refreshingState: Extract<
+      AdminReportDecisionConvergenceState,
+      { kind: "refreshing" }
+    >,
+  ) => {
+    let nextState: AdminReportDecisionConvergenceState
+
+    try {
+      const refreshResult = await detailQuery.refetch({ cancelRefetch: true })
+
+      if (refreshResult.isError || refreshResult.data === undefined) {
+        nextState = reduceAdminReportDecisionConvergence(refreshingState, {
+          type: "refetch-failed",
+        })
+      } else {
+        nextState = reduceAdminReportDecisionConvergence(refreshingState, {
+          type: "refetch-succeeded",
+          reportStatus: refreshResult.data.status,
+        })
+      }
+    } catch {
+      nextState = reduceAdminReportDecisionConvergence(refreshingState, {
+        type: "refetch-failed",
+      })
+    }
+
+    setConvergenceState(nextState)
+    if (isAdminReportDecisionConvergenceLocked(nextState)) {
+      decisionLatch.current = "retry"
+      return
+    }
+
+    releaseDecisionLock()
+  }
+
+  const beginDecisionConvergence = (
+    reason: AdminReportDecisionConvergenceReason,
+  ) => {
+    const refreshingState = reduceAdminReportDecisionConvergence(
+      initialAdminReportDecisionConvergenceState,
+      { type: "begin", reason },
+    )
+    if (refreshingState.kind !== "refreshing") return
+
+    decisionLatch.current = "refreshing"
+    setConvergenceState(refreshingState)
+    void refreshDecisionConvergence(refreshingState)
+  }
+
+  const retryDecisionConvergence = () => {
+    if (decisionLatch.current !== "retry" || convergenceState.kind !== "retry") return
+
+    const refreshingState = reduceAdminReportDecisionConvergence(
+      convergenceState,
+      { type: "retry" },
+    )
+    if (refreshingState.kind !== "refreshing") return
+
+    decisionLatch.current = "refreshing"
+    setConvergenceState(refreshingState)
+    void refreshDecisionConvergence(refreshingState)
+  }
+
+  const handleDecisionConfirm = () => {
+    if (!pendingDecision || decisionLatch.current !== "idle") return
+
+    decisionLatch.current = "mutation"
     setDecisionBusyState(true)
     const mutation =
       pendingDecision === "confirm" ? confirmMutation : dismissMutation
 
     mutation.mutate(undefined, {
-      onError: (error) => {
-        if (isReportDecisionConflict(error)) {
-          setResolvedConflict(true)
-          void detailQuery.refetch()
-        }
-      },
-      onSettled: () => {
-        decisionLatch.current = false
-        setDecisionBusyState(false)
+      onSettled: (_data, error) => {
         setPendingDecision(null)
+        const reason =
+          error === null
+            ? "success"
+            : isReportDecisionConflict(error)
+              ? "conflict"
+              : null
+        if (reason !== null) {
+          beginDecisionConvergence(reason)
+          return
+        }
+
+        releaseDecisionLock()
       },
     })
   }
@@ -143,14 +232,15 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
         <p className="text-body-regular-14 text-gray-600">{report.status}</p>
       </header>
 
-      {detailQuery.isError && (
-        <AdminAsyncState
-          kind="error"
-          onRetry={() => void detailQuery.refetch()}
-          retryDisabled={detailQuery.isFetching}
-          isRetrying={detailQuery.isFetching}
-        />
-      )}
+      {detailQuery.isError &&
+        !isAdminReportDecisionConvergenceLocked(convergenceState) && (
+          <AdminAsyncState
+            kind="error"
+            onRetry={() => void detailQuery.refetch()}
+            retryDisabled={detailQuery.isFetching}
+            isRetrying={detailQuery.isFetching}
+          />
+        )}
 
       <section aria-labelledby="admin-report-summary-title" className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
         <h2 id="admin-report-summary-title" className="text-title-semibold-18 text-gray-900">
@@ -260,15 +350,15 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
         ) : (
           <dl className="grid gap-3 md:grid-cols-3">
             <DetailField
-              label={messages.admin.reports.decision}
+              label={messages.admin.reports.resolutionDecision}
               value={resolution.decision}
             />
             <DetailField
-              label={messages.admin.reports.reporter}
+              label={messages.admin.reports.resolvedBy}
               value={`${resolution.resolvedBy.nickname} #${resolution.resolvedBy.userId}`}
             />
             <DetailField
-              label={messages.admin.reports.createdAt}
+              label={messages.admin.reports.resolvedAt}
               value={formatDateTime(resolution.resolvedAt, dateFormatter)}
             />
           </dl>
@@ -288,15 +378,15 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
               <thead className="bg-gray-50 text-body-medium-14 text-gray-600">
                 <tr>
                   <th scope="col" className="px-4 py-3">ID</th>
-                  <th scope="col" className="px-4 py-3">source</th>
-                  <th scope="col" className="px-4 py-3">type</th>
-                  <th scope="col" className="px-4 py-3">{messages.admin.reports.reason}</th>
-                  <th scope="col" className="px-4 py-3">admin</th>
-                  <th scope="col" className="px-4 py-3">startsAt</th>
-                  <th scope="col" className="px-4 py-3">endsAt</th>
-                  <th scope="col" className="px-4 py-3">releasedAt</th>
-                  <th scope="col" className="px-4 py-3">releasedBy</th>
-                  <th scope="col" className="px-4 py-3">{messages.admin.reports.createdAt}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionSource}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionType}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionReason}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionAdmin}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionStartsAt}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionEndsAt}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionReleasedAt}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionReleasedBy}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.reports.sanctionCreatedAt}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-body-regular-14 text-gray-900">
@@ -338,7 +428,14 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
         )}
       </section>
 
-      {resolvedConflict && (
+      {convergenceState.kind === "retry" && (
+        <AdminAsyncState
+          kind="error"
+          message={messages.admin.reports.convergenceError}
+          onRetry={retryDecisionConvergence}
+        />
+      )}
+      {shouldShowAdminReportResolvedConflict(convergenceState) && (
         <p role="status" className="rounded-xl bg-yellow-50 p-4 text-body-regular-14 text-gray-900">
           {messages.admin.reports.resolvedConflict}
         </p>
@@ -391,7 +488,7 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
       <ConfirmDialog
         open={pendingDecision !== null}
         onOpenChange={(open) => {
-          if (!decisionBusy && !decisionLatch.current && !open) setPendingDecision(null)
+          if (!decisionBusy && decisionLatch.current === "idle" && !open) setPendingDecision(null)
         }}
         title={
           pendingDecision === "confirm"

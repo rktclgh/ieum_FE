@@ -433,7 +433,7 @@ function assertAdminReportHooks(source) {
   )
   assert.match(
     decisionInvalidation,
-    /invalidateQueries\(\{ queryKey: adminReportKeys\.detail\(reportId\), exact: true,? \}\)/,
+    /invalidateQueries\(\{ queryKey: adminReportKeys\.detail\(reportId\), exact: true, refetchType: "none",? \}\)/,
   )
   assert.match(
     decisionInvalidation,
@@ -511,8 +511,62 @@ function assertAdminReportDetailRemountsByReportId(source) {
   )
 }
 
-function assertAdminReportDecisionLatch(source) {
+function assertAdminReportDecisionConvergenceState(source) {
   const compact = compactSource(source)
+
+  assert.match(
+    compact,
+    /type AdminReportDecisionConvergenceReason = "success" \| "conflict"/,
+  )
+  assert.match(
+    compact,
+    /type AdminReportDecisionConvergenceState = \| \{ kind: "idle" \} \| \{ kind: "refreshing"; reason: AdminReportDecisionConvergenceReason \} \| \{ kind: "retry"; reason: AdminReportDecisionConvergenceReason \} \| \{ kind: "conflict-refreshed" \}/,
+  )
+  assert.match(
+    compact,
+    /if \(event\.type === "refetch-failed"\) \{ return \{ kind: "retry", reason: state\.reason \} \}/,
+  )
+  assert.match(
+    compact,
+    /state\.reason === "conflict"[\s\S]*return \{ kind: "conflict-refreshed" \}/,
+  )
+  assert.match(
+    compact,
+    /if \( ?event\.reportStatus === "confirmed" \|\| event\.reportStatus === "dismissed" ?\) \{ return initialAdminReportDecisionConvergenceState \}/,
+  )
+  assert.match(
+    compact,
+    /return state\.kind === "refreshing" \|\| state\.kind === "retry"/,
+  )
+  assert.match(
+    compact,
+    /return state\.kind === "conflict-refreshed"/,
+  )
+}
+
+function assertAdminReportDecisionConvergence(source) {
+  const compact = compactSource(source)
+  const refresh = compactSource(
+    boundedSource(
+      source,
+      "const refreshDecisionConvergence = async (",
+      "const beginDecisionConvergence = (",
+    ),
+  )
+  const begin = compactSource(
+    boundedSource(
+      source,
+      "const beginDecisionConvergence = (",
+      "const retryDecisionConvergence = () =>",
+    ),
+  )
+  const retry = compactSource(
+    boundedSource(
+      source,
+      "const retryDecisionConvergence = () =>",
+      "const handleDecisionConfirm = () =>",
+    ),
+  )
   const handler = compactSource(
     boundedSource(
       source,
@@ -521,51 +575,140 @@ function assertAdminReportDecisionLatch(source) {
     ),
   )
 
-  assert.match(source, /const decisionLatch = React\.useRef\(false\)/)
+  assert.match(
+    source,
+    /type DecisionLatchState = "idle" \| "mutation" \| "refreshing" \| "retry"/,
+  )
+  assert.match(
+    source,
+    /const decisionLatch = React\.useRef<DecisionLatchState>\("idle"\)/,
+  )
+  assert.equal((source.match(/React\.useRef/g) ?? []).length, 1)
   assert.match(
     source,
     /const \[decisionBusyState, setDecisionBusyState\] = React\.useState\(false\)/,
   )
   assert.match(
     compact,
-    /const decisionBusy = decisionBusyState \|\| confirmMutation\.isPending \|\| dismissMutation\.isPending \|\| \(resolvedConflict && detailQuery\.isFetching\)/,
+    /const decisionBusy = decisionBusyState \|\| confirmMutation\.isPending \|\| dismissMutation\.isPending \|\| isAdminReportDecisionConvergenceLocked\(convergenceState\)/,
   )
+  assert.equal(
+    (refresh.match(/detailQuery\.refetch\(\{ cancelRefetch: true \}\)/g) ?? [])
+      .length,
+    1,
+  )
+  assert.match(
+    refresh,
+    /refreshResult\.isError \|\| refreshResult\.data === undefined/,
+  )
+  assert.ok((refresh.match(/type: "refetch-failed"/g) ?? []).length >= 2)
+  assert.match(refresh, /type: "refetch-succeeded"/)
+  assert.match(refresh, /reportStatus: refreshResult\.data\.status/)
+  assertOrdered(refresh, [
+    "setConvergenceState(nextState)",
+    "if (isAdminReportDecisionConvergenceLocked(nextState)) {",
+    'decisionLatch.current = "retry"',
+    "return",
+    "releaseDecisionLock()",
+  ])
+  assert.match(begin, /type: "begin", reason/)
+  assert.match(begin, /decisionLatch\.current = "refreshing"/)
+  assert.match(begin, /void refreshDecisionConvergence\(refreshingState\)/)
+  assert.match(
+    retry,
+    /if \(decisionLatch\.current !== "retry" \|\| convergenceState\.kind !== "retry"\) return/,
+  )
+  assert.match(retry, /type: "retry"/)
+  assert.match(retry, /decisionLatch\.current = "refreshing"/)
+  assert.match(retry, /void refreshDecisionConvergence\(refreshingState\)/)
   assertOrdered(handler, [
-    "if (!pendingDecision || decisionLatch.current) return",
-    "decisionLatch.current = true",
+    'if (!pendingDecision || decisionLatch.current !== "idle") return',
+    'decisionLatch.current = "mutation"',
     "setDecisionBusyState(true)",
     'pendingDecision === "confirm" ? confirmMutation : dismissMutation',
     "mutation.mutate(undefined, {",
-    "onSettled: () => {",
-    "decisionLatch.current = false",
-    "setDecisionBusyState(false)",
+    "onSettled: (_data, error) => {",
+    "setPendingDecision(null)",
+    "const reason =",
   ])
+  assert.match(
+    handler,
+    /onSettled: \(_data, error\) => \{ setPendingDecision\(null\) const reason = error === null \? "success" : isReportDecisionConflict\(error\) \? "conflict" : null if \(reason !== null\) \{ beginDecisionConvergence\(reason\) return \} releaseDecisionLock\(\) \}/,
+  )
+  assert.doesNotMatch(handler, /onError:/)
+  assert.doesNotMatch(handler, /detailQuery\.refetch/)
   assert.equal((handler.match(/mutation\.mutate\(/g) ?? []).length, 1)
   assert.ok((source.match(/disabled=\{decisionBusy\}/g) ?? []).length >= 2)
   assert.match(source, /confirmDisabled=\{decisionBusy\}/)
   assert.match(
+    source,
+    /convergenceState\.kind === "retry" && \(/,
+  )
+  assert.equal(
+    (source.match(/convergenceState\.kind === "retry" && \(/g) ?? []).length,
+    1,
+  )
+  assert.match(source, /message=\{messages\.admin\.reports\.convergenceError\}/)
+  assert.match(source, /onRetry=\{retryDecisionConvergence\}/)
+  assert.equal(
+    (source.match(/onRetry=\{retryDecisionConvergence\}/g) ?? []).length,
+    1,
+  )
+  assert.match(
+    source,
+    /\{detailQuery\.isError &&\s*!isAdminReportDecisionConvergenceLocked\(convergenceState\) && \(/,
+  )
+  assert.match(
+    source,
+    /shouldShowAdminReportResolvedConflict\(convergenceState\) && \(/,
+  )
+  assert.match(
     compact,
-    /if \(!decisionBusy && !decisionLatch\.current && !open\) setPendingDecision\(null\)/,
+    /if \(!decisionBusy && decisionLatch\.current === "idle" && !open\) setPendingDecision\(null\)/,
   )
   assert.equal((source.match(/<ConfirmDialog/g) ?? []).length, 1)
 }
 
-function assertAdminReportConflictConvergence(source) {
-  const compact = compactSource(source)
+function assertAdminReportSemanticLabels(source) {
+  const resolution = compactSource(
+    boundedSource(
+      source,
+      '<section aria-labelledby="admin-report-resolution-title"',
+      '<section aria-labelledby="admin-report-sanctions-title"',
+    ),
+  )
+  const sanctionHeader = compactSource(
+    boundedSource(source, '<thead className="bg-gray-50', "</thead>"),
+  )
 
-  assert.match(source, /getApiErrorCode\(error\)/)
-  assert.match(source, /code === "REPORT_ALREADY_RESOLVED"/)
-  assert.match(source, /code === "REPORT_CONCURRENTLY_CHANGED"/)
-  assert.match(
-    compact,
-    /if \(isReportDecisionConflict\(error\)\) \{ setResolvedConflict\(true\) void detailQuery\.refetch\(\) \}/,
+  assertOrdered(resolution, [
+    "label={messages.admin.reports.resolutionDecision}",
+    "value={resolution.decision}",
+    "label={messages.admin.reports.resolvedBy}",
+    "resolution.resolvedBy.nickname",
+    "resolution.resolvedBy.userId",
+    "label={messages.admin.reports.resolvedAt}",
+    "resolution.resolvedAt",
+  ])
+  assert.doesNotMatch(
+    resolution,
+    /label=\{messages\.admin\.reports\.(?:decision|reporter|createdAt)\}/,
   )
-  assert.match(source, /messages\.admin\.reports\.resolvedConflict/)
-  assert.match(
-    source,
-    /const canDecide =\s*report\.status === "pending" \|\| report\.status === "ai_reviewed"/,
+  assertOrdered(sanctionHeader, [
+    "messages.admin.reports.sanctionSource",
+    "messages.admin.reports.sanctionType",
+    "messages.admin.reports.sanctionReason",
+    "messages.admin.reports.sanctionAdmin",
+    "messages.admin.reports.sanctionStartsAt",
+    "messages.admin.reports.sanctionEndsAt",
+    "messages.admin.reports.sanctionReleasedAt",
+    "messages.admin.reports.sanctionReleasedBy",
+    "messages.admin.reports.sanctionCreatedAt",
+  ])
+  assert.doesNotMatch(
+    sanctionHeader,
+    />\s*(?:source|type|admin|startsAt|endsAt|releasedAt|releasedBy)\s*</,
   )
-  assert.match(source, /\{canDecide \? \(/)
 }
 
 const statsApiBindings = [
@@ -1480,16 +1623,92 @@ test("admin report detail safely renders every backend field and nullable relati
   assert.throws(() => assert.doesNotMatch(htmlInjectionMutant, /dangerouslySetInnerHTML/))
 })
 
-test("admin report decisions share one synchronous latch and converge conflicts", () => {
+test("admin report detail maps resolution and sanction labels to exact message keys", () => {
   const source = readSource(
     "src/features/admin/reports/components/admin-report-detail-page.tsx",
   )
 
-  assertAdminReportDecisionLatch(source)
-  assertAdminReportConflictConvergence(source)
+  assertAdminReportSemanticLabels(source)
+
+  const swappedResolutionMutant = swapFirst(
+    source,
+    "messages.admin.reports.resolutionDecision",
+    "messages.admin.reports.resolvedBy",
+  )
+  const swappedSanctionMutant = swapFirst(
+    source,
+    "messages.admin.reports.sanctionSource",
+    "messages.admin.reports.sanctionType",
+  )
+  const hardcodedSanctionMutant = source.replace(
+    "{messages.admin.reports.sanctionSource}",
+    "source",
+  )
+
+  for (const mutant of [
+    swappedResolutionMutant,
+    swappedSanctionMutant,
+    hardcodedSanctionMutant,
+  ]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminReportSemanticLabels(mutant))
+  }
+})
+
+test("admin report convergence state keeps success and 409 refetch failures locked", () => {
+  const source = readSource(
+    "src/features/admin/reports/lib/admin-report-decision-convergence.ts",
+  )
+
+  assertAdminReportDecisionConvergenceState(source)
+
+  const failedUnlockMutant = source.replace(
+    'return { kind: "retry", reason: state.reason }',
+    "return initialAdminReportDecisionConvergenceState",
+  )
+  const pendingUnlockMutant = source.replace(
+    'event.reportStatus === "confirmed" ||\n    event.reportStatus === "dismissed"',
+    'event.reportStatus === "confirmed" ||\n    event.reportStatus === "dismissed" ||\n    event.reportStatus === "pending"',
+  )
+  const earlyConflictCopyMutant = source.replace(
+    'return state.kind === "conflict-refreshed"',
+    'return state.kind !== "idle"',
+  )
+
+  for (const [name, mutant] of [
+    ["failed unlock", failedUnlockMutant],
+    ["pending unlock", pendingUnlockMutant],
+    ["early conflict copy", earlyConflictCopyMutant],
+  ]) {
+    assert.notEqual(mutant, source, `${name} mutant must change the source`)
+    assert.throws(
+      () => assertAdminReportDecisionConvergenceState(mutant),
+      `${name} mutant must violate the convergence contract`,
+    )
+  }
+})
+
+test("admin report decisions use one detail refetch owner and one synchronous latch", () => {
+  const source = readSource(
+    "src/features/admin/reports/components/admin-report-detail-page.tsx",
+  )
+  const hookSource = readSource(
+    "src/features/admin/reports/hooks/use-admin-reports.ts",
+  )
+
+  assertAdminReportDecisionConvergence(source)
+  assertAdminReportHooks(hookSource)
+  assert.match(source, /getApiErrorCode\(error\)/)
+  assert.match(source, /code === "REPORT_ALREADY_RESOLVED"/)
+  assert.match(source, /code === "REPORT_CONCURRENTLY_CHANGED"/)
+  assert.match(
+    source,
+    /const canDecide =\s*report\.status === "pending" \|\| report\.status === "ai_reviewed"/,
+  )
+  assert.match(source, /\{canDecide \? \(/)
 
   const unguardedMutant = source.replace(
-    "if (!pendingDecision || decisionLatch.current) return",
+    'if (!pendingDecision || decisionLatch.current !== "idle") return',
     "if (!pendingDecision) return",
   )
   const duplicateMutateMutant = source.replace(
@@ -1500,15 +1719,49 @@ test("admin report decisions share one synchronous latch and converge conflicts"
     "    dismissMutation.isPending ||\n",
     "",
   )
-  const staleConflictMutant = source.replace(
-    "void detailQuery.refetch()",
+  const failedUnlockMutant = source.replace(
+    "if (isAdminReportDecisionConvergenceLocked(nextState)) {",
+    "if (false) {",
+  )
+  const duplicateRefetchMutant = source.replace(
+    "await detailQuery.refetch({ cancelRefetch: true })",
+    "await detailQuery.refetch({ cancelRefetch: true })\n      await detailQuery.refetch({ cancelRefetch: true })",
+  )
+  const staleInFlightRefetchMutant = source.replace(
+    "await detailQuery.refetch({ cancelRefetch: true })",
+    "await detailQuery.refetch({ cancelRefetch: false })",
+  )
+  const earlyConflictCopyMutant = source.replace(
+    "shouldShowAdminReportResolvedConflict(convergenceState)",
+    'convergenceState.kind !== "idle"',
+  )
+  const automaticDetailRefetchMutant = hookSource.replace(
+    'refetchType: "none",',
     "",
   )
+  const trappedRetryMutant = source.replace(
+    "        setPendingDecision(null)\n        const reason =",
+    "        const reason =",
+  )
+  const duplicateCachedRetryMutant = source.replace(
+    "detailQuery.isError &&\n        !isAdminReportDecisionConvergenceLocked(convergenceState) &&",
+    "detailQuery.isError &&",
+  )
 
-  for (const mutant of [unguardedMutant, duplicateMutateMutant, splitBusyMutant]) {
+  for (const mutant of [
+    unguardedMutant,
+    duplicateMutateMutant,
+    splitBusyMutant,
+    failedUnlockMutant,
+    duplicateRefetchMutant,
+    staleInFlightRefetchMutant,
+    earlyConflictCopyMutant,
+    duplicateCachedRetryMutant,
+    trappedRetryMutant,
+  ]) {
     assert.notEqual(mutant, source)
-    assert.throws(() => assertAdminReportDecisionLatch(mutant))
+    assert.throws(() => assertAdminReportDecisionConvergence(mutant))
   }
-  assert.notEqual(staleConflictMutant, source)
-  assert.throws(() => assertAdminReportConflictConvergence(staleConflictMutant))
+  assert.notEqual(automaticDetailRefetchMutant, hookSource)
+  assert.throws(() => assertAdminReportHooks(automaticDetailRefetchMutant))
 })

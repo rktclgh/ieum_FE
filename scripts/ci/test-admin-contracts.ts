@@ -2,6 +2,12 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 import { resolveAdminGateDecision } from "../../src/features/admin/auth/lib/admin-access.js"
+import {
+  initialAdminReportDecisionConvergenceState,
+  isAdminReportDecisionConvergenceLocked,
+  reduceAdminReportDecisionConvergence,
+  shouldShowAdminReportResolvedConflict,
+} from "../../src/features/admin/reports/lib/admin-report-decision-convergence.js"
 import { compactQuery } from "../../src/features/admin/shared/lib/admin-query.js"
 import { validateSanctionDraft } from "../../src/features/admin/users/lib/admin-sanction.js"
 import type {
@@ -225,6 +231,19 @@ type ExpectedAdminMessages = {
     | "dismiss"
     | "confirmNotice"
     | "resolvedConflict"
+    | "convergenceError"
+    | "resolutionDecision"
+    | "resolvedBy"
+    | "resolvedAt"
+    | "sanctionSource"
+    | "sanctionType"
+    | "sanctionReason"
+    | "sanctionAdmin"
+    | "sanctionStartsAt"
+    | "sanctionEndsAt"
+    | "sanctionReleasedAt"
+    | "sanctionReleasedBy"
+    | "sanctionCreatedAt"
   >
   inquiries: StringMessages<
     | "title"
@@ -309,10 +328,12 @@ const expectedAdminMessageKeys = {
     "sanctionType", "search", "status", "temporary", "title",
   ],
   reports: [
-    "aiResult", "aiState", "confidence", "confirm", "confirmNotice", "createdAt", "decision", "detail", "dismiss",
-    "evidence", "evidenceHash", "lastErrorCode", "missingReportedUser", "modelVersion", "policySetHash", "policyVersion",
-    "reason", "recommendation", "reportedUser", "reporter", "resolution", "resolvedConflict", "reviewedAt", "sanctions",
-    "status", "target", "title",
+    "aiResult", "aiState", "confidence", "confirm", "confirmNotice", "convergenceError", "createdAt", "decision",
+    "detail", "dismiss", "evidence", "evidenceHash", "lastErrorCode", "missingReportedUser", "modelVersion",
+    "policySetHash", "policyVersion", "reason", "recommendation", "reportedUser", "reporter", "resolution",
+    "resolutionDecision", "resolvedAt", "resolvedBy", "resolvedConflict", "reviewedAt", "sanctionAdmin",
+    "sanctionCreatedAt", "sanctionEndsAt", "sanctionReason", "sanctionReleasedAt", "sanctionReleasedBy",
+    "sanctionSource", "sanctionStartsAt", "sanctionType", "sanctions", "status", "target", "title",
   ],
   inquiries: [
     "answer", "answerPlaceholder", "answerSubmit", "answeredAt", "answeredBy", "answeredConflict", "content",
@@ -391,6 +412,121 @@ test("admin message types and both translations expose the exact agreed keys", (
     assert.deepEqual(Object.keys(adminKo[group as keyof AdminMessages]).sort(), sortedExpectedKeys)
     assert.deepEqual(Object.keys(adminEn[group as keyof AdminMessages]).sort(), sortedExpectedKeys)
   }
+})
+
+test("admin report resolution and sanction labels preserve their exact semantics", () => {
+  assert.deepEqual(
+    {
+      resolutionDecision: adminKo.reports.resolutionDecision,
+      resolvedBy: adminKo.reports.resolvedBy,
+      resolvedAt: adminKo.reports.resolvedAt,
+      sanctionSource: adminKo.reports.sanctionSource,
+      sanctionType: adminKo.reports.sanctionType,
+      sanctionReason: adminKo.reports.sanctionReason,
+      sanctionAdmin: adminKo.reports.sanctionAdmin,
+      sanctionStartsAt: adminKo.reports.sanctionStartsAt,
+      sanctionEndsAt: adminKo.reports.sanctionEndsAt,
+      sanctionReleasedAt: adminKo.reports.sanctionReleasedAt,
+      sanctionReleasedBy: adminKo.reports.sanctionReleasedBy,
+      sanctionCreatedAt: adminKo.reports.sanctionCreatedAt,
+    },
+    {
+      resolutionDecision: "처리 결과",
+      resolvedBy: "처리 운영자",
+      resolvedAt: "처리 일시",
+      sanctionSource: "결정 출처",
+      sanctionType: "제재 유형",
+      sanctionReason: "제재 사유",
+      sanctionAdmin: "제재 운영자",
+      sanctionStartsAt: "시작 일시",
+      sanctionEndsAt: "종료 일시",
+      sanctionReleasedAt: "해제 일시",
+      sanctionReleasedBy: "해제 운영자",
+      sanctionCreatedAt: "제재 생성 일시",
+    },
+  )
+  assert.deepEqual(
+    {
+      resolutionDecision: adminEn.reports.resolutionDecision,
+      resolvedBy: adminEn.reports.resolvedBy,
+      resolvedAt: adminEn.reports.resolvedAt,
+      sanctionSource: adminEn.reports.sanctionSource,
+      sanctionType: adminEn.reports.sanctionType,
+      sanctionReason: adminEn.reports.sanctionReason,
+      sanctionAdmin: adminEn.reports.sanctionAdmin,
+      sanctionStartsAt: adminEn.reports.sanctionStartsAt,
+      sanctionEndsAt: adminEn.reports.sanctionEndsAt,
+      sanctionReleasedAt: adminEn.reports.sanctionReleasedAt,
+      sanctionReleasedBy: adminEn.reports.sanctionReleasedBy,
+      sanctionCreatedAt: adminEn.reports.sanctionCreatedAt,
+    },
+    {
+      resolutionDecision: "Resolution",
+      resolvedBy: "Resolved by",
+      resolvedAt: "Resolved at",
+      sanctionSource: "Decision source",
+      sanctionType: "Sanction type",
+      sanctionReason: "Sanction reason",
+      sanctionAdmin: "Sanction administrator",
+      sanctionStartsAt: "Starts at",
+      sanctionEndsAt: "Ends at",
+      sanctionReleasedAt: "Released at",
+      sanctionReleasedBy: "Released by",
+      sanctionCreatedAt: "Sanction created at",
+    },
+  )
+})
+
+test("successful decisions stay locked through refetch failure until terminal data arrives", () => {
+  const refreshing = reduceAdminReportDecisionConvergence(
+    initialAdminReportDecisionConvergenceState,
+    { type: "begin", reason: "success" },
+  )
+  const failed = reduceAdminReportDecisionConvergence(refreshing, {
+    type: "refetch-failed",
+  })
+  const retrying = reduceAdminReportDecisionConvergence(failed, { type: "retry" })
+  const stalePending = reduceAdminReportDecisionConvergence(retrying, {
+    type: "refetch-succeeded",
+    reportStatus: "pending",
+  })
+  const finalRetry = reduceAdminReportDecisionConvergence(stalePending, {
+    type: "retry",
+  })
+  const terminal = reduceAdminReportDecisionConvergence(finalRetry, {
+    type: "refetch-succeeded",
+    reportStatus: "confirmed",
+  })
+
+  for (const state of [refreshing, failed, retrying, stalePending, finalRetry]) {
+    assert.equal(isAdminReportDecisionConvergenceLocked(state), true)
+    assert.equal(shouldShowAdminReportResolvedConflict(state), false)
+  }
+  assert.deepEqual(terminal, { kind: "idle" })
+  assert.equal(isAdminReportDecisionConvergenceLocked(terminal), false)
+})
+
+test("409 decisions reveal conflict copy only after a successful canonical refresh", () => {
+  const refreshing = reduceAdminReportDecisionConvergence(
+    initialAdminReportDecisionConvergenceState,
+    { type: "begin", reason: "conflict" },
+  )
+  const failed = reduceAdminReportDecisionConvergence(refreshing, {
+    type: "refetch-failed",
+  })
+  const retrying = reduceAdminReportDecisionConvergence(failed, { type: "retry" })
+  const refreshedPending = reduceAdminReportDecisionConvergence(retrying, {
+    type: "refetch-succeeded",
+    reportStatus: "ai_reviewed",
+  })
+
+  for (const state of [refreshing, failed, retrying]) {
+    assert.equal(isAdminReportDecisionConvergenceLocked(state), true)
+    assert.equal(shouldShowAdminReportResolvedConflict(state), false)
+  }
+  assert.deepEqual(refreshedPending, { kind: "conflict-refreshed" })
+  assert.equal(isAdminReportDecisionConvergenceLocked(refreshedPending), false)
+  assert.equal(shouldShowAdminReportResolvedConflict(refreshedPending), true)
 })
 
 test("admin range messages interpolate both backend dates", () => {

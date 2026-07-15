@@ -112,6 +112,19 @@ interface AdminMessages {
     dismiss: string
     confirmNotice: string
     resolvedConflict: string
+    convergenceError: string
+    resolutionDecision: string
+    resolvedBy: string
+    resolvedAt: string
+    sanctionSource: string
+    sanctionType: string
+    sanctionReason: string
+    sanctionAdmin: string
+    sanctionStartsAt: string
+    sanctionEndsAt: string
+    sanctionReleasedAt: string
+    sanctionReleasedBy: string
+    sanctionCreatedAt: string
   }
   inquiries: {
     title: string
@@ -244,6 +257,19 @@ const adminKo: AdminMessages = {
     dismiss: "신고 기각",
     confirmNotice: "신고 확정은 신고 상태만 변경하며 새 제재를 만들지 않습니다.",
     resolvedConflict: "이미 처리되었거나 상태가 변경된 신고입니다. 최신 정보를 불러왔습니다.",
+    convergenceError: "최신 처리 상태를 확인하지 못했습니다.",
+    resolutionDecision: "처리 결과",
+    resolvedBy: "처리 운영자",
+    resolvedAt: "처리 일시",
+    sanctionSource: "결정 출처",
+    sanctionType: "제재 유형",
+    sanctionReason: "제재 사유",
+    sanctionAdmin: "제재 운영자",
+    sanctionStartsAt: "시작 일시",
+    sanctionEndsAt: "종료 일시",
+    sanctionReleasedAt: "해제 일시",
+    sanctionReleasedBy: "해제 운영자",
+    sanctionCreatedAt: "제재 생성 일시",
   },
   inquiries: {
     title: "문의 관리",
@@ -376,6 +402,19 @@ const adminEn: AdminMessages = {
     dismiss: "Dismiss report",
     confirmNotice: "Confirming a report only changes its status and does not create a sanction.",
     resolvedConflict: "This report was already resolved or changed. The latest data is now displayed.",
+    convergenceError: "Could not verify the latest processing state.",
+    resolutionDecision: "Resolution",
+    resolvedBy: "Resolved by",
+    resolvedAt: "Resolved at",
+    sanctionSource: "Decision source",
+    sanctionType: "Sanction type",
+    sanctionReason: "Sanction reason",
+    sanctionAdmin: "Sanction administrator",
+    sanctionStartsAt: "Starts at",
+    sanctionEndsAt: "Ends at",
+    sanctionReleasedAt: "Released at",
+    sanctionReleasedBy: "Released by",
+    sanctionCreatedAt: "Sanction created at",
   },
   inquiries: {
     title: "Inquiry management",

@@ -43,6 +43,7 @@ function invalidateAdminReportDecisionQueries(
     queryClient.invalidateQueries({
       queryKey: adminReportKeys.detail(reportId),
       exact: true,
+      refetchType: "none",
     }),
     queryClient.invalidateQueries({
       queryKey: adminStatsKeys.reports,
