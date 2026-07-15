@@ -19,6 +19,32 @@ import type {
 } from "../../src/features/admin/shared/types/admin-types.js"
 import type { UserRole } from "../../src/features/session/types/user-role.js"
 
+type Exact<Actual, Expected> =
+  (<Type>() => Type extends Actual ? 1 : 2) extends
+    (<Type>() => Type extends Expected ? 1 : 2)
+    ? (<Type>() => Type extends Expected ? 1 : 2) extends
+        (<Type>() => Type extends Actual ? 1 : 2)
+      ? true
+      : false
+    : false
+
+type Expect<Condition extends true> = Condition
+
+const literalUnionContracts: [
+  Expect<Exact<UserRole, "user" | "admin">>,
+  Expect<Exact<UserStatus, "active" | "suspended">>,
+  Expect<Exact<SanctionType, "temporary" | "permanent">>,
+  Expect<Exact<ReportReason, "spam" | "ad" | "abuse" | "obscene" | "harassment" | "etc">>,
+  Expect<Exact<ReportStatus, "pending" | "ai_reviewed" | "confirmed" | "dismissed">>,
+  Expect<
+    Exact<
+      ReportAiReviewState,
+      "pending" | "processing" | "retry" | "completed" | "cancelled" | "dead"
+    >
+  >,
+  Expect<Exact<AdminReportDecision, "suspend" | "hold" | "normal">>,
+] = [true, true, true, true, true, true, true]
+
 const protectedCases = [
   [{ kind: "loading" }, "loading"],
   [{ kind: "refreshing" }, "loading"],
@@ -49,33 +75,20 @@ test("the admin login route resolves every canonical auth state", () => {
   }
 })
 
-test("admin gate and shared response contracts expose the agreed literals", () => {
-  const role: UserRole = "admin"
+test("admin literal unions match the backend contract exactly", () => {
+  assert.deepEqual(literalUnionContracts, [true, true, true, true, true, true, true])
+})
+
+test("admin gate and shared response contracts expose their agreed shapes", () => {
   const policy: AdminGatePolicy = "protected"
   const decision: AdminGateDecision = "allow"
-  const userStatus: UserStatus = "active"
-  const sanctionType: SanctionType = "temporary"
-  const reportReason: ReportReason = "spam"
-  const reportStatus: ReportStatus = "pending"
-  const aiReviewState: ReportAiReviewState = "processing"
-  const reportDecision: AdminReportDecision = "hold"
   const page: CursorPage<JsonValue> = {
-    items: [{ role, userStatus, sanctionType, reportReason, reportStatus, aiReviewState, reportDecision }],
+    items: [{ role: "admin", status: "active" }],
     nextCursor: null,
   }
 
   assert.deepEqual(page, {
-    items: [
-      {
-        role: "admin",
-        userStatus: "active",
-        sanctionType: "temporary",
-        reportReason: "spam",
-        reportStatus: "pending",
-        aiReviewState: "processing",
-        reportDecision: "hold",
-      },
-    ],
+    items: [{ role: "admin", status: "active" }],
     nextCursor: null,
   })
   assert.equal(policy, "protected")
