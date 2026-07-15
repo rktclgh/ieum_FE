@@ -112,6 +112,27 @@ test("admin login is controlled, pending-safe, and delegates authority to canoni
   assert.doesNotMatch(source, /LoginResponse|localStorage|sessionStorage/)
 })
 
+test("disabled credential fields also disable their auxiliary controls", () => {
+  const inputSource = compactSource(
+    readSource("src/components/ui/text-field/input.tsx"),
+  )
+  const passwordSource = compactSource(
+    readSource("src/components/ui/text-field/password-input.tsx"),
+  )
+
+  assert.match(inputSource, /<input[^>]*disabled=\{disabled\}[^>]*>/)
+  assert.match(inputSource, /<ClearButton inputRef=\{inputRef\} disabled=\{disabled\} \/>/)
+  assert.match(passwordSource, /<input[^>]*disabled=\{disabled\}[^>]*>/)
+  assert.match(
+    passwordSource,
+    /data-slot="password-toggle"[^>]*disabled=\{disabled\}/,
+  )
+  assert.match(
+    passwordSource,
+    /<ClearButton inputRef=\{inputRef\} disabled=\{disabled\} \/>/,
+  )
+})
+
 test("the admin shell has four fixed destinations, current-page semantics, and logout", () => {
   const source = readSource("src/features/admin/shared/components/admin-shell.tsx")
 
