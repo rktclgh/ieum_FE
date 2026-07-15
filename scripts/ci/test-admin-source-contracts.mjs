@@ -12,6 +12,14 @@ function readSource(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8")
 }
 
+function sourceFiles(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(directory, entry.name)
+    if (entry.isDirectory()) return sourceFiles(entryPath)
+    return /\.[cm]?[jt]sx?$/.test(entry.name) ? [entryPath] : []
+  })
+}
+
 function compactSource(source) {
   return source.replace(/\s+/g, " ")
 }
@@ -244,6 +252,320 @@ function assertAdminSanctionStatsInvalidation(source) {
     activationHook,
     /invalidateAdminSanctionQueries|adminStatsKeys/,
   )
+}
+
+function interfaceFields(source, interfaceName) {
+  const match = source.match(
+    new RegExp(
+      `interface ${interfaceName}(?: extends [^{]+)? \\{([\\s\\S]*?)\\n\\}`,
+    ),
+  )
+
+  assert.ok(match, `${interfaceName} must exist`)
+  return match[1]
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
+const adminReportDtoFields = {
+  AdminReportUserSummary: [
+    "userId: number",
+    "nickname: string",
+  ],
+  AdminReportTargetSummary: [
+    "type: AdminReportTargetType",
+    "id: number",
+    "deleted: boolean",
+  ],
+  AdminReportAiSummary: [
+    "reviewState: ReportAiReviewState",
+    "recommendation: string | null",
+    "decision: AdminReportDecision | null",
+    "confidence: number | null",
+    "reviewedAt: string | null",
+  ],
+  AdminReportListItem: [
+    "reportId: number",
+    "target: AdminReportTargetSummary",
+    "reporter: AdminReportUserSummary",
+    "reportedUser: AdminReportUserSummary | null",
+    "reason: ReportReason",
+    "status: ReportStatus",
+    "ai: AdminReportAiSummary",
+    "createdAt: string",
+  ],
+  AdminReportListResponse: [
+    "items: AdminReportListItem[]",
+    "nextCursor: string | null",
+  ],
+  AdminReportAiDetail: [
+    "reviewState: ReportAiReviewState",
+    "recommendation: string | null",
+    "reason: string | null",
+    "confidence: number | null",
+    "modelVersion: string | null",
+    "policyVersion: string | null",
+    "reviewedAt: string | null",
+    "decision: AdminReportDecision | null",
+    "policySetHash: string | null",
+    "result: JsonValue | null",
+    "lastErrorCode: string | null",
+  ],
+  AdminReportResolution: [
+    "decision: ReportStatus",
+    "resolvedBy: AdminReportUserSummary",
+    "resolvedAt: string",
+  ],
+  AdminReportSanctionItem: [
+    "sanctionId: number",
+    "decisionSource: string",
+    'type: "temporary" | "permanent"',
+    "reason: string",
+    "admin: AdminReportUserSummary | null",
+    "startsAt: string",
+    "endsAt: string | null",
+    "releasedAt: string | null",
+    "releasedBy: AdminReportUserSummary | null",
+    "createdAt: string",
+  ],
+  AdminReportDetailResponse: [
+    "detail: string | null",
+    "contextSnapshot: JsonValue | null",
+    "contextHash: string | null",
+    "ai: AdminReportAiDetail",
+    "resolution: AdminReportResolution | null",
+    "sanctions: AdminReportSanctionItem[]",
+  ],
+  AdminReportsParams: [
+    'status?: ReportStatus | ""',
+    'aiReviewState?: ReportAiReviewState | ""',
+    'decision?: AdminReportDecision | ""',
+    "cursor?: string | null",
+    "size: number",
+  ],
+}
+
+function assertAdminReportDtoContracts(source) {
+  const compact = compactSource(source)
+
+  assert.match(compact, /type AdminReportTargetType = "message" \| "answer"/)
+  assert.match(
+    compact,
+    /interface AdminReportDetailResponse extends Omit<AdminReportListItem, "ai">/,
+  )
+  for (const [interfaceName, fields] of Object.entries(adminReportDtoFields)) {
+    assert.deepEqual(interfaceFields(source, interfaceName), fields)
+  }
+}
+
+function assertAdminReportApiBindings(source) {
+  const list = compactSource(asyncFunctionSource(source, "getAdminReports"))
+  const detail = compactSource(asyncFunctionSource(source, "getAdminReport"))
+  const confirm = compactSource(asyncFunctionSource(source, "confirmAdminReport"))
+  const dismiss = compactSource(asyncFunctionSource(source, "dismissAdminReport"))
+
+  assert.match(list, /apiClient\.get<AdminReportListResponse>/)
+  assert.match(list, /"\/api\/v1\/admin\/reports"/)
+  assert.match(
+    list,
+    /params: compactQuery\(\{ status: params\.status, aiReviewState: params\.aiReviewState, decision: params\.decision, cursor: params\.cursor, size: params\.size,? \}\)/,
+  )
+  assert.match(detail, /apiClient\.get<AdminReportDetailResponse>/)
+  assert.match(detail, /`\/api\/v1\/admin\/reports\/\$\{reportId\}`/)
+  assert.match(
+    confirm,
+    /apiClient\.post\(`\/api\/v1\/admin\/reports\/\$\{reportId\}\/confirm`\)/,
+  )
+  assert.match(
+    dismiss,
+    /apiClient\.post\(`\/api\/v1\/admin\/reports\/\$\{reportId\}\/dismiss`\)/,
+  )
+  assert.equal((source.match(/apiClient\.get/g) ?? []).length, 2)
+  assert.equal((source.match(/apiClient\.post/g) ?? []).length, 2)
+  assert.doesNotMatch(source, /apiClient\.(?:patch|put|delete)/)
+}
+
+function assertAdminReportHooks(source) {
+  const compact = compactSource(source)
+  const decisionInvalidation = compactSource(
+    boundedSource(
+      source,
+      "function invalidateAdminReportDecisionQueries(",
+      "function invalidateAdminReportDismissalQueries(",
+    ),
+  )
+  const dismissalInvalidation = compactSource(
+    boundedSource(
+      source,
+      "function invalidateAdminReportDismissalQueries(",
+      "function useAdminReports(",
+    ),
+  )
+  const confirmHook = compactSource(
+    boundedSource(
+      source,
+      "function useConfirmAdminReport(",
+      "function useDismissAdminReport(",
+    ),
+  )
+  const dismissHook = compactSource(
+    boundedSource(source, "function useDismissAdminReport(", "\nexport {"),
+  )
+
+  assert.match(source, /useInfiniteQuery/)
+  assert.match(
+    source,
+    /queryKey:\s*adminReportKeys\.list\(\{ status, aiReviewState, decision, size \}\)/,
+  )
+  assert.match(
+    compact,
+    /queryFn: \(\{ pageParam \}\) => getAdminReports\(\{ status, aiReviewState, decision, cursor: pageParam, size,? \}\)/,
+  )
+  assert.match(source, /initialPageParam:\s*null as string \| null/)
+  assert.match(source, /getNextPageParam:\s*\(page\) => page\.nextCursor/)
+  assert.match(source, /queryKey:\s*adminReportKeys\.detail\(reportId\)/)
+  assert.match(source, /queryFn:\s*\(\) => getAdminReport\(reportId\)/)
+
+  assert.match(
+    decisionInvalidation,
+    /invalidateQueries\(\{ queryKey: adminReportKeys\.lists\(\) \}\)/,
+  )
+  assert.match(
+    decisionInvalidation,
+    /invalidateQueries\(\{ queryKey: adminReportKeys\.detail\(reportId\), exact: true,? \}\)/,
+  )
+  assert.match(
+    decisionInvalidation,
+    /invalidateQueries\(\{ queryKey: adminStatsKeys\.reports, exact: true,? \}\)/,
+  )
+  assert.doesNotMatch(decisionInvalidation, /adminUserKeys/)
+
+  assert.match(
+    dismissalInvalidation,
+    /invalidateAdminReportDecisionQueries\(queryClient, reportId\)/,
+  )
+  assert.match(
+    dismissalInvalidation,
+    /invalidateQueries\(\{ queryKey: adminUserKeys\.lists\(\) \}\)/,
+  )
+  assert.match(dismissalInvalidation, /if \(reportedUserId !== null\)/)
+  assert.match(
+    dismissalInvalidation,
+    /invalidateQueries\(\{ queryKey: adminUserKeys\.detail\(reportedUserId\), exact: true,? \}\)/,
+  )
+
+  assert.match(confirmHook, /mutationFn: \(\) => confirmAdminReport\(reportId\)/)
+  assert.match(
+    confirmHook,
+    /onSettled: \(\) => invalidateAdminReportDecisionQueries\(queryClient, reportId\)/,
+  )
+  assert.match(dismissHook, /mutationFn: \(\) => dismissAdminReport\(reportId\)/)
+  assert.match(
+    dismissHook,
+    /onSettled: \(\) => invalidateAdminReportDismissalQueries\(queryClient, reportId, reportedUserId\)/,
+  )
+  assert.doesNotMatch(confirmHook + dismissHook, /onSuccess:/)
+}
+
+function assertAdminReportCursorRetry(source) {
+  const compact = compactSource(source)
+  const pagination = compactSource(
+    boundedSource(
+      source,
+      "{reportsQuery.isFetchNextPageError ? (",
+      "\n      )}\n    </section>",
+    ),
+  )
+
+  assert.match(
+    compact,
+    /reportsQuery\.isError && !reportsQuery\.isFetchNextPageError && \(/,
+  )
+  assertOrdered(pagination, [
+    "reportsQuery.isFetchNextPageError ? (",
+    '<AdminAsyncState kind="error"',
+    "reportsQuery.fetchNextPage({ cancelRefetch: false })",
+    ") : reportsQuery.hasNextPage ? (",
+    "<Button",
+    "reportsQuery.fetchNextPage({ cancelRefetch: false })",
+  ])
+  assert.equal(
+    (pagination.match(/reportsQuery\.fetchNextPage\(\{ cancelRefetch: false \}\)/g) ?? [])
+      .length,
+    2,
+  )
+  assert.equal((pagination.match(/<AdminAsyncState/g) ?? []).length, 1)
+  assert.doesNotMatch(pagination, /reportsQuery\.refetch\(\)/)
+  assert.match(pagination, /retryDisabled=\{reportsQuery\.isFetching\}/)
+  assert.match(pagination, /isRetrying=\{reportsQuery\.isFetching\}/)
+  assert.match(pagination, /disabled=\{reportsQuery\.isFetching\}/)
+  assert.match(pagination, /aria-busy=\{reportsQuery\.isFetching \|\| undefined\}/)
+  assert.doesNotMatch(pagination, /disabled=\{reportsQuery\.isFetchingNextPage\}/)
+}
+
+function assertAdminReportDetailRemountsByReportId(source) {
+  assert.match(
+    source,
+    /<AdminReportDetailPage key=\{reportId\} reportId=\{reportId\} \/>/,
+  )
+}
+
+function assertAdminReportDecisionLatch(source) {
+  const compact = compactSource(source)
+  const handler = compactSource(
+    boundedSource(
+      source,
+      "const handleDecisionConfirm = () =>",
+      "if (detailQuery.isPending)",
+    ),
+  )
+
+  assert.match(source, /const decisionLatch = React\.useRef\(false\)/)
+  assert.match(
+    source,
+    /const \[decisionBusyState, setDecisionBusyState\] = React\.useState\(false\)/,
+  )
+  assert.match(
+    compact,
+    /const decisionBusy = decisionBusyState \|\| confirmMutation\.isPending \|\| dismissMutation\.isPending \|\| \(resolvedConflict && detailQuery\.isFetching\)/,
+  )
+  assertOrdered(handler, [
+    "if (!pendingDecision || decisionLatch.current) return",
+    "decisionLatch.current = true",
+    "setDecisionBusyState(true)",
+    'pendingDecision === "confirm" ? confirmMutation : dismissMutation',
+    "mutation.mutate(undefined, {",
+    "onSettled: () => {",
+    "decisionLatch.current = false",
+    "setDecisionBusyState(false)",
+  ])
+  assert.equal((handler.match(/mutation\.mutate\(/g) ?? []).length, 1)
+  assert.ok((source.match(/disabled=\{decisionBusy\}/g) ?? []).length >= 2)
+  assert.match(source, /confirmDisabled=\{decisionBusy\}/)
+  assert.match(
+    compact,
+    /if \(!decisionBusy && !decisionLatch\.current && !open\) setPendingDecision\(null\)/,
+  )
+  assert.equal((source.match(/<ConfirmDialog/g) ?? []).length, 1)
+}
+
+function assertAdminReportConflictConvergence(source) {
+  const compact = compactSource(source)
+
+  assert.match(source, /getApiErrorCode\(error\)/)
+  assert.match(source, /code === "REPORT_ALREADY_RESOLVED"/)
+  assert.match(source, /code === "REPORT_CONCURRENTLY_CHANGED"/)
+  assert.match(
+    compact,
+    /if \(isReportDecisionConflict\(error\)\) \{ setResolvedConflict\(true\) void detailQuery\.refetch\(\) \}/,
+  )
+  assert.match(source, /messages\.admin\.reports\.resolvedConflict/)
+  assert.match(
+    source,
+    /const canDecide =\s*report\.status === "pending" \|\| report\.status === "ai_reviewed"/,
+  )
+  assert.match(source, /\{canDecide \? \(/)
 }
 
 const statsApiBindings = [
@@ -906,4 +1228,287 @@ test("admin user detail renders backend fields and pending-safe adjacent mutatio
   assert.match(source, /messages\.admin\.users\.activationScopeNotice/)
   assert.equal((source.match(/<ConfirmDialog/g) ?? []).length, 2)
   assert.doesNotMatch(source, /apiClient|\/role\b|changeRole|patch\(/i)
+})
+
+test("each admin report API owns its exact backend DTO, filters, method, and endpoint", () => {
+  const source = readSource("src/features/admin/reports/api/admin-reports-api.ts")
+
+  assertAdminReportDtoContracts(source)
+  assertAdminReportApiBindings(source)
+
+  const swappedEndpointMutant = swapFirst(
+    source,
+    "/confirm",
+    "/dismiss",
+  )
+  const droppedFilterMutant = source.replace(
+    "decision: params.decision,",
+    "",
+  )
+  const nonNullableUserMutant = source.replace(
+    "reportedUser: AdminReportUserSummary | null",
+    "reportedUser: AdminReportUserSummary",
+  )
+
+  assert.throws(() => assertAdminReportApiBindings(swappedEndpointMutant))
+  assert.notEqual(droppedFilterMutant, source)
+  assert.throws(() => assertAdminReportApiBindings(droppedFilterMutant))
+  assert.notEqual(nonNullableUserMutant, source)
+  assert.throws(() => assertAdminReportDtoContracts(nonNullableUserMutant))
+})
+
+test("admin report hooks preserve cursor filters and converge every decision cache", () => {
+  const source = readSource("src/features/admin/reports/hooks/use-admin-reports.ts")
+
+  assertAdminReportHooks(source)
+
+  const wrongStatsMutant = source.replace(
+    "adminStatsKeys.reports",
+    "adminStatsKeys.users",
+  )
+  const successOnlyMutant = source.replace(
+    "onSettled: () => invalidateAdminReportDecisionQueries(queryClient, reportId)",
+    "onSuccess: () => invalidateAdminReportDecisionQueries(queryClient, reportId)",
+  )
+  const staleUserMutant = source.replace(
+    "onSettled: () => invalidateAdminReportDismissalQueries(queryClient, reportId, reportedUserId)",
+    "onSettled: () => invalidateAdminReportDecisionQueries(queryClient, reportId)",
+  )
+
+  for (const mutant of [wrongStatsMutant, successOnlyMutant, staleUserMutant]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminReportHooks(mutant))
+  }
+})
+
+test("admin reports list owns three filters, nullable users, table states, and detail links", () => {
+  const source = readSource(
+    "src/features/admin/reports/components/admin-reports-page.tsx",
+  )
+  const pageSource = readSource("src/app/admin/(protected)/reports/page.tsx")
+  const compact = compactSource(source)
+
+  assert.match(source, /const \[status, setStatus\] = React\.useState<ReportStatus \| "">\(""\)/)
+  assert.match(
+    source,
+    /const \[aiReviewState, setAiReviewState\] = React\.useState<ReportAiReviewState \| "">\(""\)/,
+  )
+  assert.match(
+    source,
+    /const \[decision, setDecision\] = React\.useState<AdminReportDecision \| "">\(""\)/,
+  )
+  assert.match(
+    compact,
+    /useAdminReports\(\{ status, aiReviewState, decision, size: 20 \}\)/,
+  )
+  for (const id of [
+    "admin-report-status",
+    "admin-report-ai-state",
+    "admin-report-decision",
+  ]) {
+    assert.match(source, new RegExp(`<label[^>]*htmlFor="${id}"`))
+    assert.match(source, new RegExp(`<select[^>]*id="${id}"`))
+  }
+  for (const value of [
+    "pending",
+    "ai_reviewed",
+    "confirmed",
+    "dismissed",
+    "processing",
+    "retry",
+    "completed",
+    "cancelled",
+    "dead",
+    "suspend",
+    "hold",
+    "normal",
+  ]) {
+    assert.match(source, new RegExp(`<option value="${value}">`))
+  }
+  assert.match(source, /report\.reportedUser/)
+  assert.match(source, /messages\.admin\.reports\.missingReportedUser/)
+  assert.match(source, /report\.target\.deleted/)
+  assert.match(source, /routes\.adminReportDetail\(report\.reportId\)/)
+  assert.match(source, /<table/)
+  assert.match(source, /reportsQuery\.isPending/)
+  assert.match(source, /reportsQuery\.isError/)
+  assert.match(source, /onRetry=\{\(\) => void reportsQuery\.refetch\(\)\}/)
+  assert.match(source, /reports\.length === 0/)
+  assert.match(source, /reportsQuery\.isFetchingNextPage/)
+  assert.match(source, /messages\.admin\.common\.loadMore/)
+  assert.match(source, /messages\.admin\.common\.loading/)
+  assert.match(pageSource, /<AdminReportsPage \/>/)
+})
+
+test("admin reports retry one failed cursor without cancelling another fetch", () => {
+  const source = readSource(
+    "src/features/admin/reports/components/admin-reports-page.tsx",
+  )
+
+  assertAdminReportCursorRetry(source)
+
+  const refetchMutant = source.replace(
+    "reportsQuery.fetchNextPage({ cancelRefetch: false })",
+    "reportsQuery.refetch()",
+  )
+  const cancellationMutant = source.replace(
+    "reportsQuery.fetchNextPage({ cancelRefetch: false })",
+    "reportsQuery.fetchNextPage({ cancelRefetch: true })",
+  )
+  const raceMutant = source.replace(
+    "disabled={reportsQuery.isFetching}",
+    "disabled={reportsQuery.isFetchingNextPage}",
+  )
+  const duplicateErrorMutant = source.replace(
+    "reportsQuery.isError && !reportsQuery.isFetchNextPageError",
+    "reportsQuery.isError",
+  )
+
+  for (const mutant of [
+    refetchMutant,
+    cancellationMutant,
+    raceMutant,
+    duplicateErrorMutant,
+  ]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminReportCursorRetry(mutant))
+  }
+})
+
+test("admin report detail route validates and keys the fixed query before mounting data", () => {
+  const source = readSource("src/app/admin/(protected)/reports/detail/page.tsx")
+  const parseIndex = source.indexOf(
+    'parsePositiveInteger(searchParams.get("reportId"))',
+  )
+  const invalidIndex = source.indexOf("if (reportId === null)")
+  const detailIndex = source.indexOf("<AdminReportDetailPage")
+
+  assert.ok(parseIndex >= 0)
+  assert.ok(invalidIndex > parseIndex)
+  assert.ok(detailIndex > invalidIndex)
+  assert.match(source, /<AdminAsyncState kind="empty"/)
+  assert.match(source, /<React\.Suspense/)
+  assert.match(source, /fallback=\{<AdminAsyncState kind="loading" \/>\}/)
+  assertAdminReportDetailRemountsByReportId(source)
+
+  const carryoverMutant = source.replace(" key={reportId}", "")
+  assert.notEqual(carryoverMutant, source)
+  assert.throws(() => assertAdminReportDetailRemountsByReportId(carryoverMutant))
+})
+
+test("admin report detail safely renders every backend field and nullable relation", () => {
+  const source = readSource(
+    "src/features/admin/reports/components/admin-report-detail-page.tsx",
+  )
+
+  for (const field of [
+    "report.reportId",
+    "target.type",
+    "target.id",
+    "target.deleted",
+    "reporter.userId",
+    "reporter.nickname",
+    "reportedUser.userId",
+    "reportedUser.nickname",
+    "report.reason",
+    "report.detail",
+    "report.status",
+    "report.createdAt",
+    "contextSnapshot",
+    "report.contextHash",
+    "ai.reviewState",
+    "ai.recommendation",
+    "ai.reason",
+    "ai.confidence",
+    "ai.modelVersion",
+    "ai.policyVersion",
+    "ai.reviewedAt",
+    "ai.decision",
+    "ai.policySetHash",
+    "ai.result",
+    "ai.lastErrorCode",
+    "resolution.decision",
+    "resolution.resolvedBy.userId",
+    "resolution.resolvedBy.nickname",
+    "resolution.resolvedAt",
+    "sanction.sanctionId",
+    "sanction.decisionSource",
+    "sanction.type",
+    "sanction.reason",
+    "sanction.admin",
+    "sanction.startsAt",
+    "sanction.endsAt",
+    "sanction.releasedAt",
+    "sanction.releasedBy",
+    "sanction.createdAt",
+  ]) {
+    assert.match(source, new RegExp(escapeRegExp(field)))
+  }
+  assert.match(source, /JSON\.stringify\(contextSnapshot, null, 2\)/)
+  assert.match(source, /JSON\.stringify\(ai\.result, null, 2\)/)
+  assert.match(source, /messages\.admin\.reports\.missingReportedUser/)
+  assert.match(source, /messages\.admin\.reports\.confirmNotice/)
+  assert.match(source, /messages\.admin\.reports\.resolution/)
+  assert.match(source, /detailQuery\.isPending/)
+  assert.match(source, /detailQuery\.isError/)
+  assert.match(source, /onRetry=\{\(\) => void detailQuery\.refetch\(\)\}/)
+  assert.match(source, /getApiErrorMessage\(/)
+  assert.doesNotMatch(source, /dangerouslySetInnerHTML/)
+
+  for (const file of sourceFiles(path.join(repoRoot, "src/features/admin"))) {
+    assert.doesNotMatch(fs.readFileSync(file, "utf8"), /dangerouslySetInnerHTML/)
+  }
+
+  const unsafeJsonMutant = source.replace(
+    "JSON.stringify(contextSnapshot, null, 2)",
+    "String(contextSnapshot)",
+  )
+  const missingFallbackMutant = source.replace(
+    "messages.admin.reports.missingReportedUser",
+    '"—"',
+  )
+  const htmlInjectionMutant = `${source}\nconst dangerouslySetInnerHTML = true\n`
+
+  assert.notEqual(unsafeJsonMutant, source)
+  assert.throws(() =>
+    assert.match(unsafeJsonMutant, /JSON\.stringify\(contextSnapshot, null, 2\)/),
+  )
+  assert.notEqual(missingFallbackMutant, source)
+  assert.throws(() =>
+    assert.match(missingFallbackMutant, /messages\.admin\.reports\.missingReportedUser/),
+  )
+  assert.throws(() => assert.doesNotMatch(htmlInjectionMutant, /dangerouslySetInnerHTML/))
+})
+
+test("admin report decisions share one synchronous latch and converge conflicts", () => {
+  const source = readSource(
+    "src/features/admin/reports/components/admin-report-detail-page.tsx",
+  )
+
+  assertAdminReportDecisionLatch(source)
+  assertAdminReportConflictConvergence(source)
+
+  const unguardedMutant = source.replace(
+    "if (!pendingDecision || decisionLatch.current) return",
+    "if (!pendingDecision) return",
+  )
+  const duplicateMutateMutant = source.replace(
+    "mutation.mutate(undefined, {",
+    "mutation.mutate(undefined, {})\n    mutation.mutate(undefined, {",
+  )
+  const splitBusyMutant = source.replace(
+    "    dismissMutation.isPending ||\n",
+    "",
+  )
+  const staleConflictMutant = source.replace(
+    "void detailQuery.refetch()",
+    "",
+  )
+
+  for (const mutant of [unguardedMutant, duplicateMutateMutant, splitBusyMutant]) {
+    assert.notEqual(mutant, source)
+    assert.throws(() => assertAdminReportDecisionLatch(mutant))
+  }
+  assert.notEqual(staleConflictMutant, source)
+  assert.throws(() => assertAdminReportConflictConvergence(staleConflictMutant))
 })
