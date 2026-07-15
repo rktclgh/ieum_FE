@@ -51,6 +51,7 @@ import {
   type ChatBubbleMessage,
 } from "@/features/chat/lib/chat-adapter"
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
+import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -233,10 +234,16 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const questionId = room?.roomType === "question" ? room.questionId ?? undefined : undefined
   const { data: questionSummary } = useQuestionSummary(questionId ?? 0, questionId != null)
 
+  const meetingId = room?.roomType === "group" ? room.meetingId ?? undefined : undefined
+  const { data: meeting } = useMeeting(meetingId ?? 0, meetingId != null)
+
+  // 제목: group=모임 제목, question=질문 제목, direct=상대 닉네임. 도메인 제목이 오기 전엔 닉네임으로 폴백.
   const roomTitle = room
-    ? room.roomType === "question" && questionSummary?.title
-      ? questionSummary.title
-      : resolveRoomTitle(room.members, myUserId, room.roomType)
+    ? room.roomType === "group" && meeting?.title
+      ? meeting.title
+      : room.roomType === "question" && questionSummary?.title
+        ? questionSummary.title
+        : resolveRoomTitle(room.members, myUserId, room.roomType)
     : ""
   const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
   const notificationOn = room?.notifyEnabled ?? true
