@@ -27,6 +27,10 @@ function applyCategoryColors(map: MaplibreMap) {
     // 레이어 type과 페인트 프로퍼티가 맞지 않으면 MapLibre가 예외를 던지므로 방어한다.
     if (layer.type !== category.type) continue
 
+    // setPaintProperty는 styledata 이벤트를 다시 발생시킨다. 이미 목표 색이면 건너뛰어야
+    // styledata → setPaintProperty → styledata 재귀 루프(불필요한 스타일 재계산)를 막는다.
+    if (map.getPaintProperty(layer.id, paintProperty) === category.color) continue
+
     map.setPaintProperty(layer.id, paintProperty, category.color)
   }
 }
@@ -40,15 +44,20 @@ function VectorTileLayer() {
     const layer = L.maplibreGL({ style: MAP_STYLE_URL })
     layer.addTo(map)
 
+    // 초기화 지연 등으로 내부 MapLibre 인스턴스가 아직 없을 수 있어 존재를 확인하고 바인딩한다.
     const glMap = layer.getMaplibreMap()
-    const recolor = () => applyCategoryColors(glMap)
-    // load: 최초 스타일 로드 완료. styledata: 스타일이 늦게/재로딩될 때 재적용(idempotent).
-    glMap.on("load", recolor)
-    glMap.on("styledata", recolor)
+    const recolor = glMap ? () => applyCategoryColors(glMap) : null
+    if (glMap && recolor) {
+      // load: 최초 스타일 로드 완료. styledata: 스타일이 늦게/재로딩될 때 재적용(idempotent).
+      glMap.on("load", recolor)
+      glMap.on("styledata", recolor)
+    }
 
     return () => {
-      glMap.off("load", recolor)
-      glMap.off("styledata", recolor)
+      if (glMap && recolor) {
+        glMap.off("load", recolor)
+        glMap.off("styledata", recolor)
+      }
       map.removeLayer(layer)
     }
   }, [map])
