@@ -24,6 +24,12 @@ function useAdminStats() {
 
   const isPending = userQuery.isPending || contentQuery.isPending || reportsQuery.isPending
   const isError = userQuery.isError || contentQuery.isError || reportsQuery.isError
+  const isFetching =
+    userQuery.isFetching || contentQuery.isFetching || reportsQuery.isFetching
+  const hasData =
+    userQuery.data !== undefined &&
+    contentQuery.data !== undefined &&
+    reportsQuery.data !== undefined
   const refetch = () => Promise.all([
     userQuery.refetch(),
     contentQuery.refetch(),
@@ -36,6 +42,8 @@ function useAdminStats() {
     reports: reportsQuery.data,
     isPending,
     isError,
+    isFetching,
+    hasData,
     refetch,
   }
 }

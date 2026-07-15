@@ -5,28 +5,44 @@ import { useAdminStats } from "@/features/admin/dashboard/hooks/use-admin-stats"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 function formatAcceptedRate(value: number, locale: string) {
-  const formatted = new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(locale, {
+    style: "percent",
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
-  }).format(value * 100)
-
-  return `${formatted}%`
+  }).format(value)
 }
 
 function AdminDashboardPage() {
   const { language, messages } = useTranslation()
-  const { user, content, reports, isPending, isError, refetch } = useAdminStats()
+  const {
+    user,
+    content,
+    reports,
+    isPending,
+    isError,
+    isFetching,
+    hasData,
+    refetch,
+  } = useAdminStats()
 
-  if (isError) {
-    return <AdminAsyncState kind="error" onRetry={() => void refetch()} />
-  }
+  if (
+    !hasData ||
+    user === undefined ||
+    content === undefined ||
+    reports === undefined
+  ) {
+    if (isPending && !isError) {
+      return <AdminAsyncState kind="loading" />
+    }
 
-  if (isPending) {
-    return <AdminAsyncState kind="loading" />
-  }
-
-  if (user === undefined || content === undefined || reports === undefined) {
-    return <AdminAsyncState kind="error" onRetry={() => void refetch()} />
+    return (
+      <AdminAsyncState
+        kind="error"
+        onRetry={() => void refetch()}
+        retryDisabled={isFetching}
+        isRetrying={isFetching}
+      />
+    )
   }
 
   const countFormatter = new Intl.NumberFormat(language)
@@ -48,7 +64,11 @@ function AdminDashboardPage() {
   ]
 
   return (
-    <section aria-labelledby="admin-dashboard-title" className="space-y-6">
+    <section
+      aria-busy={isFetching || undefined}
+      aria-labelledby="admin-dashboard-title"
+      className="space-y-6"
+    >
       <header className="space-y-1">
         <h1 id="admin-dashboard-title" className="text-title-bold-28 text-gray-900">
           {messages.admin.dashboard.title}

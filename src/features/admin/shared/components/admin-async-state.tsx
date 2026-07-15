@@ -6,7 +6,13 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 type AdminAsyncStateProps =
   | { kind: "loading"; message?: string }
   | { kind: "empty"; message?: string }
-  | { kind: "error"; message?: string; onRetry: () => void }
+  | {
+      kind: "error"
+      message?: string
+      onRetry: () => void
+      retryDisabled?: boolean
+      isRetrying?: boolean
+    }
 
 function AdminAsyncState(props: AdminAsyncStateProps) {
   const { messages } = useTranslation()
@@ -36,7 +42,13 @@ function AdminAsyncState(props: AdminAsyncStateProps) {
         {message}
       </p>
       {props.kind === "error" && (
-        <Button type="button" variant="primary" onClick={props.onRetry}>
+        <Button
+          type="button"
+          variant="primary"
+          onClick={props.onRetry}
+          disabled={props.retryDisabled || props.isRetrying}
+          aria-busy={props.isRetrying || undefined}
+        >
           {messages.admin.common.retry}
         </Button>
       )}
