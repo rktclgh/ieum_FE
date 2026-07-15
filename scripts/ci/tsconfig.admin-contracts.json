@@ -5,8 +5,8 @@
     "baseUrl": "../..",
     "incremental": false,
     "isolatedModules": false,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "noEmit": false,
     "paths": {
       "@/*": ["src/*"]
@@ -14,5 +14,5 @@
     "rootDir": "../..",
     "target": "ES2022"
   },
-  "include": ["test-admin-contracts.ts"]
+  "include": ["test-admin-contracts.ts", "test-admin-inquiry-lifecycle.ts"]
 }

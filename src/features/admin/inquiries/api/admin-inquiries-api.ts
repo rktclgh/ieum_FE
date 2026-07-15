@@ -26,8 +26,17 @@ interface AdminInquiriesParams {
   size: number
 }
 
+interface FindAnsweredAdminInquiryOptions {
+  signal?: AbortSignal
+  maxPages?: number
+}
+
+// P2: replace this bounded cursor fallback when the backend exposes inquiry detail.
+const DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT = 100
+
 async function getAdminInquiries(
   params: AdminInquiriesParams,
+  signal?: AbortSignal,
 ): Promise<CursorPage<AdminInquiryItem>> {
   const { data } = await apiClient.get<CursorPage<AdminInquiryItem>>(
     "/api/v1/admin/inquiries",
@@ -37,6 +46,7 @@ async function getAdminInquiries(
         cursor: params.cursor,
         size: params.size,
       }),
+      signal,
     },
   )
   return data
@@ -44,19 +54,35 @@ async function getAdminInquiries(
 
 async function findAnsweredAdminInquiry(
   inquiryId: number,
+  options: FindAnsweredAdminInquiryOptions = {},
 ): Promise<AdminInquiryItem | null> {
   let cursor: string | null = null
   const seenCursors = new Set<string>()
+  const maxPages = Math.max(
+    0,
+    Math.min(
+      options.maxPages ?? DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT,
+      DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT,
+    ),
+  )
 
-  do {
-    const page = await getAdminInquiries({ status: "answered", cursor, size: 20 })
+  for (let pageCount = 0; pageCount < maxPages; pageCount += 1) {
+    if (options.signal?.aborted) {
+      throw options.signal.reason ?? new Error("Admin inquiry scan aborted")
+    }
+
+    const page = await getAdminInquiries(
+      { status: "answered", cursor, size: 20 },
+      options.signal,
+    )
     const inquiry = page.items.find((item) => item.inquiryId === inquiryId)
     if (inquiry !== undefined) return inquiry
 
     cursor = page.nextCursor
-    if (cursor !== null && seenCursors.has(cursor)) return null
-    if (cursor !== null) seenCursors.add(cursor)
-  } while (cursor !== null)
+    if (cursor === null) return null
+    if (seenCursors.has(cursor)) return null
+    seenCursors.add(cursor)
+  }
 
   return null
 }

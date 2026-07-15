@@ -3,31 +3,27 @@
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
-import { findAnsweredAdminInquiry } from "@/features/admin/inquiries/api/admin-inquiries-api"
 import type {
   AdminInquiryItem,
   AdminInquiryStatus,
 } from "@/features/admin/inquiries/api/admin-inquiries-api"
 import {
+  findAdminInquiryLifecycle,
+  getAdminInquiryLifecycleRecords,
   useAdminInquiries,
+  useAdminInquiryAnswerLifecycles,
   useAnswerAdminInquiry,
 } from "@/features/admin/inquiries/hooks/use-admin-inquiries"
 import {
   initialAdminInquiryAnswerConvergenceState,
   isAdminInquiryAnswerConvergenceLocked,
   normalizeInquiryAnswer,
-  reduceAdminInquiryAnswerConvergence,
   shouldShowAdminInquiryAnsweredConflict,
 } from "@/features/admin/inquiries/lib/admin-inquiry"
-import type {
-  AdminInquiryAnswerConvergenceReason,
-  AdminInquiryAnswerConvergenceState,
-} from "@/features/admin/inquiries/lib/admin-inquiry"
+import type { AdminInquiryAnswerConvergenceState } from "@/features/admin/inquiries/lib/admin-inquiry"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
-import { getApiErrorCode, getApiErrorMessage } from "@/lib/api/errors"
+import { getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
-
-type AnswerLatchState = "idle" | "mutation" | "refreshing" | "retry"
 
 interface AdminInquiryAnswerResolution {
   inquiry: AdminInquiryItem
@@ -48,10 +44,6 @@ interface AdminInquiryExpandedRowProps {
   convergenceState: AdminInquiryAnswerConvergenceState
   onAnswerSubmit: (inquiry: AdminInquiryItem, answer: string) => void
   onConvergenceRetry: () => void
-}
-
-function isInquiryAlreadyAnsweredError(error: unknown) {
-  return getApiErrorCode(error) === "INQUIRY_ALREADY_ANSWERED"
 }
 
 function formatDateTime(value: string | null, formatter: Intl.DateTimeFormat) {
@@ -208,17 +200,16 @@ function AdminInquiriesPage() {
   const { language, messages } = useTranslation()
   const [status, setStatus] = React.useState<AdminInquiryStatus | "">("")
   const [selectedInquiryId, setSelectedInquiryId] = React.useState<number | null>(null)
-  const [answerBusyInquiryId, setAnswerBusyInquiryId] = React.useState<number | null>(null)
-  const [answerTarget, setAnswerTarget] = React.useState<AdminInquiryItem | null>(null)
-  const [resolvedAnswer, setResolvedAnswer] =
-    React.useState<AdminInquiryAnswerResolution | null>(null)
-  const [convergenceState, setConvergenceState] =
-    React.useState<AdminInquiryAnswerConvergenceState>(
-      initialAdminInquiryAnswerConvergenceState,
-    )
-  const answerLatch = React.useRef<AnswerLatchState>("idle")
   const inquiriesQuery = useAdminInquiries({ status, size: 20 })
-  const answerMutation = useAnswerAdminInquiry(selectedInquiryId ?? 0)
+  const answerMutation = useAnswerAdminInquiry()
+  const answerLifecycleRegistry = useAdminInquiryAnswerLifecycles()
+  const answerLifecycleRecords = getAdminInquiryLifecycleRecords(
+    answerLifecycleRegistry,
+  )
+  const activeAnswerLifecycle = answerLifecycleRecords.findLast((record) =>
+    isAdminInquiryAnswerConvergenceLocked(record.state),
+  )
+  const latestAnswerLifecycle = answerLifecycleRecords.at(-1)
   const inquiries = inquiriesQuery.data?.pages.flatMap((page) => page.items) ?? []
   const visibleInquiryIds = inquiries.map((inquiry) => inquiry.inquiryId).join(",")
   const [previousVisibleInquiryIds, setPreviousVisibleInquiryIds] =
@@ -226,20 +217,23 @@ function AdminInquiriesPage() {
   const selectedInquiryExists =
     selectedInquiryId === null ||
     inquiries.some((inquiry) => inquiry.inquiryId === selectedInquiryId)
+  const answerTarget = activeAnswerLifecycle?.inquiry ?? null
   const answerTargetIsVisible =
     answerTarget === null ||
     inquiries.some((inquiry) => inquiry.inquiryId === answerTarget.inquiryId)
-  const answerBusy =
-    answerBusyInquiryId !== null ||
-    answerMutation.isPending ||
-    isAdminInquiryAnswerConvergenceLocked(convergenceState)
-  const listBusy = inquiriesQuery.isFetching || answerBusy
-  const answerError =
-    answerMutation.isError &&
-    !isInquiryAlreadyAnsweredError(answerMutation.error) &&
-    !isAdminInquiryAnswerConvergenceLocked(convergenceState)
-      ? getApiErrorMessage(answerMutation.error, messages.admin.common.loadError)
+  const convergenceState =
+    activeAnswerLifecycle?.state ?? initialAdminInquiryAnswerConvergenceState
+  const resolvedAnswer: AdminInquiryAnswerResolution | null =
+    latestAnswerLifecycle?.snapshot?.status === "answered"
+      ? {
+          inquiry: latestAnswerLifecycle.snapshot,
+          showConflict:
+            latestAnswerLifecycle.state.kind === "conflict-refreshed",
+        }
       : null
+  const answerBusy =
+    activeAnswerLifecycle !== undefined || answerMutation.isPending
+  const listBusy = inquiriesQuery.isFetching || answerBusy
   const dateFormatter = new Intl.DateTimeFormat(language, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -252,135 +246,30 @@ function AdminInquiriesPage() {
     }
   }
 
-  const releaseAnswerLock = () => {
-    answerLatch.current = "idle"
-    setAnswerBusyInquiryId(null)
-    setAnswerTarget(null)
-  }
-
-  const refreshAnswerConvergence = async (
-    refreshingState: Extract<
-      AdminInquiryAnswerConvergenceState,
-      { kind: "refreshing" }
-    >,
-    targetInquiry: AdminInquiryItem,
-  ) => {
-    let nextState: AdminInquiryAnswerConvergenceState
-
-    try {
-      const refreshResult = await inquiriesQuery.refetch({ cancelRefetch: true })
-
-      if (refreshResult.isError || refreshResult.data === undefined) {
-        nextState = reduceAdminInquiryAnswerConvergence(refreshingState, {
-          type: "refetch-failed",
-        })
-      } else {
-        const refreshedInquiry = refreshResult.data.pages
-          .flatMap((page) => page.items)
-          .find((item) => item.inquiryId === targetInquiry.inquiryId)
-        const recoveredInquiry =
-          refreshedInquiry === undefined && status === "pending"
-            ? await findAnsweredAdminInquiry(targetInquiry.inquiryId)
-            : null
-        const canonicalInquiry = refreshedInquiry ?? recoveredInquiry
-
-        if (canonicalInquiry === null || canonicalInquiry === undefined) {
-          nextState = reduceAdminInquiryAnswerConvergence(refreshingState, {
-            type: "refetch-failed",
-          })
-        } else {
-          nextState = reduceAdminInquiryAnswerConvergence(refreshingState, {
-            type: "refetch-succeeded",
-            inquiryStatus: canonicalInquiry.status,
-          })
-          if (canonicalInquiry.status === "answered") {
-            setResolvedAnswer({
-              inquiry: canonicalInquiry,
-              showConflict: refreshingState.reason === "conflict",
-            })
-          }
-        }
-      }
-    } catch {
-      nextState = reduceAdminInquiryAnswerConvergence(refreshingState, {
-        type: "refetch-failed",
-      })
-    }
-
-    setConvergenceState(nextState)
-    if (isAdminInquiryAnswerConvergenceLocked(nextState)) {
-      answerLatch.current = "retry"
-      return
-    }
-
-    releaseAnswerLock()
-  }
-
-  const beginAnswerConvergence = (
-    reason: AdminInquiryAnswerConvergenceReason,
-    targetInquiry: AdminInquiryItem,
-  ) => {
-    const refreshingState = reduceAdminInquiryAnswerConvergence(
-      initialAdminInquiryAnswerConvergenceState,
-      { type: "begin", reason },
-    )
-    if (refreshingState.kind !== "refreshing") return
-
-    answerLatch.current = "refreshing"
-    setConvergenceState(refreshingState)
-    void refreshAnswerConvergence(refreshingState, targetInquiry)
-  }
-
   const retryAnswerConvergence = () => {
-    if (
-      answerLatch.current !== "retry" ||
-      convergenceState.kind !== "retry" ||
-      answerTarget === null
-    ) return
-
-    const refreshingState = reduceAdminInquiryAnswerConvergence(
-      convergenceState,
-      { type: "retry" },
+    if (activeAnswerLifecycle?.state.kind !== "retry") return
+    void answerMutation.retryConvergence(
+      activeAnswerLifecycle.inquiry.inquiryId,
     )
-    if (refreshingState.kind !== "refreshing") return
-
-    answerLatch.current = "refreshing"
-    setConvergenceState(refreshingState)
-    void refreshAnswerConvergence(refreshingState, answerTarget)
   }
 
   const handleAnswerSubmit = (inquiry: AdminInquiryItem, answer: string) => {
-    if (answerLatch.current !== "idle") return
-
-    setResolvedAnswer(null)
-    setAnswerTarget(inquiry)
     answerMutation.reset()
-    answerLatch.current = "mutation"
-    setAnswerBusyInquiryId(inquiry.inquiryId)
-    answerMutation.mutate({ answer }, {
-      onSettled: (_data, error) => {
-        const reason =
-          error === null
-            ? "success"
-            : isInquiryAlreadyAnsweredError(error)
-              ? "conflict"
-              : "uncertain"
-        beginAnswerConvergence(reason, inquiry)
-      },
+    answerMutation.submit({
+      answer,
+      inquiry,
+      size: 20,
+      status,
     })
   }
 
   const handleInquiryToggle = (inquiryId: number, isExpanded: boolean) => {
     answerMutation.reset()
-    setConvergenceState(initialAdminInquiryAnswerConvergenceState)
-    setResolvedAnswer(null)
     setSelectedInquiryId(isExpanded ? null : inquiryId)
   }
 
   const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     answerMutation.reset()
-    setConvergenceState(initialAdminInquiryAnswerConvergenceState)
-    setResolvedAnswer(null)
     setSelectedInquiryId(null)
     setStatus(event.target.value as AdminInquiryStatus | "")
   }
@@ -420,15 +309,14 @@ function AdminInquiriesPage() {
             message={messages.admin.inquiries.convergenceError}
             onRetry={retryAnswerConvergence}
           />
-        ) : convergenceState.kind === "refreshing" ? (
+        ) : convergenceState.kind === "refreshing" ||
+          convergenceState.kind === "mutation" ? (
           <AdminAsyncState kind="loading" />
         ) : null
       )}
 
       {resolvedAnswer !== null &&
-        !inquiries.some(
-          (inquiry) => inquiry.inquiryId === resolvedAnswer.inquiry.inquiryId,
-        ) && (
+        selectedInquiryId !== resolvedAnswer.inquiry.inquiryId && (
           <div aria-live="polite">
             <AdminInquiryAnsweredDetails
               inquiry={resolvedAnswer.inquiry}
@@ -442,7 +330,7 @@ function AdminInquiriesPage() {
         <AdminAsyncState kind="loading" />
       ) : inquiriesQuery.isError &&
           inquiries.length === 0 &&
-          answerBusyInquiryId === null ? (
+          !answerBusy ? (
         <AdminAsyncState
           kind="error"
           onRetry={() => void inquiriesQuery.refetch()}
@@ -455,7 +343,7 @@ function AdminInquiriesPage() {
         <div className="space-y-4">
           {inquiriesQuery.isError &&
               !inquiriesQuery.isFetchNextPageError &&
-              answerBusyInquiryId === null && (
+              !answerBusy && (
             <AdminAsyncState
               kind="error"
               onRetry={() => void inquiriesQuery.refetch()}
@@ -479,6 +367,21 @@ function AdminInquiriesPage() {
               <tbody className="divide-y divide-gray-100 text-body-regular-14 text-gray-900">
                 {inquiries.map((inquiry) => {
                   const isExpanded = inquiry.inquiryId === selectedInquiryId
+                  const lifecycle = findAdminInquiryLifecycle(
+                    answerLifecycleRegistry,
+                    inquiry,
+                  )
+                  const rowConvergenceState =
+                    lifecycle?.state ?? initialAdminInquiryAnswerConvergenceState
+                  const answerError =
+                    lifecycle?.settledReason === "uncertain" &&
+                    lifecycle.mutationError !== null &&
+                    !isAdminInquiryAnswerConvergenceLocked(lifecycle.state)
+                      ? getApiErrorMessage(
+                          lifecycle.mutationError,
+                          messages.admin.common.loadError,
+                        )
+                      : null
 
                   return (
                     <React.Fragment key={inquiry.inquiryId}>
@@ -516,7 +419,7 @@ function AdminInquiriesPage() {
                                 dateFormatter={dateFormatter}
                                 answerBusy={answerBusy}
                                 answerError={answerError}
-                                convergenceState={convergenceState}
+                                convergenceState={rowConvergenceState}
                                 onAnswerSubmit={handleAnswerSubmit}
                                 onConvergenceRetry={retryAnswerConvergence}
                               />

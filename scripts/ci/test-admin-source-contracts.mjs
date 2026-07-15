@@ -739,8 +739,13 @@ function assertAdminInquiryApiContracts(source) {
   )
   assert.match(compact, /interface AnswerInquiryRequest \{ answer: string \}/)
   assert.match(
+    compact,
+    /const DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT = 100/,
+  )
+  assert.match(list, /signal\?: AbortSignal/)
+  assert.match(
     list,
-    /apiClient\.get<CursorPage<AdminInquiryItem>>\( "\/api\/v1\/admin\/inquiries", \{ params: compactQuery\(\{ status: params\.status, cursor: params\.cursor, size: params\.size, \}\), \}, \)/,
+    /apiClient\.get<CursorPage<AdminInquiryItem>>\( "\/api\/v1\/admin\/inquiries", \{ params: compactQuery\(\{ status: params\.status, cursor: params\.cursor, size: params\.size, \}\), signal, \}, \)/,
   )
   assert.match(
     answer,
@@ -749,13 +754,16 @@ function assertAdminInquiryApiContracts(source) {
   assertOrdered(recovery, [
     "let cursor: string | null = null",
     "const seenCursors = new Set<string>()",
-    'getAdminInquiries({ status: "answered", cursor, size: 20 })',
+    "const maxPages = Math.max( 0, Math.min( options.maxPages ?? DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT, DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT, ), )",
+    "for (let pageCount = 0; pageCount < maxPages; pageCount += 1)",
+    "if (options.signal?.aborted)",
+    'getAdminInquiries( { status: "answered", cursor, size: 20 }, options.signal, )',
     "page.items.find((item) => item.inquiryId === inquiryId)",
     "if (inquiry !== undefined) return inquiry",
     "cursor = page.nextCursor",
+    "if (cursor === null) return null",
     "seenCursors.has(cursor)",
     "seenCursors.add(cursor)",
-    "while (cursor !== null)",
     "return null",
   ])
   assert.equal((list.match(/apiClient\.get/g) ?? []).length, 1)
@@ -765,22 +773,35 @@ function assertAdminInquiryApiContracts(source) {
 
 function assertAdminInquiryHooks(source) {
   const compact = compactSource(source)
+  const listOptions = compactSource(
+    boundedSource(
+      source,
+      "function adminInquiriesInfiniteQueryOptions(",
+      "function invalidateAdminInquiryQueries(",
+    ),
+  )
   const invalidation = compactSource(
     boundedSource(
       source,
       "function invalidateAdminInquiryQueries(",
+      "function createAdminInquiryAnswerDependencies(",
+    ),
+  )
+  const dependencies = compactSource(
+    boundedSource(
+      source,
+      "function createAdminInquiryAnswerDependencies(",
       "function useAdminInquiries(",
     ),
   )
   const listHook = compactSource(
-    boundedSource(
-      source,
-      "function useAdminInquiries(",
-      "function useAnswerAdminInquiry(",
-    ),
+    boundedSource(source, "function useAdminInquiries(", "function useAdminInquiryAnswerLifecycles("),
+  )
+  const lifecycleHook = compactSource(
+    boundedSource(source, "function useAdminInquiryAnswerLifecycles(", "function useAnswerAdminInquiry("),
   )
   const answerHook = compactSource(
-    boundedSource(source, "function useAnswerAdminInquiry(", "export {"),
+    boundedSource(source, "function useAnswerAdminInquiry(", "function getAdminInquiryLifecycleRecords("),
   )
 
   assert.match(compact, /all: \["admin", "inquiries"\] as const/)
@@ -793,19 +814,102 @@ function assertAdminInquiryHooks(source) {
     invalidation,
     /queryClient\.invalidateQueries\(\{ queryKey: adminInquiryKeys\.all, refetchType: "none", \}\)/,
   )
-  assert.match(listHook, /queryKey: adminInquiryKeys\.list\(\{ status, size \}\)/)
+  assert.match(listOptions, /queryKey: adminInquiryKeys\.list\(\{ status, size \}\)/)
   assert.match(
-    listHook,
-    /getAdminInquiries\(\{ status, cursor: pageParam, size \}\)/,
+    listOptions,
+    /getAdminInquiries\(\{ status, cursor: pageParam, size \}, signal\)/,
   )
-  assert.match(listHook, /initialPageParam: null as string \| null/)
-  assert.match(listHook, /getNextPageParam: \(page\) => page\.nextCursor/)
-  assert.match(answerHook, /mutationFn: \(body: AnswerInquiryRequest\) => answerAdminInquiry\(inquiryId, body\)/)
-  assert.match(
-    answerHook,
-    /onSettled: \(\) => invalidateAdminInquiryQueries\(queryClient\)/,
+  assert.match(listOptions, /initialPageParam: null as string \| null/)
+  assert.match(listOptions, /getNextPageParam: \(page: \{ nextCursor: string \| null \}\) => page\.nextCursor/)
+  assert.match(listHook, /useInfiniteQuery\(adminInquiriesInfiniteQueryOptions\(\{ status, size \}\)\)/)
+  assertOrdered(dependencies, [
+    "const options = adminInquiriesInfiniteQueryOptions({ status, size })",
+    "queryClient.getQueryCache().find(",
+    "queryKey: options.queryKey",
+    "exact: true",
+    "if (query !== undefined)",
+    "await queryClient.refetchQueries(",
+    '{ queryKey: options.queryKey, exact: true, type: "all" }',
+    "{ cancelRefetch: true, throwOnError: true }",
+    "queryClient.getQueryData<",
+    "return data.pages.flatMap((page) => page.items)",
+    "await queryClient.fetchInfiniteQuery(options)",
+  ])
+  assert.equal((dependencies.match(/fetchInfiniteQuery/g) ?? []).length, 1)
+  assert.equal((dependencies.match(/refetchQueries/g) ?? []).length, 1)
+  assert.match(dependencies, /data\.pages\.flatMap\(\(page\) => page\.items\)/)
+  assert.match(dependencies, /getApiErrorCode\(error\) === "INQUIRY_ALREADY_ANSWERED"/)
+  assertOrdered(lifecycleHook, [
+    "queryKey: adminInquiryAnswerLifecycleKey",
+    "initialData: () => getAdminInquiryAnswerLifecycleRegistry(queryClient)",
+    "enabled: false",
+    "gcTime: Infinity",
+    "staleTime: Infinity",
+  ])
+  assertOrdered(answerHook, [
+    "createAdminInquiryAnswerMutationOptions(queryClient, dependencies)",
+    "const execution = claimAdminInquiryAnswer(queryClient, input)",
+    "if (execution === null) return false",
+    "mutation.mutate(execution)",
+    "retryAdminInquiryAnswerConvergence(",
+  ])
+  assert.doesNotMatch(answerHook, /mutation\.mutate\([^)]*,\s*\{/)
+}
+
+function assertAdminInquiryAnswerLifecycle(source) {
+  const compact = compactSource(source)
+  const claim = compactSource(
+    boundedSource(source, "function claimAdminInquiryAnswer(", "function beginAdminInquiryAnswerConvergence("),
   )
-  assert.doesNotMatch(answerHook, /onSuccess:/)
+  const convergence = compactSource(
+    boundedSource(source, "async function runAdminInquiryAnswerConvergence(", "function createAdminInquiryAnswerMutationOptions("),
+  )
+  const mutation = compactSource(
+    boundedSource(source, "function createAdminInquiryAnswerMutationOptions(", "async function retryAdminInquiryAnswerConvergence("),
+  )
+  const retry = compactSource(
+    boundedSource(source, "async function retryAdminInquiryAnswerConvergence(", "export {"),
+  )
+
+  assert.match(compact, /"answer-lifecycles"/)
+  assert.match(compact, /"answer"/)
+  assertOrdered(claim, [
+    "isAdminInquiryAnswerConvergenceLocked(current.state)",
+    "operationId: registry.nextOperationId",
+    'state: { kind: "mutation" }',
+  ])
+  assert.match(compact, /current\?\.operationId !== execution\.operationId/)
+  assertOrdered(mutation, [
+    "mutationKey: adminInquiryAnswerMutationKey",
+    "mutationFn:",
+    "onSettled: async (",
+    'error === null ? "success"',
+    'dependencies.isAlreadyAnsweredError(error) ? "conflict" : "uncertain"',
+    "beginAdminInquiryAnswerConvergence(",
+    "await runAdminInquiryAnswerConvergence(",
+  ])
+  assert.equal(
+    (convergence.match(/dependencies\.refetchCanonicalList/g) ?? []).length,
+    1,
+  )
+  assertOrdered(convergence, [
+    "await dependencies.invalidateInquiries()",
+    "await dependencies.refetchCanonicalList(",
+    "canonicalItems.find(",
+    "await dependencies.findAnsweredInquiry(",
+    "{ signal: controller.signal }",
+    "const canonicalInquiry = refreshedInquiry ?? recoveredInquiry",
+    'inquiryStatus: canonicalInquiry?.status ?? "missing"',
+    'canonicalInquiry?.status === "answered" ? canonicalInquiry : null',
+  ])
+  assert.match(convergence, /type: "refetch-failed"/)
+  assert.match(compact, /controllers\.get\(execution\.inquiry\.inquiryId\)\?\.controller\.abort\(\)/)
+  assertOrdered(retry, [
+    'current?.state.kind !== "retry"',
+    'type: "retry"',
+    'nextState.kind !== "refreshing"',
+    "await runAdminInquiryAnswerConvergence(",
+  ])
 }
 
 function assertAdminInquiryCursorRetry(source) {
@@ -820,11 +924,11 @@ function assertAdminInquiryCursorRetry(source) {
 
   assert.match(
     compact,
-    /inquiriesQuery\.isError && !inquiriesQuery\.isFetchNextPageError && answerBusyInquiryId === null && \(/,
+    /inquiriesQuery\.isError && !inquiriesQuery\.isFetchNextPageError && !answerBusy && \(/,
   )
   assert.match(
     compact,
-    /inquiriesQuery\.isError && inquiries\.length === 0 && answerBusyInquiryId === null \? \(/,
+    /inquiriesQuery\.isError && inquiries\.length === 0 && !answerBusy \? \(/,
   )
   assertOrdered(pagination, [
     "inquiriesQuery.isFetchNextPageError ? (",
@@ -877,7 +981,7 @@ function assertAdminInquiryAnswerConvergenceState(source) {
   )
   assert.match(
     compact,
-    /return state\.kind === "refreshing" \|\| state\.kind === "retry"/,
+    /state\.kind === "mutation" \|\| state\.kind === "refreshing" \|\| state\.kind === "retry"/,
   )
   assert.match(compact, /return state\.kind === "conflict-refreshed"/)
 }
@@ -942,11 +1046,11 @@ function assertAdminInquiryExpansion(source) {
   assert.match(source, /inquiry\.answeredAt/)
   assert.match(
     compact,
-    /const \[resolvedAnswer, setResolvedAnswer\] = React\.useState<AdminInquiryAnswerResolution \| null>\(null\)/,
+    /const resolvedAnswer: AdminInquiryAnswerResolution \| null = latestAnswerLifecycle\?\.snapshot\?\.status === "answered"/,
   )
   assert.match(
     compact,
-    /resolvedAnswer !== null && !inquiries\.some\( \(inquiry\) => inquiry\.inquiryId === resolvedAnswer\.inquiry\.inquiryId, \) && \(/,
+    /resolvedAnswer !== null && selectedInquiryId !== resolvedAnswer\.inquiry\.inquiryId && \(/,
   )
   assert.match(
     source,
@@ -968,7 +1072,6 @@ function assertAdminInquiryExpansion(source) {
 }
 
 function assertAdminInquiryAnswerConvergence(source) {
-  const compact = compactSource(source)
   const expanded = compactSource(
     boundedSource(
       source,
@@ -978,13 +1081,6 @@ function assertAdminInquiryAnswerConvergence(source) {
   )
   const page = compactSource(
     boundedSource(source, "function AdminInquiriesPage()", "export {"),
-  )
-  const refresh = compactSource(
-    boundedSource(
-      source,
-      "const refreshAnswerConvergence = async (",
-      "const beginAnswerConvergence = (",
-    ),
   )
   const retry = compactSource(
     boundedSource(
@@ -1008,54 +1104,25 @@ function assertAdminInquiryAnswerConvergence(source) {
     ),
   )
 
-  assert.match(
-    source,
-    /type AnswerLatchState = "idle" \| "mutation" \| "refreshing" \| "retry"/,
-  )
-  assert.match(source, /const answerLatch = React\.useRef<AnswerLatchState>\("idle"\)/)
-  assert.match(
-    source,
-    /const \[answerBusyInquiryId, setAnswerBusyInquiryId\] = React\.useState<number \| null>\(null\)/,
-  )
-  assert.match(
-    page,
-    /const answerBusy = answerBusyInquiryId !== null \|\| answerMutation\.isPending \|\| isAdminInquiryAnswerConvergenceLocked\(convergenceState\)/,
-  )
-  assert.equal(
-    (refresh.match(/inquiriesQuery\.refetch\(\{ cancelRefetch: true \}\)/g) ?? []).length,
-    1,
-  )
-  assert.match(refresh, /refreshResult\.isError \|\| refreshResult\.data === undefined/)
-  assert.match(
-    refresh,
-    /refreshedInquiry === undefined && status === "pending" \? await findAnsweredAdminInquiry\(targetInquiry\.inquiryId\) : null/,
-  )
-  assert.match(
-    refresh,
-    /if \(canonicalInquiry === null \|\| canonicalInquiry === undefined\) \{ nextState = reduceAdminInquiryAnswerConvergence\(refreshingState, \{ type: "refetch-failed", \}\) \}/,
-  )
-  assert.match(
-    refresh,
-    /const canonicalInquiry = refreshedInquiry \?\? recoveredInquiry/,
-  )
-  assert.match(refresh, /inquiryStatus: canonicalInquiry\.status/)
-  assert.match(
-    refresh,
-    /if \(canonicalInquiry\.status === "answered"\) \{ setResolvedAnswer\(\{ inquiry: canonicalInquiry, showConflict: refreshingState\.reason === "conflict", \}\) \}/,
-  )
-  assertOrdered(refresh, [
-    "setConvergenceState(nextState)",
-    "if (isAdminInquiryAnswerConvergenceLocked(nextState)) {",
-    'answerLatch.current = "retry"',
-    "return",
-    "releaseAnswerLock()",
+  assertOrdered(page, [
+    "useAnswerAdminInquiry()",
+    "useAdminInquiryAnswerLifecycles()",
+    "getAdminInquiryLifecycleRecords(",
+    "findLast((record) =>",
+    "isAdminInquiryAnswerConvergenceLocked(record.state)",
   ])
   assert.match(
-    retry,
-    /answerLatch\.current !== "retry" \|\| convergenceState\.kind !== "retry" \|\| answerTarget === null/,
+    page,
+    /const answerBusy = activeAnswerLifecycle !== undefined \|\| answerMutation\.isPending/,
   )
-  assert.match(retry, /type: "retry"/)
-  assert.match(retry, /void refreshAnswerConvergence\(refreshingState, answerTarget\)/)
+  assert.doesNotMatch(source, /AnswerLatchState|answerLatch|setConvergenceState/)
+  assert.doesNotMatch(source, /answerMutation\.mutate\(/)
+  assert.doesNotMatch(source, /onSettled:/)
+  assert.match(
+    retry,
+    /activeAnswerLifecycle\?\.state\.kind !== "retry"/,
+  )
+  assert.match(retry, /answerMutation\.retryConvergence\( activeAnswerLifecycle\.inquiry\.inquiryId, \)/)
   assertOrdered(formSubmit, [
     "event.preventDefault()",
     "const answer = normalizeInquiryAnswer(draft)",
@@ -1063,31 +1130,17 @@ function assertAdminInquiryAnswerConvergence(source) {
     "onAnswerSubmit(inquiry, answer)",
   ])
   assertOrdered(submit, [
-    'if (answerLatch.current !== "idle") return',
-    "setResolvedAnswer(null)",
-    "setAnswerTarget(inquiry)",
     "answerMutation.reset()",
-    'answerLatch.current = "mutation"',
-    "setAnswerBusyInquiryId(inquiry.inquiryId)",
-    "answerMutation.mutate({ answer }, {",
-    "onSettled: (_data, error) => {",
-    "const reason =",
-    "beginAnswerConvergence(reason, inquiry)",
+    "answerMutation.submit({",
+    "answer",
+    "inquiry",
+    "size: 20",
+    "status",
   ])
-  assert.match(
-    submit,
-    /const reason = error === null \? "success" : isInquiryAlreadyAnsweredError\(error\) \? "conflict" : "uncertain"/,
-  )
-  assert.doesNotMatch(submit, /releaseAnswerLock\(\)/)
-  assert.equal((submit.match(/answerMutation\.mutate\(/g) ?? []).length, 1)
-  assertOrdered(page, [
-    'answerLatch.current = "idle"',
-    "setAnswerBusyInquiryId(null)",
-    "setAnswerTarget(null)",
-  ])
+  assert.equal((submit.match(/answerMutation\.submit\(/g) ?? []).length, 1)
   assert.match(
     page,
-    /const answerError = answerMutation\.isError && !isInquiryAlreadyAnsweredError\(answerMutation\.error\) && !isAdminInquiryAnswerConvergenceLocked\(convergenceState\) \? getApiErrorMessage\(answerMutation\.error, messages\.admin\.common\.loadError\) : null/,
+    /lifecycle\?\.settledReason === "uncertain" && lifecycle\.mutationError !== null && !isAdminInquiryAnswerConvergenceLocked\(lifecycle\.state\)/,
   )
   assert.match(expanded, /convergenceState\.kind === "retry" && \(/)
   assert.equal(
@@ -1103,7 +1156,12 @@ function assertAdminInquiryAnswerConvergence(source) {
     (page.match(/onRetry=\{retryAnswerConvergence\}/g) ?? []).length,
     1,
   )
-  assert.match(compact, /getApiErrorCode\(error\) === "INQUIRY_ALREADY_ANSWERED"/)
+  assert.match(
+    page,
+    /convergenceState\.kind === "refreshing" \|\| convergenceState\.kind === "mutation"/,
+  )
+  assert.match(page, /findAdminInquiryLifecycle\( answerLifecycleRegistry, inquiry, \)/)
+  assert.match(page, /convergenceState=\{rowConvergenceState\}/)
 }
 
 const statsApiBindings = [
@@ -2189,12 +2247,21 @@ test("each admin inquiry API owns the exact nullable DTO, filters, body, and end
     "apiClient.get(`",
   )
   const pendingRecoveryMutant = source.replace(
-    'getAdminInquiries({ status: "answered", cursor, size: 20 })',
-    'getAdminInquiries({ status: "pending", cursor, size: 20 })',
+    'status: "answered", cursor, size: 20',
+    'status: "pending", cursor, size: 20',
   )
   const firstPageOnlyMutant = source.replace(
     "cursor = page.nextCursor",
     "cursor = null",
+  )
+  const droppedSignalMutant = source.replace("      signal,\n", "")
+  const unboundedScanMutant = source.replace(
+    "DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT = 100",
+    "DEFAULT_ANSWERED_INQUIRY_SCAN_PAGE_LIMIT = Infinity",
+  )
+  const uncancellableScanMutant = source.replace(
+    "if (options.signal?.aborted)",
+    "if (false)",
   )
 
   for (const mutant of [
@@ -2204,35 +2271,74 @@ test("each admin inquiry API owns the exact nullable DTO, filters, body, and end
     wrongMethodMutant,
     pendingRecoveryMutant,
     firstPageOnlyMutant,
+    droppedSignalMutant,
+    unboundedScanMutant,
+    uncancellableScanMutant,
   ]) {
     assert.notEqual(mutant, source)
     assert.throws(() => assertAdminInquiryApiContracts(mutant))
   }
 })
 
-test("admin inquiry hooks keep cursor keys stale-only and invalidate every settled answer", () => {
+test("admin inquiry hooks and mutation cache own durable settled convergence", () => {
   const source = readSource(
     "src/features/admin/inquiries/hooks/use-admin-inquiries.ts",
   )
+  const lifecycleSource = readSource(
+    "src/features/admin/inquiries/lib/admin-inquiry-answer-lifecycle.ts",
+  )
 
   assertAdminInquiryHooks(source)
+  assertAdminInquiryAnswerLifecycle(lifecycleSource)
 
-  const successOnlyMutant = source.replace("onSettled:", "onSuccess:")
   const automaticRefetchMutant = source.replace('refetchType: "none",', "")
   const wrongPrefixMutant = source.replace(
     "queryKey: adminInquiryKeys.all",
     "queryKey: adminInquiryKeys.lists()",
   )
   const droppedStatusKeyMutant = source.replace("{ status, size },", "{ size },")
+  const staleInFlightMutant = source.replace(
+    "{ cancelRefetch: true, throwOnError: true }",
+    "{ cancelRefetch: false, throwOnError: true }",
+  )
 
   for (const mutant of [
-    successOnlyMutant,
     automaticRefetchMutant,
     wrongPrefixMutant,
     droppedStatusKeyMutant,
+    staleInFlightMutant,
   ]) {
     assert.notEqual(mutant, source)
     assert.throws(() => assertAdminInquiryHooks(mutant))
+  }
+
+  const successOnlyMutant = lifecycleSource.replace("onSettled:", "onSuccess:")
+  const droppedOperationGuardMutant = lifecycleSource.replaceAll(
+    "current?.operationId !== execution.operationId",
+    "false",
+  )
+  const duplicateCanonicalRefetchMutant = lifecycleSource.replace(
+    "const canonicalItems = await dependencies.refetchCanonicalList({",
+    "await dependencies.refetchCanonicalList({ status: execution.status, size: execution.size })\n    const canonicalItems = await dependencies.refetchCanonicalList({",
+  )
+  const droppedSnapshotMutant = lifecycleSource.replace(
+    'canonicalInquiry?.status === "answered" ? canonicalInquiry : null',
+    "null",
+  )
+  const droppedAbortMutant = lifecycleSource.replace(
+    "controllers.get(execution.inquiry.inquiryId)?.controller.abort()",
+    "controllers.get(execution.inquiry.inquiryId)",
+  )
+
+  for (const mutant of [
+    successOnlyMutant,
+    droppedOperationGuardMutant,
+    duplicateCanonicalRefetchMutant,
+    droppedSnapshotMutant,
+    droppedAbortMutant,
+  ]) {
+    assert.notEqual(mutant, lifecycleSource)
+    assert.throws(() => assertAdminInquiryAnswerLifecycle(mutant))
   }
 })
 
@@ -2259,12 +2365,17 @@ test("admin inquiry answer convergence keeps every failed canonical refresh lock
     'if (event.inquiryStatus !== "answered") {',
     'if (false) {',
   )
+  const mutationUnlockMutant = source.replaceAll(
+    'state.kind === "mutation" ||\n',
+    "",
+  )
 
   for (const mutant of [
     failedUnlockMutant,
     missingUnlockMutant,
     uncertainRetryMutant,
     pendingUnlockMutant,
+    mutationUnlockMutant,
   ]) {
     assert.notEqual(mutant, source)
     assert.throws(() => assertAdminInquiryAnswerConvergenceState(mutant))
@@ -2303,25 +2414,13 @@ test("admin inquiries preserve isolated row state and recover filtered canonical
     'inquiry.status === "answered"',
     'inquiry.status === "pending"',
   )
-  const unguardedMutant = source.replace(
-    'if (answerLatch.current !== "idle") return',
-    "if (false) return",
+  const droppedLifecycleSubscriptionMutant = source.replace(
+    "useAdminInquiryAnswerLifecycles()",
+    "{ nextOperationId: 1, records: {} }",
   )
   const duplicateMutationMutant = source.replace(
-    "answerMutation.mutate({ answer }, {",
-    "answerMutation.mutate({ answer })\n    answerMutation.mutate({ answer }, {",
-  )
-  const duplicateRefetchMutant = source.replace(
-    "await inquiriesQuery.refetch({ cancelRefetch: true })",
-    "await inquiriesQuery.refetch({ cancelRefetch: true })\n      await inquiriesQuery.refetch({ cancelRefetch: true })",
-  )
-  const staleRefetchMutant = source.replace(
-    "await inquiriesQuery.refetch({ cancelRefetch: true })",
-    "await inquiriesQuery.refetch({ cancelRefetch: false })",
-  )
-  const uncertainUnlockMutant = source.replace(
-    '            : "uncertain"\n        beginAnswerConvergence(reason, inquiry)',
-    '            : "uncertain"\n        if (reason === "uncertain") {\n          releaseAnswerLock()\n          return\n        }\n        beginAnswerConvergence(reason, inquiry)',
+    "answerMutation.submit({",
+    "answerMutation.submit({})\n    answerMutation.submit({",
   )
   const duplicateRetryMutant = source.replace(
     "onRetry={retryAnswerConvergence}",
@@ -2336,9 +2435,9 @@ test("admin inquiries preserve isolated row state and recover filtered canonical
     "messages.admin.inquiries.subject",
     "messages.admin.inquiries.content",
   )
-  const droppedAnsweredRecoveryMutant = source.replace(
-    "await findAnsweredAdminInquiry(targetInquiry.inquiryId)",
-    "null",
+  const unlockedMutationMutant = source.replace(
+    "isAdminInquiryAnswerConvergenceLocked(record.state)",
+    'record.state.kind === "refreshing"',
   )
   const droppedResolvedSnapshotMutant = source.replace(
     "resolvedAnswer !== null &&",
@@ -2356,15 +2455,12 @@ test("admin inquiries preserve isolated row state and recover filtered canonical
     sharedDraftMutant,
     missingFallbackMutant,
     answeredFormMutant,
-    unguardedMutant,
+    droppedLifecycleSubscriptionMutant,
     duplicateMutationMutant,
-    duplicateRefetchMutant,
-    staleRefetchMutant,
-    uncertainUnlockMutant,
     duplicateRetryMutant,
     staleSelectionMutant,
     swappedSubjectMutant,
-    droppedAnsweredRecoveryMutant,
+    unlockedMutationMutant,
     droppedResolvedSnapshotMutant,
     droppedDetachedRetryMutant,
   ]) {
@@ -2396,11 +2492,11 @@ test("admin inquiry cursor failures retry one page without a second generic erro
     "disabled={inquiriesQuery.isFetchingNextPage}",
   )
   const duplicateErrorMutant = source.replace(
-    "inquiriesQuery.isError &&\n              !inquiriesQuery.isFetchNextPageError &&\n              answerBusyInquiryId === null",
+    "inquiriesQuery.isError &&\n              !inquiriesQuery.isFetchNextPageError &&\n              !answerBusy",
     "inquiriesQuery.isError",
   )
   const emptyDuplicateErrorMutant = source.replace(
-    "inquiriesQuery.isError &&\n          inquiries.length === 0 &&\n          answerBusyInquiryId === null",
+    "inquiriesQuery.isError &&\n          inquiries.length === 0 &&\n          !answerBusy",
     "inquiriesQuery.isError && inquiries.length === 0",
   )
 

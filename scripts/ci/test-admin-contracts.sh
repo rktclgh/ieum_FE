@@ -12,5 +12,7 @@ pnpm exec tsc \
   --outDir "$tmp_dir" \
   --incremental false
 
-node --test "$tmp_dir/scripts/ci/test-admin-contracts.js"
+NODE_PATH="$repo_root/node_modules" node --test \
+  "$tmp_dir/scripts/ci/test-admin-contracts.js" \
+  "$tmp_dir/scripts/ci/test-admin-inquiry-lifecycle.js"
 node --test scripts/ci/test-admin-source-contracts.mjs

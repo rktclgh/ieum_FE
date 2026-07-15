@@ -620,6 +620,7 @@ test("inquiry DTOs preserve every nullable backend field exactly", () => {
 })
 
 test("successful inquiry answers stay locked until canonical answered data arrives", () => {
+  const mutation = { kind: "mutation" } as const
   const refreshing = reduceAdminInquiryAnswerConvergence(
     initialAdminInquiryAnswerConvergenceState,
     { type: "begin", reason: "success" },
@@ -645,6 +646,7 @@ test("successful inquiry answers stay locked until canonical answered data arriv
   })
 
   for (const state of [
+    mutation,
     refreshing,
     failed,
     filteredMissing,

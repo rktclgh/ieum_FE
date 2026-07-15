@@ -7,6 +7,7 @@ type AdminInquiryAnswerConvergenceReason =
 
 type AdminInquiryAnswerConvergenceState =
   | { kind: "idle" }
+  | { kind: "mutation" }
   | { kind: "refreshing"; reason: AdminInquiryAnswerConvergenceReason }
   | { kind: "retry"; reason: AdminInquiryAnswerConvergenceReason }
   | { kind: "conflict-refreshed" }
@@ -40,7 +41,11 @@ function reduceAdminInquiryAnswerConvergence(
     return { kind: "refreshing", reason: event.reason }
   }
 
-  if (state.kind === "idle" || state.kind === "conflict-refreshed") {
+  if (
+    state.kind === "idle" ||
+    state.kind === "mutation" ||
+    state.kind === "conflict-refreshed"
+  ) {
     return state
   }
 
@@ -76,7 +81,11 @@ function reduceAdminInquiryAnswerConvergence(
 function isAdminInquiryAnswerConvergenceLocked(
   state: AdminInquiryAnswerConvergenceState,
 ) {
-  return state.kind === "refreshing" || state.kind === "retry"
+  return (
+    state.kind === "mutation" ||
+    state.kind === "refreshing" ||
+    state.kind === "retry"
+  )
 }
 
 function shouldShowAdminInquiryAnsweredConflict(
