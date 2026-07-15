@@ -9,6 +9,11 @@ import {
   resolveChatSessionAccess,
   type ChatSessionAccess,
 } from "@/features/chat/lib/chat-session"
+import { getMeeting } from "@/features/meetup/api/meetup-api"
+import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
+import { getQuestion } from "@/features/question/api/question-api"
+import { questionKeys } from "@/features/question/hooks/use-question-queries"
+import { PUBLIC_QUERY_META } from "@/features/session/lib/session-cache"
 import { useMe } from "@/features/session/hooks/use-me"
 
 const chatKeys = {
@@ -54,9 +59,43 @@ function useChatRoomsView(type?: RoomType) {
     })),
   })
 
-  const entries: ChatListEntry[] = rooms.map((room, index) =>
-    adaptRoomSummary(room, detailQueries[index]?.data, myUserId)
-  )
+  // 연결 도메인 제목: group=모임 제목(meetingId), question=질문 제목(questionId).
+  // 캐시 키를 meetup/question 피처와 공유해 중복 fetch를 피한다. direct는 비활성 자리표시자.
+  const domainQueries = useQueries({
+    queries: rooms.map((room) => {
+      if (room.roomType === "group" && room.meetingId != null) {
+        const meetingId = room.meetingId
+        return {
+          queryKey: meetupKeys.detail(meetingId),
+          queryFn: () => getMeeting(meetingId),
+          staleTime: 60 * 1000,
+          meta: PUBLIC_QUERY_META,
+        }
+      }
+      if (room.roomType === "question" && room.questionId != null) {
+        const questionId = room.questionId
+        return {
+          queryKey: questionKeys.detail(questionId),
+          queryFn: () => getQuestion(questionId),
+          staleTime: 60 * 1000,
+          meta: PUBLIC_QUERY_META,
+        }
+      }
+      return {
+        queryKey: [...chatKeys.room(room.roomId), "no-domain"],
+        queryFn: () => Promise.resolve(null),
+        enabled: false,
+      }
+    }),
+  })
+
+  const entries: ChatListEntry[] = rooms.map((room, index) => {
+    const domainTitle =
+      room.roomType === "direct"
+        ? undefined
+        : (domainQueries[index]?.data as { title?: string } | null | undefined)?.title
+    return adaptRoomSummary(room, detailQueries[index]?.data, myUserId, domainTitle)
+  })
 
   return {
     entries,

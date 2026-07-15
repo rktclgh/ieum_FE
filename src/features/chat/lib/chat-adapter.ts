@@ -75,16 +75,24 @@ function resolveRoomAvatar(members: ChatRoomMemberResponse[], myUserId: number):
 }
 
 // summary + detail(제목 파생용)을 목록 항목으로 합친다.
+// domainTitle: group=모임 제목, question=질문 제목(연결 도메인에서 조회). 있으면 닉네임 파생보다 우선한다.
 function adaptRoomSummary(
   summary: ChatRoomSummaryResponse,
   detail: ChatRoomDetailResponse | undefined,
-  myUserId: number
+  myUserId: number,
+  domainTitle?: string
 ): ChatListEntry {
   const members = detail?.members ?? []
   const last = summary.lastMessage
+  const title =
+    summary.roomType !== "direct" && domainTitle
+      ? domainTitle
+      : detail
+        ? resolveRoomTitle(members, myUserId, summary.roomType)
+        : `채팅방 ${summary.roomId}`
   return {
     roomId: summary.roomId,
-    title: detail ? resolveRoomTitle(members, myUserId, summary.roomType) : `채팅방 ${summary.roomId}`,
+    title,
     category: roomCategory(summary.roomType),
     avatarSrc: resolveRoomAvatar(members, myUserId),
     memberCount: summary.roomType === "direct" ? undefined : members.length || undefined,
