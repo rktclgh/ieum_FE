@@ -38,6 +38,8 @@ interface ChatBubbleMessage {
   imageUrl?: string
   time: string
   createdAt: string
+  // 낙관적으로 먼저 그린 내 말풍선(서버 에코 전). 에코 도착 시 대체된다.
+  pending?: boolean
 }
 
 interface ChatMemberEntry {
