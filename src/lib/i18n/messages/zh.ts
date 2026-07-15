@@ -238,7 +238,7 @@ export const zh: Messages = {
       QUESTION_NOT_FOUND: "找不到问题。",
       ANSWER_NOT_FOUND: "找不到回答。",
       SELF_ACCEPT_NOT_ALLOWED: "无法采纳自己的回答。",
-      QUESTION_ALREADY_RESOLVED: "该问题已被采纳。",
+      ANSWER_SELECTION_FINALIZED: "该问题已被采纳。",
       VALIDATION_FAILED: "请检查输入内容。",
       ROOM_CREATE_FAILED: "无法开始聊天，请稍后再试。",
       REPORT_FAILED: "举报失败，请稍后再试。",

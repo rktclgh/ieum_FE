@@ -238,7 +238,7 @@ export const ja: Messages = {
       QUESTION_NOT_FOUND: "質問が見つかりません。",
       ANSWER_NOT_FOUND: "回答が見つかりません。",
       SELF_ACCEPT_NOT_ALLOWED: "自分の回答は採用できません。",
-      QUESTION_ALREADY_RESOLVED: "すでに採用された質問です。",
+      ANSWER_SELECTION_FINALIZED: "すでに採用された質問です。",
       VALIDATION_FAILED: "入力内容を確認してください。",
       ROOM_CREATE_FAILED: "チャットを開始できませんでした。しばらくしてからもう一度お試しください。",
       REPORT_FAILED: "通報に失敗しました。しばらくしてからもう一度お試しください。",

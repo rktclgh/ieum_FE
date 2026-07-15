@@ -82,6 +82,13 @@ interface UpdateQuestionRequest {
   location?: LocationSnapshot
 }
 
+// 답변 채택 확정. 다중채택 계약이지만 본 서비스는 단일 채택(answerIds 길이 1)만 사용한다.
+interface FinalizeAcceptedAnswersResponse {
+  questionId: number
+  answerSelectionFinalized: boolean
+  acceptedAnswerIds: number[]
+}
+
 interface PostAnswerRequest {
   content?: string
   imageFileIds?: string[]
@@ -101,6 +108,7 @@ export type {
   CreateQuestionRequest,
   SimilarQuestion,
   UpdateQuestionRequest,
+  FinalizeAcceptedAnswersResponse,
   PostAnswerRequest,
   PostAnswerResponse,
 }

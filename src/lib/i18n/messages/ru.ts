@@ -239,7 +239,7 @@ export const ru: Messages = {
       QUESTION_NOT_FOUND: "Вопрос не найден.",
       ANSWER_NOT_FOUND: "Ответ не найден.",
       SELF_ACCEPT_NOT_ALLOWED: "Нельзя принять собственный ответ.",
-      QUESTION_ALREADY_RESOLVED: "Этот вопрос уже решён.",
+      ANSWER_SELECTION_FINALIZED: "Этот вопрос уже решён.",
       VALIDATION_FAILED: "Проверьте введённые данные.",
       ROOM_CREATE_FAILED: "Не удалось начать чат. Попробуйте ещё раз позже.",
       REPORT_FAILED: "Не удалось отправить жалобу. Попробуйте ещё раз позже.",

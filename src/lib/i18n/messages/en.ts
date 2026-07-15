@@ -239,7 +239,7 @@ export const en: Messages = {
       QUESTION_NOT_FOUND: "Question not found.",
       ANSWER_NOT_FOUND: "Answer not found.",
       SELF_ACCEPT_NOT_ALLOWED: "You can't accept your own answer.",
-      QUESTION_ALREADY_RESOLVED: "This question is already resolved.",
+      ANSWER_SELECTION_FINALIZED: "This question is already resolved.",
       VALIDATION_FAILED: "Please check your input.",
       ROOM_CREATE_FAILED: "Couldn't start the chat. Please try again later.",
       REPORT_FAILED: "Failed to submit the report. Please try again later.",

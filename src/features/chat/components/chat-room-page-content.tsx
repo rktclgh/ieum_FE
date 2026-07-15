@@ -51,16 +51,19 @@ import {
   type ChatBubbleMessage,
 } from "@/features/chat/lib/chat-adapter"
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
+import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { getKstDateKey, formatKstFullDate, formatKstShortDate } from "@/lib/date/kst"
+import { getKstDateKey, formatKstFullDate, formatKstShortDate, formatKstTime } from "@/lib/date/kst"
 import { routes } from "@/lib/navigation/routes"
 import { cn } from "@/lib/utils"
 
 // 롱프레스 메뉴(최대 3개 항목) 높이 추정치 + 하단 입력창과 겹치지 않기 위한 여유 공간
 const MESSAGE_MENU_HEIGHT_ESTIMATE = 180
 const MESSAGE_BOTTOM_SAFE_AREA = 96
+// 낙관적 말풍선을 서버 메시지와 같은 것으로 볼 시간 창(에코를 놓쳐 백필로 들어온 경우 매칭용).
+const PENDING_MATCH_WINDOW_MS = 60_000
 
 interface MessageRowProps {
   message: ChatBubbleMessage
@@ -119,13 +122,38 @@ interface ChatRoomSessionContentProps extends ChatRoomPageContentProps {
   session: ChatSessionAccess
 }
 
-// createdAt + messageId 기준으로 중복 제거 후 오래된→최신 정렬한다(초기 로드 + 실시간 수신 병합).
+// 초기 로드(base) + 실시간 수신(live)을 병합한다.
+// 1) 서버 메시지(양수 id)는 messageId로 중복 제거 — 에코(live)와 재연결 백필(base)에 같은 id가 겹칠 수 있다.
+// 2) 낙관적(pending) 말풍선은 대응하는 서버 메시지가 이미 있으면 버린다.
+//    에코를 정상 수신하면 onMessage가 pending을 제거하므로, 이 필터는 "에코를 놓치고 백필로 들어온" 경우의 안전망이다.
+//    서버가 clientNonce를 주지 않아 (내가 보냄 + 같은 내용 + 시간 창 이내)로 매칭한다. 한 서버 메시지는 최대 한 pending만 흡수.
 function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): ChatBubbleMessage[] {
   const byId = new Map<number, ChatBubbleMessage>()
   for (const message of [...base, ...live]) {
+    if (message.pending) continue
     byId.set(message.messageId, message)
   }
-  return [...byId.values()].sort((a, b) => {
+  const server = [...byId.values()]
+
+  const pendings = live
+    .filter((message) => message.pending)
+    .sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : a.messageId - b.messageId))
+  const claimed = new Set<number>()
+  const survivingPending: ChatBubbleMessage[] = []
+  for (const pending of pendings) {
+    const pendingAt = new Date(pending.createdAt).getTime()
+    const match = server.find(
+      (message) =>
+        !claimed.has(message.messageId) &&
+        message.sender === "me" &&
+        message.texts[0] === pending.texts[0] &&
+        Math.abs(new Date(message.createdAt).getTime() - pendingAt) < PENDING_MATCH_WINDOW_MS
+    )
+    if (match) claimed.add(match.messageId)
+    else survivingPending.push(pending)
+  }
+
+  return [...server, ...survivingPending].sort((a, b) => {
     if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? -1 : 1
     return a.messageId - b.messageId
   })
@@ -138,9 +166,16 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const myUserId = session.userId ?? -1
 
   const { data: room } = useChatRoom(roomId, session)
-  const { messages: initialMessages } = useChatMessages(roomId, session)
+  const {
+    messages: initialMessages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useChatMessages(roomId, session)
 
   const [liveMessages, setLiveMessages] = React.useState<ChatBubbleMessage[]>([])
+  // 낙관적 말풍선의 임시 messageId. 서버 id(양수)와 겹치지 않게 음수를 감소시켜 부여한다.
+  const tempMessageIdRef = React.useRef(-1)
   const [notice, setNotice] = React.useState<string | null>(null)
   const [moreOpen, setMoreOpen] = React.useState(false)
   const [cameraMenuOpen, setCameraMenuOpen] = React.useState(false)
@@ -150,8 +185,15 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const [socketError, setSocketError] = React.useState<string | null>(null)
 
   const bottomRef = React.useRef<HTMLDivElement>(null)
+  const topRef = React.useRef<HTMLDivElement>(null)
   const dateGroupRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
+  // 사용자가 하단 근처를 보고 있는지. 새 메시지 도착 시 이 값이 true일 때만 자동으로 맨 아래로 내린다.
+  const isAtBottomRef = React.useRef(true)
+  // 최초 진입 시 1회 맨 아래로 내렸는지.
+  const didInitialScrollRef = React.useRef(false)
+  // 과거 페이지 prepend 직전 scrollHeight. prepend 후 스크롤 위치 보정(anchor)에 쓴다.
+  const prevScrollHeightRef = React.useRef<number | null>(null)
   const { isScrolling, onScroll: handleMessagesScroll } = useFadeScrollbar()
 
   const markReadMutation = useMarkRead()
@@ -168,7 +210,20 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const { connected, send } = useChatRoomSocket(session.activeRoomId, {
     onMessage: (event) => {
       if (myUserId < 0) return
-      setLiveMessages((prev) => [...prev, adaptMessage(event, myUserId)])
+      const incoming = adaptMessage(event, myUserId)
+      setLiveMessages((prev) => {
+        // 내 메시지 에코면, 먼저 그려둔 pending 낙관 말풍선 중 같은 내용 하나를 제거(대체)한다.
+        // 서버가 clientNonce를 주지 않으므로 내용 일치로 가장 오래된 pending 항목을 매칭한다.
+        if (incoming.sender === "me") {
+          const idx = prev.findIndex(
+            (message) => message.pending && message.texts[0] === incoming.texts[0]
+          )
+          if (idx !== -1) {
+            return [...prev.slice(0, idx), ...prev.slice(idx + 1), incoming]
+          }
+        }
+        return [...prev, incoming]
+      })
       // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
       queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })
     },
@@ -191,10 +246,16 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const questionId = room?.roomType === "question" ? room.questionId ?? undefined : undefined
   const { data: questionSummary } = useQuestionSummary(questionId ?? 0, questionId != null)
 
+  const meetingId = room?.roomType === "group" ? room.meetingId ?? undefined : undefined
+  const { data: meeting } = useMeeting(meetingId ?? 0, meetingId != null)
+
+  // 제목: group=모임 제목, question=질문 제목, direct=상대 닉네임. 도메인 제목이 오기 전엔 닉네임으로 폴백.
   const roomTitle = room
-    ? room.roomType === "question" && questionSummary?.title
-      ? questionSummary.title
-      : resolveRoomTitle(room.members, myUserId, room.roomType)
+    ? room.roomType === "group" && meeting?.title
+      ? meeting.title
+      : room.roomType === "question" && questionSummary?.title
+        ? questionSummary.title
+        : resolveRoomTitle(room.members, myUserId, room.roomType)
     : ""
   const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
   const notificationOn = room?.notifyEnabled ?? true
@@ -253,8 +314,19 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   const scrollTicking = React.useRef(false)
 
+  // 하단에서 이 거리(px) 이내면 "맨 아래를 보고 있다"고 본다.
+  const AT_BOTTOM_THRESHOLD_PX = 80
+
+  const updateIsAtBottom = React.useCallback(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    const { scrollTop, scrollHeight, clientHeight } = container
+    isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < AT_BOTTOM_THRESHOLD_PX
+  }, [])
+
   const handleMessagesAreaScroll = () => {
     handleMessagesScroll()
+    updateIsAtBottom()
     if (!scrollTicking.current) {
       requestAnimationFrame(() => {
         updateActiveDateKey()
@@ -278,12 +350,76 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     if (!text) return
     if (!send({ content: text })) {
       setSocketError(messages.chat.sendFailed)
+      return
     }
+    // 내가 보낸 메시지는 위로 스크롤 중이었더라도 항상 맨 아래로 따라 내려간다.
+    isAtBottomRef.current = true
+    // 낙관적 반영: 서버 에코를 기다리지 않고 내 말풍선을 즉시 표시한다.
+    // 에코 도착 시 onMessage가 이 pending 항목을 서버 메시지로 대체한다.
+    const nowIso = new Date().toISOString()
+    const tempId = tempMessageIdRef.current
+    tempMessageIdRef.current -= 1
+    setLiveMessages((prev) => [
+      ...prev,
+      {
+        id: `pending-${tempId}`,
+        messageId: tempId,
+        senderId: myUserId,
+        sender: "me",
+        variant: text.length > 30 ? "long" : "short",
+        texts: [text],
+        time: formatKstTime(nowIso),
+        createdAt: nowIso,
+        pending: true,
+      },
+    ])
   }
 
+  const lastMessageId = chatMessages[chatMessages.length - 1]?.messageId
+
+  // 자동 하단 스크롤: 최초 진입 시 1회, 이후엔 새 메시지가 도착했고(마지막 messageId 변화)
+  // 사용자가 이미 하단 근처를 보고 있을 때만. 위로 스크롤해 과거를 보는 중엔 강제로 끌어내리지 않는다.
   React.useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: "end" })
+    if (chatMessages.length === 0) return
+    if (!didInitialScrollRef.current) {
+      bottomRef.current?.scrollIntoView({ block: "end" })
+      didInitialScrollRef.current = true
+      return
+    }
+    if (isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ block: "end" })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMessageId])
+
+  // 과거 페이지 prepend 후 스크롤 위치 보정: 늘어난 높이만큼 scrollTop을 더해 보던 위치를 유지한다.
+  React.useLayoutEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container || prevScrollHeightRef.current == null) return
+    const diff = container.scrollHeight - prevScrollHeightRef.current
+    prevScrollHeightRef.current = null
+    if (diff > 0) container.scrollTop += diff
   }, [chatMessages])
+
+  // 상단 도달 감지 → 과거 메시지 다음 페이지 로드. prepend 전 scrollHeight를 기록해 위치 보정에 쓴다.
+  React.useEffect(() => {
+    const container = scrollContainerRef.current
+    const sentinel = topRef.current
+    if (!container || !sentinel) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return
+        // 최초 하단 정렬 전에는 상단 센티넬이 잠시 보일 수 있어, 초기 스크롤 완료 후에만 로드한다.
+        if (!didInitialScrollRef.current) return
+        if (!hasNextPage || isFetchingNextPage) return
+        prevScrollHeightRef.current = container.scrollHeight
+        fetchNextPage()
+      },
+      { root: container, rootMargin: "120px 0px 0px 0px", threshold: 0 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const messageMenuItems = (message: ChatBubbleMessage): ChatContextMenuItem[] => {
     const text = message.texts?.[0]
@@ -354,6 +490,13 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
               </div>
             )}
             <div className="flex flex-col">
+              {/* 상단 도달 감지 센티넬 + 과거 메시지 로딩 표시 */}
+              <div ref={topRef} />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-2">
+                  <span className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+                </div>
+              )}
               {dateGroups.map((group) => (
                 <div
                   key={group.dateKey}

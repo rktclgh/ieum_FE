@@ -1,14 +1,25 @@
 "use client"
 
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useCallback, useMemo } from "react"
 
 import { getMessages, getRoom, getRooms } from "@/features/chat/api/chat-api"
-import type { RoomType } from "@/features/chat/api/chat-types"
+import type {
+  ChatRoomSummaryResponse,
+  RoomType,
+  WsRoomEvent,
+} from "@/features/chat/api/chat-types"
 import { adaptMessage, adaptRoomSummary, type ChatListEntry } from "@/features/chat/lib/chat-adapter"
 import {
   resolveChatSessionAccess,
   type ChatSessionAccess,
 } from "@/features/chat/lib/chat-session"
+import { useChatRoomsSocket } from "@/features/chat/lib/chat-socket"
+import { getMeeting } from "@/features/meetup/api/meetup-api"
+import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
+import { getQuestion } from "@/features/question/api/question-api"
+import { questionKeys } from "@/features/question/hooks/use-question-queries"
+import { PUBLIC_QUERY_META } from "@/features/session/lib/session-cache"
 import { useMe } from "@/features/session/hooks/use-me"
 
 const chatKeys = {
@@ -16,6 +27,49 @@ const chatKeys = {
   rooms: (type?: RoomType) => [...chatKeys.all, "rooms", type ?? "all"] as const,
   room: (roomId: number) => [...chatKeys.all, "room", roomId] as const,
   messages: (roomId: number) => [...chatKeys.all, "messages", roomId] as const,
+}
+
+// 방 목록 요약 쿼리는 type별(chatKeys.rooms(type))로 나뉘어 캐시된다. 사용자 단위 토픽
+// (/user/queue/rooms) 이벤트를 받으면 해당하는 모든 요약 캐시를 직접 갱신한다.
+const roomsListKey = [...chatKeys.all, "rooms"] as const
+
+// WS 델타는 이미 로드된 캐시만 패치한다. 아직 초기 fetch 중(data===undefined)인 쿼리에
+// setQueryData로 [room]/[]를 채우면 로딩 상태를 건너뛰고 불완전한 목록이 잠깐 노출된다
+// → getQueryData로 기존 데이터가 있는 캐시만 갱신하고, 없으면 진행 중/다음 fetch에 맡긴다.
+// upsert: 필터(type)에 속하는 캐시에는 기존 항목 제거 후 최상단에 삽입(활동 있는 방을 위로),
+// 속하지 않는 캐시에서는(방 유형 변경 등 예외) 제거만 한다.
+function upsertRoomInCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  room: ChatRoomSummaryResponse
+) {
+  for (const query of queryClient.getQueryCache().findAll({ queryKey: roomsListKey })) {
+    const oldData = queryClient.getQueryData<ChatRoomSummaryResponse[]>(query.queryKey)
+    if (oldData === undefined) continue
+
+    const keyType = query.queryKey[2] as RoomType | "all" | undefined
+    const belongs = keyType === "all" || keyType === room.roomType
+    const without = oldData.filter((r) => r.roomId !== room.roomId)
+    queryClient.setQueryData<ChatRoomSummaryResponse[]>(
+      query.queryKey,
+      belongs ? [room, ...without] : without
+    )
+  }
+}
+
+// remove: 이미 로드된 요약 캐시에서만 해당 방을 제거한다(위와 동일한 이유로 getQueryData 가드).
+function removeRoomFromCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  roomId: number
+) {
+  for (const query of queryClient.getQueryCache().findAll({ queryKey: roomsListKey })) {
+    const oldData = queryClient.getQueryData<ChatRoomSummaryResponse[]>(query.queryKey)
+    if (oldData === undefined) continue
+
+    queryClient.setQueryData<ChatRoomSummaryResponse[]>(
+      query.queryKey,
+      oldData.filter((r) => r.roomId !== roomId)
+    )
+  }
 }
 
 function useChatSessionAccess(requestedRoomId?: number) {
@@ -27,12 +81,33 @@ function useChatSessionAccess(requestedRoomId?: number) {
 function useChatRoomsView(type?: RoomType) {
   const session = useChatSessionAccess()
   const myUserId = session.userId ?? -1
+  const queryClient = useQueryClient()
 
   const roomsQuery = useQuery({
     queryKey: chatKeys.rooms(type),
     queryFn: () => getRooms(type),
     enabled: session.authenticated,
+    // 구독은 목록이 마운트된 동안만 유지된다. 방 상세·다른 탭으로 이동해 언마운트된 사이의
+    // 이벤트는 놓치므로(WS 백필 없음), 다시 목록으로 돌아올 때 전역 staleTime 60s에 걸려
+    // stale한 목록이 보일 수 있다. staleTime 0으로 재마운트/포커스마다 백그라운드 재요청해
+    // 공백 기간을 메운다(캐시 데이터는 즉시 표시되므로 로딩 플래시 없음).
+    staleTime: 0,
   })
+
+  // 정식 실시간: 사용자 단위 토픽 구독 1개로 방 요약 변경을 받아 캐시를 직접 갱신한다(BE 이슈 #103).
+  // 방 개수와 무관하게 구독 1개. 방 상세(제목/아바타)는 rooms 배열 변화에 반응해 useQueries가 파생한다.
+  // 상세 설계: docs/superpowers/specs/2026-07-15-chat-list-realtime-design.md
+  const onRoomEvent = useCallback(
+    (event: WsRoomEvent) => {
+      if (event.type === "upsert") {
+        upsertRoomInCaches(queryClient, event.room)
+      } else {
+        removeRoomFromCaches(queryClient, event.roomId)
+      }
+    },
+    [queryClient]
+  )
+  useChatRoomsSocket(session.authenticated, { onRoomEvent })
 
   const rooms = session.authenticated ? (roomsQuery.data ?? []) : []
 
@@ -44,9 +119,43 @@ function useChatRoomsView(type?: RoomType) {
     })),
   })
 
-  const entries: ChatListEntry[] = rooms.map((room, index) =>
-    adaptRoomSummary(room, detailQueries[index]?.data, myUserId)
-  )
+  // 연결 도메인 제목: group=모임 제목(meetingId), question=질문 제목(questionId).
+  // 캐시 키를 meetup/question 피처와 공유해 중복 fetch를 피한다. direct는 비활성 자리표시자.
+  const domainQueries = useQueries({
+    queries: rooms.map((room) => {
+      if (room.roomType === "group" && room.meetingId != null) {
+        const meetingId = room.meetingId
+        return {
+          queryKey: meetupKeys.detail(meetingId),
+          queryFn: () => getMeeting(meetingId),
+          staleTime: 60 * 1000,
+          meta: PUBLIC_QUERY_META,
+        }
+      }
+      if (room.roomType === "question" && room.questionId != null) {
+        const questionId = room.questionId
+        return {
+          queryKey: questionKeys.detail(questionId),
+          queryFn: () => getQuestion(questionId),
+          staleTime: 60 * 1000,
+          meta: PUBLIC_QUERY_META,
+        }
+      }
+      return {
+        queryKey: [...chatKeys.room(room.roomId), "no-domain"],
+        queryFn: () => Promise.resolve(null),
+        enabled: false,
+      }
+    }),
+  })
+
+  const entries: ChatListEntry[] = rooms.map((room, index) => {
+    const domainTitle =
+      room.roomType === "direct"
+        ? undefined
+        : (domainQueries[index]?.data as { title?: string } | null | undefined)?.title
+    return adaptRoomSummary(room, detailQueries[index]?.data, myUserId, domainTitle)
+  })
 
   return {
     entries,
@@ -67,19 +176,39 @@ function useChatRoom(roomId: number, session: ChatSessionAccess) {
   return { ...query, data: room }
 }
 
-// 최근 메시지 한 페이지(최대 50개). 서버는 최신순으로 내려주므로 화면 표시를 위해 오래된→최신으로 뒤집는다.
+// 한 번에 불러올 메시지 페이지 크기. 서버는 최신순 items + nextCursor(더 과거 페이지 커서)를 내려준다.
+const MESSAGES_PAGE_SIZE = 30
+
+// 커서 페이지네이션. pages[0]=최신 페이지, 뒤 페이지일수록 과거. 화면 표시는 오래된→최신이므로
+// 페이지를 역순으로, 각 페이지의 items(최신순)도 역순으로 평탄화한다.
+// messages 배열은 useMemo로 memoize해 리렌더마다 새 참조가 생기지 않게 한다(스크롤 스냅백 방지).
 function useChatMessages(roomId: number, session: ChatSessionAccess) {
-  const query = useQuery({
+  const enabled = session.activeRoomId === roomId
+  const query = useInfiniteQuery({
     queryKey: chatKeys.messages(roomId),
-    queryFn: () => getMessages(roomId),
-    enabled: session.activeRoomId === roomId,
+    queryFn: ({ pageParam }) => getMessages(roomId, pageParam, MESSAGES_PAGE_SIZE),
+    enabled,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   })
 
-  const messages = session.activeRoomId === roomId && query.data
-    ? [...query.data.items].reverse().map((message) => adaptMessage(message, session.userId ?? -1))
-    : []
+  const userId = session.userId ?? -1
+  const messages = useMemo(() => {
+    if (!enabled || !query.data) return []
+    return query.data.pages
+      .slice()
+      .reverse()
+      .flatMap((page) => [...page.items].reverse().map((message) => adaptMessage(message, userId)))
+  }, [enabled, query.data, userId])
 
-  return { messages, isLoading: query.isLoading, isError: query.isError }
+  return {
+    messages,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    fetchNextPage: query.fetchNextPage,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+  }
 }
 
 export {

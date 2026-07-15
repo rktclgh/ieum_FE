@@ -1,5 +1,3 @@
-import * as React from "react"
-
 import { cn } from "@/lib/utils"
 import { ChatProfile } from "@/features/chat/components/chat-profile"
 import { ME_RADIUS, OTHERS_RADIUS, bubblePosition } from "@/features/chat/components/chat-bubble-segment"
@@ -7,7 +5,11 @@ import { ME_RADIUS, OTHERS_RADIUS, bubblePosition } from "@/features/chat/compon
 type ChatBubbleSender = "me" | "others"
 type ChatBubbleVariant = "long" | "short" | "multiple" | "reply"
 
-interface ChatBubbleProps extends React.ComponentProps<"div"> {
+// DOM(<div>)에 그대로 흘려보낼 임의 prop 확장을 두지 않는다.
+// 예전 /chat 테스트 페이지가 메시지 객체를 통째로 spread(`{...message}`)하면서
+// createdAt/replyToId 같은 미소비 필드가 DOM 속성으로 새어나가 React 경고를 냈던 것을 방지한다.
+interface ChatBubbleProps {
+  className?: string
   sender: ChatBubbleSender
   variant: ChatBubbleVariant
   /** others 전용: 그룹 채팅에서 보낸 사람 이름 */
@@ -41,7 +43,6 @@ function ChatBubble({
   highlightedIndex,
   onHighlightAnimationEnd,
   time,
-  ...props
 }: ChatBubbleProps) {
   const isMe = sender === "me"
   const isReply = variant === "reply"
@@ -57,7 +58,6 @@ function ChatBubble({
           isMe ? "flex-col items-end gap-1" : "",
           className
         )}
-        {...props}
       >
         {!isMe && <ChatProfile src={avatarSrc} size={26} />}
         <div className={cn("flex flex-col items-start gap-1", isMe ? "w-full items-end" : "flex-1")}>
@@ -108,7 +108,6 @@ function ChatBubble({
     <div
       data-slot="chat-bubble"
       className={cn("flex w-full items-end gap-2 py-2", isMe && "justify-end", className)}
-      {...props}
     >
       {!isMe && <ChatProfile src={avatarSrc} size={26} />}
       <div className={cn("flex max-w-[75%] flex-col gap-1", isMe ? "items-end" : "items-start")}>
