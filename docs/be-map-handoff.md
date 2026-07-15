@@ -17,7 +17,7 @@
 - [ ] 검증한 **정확한 FE SHA**에서 만든 `out/.`을 `app-main/src/main/resources/static/`에 복사
 - [ ] API·admin·actuator 규칙 뒤에 static `GET`·`HEAD` 허용 규칙 배치
 - [ ] static 요청에서 JWT decode와 Redis session validation 생략
-- [ ] 아래 canonical 목록의 root + 16개 구현 route 전체를 Spring forward/controller/JAR smoke에서 검증
+- [ ] 아래 canonical 목록의 root + 25개 구현 route 전체를 Spring forward/controller/JAR smoke에서 검증
 - [ ] trailing slash canonical과 실제 Next client navigation의 RSC `.txt` 요청 처리 검증
 - [ ] `/oauth/kakao/callback/`을 Kakao 개발자 콘솔·Spring allowlist·FE와 동일하게 등록
 - [ ] browser HTML 404와 `NoResourceFoundException` API JSON 응답 분리
@@ -42,11 +42,18 @@
 
 ### Spring forward/controller/JAR smoke canonical 목록
 
-이 목록은 FE `scripts/ci/verify-static-export.sh`의 root + 16개 구현 route와 정확히 같아야 한다. Spring controller test와 실제 JAR smoke는 일부 대표 route만 검사하지 않고 아래 전체를 고정한다. query string은 forward 대상을 바꾸지 않으며 browser URL에 보존한다.
+이 목록은 FE `scripts/ci/verify-static-export.sh`의 root + 25개 구현 route와 정확히 같아야 한다. Spring controller test와 실제 JAR smoke는 일부 대표 route만 검사하지 않고 아래 전체를 고정한다. query string은 forward 대상을 바꾸지 않으며 browser URL에 보존한다.
 
 | Canonical URL | Spring static target |
 |---|---|
 | `/` | `/index.html` |
+| `/admin/` | `/admin/index.html` |
+| `/admin/inquiries/` | `/admin/inquiries/index.html` |
+| `/admin/login/` | `/admin/login/index.html` |
+| `/admin/reports/` | `/admin/reports/index.html` |
+| `/admin/reports/detail/` | `/admin/reports/detail/index.html` |
+| `/admin/users/` | `/admin/users/index.html` |
+| `/admin/users/detail/` | `/admin/users/detail/index.html` |
 | `/chats/` | `/chats/index.html` |
 | `/chats/notices/` | `/chats/notices/index.html` |
 | `/chats/report/` | `/chats/report/index.html` |
@@ -59,7 +66,9 @@
 | `/meetups/detail/` | `/meetups/detail/index.html` |
 | `/my/` | `/my/index.html` |
 | `/my/edit/` | `/my/edit/index.html` |
-| `/my/settings/` | `/my/settings/index.html` |
+| `/my/inquiry/` | `/my/inquiry/index.html` |
+| `/my/notifications/` | `/my/notifications/index.html` |
+| `/my/permissions/` | `/my/permissions/index.html` |
 | `/oauth/kakao/callback/` | `/oauth/kakao/callback/index.html` |
 | `/questions/` | `/questions/index.html` |
 | `/questions/detail/` | `/questions/detail/index.html` |
@@ -88,7 +97,7 @@ root를 제외한 no-slash 요청은 query를 보존한 slash canonical redirect
 - canonical 목록 전체의 static GET/HEAD, canonical slash, `.txt`, browser 404를 통합 테스트한다.
 - API/admin/actuator 우선순위와 API/WS/SSE 제외를 통합 테스트한다.
 - static 요청에서 JWT decode·Redis access가 발생하지 않는지 확인한다.
-- 실제 JAR로 root + 16개 구현 route의 HTML과 `index.txt`를 모두 smoke test한다.
+- 실제 JAR로 root + 25개 구현 route의 HTML과 `index.txt`를 모두 smoke test한다.
 - header 통합 테스트는 route HTML·`404.html`·RSC `index.txt`·중첩 `__next.*.txt`·`manifest.webmanifest`의 no-cache와 hashed `/_next/static/**`의 정확한 immutable 값을 각각 검증한다.
 
 복사 또는 `bootJar` 단계가 segment payload를 누락하지 않았음은 대표 파일 몇 개가 아니라 모든 `.txt` 목록의 완전 일치로 증명한다.
