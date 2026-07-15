@@ -373,6 +373,8 @@ export const zh: Messages = {
     disbandChatConfirmDescription: "解散后所有成员都将被移出聊天室,且无法撤销。",
     messageInputPlaceholder: "输入消息",
     sendButtonLabel: "发送",
+    imageAlt: "已发送的照片",
+    imageUploadFailed: "照片发送失败，请重试。",
   },
   schedule: {
     addButtonLabel: "添加日程",
