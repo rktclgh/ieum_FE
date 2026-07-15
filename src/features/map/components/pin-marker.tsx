@@ -60,4 +60,4 @@ function PinMarker({ pin, onClick }: PinMarkerProps) {
   )
 }
 
-export { PinMarker }
+export { PinMarker, escapeAttr }

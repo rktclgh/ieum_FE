@@ -1,0 +1,41 @@
+"use client"
+
+import L from "leaflet"
+import * as React from "react"
+import { Marker } from "react-leaflet"
+
+import { escapeAttr } from "@/features/map/components/pin-marker"
+
+const GRAY_900 = "#111827" // --color-gray-900 (ClusterPin bg)
+
+// map-pin.tsx의 ClusterPin(다크 원 size-12 + text-body-semibold-15 흰 개수)과 동일 비주얼을
+// leaflet divIcon용 plain HTML로 조립한다(divIcon은 React 트리 밖이라 컴포넌트 재사용 불가).
+// aria-label은 i18n clusterMarkerLabel(count)을 그대로 받아 넣는다(하드코딩 금지).
+function buildClusterIcon(count: number, label: string): L.DivIcon {
+  // 개수가 매우 커도 원 안에 담기도록 4자리부터는 축약 표기.
+  const text = count > 999 ? "999+" : String(count)
+
+  return L.divIcon({
+    html: `<div role="img" aria-label="${escapeAttr(label)}" style="display:flex;width:48px;height:48px;align-items:center;justify-content:center;border-radius:9999px;background:${GRAY_900}"><span style="font-size:15px;line-height:1;font-weight:600;color:#ffffff">${escapeAttr(text)}</span></div>`,
+    className: "",
+    iconSize: [48, 48],
+    iconAnchor: [24, 24], // 원 중심을 클러스터 좌표에 고정
+  })
+}
+
+interface ClusterMarkerProps {
+  count: number
+  lat: number
+  lng: number
+  /** i18n clusterMarkerLabel(count) 결과 — 마커 aria-label */
+  label: string
+  onClick: () => void
+}
+
+function ClusterMarker({ count, lat, lng, label, onClick }: ClusterMarkerProps) {
+  const icon = React.useMemo(() => buildClusterIcon(count, label), [count, label])
+
+  return <Marker position={[lat, lng]} icon={icon} eventHandlers={{ click: onClick }} />
+}
+
+export { ClusterMarker }
