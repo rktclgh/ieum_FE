@@ -33,6 +33,9 @@ const chatKeys = {
 // (/user/queue/rooms) 이벤트를 받으면 해당하는 모든 요약 캐시를 직접 갱신한다.
 const roomsListKey = [...chatKeys.all, "rooms"] as const
 
+// WS 델타는 이미 로드된 캐시만 패치한다. 아직 초기 fetch 중(data===undefined)인 쿼리에
+// setQueryData로 [room]/[]를 채우면 로딩 상태를 건너뛰고 불완전한 목록이 잠깐 노출된다
+// → getQueryData로 기존 데이터가 있는 캐시만 갱신하고, 없으면 진행 중/다음 fetch에 맡긴다.
 // upsert: 필터(type)에 속하는 캐시에는 기존 항목 제거 후 최상단에 삽입(활동 있는 방을 위로),
 // 속하지 않는 캐시에서는(방 유형 변경 등 예외) 제거만 한다.
 function upsertRoomInCaches(
@@ -40,23 +43,31 @@ function upsertRoomInCaches(
   room: ChatRoomSummaryResponse
 ) {
   for (const query of queryClient.getQueryCache().findAll({ queryKey: roomsListKey })) {
+    const oldData = queryClient.getQueryData<ChatRoomSummaryResponse[]>(query.queryKey)
+    if (oldData === undefined) continue
+
     const keyType = query.queryKey[2] as RoomType | "all" | undefined
     const belongs = keyType === "all" || keyType === room.roomType
-    queryClient.setQueryData<ChatRoomSummaryResponse[]>(query.queryKey, (old) => {
-      const without = (old ?? []).filter((r) => r.roomId !== room.roomId)
-      return belongs ? [room, ...without] : without
-    })
+    const without = oldData.filter((r) => r.roomId !== room.roomId)
+    queryClient.setQueryData<ChatRoomSummaryResponse[]>(
+      query.queryKey,
+      belongs ? [room, ...without] : without
+    )
   }
 }
 
-// remove: 모든 요약 캐시에서 해당 방을 제거한다.
+// remove: 이미 로드된 요약 캐시에서만 해당 방을 제거한다(위와 동일한 이유로 getQueryData 가드).
 function removeRoomFromCaches(
   queryClient: ReturnType<typeof useQueryClient>,
   roomId: number
 ) {
   for (const query of queryClient.getQueryCache().findAll({ queryKey: roomsListKey })) {
-    queryClient.setQueryData<ChatRoomSummaryResponse[]>(query.queryKey, (old) =>
-      (old ?? []).filter((r) => r.roomId !== roomId)
+    const oldData = queryClient.getQueryData<ChatRoomSummaryResponse[]>(query.queryKey)
+    if (oldData === undefined) continue
+
+    queryClient.setQueryData<ChatRoomSummaryResponse[]>(
+      query.queryKey,
+      oldData.filter((r) => r.roomId !== roomId)
     )
   }
 }
@@ -76,6 +87,11 @@ function useChatRoomsView(type?: RoomType) {
     queryKey: chatKeys.rooms(type),
     queryFn: () => getRooms(type),
     enabled: session.authenticated,
+    // 구독은 목록이 마운트된 동안만 유지된다. 방 상세·다른 탭으로 이동해 언마운트된 사이의
+    // 이벤트는 놓치므로(WS 백필 없음), 다시 목록으로 돌아올 때 전역 staleTime 60s에 걸려
+    // stale한 목록이 보일 수 있다. staleTime 0으로 재마운트/포커스마다 백그라운드 재요청해
+    // 공백 기간을 메운다(캐시 데이터는 즉시 표시되므로 로딩 플래시 없음).
+    staleTime: 0,
   })
 
   // 정식 실시간: 사용자 단위 토픽 구독 1개로 방 요약 변경을 받아 캐시를 직접 갱신한다(BE 이슈 #103).
