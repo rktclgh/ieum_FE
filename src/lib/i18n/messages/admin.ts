@@ -15,6 +15,10 @@ interface AdminMessages {
     desktopOnly: string
     forbidden: string
     switchAccount: string
+    email: string
+    password: string
+    submit: string
+    loginError: string
   }
   navigation: {
     dashboard: string
@@ -143,6 +147,10 @@ const adminKo: AdminMessages = {
     desktopOnly: "운영자 화면은 1024px 이상의 데스크톱 환경에서 사용할 수 있습니다.",
     forbidden: "운영자 권한이 없는 계정입니다.",
     switchAccount: "다른 계정으로 로그인",
+    email: "이메일",
+    password: "비밀번호",
+    submit: "로그인",
+    loginError: "로그인에 실패했습니다. 계정 정보를 확인해 주세요.",
   },
   navigation: {
     dashboard: "대시보드",
@@ -271,6 +279,10 @@ const adminEn: AdminMessages = {
     desktopOnly: "The administrator dashboard requires a desktop viewport of at least 1024px.",
     forbidden: "This account does not have administrator access.",
     switchAccount: "Sign in with another account",
+    email: "Email",
+    password: "Password",
+    submit: "Sign in",
+    loginError: "Sign-in failed. Check your account details and try again.",
   },
   navigation: {
     dashboard: "Dashboard",

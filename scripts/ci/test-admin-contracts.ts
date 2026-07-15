@@ -53,7 +53,15 @@ type ExpectedAdminMessages = {
     "loading" | "loadError" | "empty" | "retry" | "loadMore" | "all" | "save" | "cancel"
   >
   auth: StringMessages<
-    "title" | "description" | "desktopOnly" | "forbidden" | "switchAccount"
+    | "title"
+    | "description"
+    | "desktopOnly"
+    | "forbidden"
+    | "switchAccount"
+    | "email"
+    | "password"
+    | "submit"
+    | "loginError"
   >
   navigation: StringMessages<"dashboard" | "users" | "reports" | "inquiries">
   dashboard: StringMessages<
@@ -180,7 +188,9 @@ const responseRoleTypeContracts: [
 
 const expectedAdminMessageKeys = {
   common: ["all", "cancel", "empty", "loadError", "loadMore", "loading", "retry", "save"],
-  auth: ["description", "desktopOnly", "forbidden", "switchAccount", "title"],
+  auth: [
+    "description", "desktopOnly", "email", "forbidden", "loginError", "password", "submit", "switchAccount", "title",
+  ],
   navigation: ["dashboard", "inquiries", "reports", "users"],
   dashboard: [
     "acceptedRate", "activeUsers", "aiReviewed", "answers", "confirmed", "dismissed", "meetings",

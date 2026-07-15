@@ -19,6 +19,7 @@ interface ConfirmDialogProps {
   cancelLabel: string
   confirmLabel: string
   onConfirm: () => void
+  confirmDisabled?: boolean
 }
 
 function ConfirmDialog({
@@ -29,6 +30,7 @@ function ConfirmDialog({
   cancelLabel,
   confirmLabel,
   onConfirm,
+  confirmDisabled,
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -47,6 +49,7 @@ function ConfirmDialog({
               <button
                 type="button"
                 onClick={onConfirm}
+                disabled={confirmDisabled}
                 className="flex flex-1 items-center justify-center rounded-full bg-gray-100 px-3 py-2.5 text-body-medium-14 text-gray-900"
               >
                 {confirmLabel}
