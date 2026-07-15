@@ -65,6 +65,13 @@ interface WsMessageEvent {
   createdAt: string
 }
 
+// WebSocket /user/queue/rooms 로 내려오는 사용자 단위 방 요약 이벤트 (BE 이슈 #103).
+// upsert: 방 요약이 바뀌거나 새 방에 추가됨(room은 ChatRoomSummaryResponse와 동일 스키마).
+// remove: 방을 나가거나 해체돼 내 목록에서 제거됨.
+type WsRoomEvent =
+  | { type: "upsert"; room: ChatRoomSummaryResponse }
+  | { type: "remove"; roomId: number }
+
 interface SendChatMessageRequest {
   content?: string
   imageFileId?: string
@@ -92,6 +99,7 @@ export type {
   ChatCursorPage,
   ChatRoomResponse,
   WsMessageEvent,
+  WsRoomEvent,
   SendChatMessageRequest,
   ChatWebSocketErrorResponse,
   QuestionRoomRequest,
