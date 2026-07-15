@@ -1,6 +1,8 @@
 import type { Messages } from "./ko"
+import { adminEn } from "./admin"
 
 export const ru: Messages = {
+  admin: adminEn,
   common: {
     or: "or",
     logout: "Выйти",

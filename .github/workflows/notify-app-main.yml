@@ -26,10 +26,17 @@ jobs:
             exit 1
           fi
 
+          frontend_sha="$GITHUB_SHA"
+          if [[ ! "$frontend_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "GITHUB_SHA must be a 40-character lowercase Git commit SHA" >&2
+            exit 1
+          fi
+          printf -v payload '{"event_type":"frontend-updated","client_payload":{"frontend_sha":"%s"}}' "$frontend_sha"
+
           curl --fail-with-body --silent --show-error \
             --request POST \
             --url https://api.github.com/repos/rktclgh/ieum_BE/dispatches \
             --header "Accept: application/vnd.github+json" \
             --header "Authorization: Bearer $CI_GITHUB_TOKEN" \
             --header "X-GitHub-Api-Version: 2022-11-28" \
-            --data '{"event_type": "frontend-updated"}'
+            --data "$payload"

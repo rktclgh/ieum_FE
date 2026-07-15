@@ -1,6 +1,8 @@
 import type { Messages } from "./ko"
+import { adminEn } from "./admin"
 
 export const zh: Messages = {
+  admin: adminEn,
   common: {
     or: "or",
     logout: "退出登录",

@@ -16,6 +16,7 @@ function Input({
   value,
   error,
   endAdornment,
+  disabled,
   onChange,
   onFocus,
   onBlur,
@@ -38,6 +39,7 @@ function Input({
       <input
         ref={inputRef}
         data-slot="input"
+        disabled={disabled}
         defaultValue={defaultValue}
         value={value}
         onChange={(event) => {
@@ -49,7 +51,9 @@ function Input({
         className="w-full bg-transparent text-body-medium-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
         {...props}
       />
-      {endAdornment ?? (hasValue && <ClearButton inputRef={inputRef} />)}
+      {endAdornment ?? (
+        hasValue && <ClearButton inputRef={inputRef} disabled={disabled} />
+      )}
     </div>
   )
 }

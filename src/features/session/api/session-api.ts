@@ -1,6 +1,7 @@
 import axios from "axios"
 
 import { apiClient } from "@/lib/api/client"
+import type { UserRole } from "@/features/session/types/user-role"
 import type { LanguageCode } from "@/lib/i18n/languages"
 
 type Gender = "male" | "female" | "other"
@@ -25,6 +26,7 @@ interface UserMeResponse {
   nationality: string | null
   profileImageUrl: string | null
   grade: string
+  role: UserRole
   acceptedCount: number
   settings: UserSettings
 }

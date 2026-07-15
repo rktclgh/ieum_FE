@@ -4,7 +4,7 @@
 >
 > - 와이어프레임: [Figma – 신한해커톤 와이어프레임](https://www.figma.com/design/FPRPYHC1ukJph6hjRiyU0Z/?node-id=782-1049)
 > - 생성: 2026-07-02
-> - 최종 수정: 2026-07-14 (FE #76 질문 내역·답변·꼬리질문 채팅 + FE #82 정적 export 전환)
+> - 최종 수정: 2026-07-15 (운영자 데스크톱 라우트 7개 + 전체 정적 export 인벤토리 동기화)
 
 ## 배포 및 URL 원칙
 
@@ -75,7 +75,26 @@
 |---|---|---|---|---|
 | `/my/` | 마이 | ③ 마이페이지 1) | `GET /users/me` | protected client gate |
 | `/my/edit/` | 내 정보 수정 (닉네임·국적·비밀번호) | ③ 마이페이지 2) | `PATCH /users/me` | protected client gate |
-| `/my/settings/` | 알림 설정 (모임·질문 알림, 반경, 권한) | ③ 마이페이지 3) | `PATCH /users/me/notification-settings` | protected client gate |
+| `/my/inquiry/` | 운영 문의 등록 | — | `POST /api/v1/inquiries` | protected client gate |
+| `/my/notifications/` | 알림 설정 (전체·모임·질문·반경) | ③ 마이페이지 3) | `PATCH /api/v1/users/me/settings` | protected client gate |
+| `/my/permissions/` | 카메라·푸시 권한 설정 | ③ 마이페이지 3) | `PATCH /api/v1/users/me/settings` | protected client gate |
+
+### 운영자
+
+| Canonical URL | 화면 | 백엔드 API 그룹 | 접근 계약 |
+|---|---|---|---|
+| `/admin/` | 운영 지표 대시보드 | `GET /api/v1/admin/stats/users`, `GET /api/v1/admin/stats/content`, `GET /api/v1/admin/stats/reports` | `role=admin` protected gate + desktop-only |
+| `/admin/login/` | 운영자 로그인 | `POST /api/v1/auth/login`, `GET /api/v1/users/me` | guest 허용, admin은 대시보드 이동, 일반 사용자는 forbidden/logout + desktop-only |
+| `/admin/users/` | 회원 검색·상태 필터 목록 | `GET /api/v1/admin/users` | `role=admin` protected gate + desktop-only |
+| `/admin/users/detail/?userId={userId}` | 회원 상세·제재·활성화 | `GET /api/v1/admin/users/{userId}`, `POST /api/v1/admin/users/{userId}/sanctions`, `POST /api/v1/admin/users/{userId}/activate` | `role=admin` protected gate + desktop-only |
+| `/admin/reports/` | 신고 필터·목록 | `GET /api/v1/admin/reports` | `role=admin` protected gate + desktop-only |
+| `/admin/reports/detail/?reportId={reportId}` | 신고 증거 상세·확정·기각 | `GET /api/v1/admin/reports/{reportId}`, `POST /api/v1/admin/reports/{reportId}/confirm`, `POST /api/v1/admin/reports/{reportId}/dismiss` | `role=admin` protected gate + desktop-only |
+| `/admin/inquiries/` | 문의 목록·답변 | `GET /api/v1/admin/inquiries`, `POST /api/v1/admin/inquiries/{inquiryId}/answer` | `role=admin` protected gate + desktop-only |
+
+- 운영자 화면은 `1024px` 이상에서만 기능 UI를 mount한다. 더 작은 viewport에서는 `/api/v1/users/me` 인증 확인만 허용하고 `/api/v1/admin/**` 요청을 시작하지 않는다.
+- `userId`와 `reportId`는 positive safe integer query여야 한다. 상세 path literal은 `src/lib/navigation/routes.ts`의 route builder만 소유하며 런타임 `[userId]`·`[reportId]` 디렉터리를 만들지 않는다.
+- 정적 HTML 노출은 운영자 권한을 뜻하지 않는다. Spring Security의 `/api/v1/admin/**` `role=admin` 인가가 최종 보안 경계다.
+- 이 문서는 FE 정적 라우트의 기준이다. Spring `StaticPageController`, test fixture, JAR package verifier 반영은 `docs/be-map-handoff.md`에 따라 백엔드 worktree가 담당한다.
 
 ## 런타임 ID URL 전환표
 
