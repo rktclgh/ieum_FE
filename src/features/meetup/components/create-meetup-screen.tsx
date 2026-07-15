@@ -11,6 +11,7 @@ import {
   formatDateValue,
   formatTimeValue,
   toKstIso,
+  type MeetupPlaceValue,
 } from "@/features/meetup/constants/create-meetup"
 import { MeetupDatePicker } from "@/features/meetup/components/meetup-date-picker"
 import { MeetupImagePicker } from "@/features/meetup/components/meetup-image-picker"
@@ -26,6 +27,8 @@ import { cn } from "@/lib/utils"
 interface CreateMeetupScreenProps {
   /** 닫기(X) 또는 제출 완료 시 호출 — 오버레이 언마운트는 부모가 담당 */
   onClose: () => void
+  /** 지도 홈 핀에서 넘어온 초기 장소 — 있으면 장소 칸을 프리필한다 */
+  initialPlace?: MeetupPlaceValue | null
 }
 
 /**
@@ -33,10 +36,10 @@ interface CreateMeetupScreenProps {
  * 제목·날짜·시간·장소·내용을 채우면 제출 버튼이 활성화되고, 제출 시 POST /meetings 로 생성한다.
  * 장소는 Figma 지도 기반 MeetupLocationPicker에서 좌표(lat/lng)·주소·라벨까지 확보한다.
  */
-function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
+function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreenProps) {
   const { messages } = useTranslation()
   const t = messages.createMeetup
-  const form = useCreateMeetupForm()
+  const form = useCreateMeetupForm(initialPlace)
   const createMeeting = useCreateMeeting()
 
   const [datePickerOpen, setDatePickerOpen] = React.useState(false)
@@ -77,7 +80,7 @@ function CreateMeetupScreen({ onClose }: CreateMeetupScreenProps) {
     setError(null)
 
     // 이미지 업로드 실패와 모임 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
-    let imageFileId: number | undefined
+    let imageFileId: string | undefined
     if (form.image) {
       try {
         imageFileId = await uploadMeetingImage(form.image.file)

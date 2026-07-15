@@ -35,4 +35,9 @@ export interface ProfileFormApi {
   isNextEnabled: boolean
   onSubmit: () => void
   signupMutation: ProfileMutationState
+  avatarPreview: string | null
+  onAvatarFileSelected: (file: File) => void
+  editorSrc: string | null
+  onEditorClose: () => void
+  onCropped: (blob: Blob) => void
 }

@@ -2,19 +2,14 @@
 
 import L from "leaflet"
 import * as React from "react"
-import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet"
+import { Circle, MapContainer, Marker, useMap, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
 import { PinMarker } from "@/features/map/components/pin-marker"
+import { VectorTileLayer } from "@/features/map/components/vector-tile-layer"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
-import {
-  DEFAULT_MAP_CENTER,
-  DEFAULT_MAP_ZOOM,
-  MAP_TILE_MAX_ZOOM,
-  MAP_TILE_SUBDOMAINS,
-  MAP_TILE_URL,
-} from "@/features/map/constants/map"
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
 
 interface MapCanvasProps {
   /** 재중심 시 이동할 좌표. 실시간 위치 갱신은 여기에 반영되어도 뷰를 움직이지 않는다(recenterKey로만 이동). */
@@ -38,6 +33,8 @@ interface MapCanvasProps {
   liveAccuracy?: number | null
   /** 사용자가 지도에서 고른 지점 — Figma Location/XL 핀으로 표시 */
   selectedPosition?: Coordinates | null
+  /** 선택 핀 마커를 클릭했을 때 (핀 토글 제거용). 미지정이면 마커 클릭 무반응 */
+  onSelectedPositionClick?: () => void
 }
 
 const LIVE_ACCENT = "#316CED"
@@ -173,6 +170,7 @@ function MapCanvas({
   livePosition,
   liveAccuracy,
   selectedPosition,
+  onSelectedPositionClick,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
 
@@ -184,11 +182,7 @@ function MapCanvas({
       attributionControl={false}
       className={className}
     >
-      <TileLayer
-        url={MAP_TILE_URL}
-        subdomains={MAP_TILE_SUBDOMAINS}
-        maxZoom={MAP_TILE_MAX_ZOOM}
-      />
+      <VectorTileLayer />
       <MapCenterUpdater
         center={center}
         recenterKey={recenterKey ?? 0}
@@ -203,7 +197,11 @@ function MapCanvas({
         <PinMarker key={pin.pinId} pin={pin} onClick={onPinClick} />
       ))}
       {selectedPosition && (
-        <Marker position={[selectedPosition.lat, selectedPosition.lng]} icon={selectedLocationIcon} />
+        <Marker
+          position={[selectedPosition.lat, selectedPosition.lng]}
+          icon={selectedLocationIcon}
+          eventHandlers={onSelectedPositionClick ? { click: onSelectedPositionClick } : undefined}
+        />
       )}
       {livePosition && (
         <>

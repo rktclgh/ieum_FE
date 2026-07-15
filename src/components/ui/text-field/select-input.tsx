@@ -35,6 +35,9 @@ interface SelectInputProps {
   searchPlaceholder?: string
   error?: boolean
   disabled?: boolean
+  // 기본 필드형 트리거 대신 임의의 엘리먼트(예: 메뉴 행)를 트리거로 쓰고 싶을 때 전달한다.
+  // 전달 시 선택된 값/placeholder/error 스타일은 무시되고 이 엘리먼트가 그대로 트리거가 된다.
+  renderTrigger?: React.ReactElement
 }
 
 function SelectInput({
@@ -48,6 +51,7 @@ function SelectInput({
   searchPlaceholder,
   error,
   disabled,
+  renderTrigger,
 }: SelectInputProps) {
   const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue ?? "")
   const selectedValue = value ?? uncontrolledValue
@@ -72,42 +76,46 @@ function SelectInput({
         }
       }}
     >
-      <DrawerTrigger
-        data-slot="select-input-wrapper"
-        disabled={disabled}
-        className={cn(
-          "flex h-[3.375rem] w-full items-center gap-2 rounded-2xl border border-gray-100 p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-          error && "border-red",
-          className
-        )}
-      >
-        <span className="flex w-full min-w-0 items-center gap-2">
-          {selectedOption?.icon && (
-            <Image
-              src={selectedOption.icon}
-              alt=""
-              width={24}
-              height={17}
-              className="h-[17px] w-6 shrink-0 rounded-[3px] border border-gray-100 object-cover"
-            />
+      {renderTrigger ? (
+        <DrawerTrigger disabled={disabled} render={renderTrigger} />
+      ) : (
+        <DrawerTrigger
+          data-slot="select-input-wrapper"
+          disabled={disabled}
+          className={cn(
+            "flex h-[3.375rem] w-full items-center gap-2 rounded-2xl border border-gray-100 p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+            error && "border-red",
+            className
           )}
-          <span
-            className={cn(
-              "truncate text-body-regular-16",
-              selectedOption ? "text-body-medium-16 text-gray-900" : "text-gray-400"
+        >
+          <span className="flex w-full min-w-0 items-center gap-2">
+            {selectedOption?.icon && (
+              <Image
+                src={selectedOption.icon}
+                alt=""
+                width={24}
+                height={17}
+                className="h-[17px] w-6 shrink-0 rounded-[3px] border border-gray-100 object-cover"
+              />
             )}
-          >
-            {selectedOption?.label ?? placeholder}
+            <span
+              className={cn(
+                "truncate text-body-regular-16",
+                selectedOption ? "text-body-medium-16 text-gray-900" : "text-gray-400"
+              )}
+            >
+              {selectedOption?.label ?? placeholder}
+            </span>
           </span>
-        </span>
-        <Image
-          src="/icons/arrow/left.svg"
-          alt=""
-          width={24}
-          height={24}
-          className="size-6 shrink-0 -rotate-90"
-        />
-      </DrawerTrigger>
+          <Image
+            src="/icons/arrow/left.svg"
+            alt=""
+            width={24}
+            height={24}
+            className="size-6 shrink-0 -rotate-90"
+          />
+        </DrawerTrigger>
+      )}
       <DrawerPortal>
         <DrawerBackdrop />
         <DrawerViewport>

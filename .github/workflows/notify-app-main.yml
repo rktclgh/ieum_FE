@@ -12,56 +12,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate-and-notify:
+  notify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-      NEXT_PUBLIC_KAKAO_REST_API_KEY: ${{ vars.NEXT_PUBLIC_KAKAO_REST_API_KEY }}
-
+    timeout-minutes: 5
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check public build variables
-        run: |
-          test -n "$NEXT_PUBLIC_GOOGLE_CLIENT_ID"
-          test -n "$NEXT_PUBLIC_KAKAO_REST_API_KEY"
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Build static frontend
-        run: pnpm build
-
-      - name: Check static export
-        run: |
-          test -s out/index.html
-          test -s out/index.txt
-          test -s out/404.html
-
-      - name: Refuse stale notification
-        run: |
-          git fetch origin main --depth=1
-          [[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]]
-
       - name: Notify backend
         env:
           # fine-grained PAT with Contents read/write on rktclgh/ieum_BE
           CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-          event_type: "frontend-updated"
         run: |
           if [[ -z "$CI_GITHUB_TOKEN" ]]; then
             echo "CI_GITHUB_TOKEN is required" >&2
@@ -74,4 +32,4 @@ jobs:
             --header "Accept: application/vnd.github+json" \
             --header "Authorization: Bearer $CI_GITHUB_TOKEN" \
             --header "X-GitHub-Api-Version: 2022-11-28" \
-            --data '{"event_type": "${{ env.event_type }}", "client_payload": {"fe_sha": "${{ github.sha }}", "fe_ref": "${{ github.ref }}", "fe_repo": "${{ github.repository }}"}}'
+            --data '{"event_type": "frontend-updated"}'

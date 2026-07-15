@@ -12,7 +12,7 @@ interface LocationListItemProps {
   subtitle: string
   /** 우측 버튼 라벨 (선택 / 입력 등) */
   actionLabel: string
-  /** filled: 파란 채움(선택), outlined: 테두리(입력) */
+  /** outlined: 테두리(선택), filled: 파란 채움(입력) */
   actionVariant?: "filled" | "outlined"
   onAction: () => void
 }
@@ -26,7 +26,7 @@ function LocationListItem({
   title,
   subtitle,
   actionLabel,
-  actionVariant = "filled",
+  actionVariant = "outlined",
   onAction,
 }: LocationListItemProps) {
   return (

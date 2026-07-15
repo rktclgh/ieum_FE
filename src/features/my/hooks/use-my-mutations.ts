@@ -2,11 +2,18 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { updateLocation, updateMe, updateSettings } from "@/features/my/api/my-api"
+import {
+  submitInquiry,
+  updateLocation,
+  updateMe,
+  updateSettings,
+  withdrawMe,
+} from "@/features/my/api/my-api"
 import type { UserMeResponse, UserSettings } from "@/features/session/api/session-api"
 import {
   createSessionMutationCallbacks,
   ME_QUERY_KEY,
+  resetSessionCache,
 } from "@/features/session/lib/session-cache"
 
 // PATCH /users/me 는 전체 UserMeResponse 를 authoritative 로 되돌려주므로,
@@ -39,4 +46,26 @@ function useUpdateLocation() {
   return useMutation({ mutationFn: updateLocation })
 }
 
-export { useUpdateMe, useUpdateSettings, useUpdateLocation }
+// DELETE /users/me — 로그아웃과 동일하게 성공 시 세션 캐시를 전부 리셋한다(쿠키는 BE가 만료).
+function useWithdrawMe() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: withdrawMe,
+    onSuccess: async () => {
+      await resetSessionCache(queryClient)
+    },
+  })
+}
+
+// POST /inquiries — 204/2xx, 캐시에 반영할 상태 없음.
+function useSubmitInquiry() {
+  return useMutation({ mutationFn: submitInquiry })
+}
+
+export {
+  useUpdateMe,
+  useUpdateSettings,
+  useUpdateLocation,
+  useWithdrawMe,
+  useSubmitInquiry,
+}

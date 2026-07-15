@@ -17,7 +17,13 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 
 const PERIODS = ["am", "pm"] as const
 const HOURS = Array.from({ length: 12 }, (_, index) => index + 1)
-const MINUTES = Array.from({ length: 60 }, (_, index) => index)
+const MINUTE_STEP = 5
+const MINUTES = Array.from({ length: 60 / MINUTE_STEP }, (_, index) => index * MINUTE_STEP)
+
+/** 초기 분을 5분 단위 옵션에 맞도록 가장 가까운 값으로 보정한다. */
+function snapMinute(minute: number): number {
+  return Math.min(55, Math.round(minute / MINUTE_STEP) * MINUTE_STEP)
+}
 
 interface MeetupTimePickerProps {
   open: boolean
@@ -40,9 +46,10 @@ function MeetupTimePickerContent({
   const { messages } = useTranslation()
   const t = messages.createMeetup
 
-  const [draft, setDraft] = React.useState<MeetupTimeValue>(
-    () => initialValue ?? getKstTimeParts()
-  )
+  const [draft, setDraft] = React.useState<MeetupTimeValue>(() => {
+    const source = initialValue ?? getKstTimeParts()
+    return { ...source, minute: snapMinute(source.minute) }
+  })
 
   const periodLabels = PERIODS.map((period) => (period === "am" ? t.amLabel : t.pmLabel))
   const hourLabels = HOURS.map((hour) => t.hourLabel(hour))

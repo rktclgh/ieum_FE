@@ -3,9 +3,11 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { Flag } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { LongPressActionOverlay } from "@/features/question/components/long-press-action-overlay"
 import { QuestionAiAnswerCard } from "@/features/question/components/question-ai-answer-card"
 import { QuestionAnswerAuthorItem } from "@/features/question/components/question-answer-author-item"
 import { QuestionAnswerItem } from "@/features/question/components/question-answer-item"
@@ -17,6 +19,7 @@ import {
 } from "@/features/question/hooks/use-question-mutations"
 import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
+import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
@@ -39,8 +42,13 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
   const [reply, setReply] = React.useState("")
   const [actionError, setActionError] = React.useState<string | null>(null)
   const [pendingAcceptId, setPendingAcceptId] = React.useState<number | null>(null)
-  const [reportedIds, setReportedIds] = React.useState<Set<number>>(new Set())
+  const [removedIds, setRemovedIds] = React.useState<Set<number>>(new Set())
   const [pendingReportId, setPendingReportId] = React.useState<number | null>(null)
+  const [activeAnswer, setActiveAnswer] = React.useState<{
+    id: number
+    rect: DOMRect
+    view: QuestionAnswerView
+  } | null>(null)
 
   React.useEffect(() => {
     if (!actionError) return
@@ -90,7 +98,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
       { answerId, reason: "etc" },
       {
         onSuccess: () => {
-          setReportedIds((prev) => new Set(prev).add(answerId))
+          setRemovedIds((prev) => new Set(prev).add(answerId))
           setActionError(messages.question.reportSubmitted)
         },
         onError: () => setActionError(messages.question.errors.REPORT_FAILED),
@@ -161,18 +169,19 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   {question.answers.filter((a) => a.isAi).map((a) => (
                     <QuestionAiAnswerCard key={a.answerId} answer={a} />
                   ))}
-                  {question.answers.filter((a) => !a.isAi).map((a) => (
-                    <QuestionAnswerAuthorItem
-                      key={a.answerId}
-                      answer={a}
-                      isMine={a.authorUserId === me.data?.userId}
-                      isReported={reportedIds.has(a.answerId)}
-                      canAccept={!question.isResolved && !a.isAccepted}
-                      onAccept={() => setPendingAcceptId(a.answerId)}
-                      onStartChat={() => handleStartChat(a.authorUserId)}
-                      onReport={() => setPendingReportId(a.answerId)}
-                    />
-                  ))}
+                  {question.answers
+                    .filter((a) => !a.isAi && !removedIds.has(a.answerId))
+                    .map((a) => (
+                      <QuestionAnswerAuthorItem
+                        key={a.answerId}
+                        answer={a}
+                        isMine={a.authorUserId === me.data?.userId}
+                        isReported={false}
+                        onAccept={() => setPendingAcceptId(a.answerId)}
+                        onStartChat={() => handleStartChat(a.authorUserId)}
+                        onLongPress={(rect) => setActiveAnswer({ id: a.answerId, rect, view: a })}
+                      />
+                    ))}
                   {question.answers.length === 0 ? (
                     <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
                       {messages.question.emptyAnswers}
@@ -217,9 +226,9 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                 aria-label={messages.question.sendLabel}
                 onClick={handleSend}
                 disabled={postAnswer.isPending}
-                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-400 disabled:opacity-50"
+                className="size-8 shrink-0 disabled:opacity-50"
               >
-                <Image src="/icons/chat/send.svg" alt="" width={16} height={16} className="size-4" />
+                <Image src="/icons/chat/send-button.svg" alt="" width={32} height={32} className="size-8" />
               </button>
             </div>
           </div>
@@ -232,6 +241,30 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
             {actionError}
           </div>
         </div>
+      )}
+
+      {activeAnswer && (
+        <LongPressActionOverlay
+          anchorRect={activeAnswer.rect}
+          onDismiss={() => setActiveAnswer(null)}
+          actions={[
+            {
+              icon: <Flag className="size-5 text-red" />,
+              label: messages.question.reportAction,
+              tone: "destructive",
+              onClick: () => setPendingReportId(activeAnswer.id),
+            },
+          ]}
+        >
+          <QuestionAnswerAuthorItem
+            answer={activeAnswer.view}
+            isMine={false}
+            isReported={false}
+            onStartChat={() => {}}
+            onAccept={() => {}}
+            onLongPress={() => {}}
+          />
+        </LongPressActionOverlay>
       )}
 
       <ConfirmDialog

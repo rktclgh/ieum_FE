@@ -19,4 +19,17 @@ interface UpdateLocationRequest {
   latitude: number
 }
 
-export type { UpdateMeRequest, UpdateSettingsRequest, UpdateLocationRequest, LanguageCode, NotifyRadiusKm }
+// POST /inquiries — content 필수, title 옵션(디자인엔 내용만 노출).
+interface InquiryRequest {
+  content: string
+  title?: string
+}
+
+export type {
+  UpdateMeRequest,
+  UpdateSettingsRequest,
+  UpdateLocationRequest,
+  InquiryRequest,
+  LanguageCode,
+  NotifyRadiusKm,
+}

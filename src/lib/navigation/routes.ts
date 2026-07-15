@@ -30,7 +30,9 @@ const routes = {
   friends: () => "/friends/",
   my: () => "/my/",
   myEdit: () => "/my/edit/",
-  mySettings: () => "/my/settings/",
+  myNotifications: () => "/my/notifications/",
+  myPermissions: () => "/my/permissions/",
+  myInquiry: () => "/my/inquiry/",
   chatRoom: (chatId: number) =>
     queryRoute("/chats/room/", { chatId: requirePositiveInteger(chatId, "chatId") }),
   chatNotices: (chatId: number) =>

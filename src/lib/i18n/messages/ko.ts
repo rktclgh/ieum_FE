@@ -105,6 +105,7 @@ export interface Messages {
     listParticipantCount: (count: number) => string
     searchEmpty: string
     listEmpty: string
+    locatingMe: string
   }
   meetup: {
     joinButton: string
@@ -199,11 +200,13 @@ export interface Messages {
     acceptConfirmDescription: string
     acceptConfirmCancel: string
     createTitle: string
+    editTitle: string
     titlePlaceholder: string
     contentPlaceholder: string
     locationPlaceholder: string
     submitButton: string
     submittingButton: string
+    updateButton: string
     imageUploadFailed: string
     imageTooLarge: string
     similarTitle: string
@@ -214,6 +217,7 @@ export interface Messages {
     addImageLabel: string
     historyTitle: string
     historyEmpty: string
+    editAction: string
     deleteAction: string
     deleteConfirmTitle: string
     deleteConfirmDescription: string
@@ -241,46 +245,76 @@ export interface Messages {
     }
   }
   my: {
-    emailLabel: string
-    gradeLabel: string
-    acceptedCountLabel: string
     editInfoLabel: string
-    settingsLabel: string
     edit: {
       title: string
-      genderOther: string
       saveButton: string
     }
-    settings: {
+    notifications: {
       title: string
-      languageLabel: string
-      permissionsSectionTitle: string
-      cameraPermissionLabel: string
-      pushPermissionLabel: string
-      notificationsSectionTitle: string
       notifyAllLabel: string
-      notifyMeetingLabel: string
-      notifyQuestionLabel: string
       notifyRadiusLabel: string
       radiusOption: (km: number) => string
-      locationLabel: string
-      locationUpdateAction: string
-      locationSublabel: string
-      locationUpdating: string
-      locationUpdated: string
-      locationDenied: string
-      locationUnavailable: string
       saveError: string
+    }
+    permissions: {
+      title: string
+      cameraPermissionLabel: string
+      saveError: string
+    }
+    inquiry: {
+      title: string
+      placeholder: string
+      guide1: string
+      guide2: string
+      cancel: string
+      submit: string
+      success: string
+      error: string
     }
     errors: {
       NICKNAME_TAKEN: string
       VALIDATION_FAILED: string
       default: string
     }
+    menu: {
+      notifications: string
+      permissions: string
+      language: string
+      inquiry: string
+      version: string
+      logout: string
+      withdraw: string
+    }
+    logoutDialog: {
+      title: string
+      description: string
+      cancel: string
+      confirm: string
+    }
+    withdrawDialog: {
+      title: string
+      description: string
+      cancel: string
+      confirm: string
+      error: string
+    }
+  }
+  profileImage: {
+    takePhoto: string
+    chooseAlbum: string
+    editLabel: string
+    deleteLabel: string
+    uploadFailed: string
+    invalidType: string
+    tooLarge: string
+    cropTitle: string
+    cropConfirm: string
+    cropCancel: string
   }
   tabBar: {
     home: string
-    meetups: string
+    chat: string
     questions: string
     my: string
   }
@@ -308,7 +342,6 @@ export interface Messages {
     removeFriendConfirmDescription: string
     addFriendButton: string
     requestedButton: string
-    startChatButton: string
     pinAction: string
     muteAction: string
     notificationLabel: string
@@ -332,6 +365,7 @@ export interface Messages {
     sendFailed: string
     leaveFailed: string
     disbandFailed: string
+    connecting: string
     leaveChatConfirmTitle: string
     leaveChatConfirmDescription: string
     disbandChatConfirmTitle: string
@@ -507,6 +541,7 @@ export const ko: Messages = {
     listParticipantCount: (count) => `현재 ${count}명`,
     searchEmpty: "검색 결과가 없습니다",
     listEmpty: "이 지역에 표시할 항목이 없습니다",
+    locatingMe: "내 위치를 찾는 중…",
   },
   meetup: {
     joinButton: "참여하기",
@@ -598,14 +633,16 @@ export const ko: Messages = {
     acceptedBadge: "채택됨",
     acceptButton: "채택",
     acceptConfirmTitle: "이 답변을 채택할까요?",
-    acceptConfirmDescription: "채택하면 질문이 해결 상태로 바뀌며 되돌릴 수 없어요.",
+    acceptConfirmDescription: "채택하면 이 답변 작성자와 채팅을 시작할 수 있어요.",
     acceptConfirmCancel: "취소",
     createTitle: "질문하기",
+    editTitle: "질문 수정",
     titlePlaceholder: "질문 제목",
     contentPlaceholder: "질문 내용을 입력해주세요.",
     locationPlaceholder: "장소 선택",
     submitButton: "질문 올리기",
     submittingButton: "올리는 중…",
+    updateButton: "수정 완료",
     imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
     imageTooLarge: "이미지는 5MB 이하만 첨부할 수 있어요.",
     similarTitle: "비슷한 질문",
@@ -616,6 +653,7 @@ export const ko: Messages = {
     addImageLabel: "사진 첨부",
     historyTitle: "질문 내역",
     historyEmpty: "아직 등록한 질문이 없어요.",
+    editAction: "수정",
     deleteAction: "삭제",
     deleteConfirmTitle: "이 질문을 삭제할까요?",
     deleteConfirmDescription: "삭제하면 답변과 함께 사라지며 되돌릴 수 없어요.",
@@ -643,46 +681,76 @@ export const ko: Messages = {
     },
   },
   my: {
-    emailLabel: "이메일",
-    gradeLabel: "등급",
-    acceptedCountLabel: "채택 수",
     editInfoLabel: "내 정보 수정",
-    settingsLabel: "설정",
     edit: {
       title: "내 정보 수정",
-      genderOther: "기타",
       saveButton: "저장",
     },
-    settings: {
-      title: "설정",
-      languageLabel: "언어",
-      permissionsSectionTitle: "권한",
-      cameraPermissionLabel: "카메라 권한",
-      pushPermissionLabel: "푸시 알림 권한",
-      notificationsSectionTitle: "알림",
+    notifications: {
+      title: "알림 설정",
       notifyAllLabel: "전체 알림",
-      notifyMeetingLabel: "모임 알림",
-      notifyQuestionLabel: "질문 알림",
       notifyRadiusLabel: "알림 반경",
       radiusOption: (km) => `${km}km`,
-      locationLabel: "위치",
-      locationUpdateAction: "내 위치 업데이트",
-      locationSublabel: "지도에서 내 위치를 최신으로 갱신해요.",
-      locationUpdating: "위치 업데이트 중...",
-      locationUpdated: "위치가 업데이트되었어요.",
-      locationDenied: "위치 권한이 필요해요.",
-      locationUnavailable: "위치를 가져오지 못했어요.",
       saveError: "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    },
+    permissions: {
+      title: "권한 설정",
+      cameraPermissionLabel: "카메라 권한",
+      saveError: "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    },
+    inquiry: {
+      title: "문의하기",
+      placeholder: "문의 내용을 입력해 주세요.",
+      guide1: "문의하신 내용은 최대 7일 안에 답변 드리겠습니다.",
+      guide2: "답변은 등록하신 이메일로 전송해드립니다.",
+      cancel: "취소",
+      submit: "문의",
+      success: "문의가 접수되었어요.",
+      error: "문의 등록에 실패했어요. 잠시 후 다시 시도해 주세요.",
     },
     errors: {
       NICKNAME_TAKEN: "이미 사용중인 닉네임이에요.",
       VALIDATION_FAILED: "입력값을 다시 확인해 주세요.",
       default: "잠시 후 다시 시도해 주세요.",
     },
+    menu: {
+      notifications: "알림 설정",
+      permissions: "권한 설정",
+      language: "언어 설정",
+      inquiry: "문의하기",
+      version: "버전 정보",
+      logout: "로그아웃",
+      withdraw: "회원탈퇴",
+    },
+    logoutDialog: {
+      title: "이음에서 로그아웃합니다",
+      description: "정말로 로그아웃 하시겠습니까?",
+      cancel: "취소",
+      confirm: "로그아웃",
+    },
+    withdrawDialog: {
+      title: "현재 계정을 탈퇴합니다",
+      description: "정말로 탈퇴하시겠습니까?",
+      cancel: "취소",
+      confirm: "탈퇴",
+      error: "탈퇴에 실패했어요. 잠시 후 다시 시도해 주세요.",
+    },
+  },
+  profileImage: {
+    takePhoto: "사진 찍기",
+    chooseAlbum: "앨범에서 고르기",
+    editLabel: "프로필 사진 편집",
+    deleteLabel: "사진 삭제",
+    uploadFailed: "사진 업로드에 실패했어요. 잠시 후 다시 시도해주세요.",
+    invalidType: "이미지 파일만 업로드할 수 있어요.",
+    tooLarge: "10MB 이하의 이미지를 사용해주세요.",
+    cropTitle: "사진 편집",
+    cropConfirm: "확인",
+    cropCancel: "취소",
   },
   tabBar: {
     home: "홈",
-    meetups: "모임",
+    chat: "채팅",
     questions: "질문",
     my: "마이",
   },
@@ -710,7 +778,6 @@ export const ko: Messages = {
     removeFriendConfirmDescription: "정말로 삭제하시겠습니까?",
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
-    startChatButton: "채팅 시작",
     pinAction: "고정",
     muteAction: "알림 해제",
     notificationLabel: "알림",
@@ -734,6 +801,7 @@ export const ko: Messages = {
     sendFailed: "메시지를 보낼 수 없습니다. 연결을 확인해주세요.",
     leaveFailed: "채팅방 나가기에 실패했습니다.",
     disbandFailed: "채팅방 해체에 실패했습니다.",
+    connecting: "연결 중…",
     leaveChatConfirmTitle: "채팅방을 나갑니다",
     leaveChatConfirmDescription: "정말로 나가시겠습니까?",
     disbandChatConfirmTitle: "채팅방을 해체합니다",

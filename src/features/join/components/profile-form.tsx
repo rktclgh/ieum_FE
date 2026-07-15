@@ -10,6 +10,8 @@ import { InputWithButton } from "@/components/ui/text-field/input-with-button"
 import { Title } from "@/components/ui/text-field/title"
 import { NationalitySelect } from "@/features/join/components/nationality-select"
 import type { ProfileFormApi } from "@/features/join/types"
+import { ProfileAvatarButton } from "@/features/profile-image/components/profile-avatar-button"
+import { ProfileImageEditor } from "@/features/profile-image/components/profile-image-editor"
 import { getApiErrorMessage } from "@/lib/api/errors"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -38,6 +40,11 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
     isNextEnabled,
     onSubmit,
     signupMutation,
+    avatarPreview,
+    onAvatarFileSelected,
+    editorSrc,
+    onEditorClose,
+    onCropped,
   } = flow
 
   const handleSubmit = (event: FormEvent) => {
@@ -51,6 +58,10 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
       className={cn("flex w-full flex-1 flex-col items-center", className)}
     >
       <div className="flex w-full flex-col gap-3 px-4 pb-32 [&>[data-slot=explanation]]:-mt-3">
+        <div className="flex w-full flex-col items-center py-2">
+          <ProfileAvatarButton previewUrl={avatarPreview} onFileSelected={onAvatarFileSelected} />
+        </div>
+
         <div className="flex w-full flex-col items-start">
           <Title text={messages.join.nicknameLabel} />
           <InputWithButton
@@ -137,6 +148,14 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
         </Button>
         <span className="h-1 w-[135px] rounded-full bg-gray-900" />
       </div>
+
+      <ProfileImageEditor
+        key={editorSrc ?? "none"}
+        open={editorSrc !== null}
+        imageSrc={editorSrc}
+        onClose={onEditorClose}
+        onCropped={onCropped}
+      />
     </form>
   )
 }

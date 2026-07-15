@@ -119,7 +119,7 @@ function MeetupLocationSearch({
               title={<HighlightedText text={primary} query={apiQuery} />}
               subtitle={secondary}
               actionLabel={t.createPlaceButton}
-              actionVariant="outlined"
+              actionVariant="filled"
               onAction={() => onCreateName(primary, { lat: address.lat, lng: address.lng })}
             />
           )

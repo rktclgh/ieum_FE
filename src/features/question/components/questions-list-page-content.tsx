@@ -2,27 +2,36 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { TabBar } from "@/features/navigation/components/tab-bar"
-import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
+import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
+import {
+  LongPressActionOverlay,
+  type LongPressAction,
+} from "@/features/question/components/long-press-action-overlay"
 import { QuestionHistoryItem } from "@/features/question/components/question-history-item"
 import { useDeleteQuestion } from "@/features/question/hooks/use-question-mutations"
 import { useMyQuestions } from "@/features/question/hooks/use-question-queries"
-import { adaptMyQuestionItem } from "@/features/question/lib/question-adapter"
+import { adaptMyQuestionItem, type MyQuestionListItemView } from "@/features/question/lib/question-adapter"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
-// 질문 내역 화면 — 목록 + 무한스크롤 + 롱프레스 삭제. 탭바가 있는 (main) 화면.
+// 질문 내역 화면 — 목록 + 무한스크롤 + 롱프레스 수정/삭제. 탭바가 있는 (main) 화면.
 function QuestionsListPageContent() {
   const router = useRouter()
   const { messages } = useTranslation()
   const query = useMyQuestions()
   const deleteQuestion = useDeleteQuestion()
 
-  const [menuFor, setMenuFor] = React.useState<number | null>(null)
+  const [active, setActive] = React.useState<{
+    id: number
+    rect: DOMRect
+    view: MyQuestionListItemView
+  } | null>(null)
+  const [editId, setEditId] = React.useState<number | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = React.useState<number | null>(null)
 
   const items = React.useMemo(
@@ -44,18 +53,6 @@ function QuestionsListPageContent() {
     return () => observer.disconnect()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  const menuItems: ChatContextMenuItem[] = [
-    {
-      icon: <Trash2 className="size-5 text-red" />,
-      label: messages.question.deleteAction,
-      tone: "destructive",
-      onClick: () => {
-        setPendingDeleteId(menuFor)
-        setMenuFor(null)
-      },
-    },
-  ]
-
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-gray-50">
@@ -72,7 +69,7 @@ function QuestionsListPageContent() {
                 key={item.questionId}
                 item={item}
                 onOpen={() => router.push(routes.questionDetail(item.questionId))}
-                onLongPress={() => setMenuFor(item.questionId)}
+                onLongPress={(rect) => setActive({ id: item.questionId, rect, view: item })}
               />
             ))
           )}
@@ -84,15 +81,32 @@ function QuestionsListPageContent() {
         <TabBar />
       </div>
 
-      {menuFor != null && (
-        <div className="fixed inset-0 z-50">
-          <ChatContextMenu
-            dimmed
-            items={menuItems}
-            onDismiss={() => setMenuFor(null)}
-            className="left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-          />
-        </div>
+      {active && (
+        <LongPressActionOverlay
+          anchorRect={active.rect}
+          onDismiss={() => setActive(null)}
+          actions={
+            [
+              {
+                icon: <Pencil className="size-5 text-gray-900" />,
+                label: messages.question.editAction,
+                onClick: () => setEditId(active.id),
+              },
+              {
+                icon: <Trash2 className="size-5 text-red" />,
+                label: messages.question.deleteAction,
+                tone: "destructive",
+                onClick: () => setPendingDeleteId(active.id),
+              },
+            ] satisfies LongPressAction[]
+          }
+        >
+          <QuestionHistoryItem item={active.view} onOpen={() => {}} onLongPress={() => {}} />
+        </LongPressActionOverlay>
+      )}
+
+      {editId != null && (
+        <CreateQuestionScreen mode="edit" questionId={editId} onClose={() => setEditId(null)} />
       )}
 
       <ConfirmDialog

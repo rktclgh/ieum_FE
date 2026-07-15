@@ -1,33 +1,8 @@
-import { apiClient } from "@/lib/api/client"
+import { uploadImage } from "@/lib/files/upload-image"
 
-// 이미지 업로드 3단계(presign → S3 직접 PUT → complete). 계약: api-reference.md §8.
-// 공유 업로드 헬퍼가 아직 없어 모임 이미지 첨부용으로 최소 구현한다(#30에서 공용화 예정).
-
-interface PresignResponse {
-  fileId: number
-  uploadUrl: string
-}
-
-// 업로드 완료 후 imageFileId 로 쓸 fileId(number)를 반환한다.
-async function uploadMeetingImage(file: File): Promise<number> {
-  // file.type이 빈 문자열이면 fetch가 임의 Content-Type을 붙여 presign 서명과 불일치(403)할 수 있어 폴백을 둔다.
-  const contentType = file.type || "image/jpeg"
-  const { data: presigned } = await apiClient.post<PresignResponse>("/api/v1/files/presign", {
-    purpose: "meeting",
-    contentType,
-    sizeBytes: file.size,
-  })
-
-  // S3 presigned URL 직접 PUT — 쿠키/CSRF 불필요하므로 apiClient(withCredentials)가 아니라 raw fetch 사용.
-  const uploadResponse = await fetch(presigned.uploadUrl, {
-    method: "PUT",
-    body: file,
-    headers: { "Content-Type": contentType },
-  })
-  if (!uploadResponse.ok) throw new Error("Failed to upload image to storage")
-
-  await apiClient.post(`/api/v1/files/${presigned.fileId}/complete`)
-  return presigned.fileId
+// 모임 대표 이미지 업로드 → imageFileId(UUID 문자열) 반환. 공용 코어에 위임한다(#30).
+async function uploadMeetingImage(file: File): Promise<string> {
+  return uploadImage(file, "meeting")
 }
 
 export { uploadMeetingImage }

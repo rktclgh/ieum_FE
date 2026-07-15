@@ -74,9 +74,9 @@ function ChatMessageInput({
         aria-label={messages.chat.sendButtonLabel}
         onClick={handleSend}
         disabled={disabled}
-        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-400 disabled:cursor-not-allowed disabled:opacity-50"
+        className="size-8 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <Image src="/icons/chat/send.svg" alt="" width={16} height={16} className="size-4" />
+        <Image src="/icons/chat/send-button.svg" alt="" width={32} height={32} className="size-8" />
       </button>
     </div>
   )
