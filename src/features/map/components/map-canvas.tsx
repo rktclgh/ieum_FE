@@ -2,19 +2,14 @@
 
 import L from "leaflet"
 import * as React from "react"
-import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet"
+import { Circle, MapContainer, Marker, useMap, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
 import { PinMarker } from "@/features/map/components/pin-marker"
+import { VectorTileLayer } from "@/features/map/components/vector-tile-layer"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
-import {
-  DEFAULT_MAP_CENTER,
-  DEFAULT_MAP_ZOOM,
-  MAP_TILE_MAX_ZOOM,
-  MAP_TILE_SUBDOMAINS,
-  MAP_TILE_URL,
-} from "@/features/map/constants/map"
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
 
 interface MapCanvasProps {
   /** 재중심 시 이동할 좌표. 실시간 위치 갱신은 여기에 반영되어도 뷰를 움직이지 않는다(recenterKey로만 이동). */
@@ -187,11 +182,7 @@ function MapCanvas({
       attributionControl={false}
       className={className}
     >
-      <TileLayer
-        url={MAP_TILE_URL}
-        subdomains={MAP_TILE_SUBDOMAINS}
-        maxZoom={MAP_TILE_MAX_ZOOM}
-      />
+      <VectorTileLayer />
       <MapCenterUpdater
         center={center}
         recenterKey={recenterKey ?? 0}
