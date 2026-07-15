@@ -60,6 +60,7 @@ function useAcceptFriendRequest() {
           userId: accepted.userId,
           nickname: accepted.nickname,
           profileImageUrl: accepted.profileImageUrl,
+          nationality: accepted.nationality,
           lastActiveAt: accepted.requestedAt,
           active: true,
         }

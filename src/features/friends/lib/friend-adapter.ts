@@ -7,7 +7,7 @@ import type {
   UserSearchResponse,
 } from "@/features/friends/api/friend-types"
 
-// UI(FriendRequestItem)가 쓰는 공통 모델. 친구/요청 응답에는 국적이 없어 국기는 선택값이다.
+// UI(FriendRequestItem)가 쓰는 공통 모델. 매칭 실패 시 국기는 생략되므로 선택값이다.
 interface FriendEntry {
   userId: number
   nickname: string
@@ -27,19 +27,25 @@ function flagOf(code: CountryCode | undefined) {
 }
 
 function adaptFriend(friend: FriendResponse): FriendEntry {
+  const countryCode = fromIso2(friend.nationality)
   return {
     userId: friend.userId,
     nickname: friend.nickname,
     avatarSrc: resolveFileUrl(friend.profileImageUrl),
+    countryCode,
+    flagSrc: flagOf(countryCode),
     active: friend.active,
   }
 }
 
 function adaptRequest(request: FriendRequestResponse): FriendEntry {
+  const countryCode = fromIso2(request.nationality)
   return {
     userId: request.userId,
     nickname: request.nickname,
     avatarSrc: resolveFileUrl(request.profileImageUrl),
+    countryCode,
+    flagSrc: flagOf(countryCode),
   }
 }
 
