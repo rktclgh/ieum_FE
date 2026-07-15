@@ -110,6 +110,8 @@ function useSocialLogin() {
     authorizeUrl.searchParams.set("client_id", clientId)
     authorizeUrl.searchParams.set("redirect_uri", redirectUri)
     authorizeUrl.searchParams.set("response_type", "code")
+    // 백엔드가 OIDC id_token으로 검증하므로 openid scope 필수 (없으면 카카오가 id_token 미발급)
+    authorizeUrl.searchParams.set("scope", "openid")
     authorizeUrl.searchParams.set("state", state)
     window.location.assign(authorizeUrl.toString())
   }, [messages.social.kakaoFailed])
