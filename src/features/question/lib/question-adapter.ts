@@ -120,5 +120,28 @@ function adaptMyQuestionItem(item: MyQuestionItem): MyQuestionListItemView {
   }
 }
 
-export { adaptAnswer, adaptQuestionDetail, adaptQuestionSummary, adaptMyQuestionItem }
+// 목록 미리보기 최대 글자 수. 한 줄 요약이라 CSS truncate가 시각적 말줄임을 처리하지만,
+// 문자열도 잘라 과도한 길이를 방지하고 여러 줄 본문을 한 줄로 접는다.
+const CONTENT_PREVIEW_MAX_LENGTH = 80
+
+// 목록 API에 본문이 없어(BE 미구현) 상세 API(content)로 FE에서 미리보기를 자체 생성한다.
+// 공백/개행을 한 칸으로 정규화 후 앞 N자만 사용. 비면 undefined → 제목만 노출(graceful).
+function deriveContentPreview(
+  content: string | null | undefined,
+  maxLength = CONTENT_PREVIEW_MAX_LENGTH
+): string | undefined {
+  const normalized = content?.replace(/\s+/g, " ").trim()
+  if (!normalized) return undefined
+  // 이모지 등 서로게이트 쌍이 경계에서 깨지지 않도록 코드 포인트 단위로 자른다.
+  const chars = Array.from(normalized)
+  return chars.length > maxLength ? `${chars.slice(0, maxLength).join("")}…` : normalized
+}
+
+export {
+  adaptAnswer,
+  adaptQuestionDetail,
+  adaptQuestionSummary,
+  adaptMyQuestionItem,
+  deriveContentPreview,
+}
 export type { QuestionAnswerView, QuestionDetailView, MyQuestionListItemView }
