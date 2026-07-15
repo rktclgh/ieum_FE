@@ -210,7 +210,7 @@ Run: `bash scripts/ci/test-route-contracts.sh && bash scripts/ci/test-admin-cont
 Expected: route/admin contracts and TypeScript PASS.
 
 ```bash
-git add src/features/session/api/session-api.ts src/features/login/api/auth-api.ts src/lib/navigation/routes.ts scripts/ci/test-route-builders.ts scripts/ci/test-admin-source-contracts.mjs src/lib/i18n/messages
+git add src/features/session/api/session-api.ts src/features/login/api/auth-api.ts src/lib/navigation/routes.ts scripts/ci/test-route-builders.ts scripts/ci/test-admin-contracts.ts scripts/ci/test-admin-contracts.sh scripts/ci/test-admin-source-contracts.mjs scripts/ci/tsconfig.admin-contracts.json src/lib/i18n/messages
 git commit -m "관리자 역할·라우트·메시지 계약 추가"
 ```
 
