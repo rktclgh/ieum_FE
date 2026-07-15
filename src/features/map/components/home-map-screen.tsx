@@ -72,14 +72,26 @@ function HomeMapScreen() {
     setRecenterKey((key) => key + 1)
   }, [])
 
+  // 서버(navigator 없음→status "error")와 클라 첫 렌더(status "loading")의 분기가 달라 hydration이
+  // 어긋나므로, 마운트 완료 전에는 항상 스켈레톤을 그려 서버/클라 첫 렌더를 일치시킨다.
+  // useSyncExternalStore로 서버/hydration=false, 이후=true를 안전하게 얻는다(setState-in-effect 회피).
+  const isMounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
+
   // 진입 시 내 위치를 확보할 때까지 지도를 그리지 않는다 — 명동(기본 좌표)→내 위치로 날아가는 모션을 없앤다.
   // 단 상한 시간을 넘기면 기본 좌표로 먼저 띄운다(GPS가 오래 걸리거나 실패해도 무한 대기 방지).
+  // status가 이미 확정된 경우엔 타이머를 걸지 않아 불필요한 리렌더를 막는다.
   const [waitedForLocation, setWaitedForLocation] = React.useState(false)
   React.useEffect(() => {
+    if (status !== "loading") return
     const timer = setTimeout(() => setWaitedForLocation(true), MAP_LOCATION_WAIT_MS)
     return () => clearTimeout(timer)
-  }, [])
-  const canShowMap = status !== "loading" || waitedForLocation
+  }, [status])
+
+  const canShowMap = isMounted && (status !== "loading" || waitedForLocation)
 
   // 최초 위치 확보 1회: 내 위치로 자동 중심. 지도는 canShowMap 시점의 최선 좌표(내 위치 또는 기본 좌표)로
   // 마운트되므로, 정상 경로(위치를 알고 마운트)에선 같은 좌표라 이동이 없고,
