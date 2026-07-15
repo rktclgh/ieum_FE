@@ -177,3 +177,112 @@ test("ConfirmDialog can disable confirmation without making the prop required", 
   assert.match(source, /confirmDisabled\?: boolean/)
   assert.match(source, /disabled=\{confirmDisabled\}/)
 })
+
+test("admin stats API calls exactly the three default-range GET endpoints", () => {
+  const source = readSource("src/features/admin/dashboard/api/admin-stats-api.ts")
+  const endpointLiterals = [...source.matchAll(/["'](\/api\/v1\/admin\/stats\/[^"']+)["']/g)]
+    .map((match) => match[1])
+    .sort()
+
+  assert.deepEqual(endpointLiterals, [
+    "/api/v1/admin/stats/content",
+    "/api/v1/admin/stats/reports",
+    "/api/v1/admin/stats/users",
+  ])
+  assert.equal((source.match(/apiClient\.get/g) ?? []).length, 3)
+  assert.doesNotMatch(source, /\bparams\s*:|URLSearchParams|compactQuery/)
+  for (const functionName of [
+    "getAdminUserStats",
+    "getAdminContentStats",
+    "getAdminReportStats",
+  ]) {
+    assert.match(source, new RegExp(`async function ${functionName}\\(\\)`))
+  }
+})
+
+test("admin stats hook owns three parallel keys and one aggregate retry", () => {
+  const source = readSource("src/features/admin/dashboard/hooks/use-admin-stats.ts")
+
+  assert.equal((source.match(/useQuery\s*\(\s*\{/g) ?? []).length, 3)
+  for (const [suffix, queryFn] of [
+    ["users", "getAdminUserStats"],
+    ["content", "getAdminContentStats"],
+    ["reports", "getAdminReportStats"],
+  ]) {
+    assert.match(
+      source,
+      new RegExp(`queryKey:\\s*\\["admin",\\s*"stats",\\s*"${suffix}"\\]`),
+    )
+    assert.match(source, new RegExp(`queryFn:\\s*${queryFn}`))
+  }
+  assert.match(
+    compactSource(source),
+    /isPending = userQuery\.isPending \|\| contentQuery\.isPending \|\| reportsQuery\.isPending/,
+  )
+  assert.match(
+    compactSource(source),
+    /isError = userQuery\.isError \|\| contentQuery\.isError \|\| reportsQuery\.isError/,
+  )
+  assert.match(source, /Promise\.all\s*\(\s*\[/)
+  for (const queryName of ["userQuery", "contentQuery", "reportsQuery"]) {
+    assert.match(source, new RegExp(`${queryName}\\.refetch\\(\\)`))
+  }
+  assert.doesNotMatch(source, /\b(?:from|to)\s*:/)
+})
+
+test("admin dashboard renders every KPI and the default backend range", () => {
+  const source = readSource(
+    "src/features/admin/dashboard/components/admin-dashboard-page.tsx",
+  )
+  const metricPairs = [
+    ["signup", "user.signupCount"],
+    ["activeUsers", "user.activeUserCount"],
+    ["suspendedUsers", "user.suspendedUserCount"],
+    ["pins", "content.pinCount"],
+    ["questions", "content.questionCount"],
+    ["meetings", "content.meetingCount"],
+    ["answers", "content.answerCount"],
+    ["acceptedRate", "content.acceptedRate"],
+    ["messages", "content.messageCount"],
+    ["reports", "reports.reportCount"],
+    ["aiReviewed", "reports.aiReviewedCount"],
+    ["confirmed", "reports.confirmedCount"],
+    ["dismissed", "reports.dismissedCount"],
+    ["sanctions", "reports.sanctionCount"],
+  ]
+
+  assert.equal((source.match(/\{\s*label:/g) ?? []).length, 14)
+  for (const [messageKey, field] of metricPairs) {
+    assert.match(source, new RegExp(`messages\\.admin\\.dashboard\\.${messageKey}`))
+    assert.match(source, new RegExp(field.replace(".", "\\.")))
+  }
+  assert.match(source, /messages\.admin\.dashboard\.range\(user\.from, user\.to\)/)
+  assert.match(source, /new Intl\.NumberFormat/)
+  assert.match(source, /minimumFractionDigits:\s*1/)
+  assert.match(source, /maximumFractionDigits:\s*1/)
+  assert.match(source, /\.format\(value \* 100\)/)
+  assert.match(source, /`\$\{[^}]+\}%`/)
+})
+
+test("admin dashboard aggregates pending and error states without chart imports", () => {
+  const componentSource = readSource(
+    "src/features/admin/dashboard/components/admin-dashboard-page.tsx",
+  )
+  const pageSource = readSource("src/app/admin/(protected)/page.tsx")
+  const allDashboardSource = [
+    readSource("src/features/admin/dashboard/api/admin-stats-api.ts"),
+    readSource("src/features/admin/dashboard/hooks/use-admin-stats.ts"),
+    componentSource,
+    pageSource,
+  ].join("\n")
+
+  assert.match(componentSource, /if \(isError/)
+  assert.match(componentSource, /kind="error" onRetry=\{\(\) => void refetch\(\)\}/)
+  assert.match(componentSource, /if \(isPending\)/)
+  assert.match(componentSource, /<AdminAsyncState kind="loading" \/>/)
+  assert.match(pageSource, /<AdminDashboardPage \/>/)
+  assert.doesNotMatch(
+    allDashboardSource,
+    /(?:from\s+["'][^"']*(?:chart|recharts)|import\s+["'][^"']*(?:chart|recharts))/i,
+  )
+})
