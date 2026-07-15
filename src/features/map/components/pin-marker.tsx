@@ -51,13 +51,15 @@ interface PinMarkerProps {
 function PinMarker({ pin, onClick }: PinMarkerProps) {
   const icon = React.useMemo(() => buildPinIcon(pin), [pin])
 
-  return (
-    <Marker
-      position={[pin.location.lat, pin.location.lng]}
-      icon={icon}
-      eventHandlers={{ click: () => onClick?.(pin) }}
-    />
-  )
+  // onClick이 매 렌더 새 함수여도 eventHandlers 객체 정체성을 고정해, react-leaflet이
+  // 매 렌더 리스너를 off/on 재바인딩하지 않도록 한다. 최신 콜백은 ref로 동기화한다.
+  const onClickRef = React.useRef(onClick)
+  React.useEffect(() => {
+    onClickRef.current = onClick
+  })
+  const eventHandlers = React.useMemo(() => ({ click: () => onClickRef.current?.(pin) }), [pin])
+
+  return <Marker position={[pin.location.lat, pin.location.lng]} icon={icon} eventHandlers={eventHandlers} />
 }
 
 export { PinMarker, escapeAttr }

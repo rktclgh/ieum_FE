@@ -11,6 +11,9 @@ import {
   type PinClusterItem,
 } from "@/features/map/lib/cluster-index"
 
+// 클러스터 조회 시 뷰포트 경계를 넓힐 비율(폭 대비). 가장자리 마커 깜빡임 완화용.
+const BOUNDS_PADDING_RATIO = 0.2
+
 // 현재 지도 영역/zoom에 맞는 클러스터·개별 핀 목록을 계산한다.
 // 인덱스는 pins가 바뀔 때만 다시 만들고(useMemo), 목록은 index/영역/zoom이 바뀌면 렌더 중 파생한다.
 // 영역·zoom 변화는 moveend/zoomend에서 viewVersion(nonce)을 올려 재계산을 트리거한다
@@ -32,13 +35,21 @@ function usePinClusters(pins: MapPin[]): {
   const items = React.useMemo(() => {
     void viewVersion // 지도 이동/줌 시 재계산을 강제하는 트리거
     const bounds = map.getBounds()
+    const south = bounds.getSouth()
+    const west = bounds.getWest()
+    const north = bounds.getNorth()
+    const east = bounds.getEast()
+    // 뷰포트 폭의 일정 비율만큼 경계를 넓혀 조회한다. pan 직후(keepPreviousData 전환 구간)
+    // 화면 가장자리의 마커가 사라졌다 다시 나타나는 깜빡임을 줄인다. 화면 밖 마커는 Leaflet이 컬링한다.
+    const latPad = (north - south) * BOUNDS_PADDING_RATIO
+    const lngPad = (east - west) * BOUNDS_PADDING_RATIO
     return getPinClusters(
       index,
       {
-        swLat: bounds.getSouth(),
-        swLng: bounds.getWest(),
-        neLat: bounds.getNorth(),
-        neLng: bounds.getEast(),
+        swLat: south - latPad,
+        swLng: west - lngPad,
+        neLat: north + latPad,
+        neLng: east + lngPad,
       },
       map.getZoom()
     )
