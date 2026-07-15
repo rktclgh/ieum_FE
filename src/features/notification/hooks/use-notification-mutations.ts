@@ -80,7 +80,9 @@ function useReadNotification() {
       return ctx
     },
     onError: (_error, _id, ctx) => restore(qc, ctx),
-    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.all }),
+    // 낙관적 업데이트가 목록을 결정적으로 갱신하므로 목록 전체(모든 페이지) 재조회는
+    // 불필요. 서버 권위값인 미읽음 배지만 무효화한다.
+    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.unreadCount() }),
   })
 }
 
@@ -145,7 +147,8 @@ function useDeleteNotification() {
       return ctx
     },
     onError: (_error, _id, ctx) => restore(qc, ctx),
-    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.all }),
+    // 낙관적 업데이트가 목록에서 항목을 이미 제거했으므로, 서버 권위값인 배지만 무효화한다.
+    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.unreadCount() }),
   })
 }
 

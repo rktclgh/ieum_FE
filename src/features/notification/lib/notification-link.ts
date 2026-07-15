@@ -5,6 +5,8 @@ import { routes } from "@/lib/navigation/routes"
 // 소문자 부분일치로 관대하게 매칭한다(QUESTION_ANSWER, NEW_CHAT_MESSAGE 등 접미/접두 변형 대응).
 function resolveNotificationRoute(type: string, refId: number | null): string | null {
   if (refId === null || !Number.isSafeInteger(refId) || refId <= 0) return null
+  // 서버 표기가 확정 전이라 런타임에 문자열이 아닌 값이 올 가능성에 대비한다.
+  if (typeof type !== "string") return null
 
   const normalized = type.toLowerCase()
   if (normalized.includes("question") || normalized.includes("answer")) {
