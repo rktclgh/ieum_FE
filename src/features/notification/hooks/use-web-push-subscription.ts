@@ -77,35 +77,38 @@ function useWebPushSubscription() {
   }))
   const latestRequest = React.useRef(0)
 
-  const inspect = React.useCallback(async () => {
+  React.useEffect(() => {
+    let cancelled = false
     const request = ++latestRequest.current
-    try {
-      const result = await inspectWebPushDevice({ registerServiceWorker: true })
-      if (latestRequest.current !== request) return result
 
-      setState((current) => ({
-        ...current,
-        status: result.status,
-        error: null,
-        isLoading: false,
-      }))
-      return result
-    } catch (error) {
-      if (latestRequest.current !== request) return null
+    const inspect = async () => {
+      try {
+        const result = await inspectWebPushDevice({ registerServiceWorker: true })
+        if (cancelled || latestRequest.current !== request) return
 
-      setState((current) => ({
-        ...current,
-        error: "connection-failed",
-        isLoading: false,
-      }))
-      console.warn("Failed to inspect Web Push subscription", error)
-      return null
+        setState((current) => ({
+          ...current,
+          status: result.status,
+          error: null,
+          isLoading: false,
+        }))
+      } catch (error) {
+        if (cancelled || latestRequest.current !== request) return
+
+        setState((current) => ({
+          ...current,
+          error: "connection-failed",
+          isLoading: false,
+        }))
+        console.warn("Failed to inspect Web Push subscription", error)
+      }
+    }
+
+    void inspect()
+    return () => {
+      cancelled = true
     }
   }, [])
-
-  React.useEffect(() => {
-    void inspect()
-  }, [inspect])
 
   const connectCurrentDevice = React.useCallback(async () => {
     const request = ++latestRequest.current
@@ -185,7 +188,7 @@ function useWebPushSubscription() {
     }
   }, [])
 
-  return { ...state, connectCurrentDevice, inspect }
+  return { ...state, connectCurrentDevice }
 }
 
 function useReconcileWebPushSubscription({
