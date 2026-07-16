@@ -197,8 +197,9 @@ export const ja: Messages = {
     aiBadge: "AI",
     acceptedBadge: "採用済み",
     acceptButton: "採用",
-    acceptConfirmTitle: "この回答を採用しますか？",
-    acceptConfirmDescription: "採用すると、この回答の作成者とチャットを始められます。",
+    acceptConfirmTitle: "回答を採用しました",
+    acceptConfirmDescription: (name) =>
+      `${name}さんにもっと聞きたいことがあれば、個人チャットで続けて質問できます。`,
     acceptConfirmCancel: "キャンセル",
     createTitle: "質問する",
     editTitle: "質問を編集",

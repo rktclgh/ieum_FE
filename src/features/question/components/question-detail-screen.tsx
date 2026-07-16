@@ -61,6 +61,8 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
 
   const question = detailQuery.data
   const isAuthor = question != null && me.data?.userId === question.authorUserId
+  const pendingAcceptAnswer =
+    question?.answers.find((a) => a.answerId === pendingAcceptId) ?? null
 
   const handleSend = () => {
     const value = reply.trim()
@@ -273,7 +275,9 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
         open={pendingAcceptId != null}
         onOpenChange={(open) => !open && setPendingAcceptId(null)}
         title={messages.question.acceptConfirmTitle}
-        description={messages.question.acceptConfirmDescription}
+        description={messages.question.acceptConfirmDescription(
+          pendingAcceptAnswer?.authorName ?? ""
+        )}
         cancelLabel={messages.question.acceptConfirmCancel}
         confirmLabel={messages.question.acceptButton}
         onConfirm={handleConfirmAccept}

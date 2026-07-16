@@ -201,7 +201,7 @@ export interface Messages {
     acceptedBadge: string
     acceptButton: string
     acceptConfirmTitle: string
-    acceptConfirmDescription: string
+    acceptConfirmDescription: (name: string) => string
     acceptConfirmCancel: string
     createTitle: string
     editTitle: string
@@ -637,8 +637,9 @@ export const ko: Messages = {
     aiBadge: "AI",
     acceptedBadge: "채택됨",
     acceptButton: "채택",
-    acceptConfirmTitle: "이 답변을 채택할까요?",
-    acceptConfirmDescription: "채택하면 이 답변 작성자와 채팅을 시작할 수 있어요.",
+    acceptConfirmTitle: "답변을 채택했습니다",
+    acceptConfirmDescription: (name) =>
+      `${name}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,
     acceptConfirmCancel: "취소",
     createTitle: "질문하기",
     editTitle: "질문 수정",
