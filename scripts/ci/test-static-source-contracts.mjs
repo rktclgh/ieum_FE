@@ -34,6 +34,7 @@ const fixedStaticRoutes = [
   "my/inquiry",
   "my/notifications",
   "my/permissions",
+  "notifications",
   "oauth/kakao/callback",
   "questions",
   "questions/detail",
@@ -159,7 +160,7 @@ function documentedRoutes(section) {
   ].sort((left, right) => left.localeCompare(right, "en"))
 }
 
-test("app tree exposes exactly the root and 25 fixed static routes", async () => {
+test("app tree exposes exactly the root and 26 fixed static routes", async () => {
   const routes = await discoverStaticAppRoutes(path.join(repoRoot, "src/app"))
 
   assert.deepEqual(routes, fixedStaticRoutes)

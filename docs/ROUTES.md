@@ -69,6 +69,12 @@
 - 채팅방 더보기 드로어(참여자·알림·나가기)는 URL 없이 채팅방 내부 상태로 처리한다.
 - 신고 URL의 `target`은 선택 표시 문자열이다. 식별·인가에 사용하지 않고 React text node로만 출력한다.
 
+### 알림센터
+
+| Canonical URL | 화면 | 백엔드 API | 접근 계약 |
+|---|---|---|---|
+| `/notifications/` | 알림 목록·읽음·삭제 | `GET /api/v1/notifications`, `POST /api/v1/notifications/{id}/read`, `POST /api/v1/notifications/read-all`, `DELETE /api/v1/notifications/{id}`, `GET /api/v1/sse/subscribe` | protected client gate |
+
 ### 마이페이지
 
 | Canonical URL | 화면 | 와이어프레임 | 백엔드 API | 접근 계약 |
@@ -137,7 +143,6 @@
 | 화면 | 상태 | 백엔드 API (예상) |
 |---|---|---|
 | 비밀번호 찾기 | URL 미확정 | `POST /auth/reset-password` |
-| 알림센터 | URL 미확정 | `GET /notifications` |
 | 모임 만들기 | URL 미확정 | `POST /meetups` |
 | 질문 작성 (비슷한 질문·답변 확인 포함) | URL 미확정 | `POST /questions`, `GET /questions/similar?q=` |
 | 다른 사용자 프로필 | URL 미확정 | `GET /users/{id}` |
