@@ -254,6 +254,12 @@ export const zh: Messages = {
     notifications: {
       title: "通知设置",
       notifyAllLabel: "全部通知",
+      pushDeviceConnected: "此设备正在接收推送通知。",
+      pushDeviceConnect: "连接此设备",
+      pushDeviceUnsupported: "此浏览器不支持推送通知。",
+      pushDevicePermissionDenied: "请在浏览器设置中允许通知。",
+      pushDeviceUnavailable: "推送通知暂时不可用。",
+      pushDeviceError: "无法连接推送通知，请重试。",
       notifyRadiusLabel: "通知范围",
       radiusOption: (km) => `${km}km`,
       saveError: "无法保存设置，请稍后再试。",

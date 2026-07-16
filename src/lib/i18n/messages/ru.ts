@@ -255,6 +255,12 @@ export const ru: Messages = {
     notifications: {
       title: "Настройки уведомлений",
       notifyAllLabel: "Все уведомления",
+      pushDeviceConnected: "Это устройство получает push-уведомления.",
+      pushDeviceConnect: "Подключить это устройство",
+      pushDeviceUnsupported: "Этот браузер не поддерживает push-уведомления.",
+      pushDevicePermissionDenied: "Разрешите уведомления в настройках браузера.",
+      pushDeviceUnavailable: "Push-уведомления сейчас недоступны.",
+      pushDeviceError: "Не удалось подключить push-уведомления. Повторите попытку.",
       notifyRadiusLabel: "Радиус уведомлений",
       radiusOption: (km) => `${km}km`,
       saveError: "Не удалось сохранить настройки. Повторите попытку позже.",

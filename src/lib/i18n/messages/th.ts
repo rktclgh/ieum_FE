@@ -254,6 +254,12 @@ export const th: Messages = {
     notifications: {
       title: "ตั้งค่าการแจ้งเตือน",
       notifyAllLabel: "การแจ้งเตือนทั้งหมด",
+      pushDeviceConnected: "อุปกรณ์นี้กำลังรับการแจ้งเตือนแบบพุช",
+      pushDeviceConnect: "เชื่อมต่ออุปกรณ์นี้",
+      pushDeviceUnsupported: "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนแบบพุช",
+      pushDevicePermissionDenied: "โปรดอนุญาตการแจ้งเตือนในการตั้งค่าเบราว์เซอร์",
+      pushDeviceUnavailable: "การแจ้งเตือนแบบพุชไม่พร้อมใช้งานในขณะนี้",
+      pushDeviceError: "เชื่อมต่อการแจ้งเตือนแบบพุชไม่ได้ โปรดลองอีกครั้ง",
       notifyRadiusLabel: "รัศมีการแจ้งเตือน",
       radiusOption: (km) => `${km}km`,
       saveError: "ไม่สามารถบันทึกการตั้งค่าได้ กรุณาลองใหม่ภายหลัง",

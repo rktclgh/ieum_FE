@@ -44,7 +44,7 @@ function useSettingsForm(serverSettings: UserSettings) {
     [settings, setLanguage, updateSettings]
   )
 
-  return { settings, patch, error }
+  return { settings, patch, error, isPending: updateSettings.isPending }
 }
 
 export { useSettingsForm }

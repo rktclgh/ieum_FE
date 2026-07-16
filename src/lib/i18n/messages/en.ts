@@ -255,6 +255,12 @@ export const en: Messages = {
     notifications: {
       title: "Notification settings",
       notifyAllLabel: "All notifications",
+      pushDeviceConnected: "This device is receiving push notifications.",
+      pushDeviceConnect: "Connect this device",
+      pushDeviceUnsupported: "This browser does not support push notifications.",
+      pushDevicePermissionDenied: "Allow notifications in your browser settings.",
+      pushDeviceUnavailable: "Push notifications are not available right now.",
+      pushDeviceError: "Couldn't connect push notifications. Please try again.",
       notifyRadiusLabel: "Notification radius",
       radiusOption: (km) => `${km}km`,
       saveError: "Couldn't save your settings. Please try again later.",

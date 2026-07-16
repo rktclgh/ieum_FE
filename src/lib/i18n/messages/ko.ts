@@ -257,6 +257,12 @@ export interface Messages {
     notifications: {
       title: string
       notifyAllLabel: string
+      pushDeviceConnected: string
+      pushDeviceConnect: string
+      pushDeviceUnsupported: string
+      pushDevicePermissionDenied: string
+      pushDeviceUnavailable: string
+      pushDeviceError: string
       notifyRadiusLabel: string
       radiusOption: (km: number) => string
       saveError: string
@@ -709,6 +715,12 @@ export const ko: Messages = {
     notifications: {
       title: "알림 설정",
       notifyAllLabel: "전체 알림",
+      pushDeviceConnected: "이 기기에서 푸시 알림을 받고 있어요.",
+      pushDeviceConnect: "이 기기 연결",
+      pushDeviceUnsupported: "이 브라우저는 푸시 알림을 지원하지 않아요.",
+      pushDevicePermissionDenied: "브라우저 설정에서 알림 권한을 허용해 주세요.",
+      pushDeviceUnavailable: "푸시 알림을 지금 사용할 수 없어요.",
+      pushDeviceError: "푸시 알림을 연결하지 못했어요. 다시 시도해 주세요.",
       notifyRadiusLabel: "알림 반경",
       radiusOption: (km) => `${km}km`,
       saveError: "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",

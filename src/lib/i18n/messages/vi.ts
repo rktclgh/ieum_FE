@@ -255,6 +255,12 @@ export const vi: Messages = {
     notifications: {
       title: "Cài đặt thông báo",
       notifyAllLabel: "Tất cả thông báo",
+      pushDeviceConnected: "Thiết bị này đang nhận thông báo đẩy.",
+      pushDeviceConnect: "Kết nối thiết bị này",
+      pushDeviceUnsupported: "Trình duyệt này không hỗ trợ thông báo đẩy.",
+      pushDevicePermissionDenied: "Hãy cho phép thông báo trong cài đặt trình duyệt.",
+      pushDeviceUnavailable: "Thông báo đẩy hiện chưa khả dụng.",
+      pushDeviceError: "Không thể kết nối thông báo đẩy. Vui lòng thử lại.",
       notifyRadiusLabel: "Bán kính thông báo",
       radiusOption: (km) => `${km}km`,
       saveError: "Không thể lưu cài đặt. Vui lòng thử lại sau.",

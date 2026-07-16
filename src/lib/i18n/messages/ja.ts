@@ -254,6 +254,12 @@ export const ja: Messages = {
     notifications: {
       title: "通知設定",
       notifyAllLabel: "すべての通知",
+      pushDeviceConnected: "この端末でプッシュ通知を受信しています。",
+      pushDeviceConnect: "この端末を接続",
+      pushDeviceUnsupported: "このブラウザはプッシュ通知に対応していません。",
+      pushDevicePermissionDenied: "ブラウザの設定で通知を許可してください。",
+      pushDeviceUnavailable: "プッシュ通知は現在利用できません。",
+      pushDeviceError: "プッシュ通知に接続できませんでした。もう一度お試しください。",
       notifyRadiusLabel: "通知の範囲",
       radiusOption: (km) => `${km}km`,
       saveError: "設定を保存できませんでした。しばらくしてからもう一度お試しください。",
