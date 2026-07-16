@@ -19,7 +19,7 @@ export const en: Messages = {
     backendUnavailable: "We couldn't connect to the server. Please try again shortly.",
   },
   login: {
-    logoAlt: "Logo",
+    logoText: "ieum",
     emailPlaceholder: "Enter your email",
     passwordPlaceholder: "Enter your password",
     submit: "Log in",

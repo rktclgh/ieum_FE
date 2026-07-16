@@ -19,7 +19,7 @@ export const ja: Messages = {
     backendUnavailable: "サーバーに接続できません。しばらくしてからもう一度お試しください。",
   },
   login: {
-    logoAlt: "ロゴ",
+    logoText: "ieum",
     emailPlaceholder: "メールアドレスを入力",
     passwordPlaceholder: "パスワードを入力",
     submit: "ログイン",
