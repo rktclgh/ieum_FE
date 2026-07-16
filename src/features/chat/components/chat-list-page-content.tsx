@@ -105,6 +105,7 @@ function ChatListPageContent() {
       ...(canPinRoom ? [{
         icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
         label: messages.chat.pinAction,
+        disabled: setPinnedMutation.isPending,
         onClick: () => {
           setPinnedMutation.mutate({ roomId: chat.roomId, pinned: !chat.pinned })
           setOpenMenuRoomId(null)
@@ -132,6 +133,7 @@ function ChatListPageContent() {
       icon: <Image src="/icons/chat/trash.svg" alt="" width={24} height={24} />,
       label: messages.chat.deleteAction,
       tone: "destructive",
+      disabled: leaveRoomMutation.isPending,
       onClick: () => {
         leaveRoomMutation.mutate(chat.roomId)
         setOpenMenuRoomId(null)

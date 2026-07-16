@@ -198,3 +198,60 @@ test("notification click navigates and focuses an existing app window", async ()
   assert.equal(focused, 1)
   assert.deepEqual(worker.opened, [])
 })
+
+test("notification click opens a new window when existing-client navigation rejects", async () => {
+  let completion
+  const client = {
+    url: "https://ieum.example/",
+    async navigate() {
+      throw new Error("navigation failed")
+    },
+    async focus() {
+      throw new Error("stale client must not be focused")
+    },
+  }
+  const worker = loadWorker([client])
+
+  worker.listeners.get("notificationclick")({
+    notification: {
+      close() {},
+      data: { url: "/chats/room/?chatId=7" },
+    },
+    waitUntil(promise) {
+      completion = promise
+    },
+  })
+  await completion
+
+  assert.deepEqual(worker.opened, ["https://ieum.example/chats/room/?chatId=7"])
+})
+
+test("notification click opens a new window when existing-client navigation returns null", async () => {
+  let completion
+  let focused = 0
+  const client = {
+    url: "https://ieum.example/",
+    async navigate() {
+      return null
+    },
+    async focus() {
+      focused += 1
+      return client
+    },
+  }
+  const worker = loadWorker([client])
+
+  worker.listeners.get("notificationclick")({
+    notification: {
+      close() {},
+      data: { url: "/chats/room/?chatId=7" },
+    },
+    waitUntil(promise) {
+      completion = promise
+    },
+  })
+  await completion
+
+  assert.equal(focused, 0)
+  assert.deepEqual(worker.opened, ["https://ieum.example/chats/room/?chatId=7"])
+})

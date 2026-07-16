@@ -674,16 +674,23 @@ test("Web Push device status follows the account switch and does not log subscri
 test("chat room controls wait for canonical state and never act before room type is known", () => {
   const roomPage = compact(read("src/features/chat/components/chat-room-page-content.tsx"))
   const listPage = compact(read("src/features/chat/components/chat-list-page-content.tsx"))
+  const moreHeader = compact(read("src/features/chat/components/chat-room-more-header.tsx"))
   const mutations = compact(read("src/features/chat/hooks/use-chat-mutations.ts"))
 
   assert.ok(roomPage.includes('constcanPinRoom=room!==undefined&&room.roomType!=="question"'))
   assert.ok(roomPage.includes("constcanConfigureRoomNotification=room!==undefined"))
   assert.ok(roomPage.includes("showPinAction={canPinRoom}"))
   assert.ok(roomPage.includes("showNotificationAction={canConfigureRoomNotification}"))
+  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending}"))
   assert.ok(roomPage.includes("if(!session.authenticated||!canConfigureRoomNotification||setNotifyMutation.isPending)return"))
   assert.ok(roomPage.includes("if(!session.authenticated||!canPinRoom||setPinnedMutation.isPending)return"))
+  assert.ok(moreHeader.includes("pinPending?:boolean"))
+  assert.ok(moreHeader.includes("aria-busy={pinPending}"))
+  assert.ok(moreHeader.includes("disabled={pinPending}"))
   assert.ok(listPage.includes('constcanPinRoom=chat.category!=="question"'))
   assert.ok(listPage.includes("...(canPinRoom?[{") )
+  assert.ok(listPage.includes("disabled:setPinnedMutation.isPending"))
+  assert.ok(listPage.includes("disabled:leaveRoomMutation.isPending"))
   assert.match(
     mutations,
     /functionuseSetNotify\(\).*?onSuccess:\(_data,\{roomId\}\)=>Promise\.all\(/s,

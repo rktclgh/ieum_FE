@@ -90,8 +90,12 @@ async function openNotificationDestination(value) {
 
   const client = windowClients[0]
   if (client && typeof client.navigate === "function") {
-    const navigatedClient = await client.navigate(targetUrl)
-    return (navigatedClient || client).focus()
+    try {
+      const navigatedClient = await client.navigate(targetUrl)
+      if (navigatedClient) return navigatedClient.focus()
+    } catch {
+      // Fall through and open a new window.
+    }
   }
 
   return self.clients.openWindow(targetUrl)

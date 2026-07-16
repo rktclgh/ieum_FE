@@ -11,6 +11,7 @@ interface ChatRoomMoreHeaderProps extends React.ComponentProps<"div"> {
   showNotificationAction?: boolean
   showPinAction?: boolean
   notificationPending?: boolean
+  pinPending?: boolean
   notificationOn: boolean
   onToggleNotification: () => void
   pinned: boolean
@@ -23,6 +24,7 @@ function ChatRoomMoreHeader({
   showNotificationAction = true,
   showPinAction = true,
   notificationPending = false,
+  pinPending = false,
   notificationOn,
   onToggleNotification,
   pinned,
@@ -75,8 +77,10 @@ function ChatRoomMoreHeader({
               type="button"
               aria-label={messages.chat.pinAction}
               aria-pressed={pinned}
+              aria-busy={pinPending}
+              disabled={pinPending}
               onClick={onTogglePin}
-              className="flex size-6 shrink-0 items-center justify-center"
+              className="flex size-6 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Image
                 src={pinned ? "/icons/chat/pin-on.svg" : "/icons/chat/pin-off.svg"}

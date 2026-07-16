@@ -669,6 +669,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                 showNotificationAction={canConfigureRoomNotification}
                 showPinAction={canPinRoom}
                 notificationPending={setNotifyMutation.isPending}
+                pinPending={setPinnedMutation.isPending}
                 notificationOn={notificationOn}
                 onToggleNotification={() => {
                   if (!session.authenticated || !canConfigureRoomNotification || setNotifyMutation.isPending) return
