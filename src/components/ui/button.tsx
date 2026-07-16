@@ -10,7 +10,7 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/80",
         outline:
-          "border-gray-900 bg-background text-gray-900 hover:bg-gray-50 hover:text-gray-900 aria-expanded:bg-gray-50 aria-expanded:text-gray-900 dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border-gray-900 bg-background text-gray-900 hover:bg-gray-50 hover:text-gray-900 aria-expanded:bg-gray-50 aria-expanded:text-gray-900 dark:border-input dark:bg-input/30 dark:hover:bg-input/50 dark:text-gray-100 dark:hover:text-gray-100 dark:aria-expanded:text-gray-100",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
@@ -18,7 +18,7 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
-        primary: "rounded-full bg-gray-900 text-white hover:bg-gray-800",
+        primary: "rounded-full bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200",
         social:
           "rounded-full border-gray-100 bg-gray-50 text-gray-900 hover:bg-gray-100",
       },
