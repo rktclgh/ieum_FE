@@ -201,7 +201,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   <QuestionAnswerItem
                     key={answer.answerId}
                     answer={answer}
-                    canAccept={!question.isResolved && !hasAcceptedAnswer && !answer.isAccepted}
+                    canAccept={false}
                     onAccept={() => setPendingAcceptId(answer.answerId)}
                   />
                 ))
