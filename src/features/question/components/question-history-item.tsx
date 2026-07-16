@@ -37,8 +37,8 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
     if (!el || hasEntered || item.contentPreview) return
     // IntersectionObserver 미지원 환경(구형 브라우저·JSDOM 등)에선 즉시 로드로 우아하게 폴백.
     if (!("IntersectionObserver" in window)) {
-      setHasEntered(true)
-      return
+      const fallbackTimer = globalThis.setTimeout(() => setHasEntered(true), 0)
+      return () => globalThis.clearTimeout(fallbackTimer)
     }
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
