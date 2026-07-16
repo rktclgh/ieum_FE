@@ -1,10 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { type QueryClient, useQueryClient } from "@tanstack/react-query"
 
 import {
   getWebPushConfig,
   upsertWebPushSubscription,
+  type WebPushConfig,
 } from "@/features/notification/api/web-push-api"
 import {
   createOrReuseWebPushSubscription,
@@ -14,6 +16,11 @@ import {
   resolveWebPushStatus,
   type WebPushStatus,
 } from "@/features/notification/lib/web-push"
+import {
+  getSessionAbortSignal,
+  getSessionGeneration,
+  isSessionGenerationCurrent,
+} from "@/features/session/lib/session-cache"
 
 type WebPushConnectionError = "connection-failed"
 
@@ -28,14 +35,26 @@ function browserPermission() {
   return Notification.permission
 }
 
-async function inspectWebPushDevice() {
+function isSessionWorkCurrent(
+  queryClient: QueryClient,
+  generation: number,
+  sessionSignal: AbortSignal,
+) {
+  return (
+    !sessionSignal.aborted &&
+    isSessionGenerationCurrent(queryClient, generation)
+  )
+}
+
+async function inspectWebPushDevice(config: WebPushConfig | null) {
   if (!isWebPushSupported()) {
     return {
       status: "unsupported" as const,
     }
   }
 
-  const config = await getWebPushConfig()
+  if (!config) throw new Error("Web Push configuration is required")
+
   const permission = browserPermission()
   let browserSubscribed = false
 
@@ -56,6 +75,7 @@ async function inspectWebPushDevice() {
 }
 
 function useWebPushSubscription() {
+  const queryClient = useQueryClient()
   const [state, setState] = React.useState<WebPushConnectionState>(() => ({
     status: isWebPushSupported() ? "unsubscribed" : "unsupported",
     error: null,
@@ -67,11 +87,30 @@ function useWebPushSubscription() {
   React.useEffect(() => {
     let cancelled = false
     const request = ++latestRequest.current
+    const generation = getSessionGeneration(queryClient)
+    const sessionSignal = getSessionAbortSignal(queryClient)
 
     const inspect = async () => {
       try {
-        const result = await inspectWebPushDevice()
-        if (cancelled || latestRequest.current !== request) return
+        const config = isWebPushSupported()
+          ? await getWebPushConfig({ signal: sessionSignal })
+          : null
+        if (
+          cancelled ||
+          latestRequest.current !== request ||
+          !isSessionWorkCurrent(queryClient, generation, sessionSignal)
+        ) {
+          return
+        }
+
+        const result = await inspectWebPushDevice(config)
+        if (
+          cancelled ||
+          latestRequest.current !== request ||
+          !isSessionWorkCurrent(queryClient, generation, sessionSignal)
+        ) {
+          return
+        }
 
         setState((current) => ({
           ...current,
@@ -80,7 +119,13 @@ function useWebPushSubscription() {
           isLoading: false,
         }))
       } catch (error) {
-        if (cancelled || latestRequest.current !== request) return
+        if (
+          cancelled ||
+          latestRequest.current !== request ||
+          !isSessionWorkCurrent(queryClient, generation, sessionSignal)
+        ) {
+          return
+        }
 
         setState((current) => ({
           ...current,
@@ -95,10 +140,12 @@ function useWebPushSubscription() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [queryClient])
 
   const connectCurrentDevice = React.useCallback(async () => {
     const request = ++latestRequest.current
+    const generation = getSessionGeneration(queryClient)
+    const sessionSignal = getSessionAbortSignal(queryClient)
     setState((current) => ({ ...current, error: null, isConnecting: true }))
 
     try {
@@ -118,6 +165,7 @@ function useWebPushSubscription() {
       if (permission === "default") {
         permission = await Notification.requestPermission()
       }
+      if (!isSessionWorkCurrent(queryClient, generation, sessionSignal)) return false
       if (permission !== "granted") {
         if (latestRequest.current === request) {
           setState((current) => ({
@@ -131,7 +179,8 @@ function useWebPushSubscription() {
         return false
       }
 
-      const config = await getWebPushConfig()
+      const config = await getWebPushConfig({ signal: sessionSignal })
+      if (!isSessionWorkCurrent(queryClient, generation, sessionSignal)) return false
       if (!config.enabled || !config.vapidPublicKey) {
         if (latestRequest.current === request) {
           setState((current) => ({
@@ -146,11 +195,14 @@ function useWebPushSubscription() {
       }
 
       const registration = await registerWebPushServiceWorker()
+      if (!isSessionWorkCurrent(queryClient, generation, sessionSignal)) return false
       const subscription = await createOrReuseWebPushSubscription(
         registration,
         config.vapidPublicKey,
       )
-      await upsertWebPushSubscription(subscription.toJSON())
+      if (!isSessionWorkCurrent(queryClient, generation, sessionSignal)) return false
+      await upsertWebPushSubscription(subscription.toJSON(), { signal: sessionSignal })
+      if (!isSessionWorkCurrent(queryClient, generation, sessionSignal)) return false
 
       if (latestRequest.current === request) {
         setState({
@@ -162,18 +214,21 @@ function useWebPushSubscription() {
       }
       return true
     } catch (error) {
-      if (latestRequest.current === request) {
+      if (
+        latestRequest.current === request &&
+        isSessionWorkCurrent(queryClient, generation, sessionSignal)
+      ) {
         setState((current) => ({
           ...current,
           error: "connection-failed",
           isConnecting: false,
           isLoading: false,
         }))
+        console.warn("Failed to connect Web Push subscription", error)
       }
-      console.warn("Failed to connect Web Push subscription", error)
       return false
     }
-  }, [])
+  }, [queryClient])
 
   return { ...state, connectCurrentDevice }
 }
@@ -185,27 +240,33 @@ function useReconcileWebPushSubscription({
   userId: number | undefined
   notifyAll: boolean | undefined
 }) {
+  const queryClient = useQueryClient()
+
   React.useEffect(() => {
     if (!userId || !notifyAll || !isWebPushSupported()) return
 
     let cancelled = false
+    const generation = getSessionGeneration(queryClient)
+    const sessionSignal = getSessionAbortSignal(queryClient)
+    const isCurrent = () =>
+      !cancelled && isSessionWorkCurrent(queryClient, generation, sessionSignal)
 
     const reconcile = async () => {
       if (browserPermission() !== "granted") return
 
       try {
-        const config = await getWebPushConfig()
-        if (cancelled || !config.enabled || config.subscribed) return
+        const config = await getWebPushConfig({ signal: sessionSignal })
+        if (!isCurrent() || !config.enabled || config.subscribed) return
 
         const registration = await navigator.serviceWorker.getRegistration("/")
-        if (cancelled || !registration) return
+        if (!isCurrent() || !registration) return
 
         const subscription = await getExistingWebPushSubscription(registration)
-        if (cancelled || !subscription) return
+        if (!isCurrent() || !subscription) return
 
-        await upsertWebPushSubscription(subscription.toJSON())
+        await upsertWebPushSubscription(subscription.toJSON(), { signal: sessionSignal })
       } catch (error) {
-        if (!cancelled) {
+        if (isCurrent()) {
           console.warn("Failed to reconcile Web Push subscription", error)
         }
       }
@@ -215,7 +276,7 @@ function useReconcileWebPushSubscription({
     return () => {
       cancelled = true
     }
-  }, [notifyAll, userId])
+  }, [notifyAll, queryClient, userId])
 }
 
 export {

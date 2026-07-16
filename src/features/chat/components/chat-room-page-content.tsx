@@ -292,6 +292,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     counterpart
   )
   const isMeetingHost = isGroup && meeting?.host.userId === session.userId
+  const canConfigureRoomNotification = room !== undefined
+  const canPinRoom = room !== undefined && room.roomType !== "question"
 
   // 메시지를 한국 날짜(KST) 단위로 묶어서 날짜가 바뀔 때마다 구분선을 표시한다.
   const dateGroups = React.useMemo(() => {
@@ -664,16 +666,17 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             <SidePanelPopup>
               <ChatRoomMoreHeader
                 onBack={() => setMoreOpen(false)}
-                showPinAction={!isQuestionRoom}
+                showNotificationAction={canConfigureRoomNotification}
+                showPinAction={canPinRoom}
                 notificationPending={setNotifyMutation.isPending}
                 notificationOn={notificationOn}
                 onToggleNotification={() => {
-                  if (!session.authenticated || setNotifyMutation.isPending) return
+                  if (!session.authenticated || !canConfigureRoomNotification || setNotifyMutation.isPending) return
                   setNotifyMutation.mutate({ roomId, enabled: !notificationOn })
                 }}
                 pinned={roomPinned}
                 onTogglePin={() => {
-                  if (!session.authenticated) return
+                  if (!session.authenticated || !canPinRoom || setPinnedMutation.isPending) return
                   setPinnedMutation.mutate({ roomId, pinned: !roomPinned })
                 }}
               />

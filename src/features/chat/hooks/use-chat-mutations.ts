@@ -53,10 +53,11 @@ function useSetNotify() {
   return useMutation({
     mutationFn: ({ roomId, enabled }: { roomId: number; enabled: boolean }) => setNotify(roomId, enabled),
     // 알림 설정은 목록(뮤트 표시)과 해당 방 상세에 반영 → 메시지는 불필요
-    onSuccess: (_data, { roomId }) => {
-      queryClient.invalidateQueries({ queryKey: roomsListKey })
-      queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
-    },
+    onSuccess: (_data, { roomId }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: roomsListKey }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) }),
+      ]),
   })
 }
 

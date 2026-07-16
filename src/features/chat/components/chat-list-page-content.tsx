@@ -98,15 +98,18 @@ function ChatListPageContent() {
       .sort((a, b) => Number(b.pinned) - Number(a.pinned))
   }, [entries, query, category])
 
-  const menuItemsFor = (chat: ChatListEntry): ChatContextMenuItem[] => [
-    {
-      icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
-      label: messages.chat.pinAction,
-      onClick: () => {
-        setPinnedMutation.mutate({ roomId: chat.roomId, pinned: !chat.pinned })
-        setOpenMenuRoomId(null)
-      },
-    },
+  const menuItemsFor = (chat: ChatListEntry): ChatContextMenuItem[] => {
+    const canPinRoom = chat.category !== "question"
+
+    return [
+      ...(canPinRoom ? [{
+        icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
+        label: messages.chat.pinAction,
+        onClick: () => {
+          setPinnedMutation.mutate({ roomId: chat.roomId, pinned: !chat.pinned })
+          setOpenMenuRoomId(null)
+        },
+      }] : []),
     {
       icon: (
         <Image
@@ -134,7 +137,8 @@ function ChatListPageContent() {
         setOpenMenuRoomId(null)
       },
     },
-  ]
+    ]
+  }
 
   return (
     <>
