@@ -13,3 +13,8 @@ bash scripts/ci/test-meetup-contracts.sh
 node --test scripts/ci/test-meetup-source-contracts.mjs
 node --test scripts/ci/test-static-export-routes.mjs
 node --test scripts/ci/test-static-source-contracts.mjs
+node --experimental-strip-types --test src/features/chat/lib/chat-timeline.test.ts
+node --experimental-strip-types --test src/features/chat/components/chat-system-message.test.ts
+node --experimental-strip-types --test src/features/chat/lib/chat-leave.test.ts
+node --experimental-strip-types --test src/features/chat/lib/chat-member-management.test.ts
+node --experimental-strip-types --test src/features/chat/lib/chat-room-event.test.ts

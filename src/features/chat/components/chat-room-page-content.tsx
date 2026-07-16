@@ -18,6 +18,7 @@ import {
 import { NoticeBanner } from "@/features/chat/components/notice-banner"
 import { ChatDateDivider } from "@/features/chat/components/chat-date-divider"
 import { ChatScrollDateBadge } from "@/features/chat/components/chat-scroll-date-badge"
+import { ChatSystemMessage } from "@/features/chat/components/chat-system-message"
 import { ChatBubbleSegment, bubblePosition } from "@/features/chat/components/chat-bubble-segment"
 import { ChatMessageGroup } from "@/features/chat/components/chat-message-group"
 import { ChatMessageInput } from "@/features/chat/components/chat-message-input"
@@ -37,28 +38,46 @@ import {
 } from "@/features/chat/hooks/use-chat-queries"
 import {
   useDisbandMeeting,
-  useLeaveRoom,
+  useLeaveChatRoom,
   useMarkRead,
   useSetNotify,
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
+import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
+import {
+  isActiveRoomRemoval,
+  removeRoomFromAllLoadedListCaches,
+} from "@/features/chat/lib/chat-room-event"
 import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
 import { uploadChatImage } from "@/features/chat/api/chat-file-api"
 import {
   adaptMember,
   adaptMessage,
-  buildMessageRuns,
   resolveRoomTitle,
   type ChatBubbleMessage,
+  type ChatMessageView,
 } from "@/features/chat/lib/chat-adapter"
 import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
+import {
+  buildGroupChatMemberList,
+  type GroupChatMemberListItem,
+} from "@/features/chat/lib/chat-member-management"
+import { buildChatTimeline, dedupeServerMessages } from "@/features/chat/lib/chat-timeline"
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
-import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
+import { useKickMember } from "@/features/meetup/hooks/use-meetup-mutations"
+import { meetupKeys, useMeeting, useMeetingParticipants } from "@/features/meetup/hooks/use-meetup-queries"
+import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
+import { resolveFileUrl } from "@/lib/api/file-url"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { getKstDateKey, formatKstFullDate, formatKstShortDate, formatKstTime } from "@/lib/date/kst"
-import { resolveFileUrl } from "@/lib/api/file-url"
+import {
+  getKstDateKey,
+  formatKstFullDate,
+  formatKstShortDate,
+  formatKstTime,
+  getKstMinuteKey,
+} from "@/lib/date/kst"
 import { routes } from "@/lib/navigation/routes"
 import { cn } from "@/lib/utils"
 
@@ -134,16 +153,13 @@ interface ChatRoomSessionContentProps extends ChatRoomPageContentProps {
 // 2) 낙관적(pending) 말풍선은 대응하는 서버 메시지가 이미 있으면 버린다.
 //    에코를 정상 수신하면 onMessage가 pending을 제거하므로, 이 필터는 "에코를 놓치고 백필로 들어온" 경우의 안전망이다.
 //    서버가 clientNonce를 주지 않아 (내가 보냄 + 같은 내용 + 시간 창 이내)로 매칭한다. 한 서버 메시지는 최대 한 pending만 흡수.
-function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): ChatBubbleMessage[] {
-  const byId = new Map<number, ChatBubbleMessage>()
-  for (const message of [...base, ...live]) {
-    if (message.pending) continue
-    byId.set(message.messageId, message)
-  }
-  const server = [...byId.values()]
+function mergeMessages(base: ChatMessageView[], live: ChatMessageView[]): ChatMessageView[] {
+  const server = dedupeServerMessages(
+    [...base, ...live].filter((message) => message.messageType !== "user" || !message.pending)
+  )
 
   const pendings = live
-    .filter((message) => message.pending)
+    .filter((message): message is ChatBubbleMessage => message.messageType === "user" && Boolean(message.pending))
     .sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : a.messageId - b.messageId))
   const claimed = new Set<number>()
   const survivingPending: ChatBubbleMessage[] = []
@@ -152,6 +168,7 @@ function mergeMessages(base: ChatBubbleMessage[], live: ChatBubbleMessage[]): Ch
     const match = server.find(
       (message) =>
         !claimed.has(message.messageId) &&
+        message.messageType === "user" &&
         message.sender === "me" &&
         // 이미지 낙관 말풍선은 서버가 clientNonce를 주지 않아 내용 비교가 불가하므로,
         // "내가 보낸 이미지 메시지"끼리 시간 창 이내로 매칭한다. 텍스트는 종전대로 내용 일치.
@@ -186,7 +203,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     isFetchingNextPage,
   } = useChatMessages(roomId, session)
 
-  const [liveMessages, setLiveMessages] = React.useState<ChatBubbleMessage[]>([])
+  const [liveMessages, setLiveMessages] = React.useState<ChatMessageView[]>([])
   // 낙관적 말풍선의 임시 messageId. 서버 id(양수)와 겹치지 않게 음수를 감소시켜 부여한다.
   const tempMessageIdRef = React.useRef(-1)
   const [notice, setNotice] = React.useState<string | null>(null)
@@ -195,6 +212,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const [activeMessageId, setActiveMessageId] = React.useState<string | null>(null)
   const [confirmLeaveOpen, setConfirmLeaveOpen] = React.useState(false)
   const [confirmDisbandOpen, setConfirmDisbandOpen] = React.useState(false)
+  const [kickTarget, setKickTarget] = React.useState<GroupChatMemberListItem | null>(null)
   const [socketError, setSocketError] = React.useState<string | null>(null)
 
   const bottomRef = React.useRef<HTMLDivElement>(null)
@@ -215,8 +233,23 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const markReadMutation = useMarkRead()
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
-  const leaveRoomMutation = useLeaveRoom()
+  const leaveChatRoomMutation = useLeaveChatRoom()
   const disbandMeetingMutation = useDisbandMeeting()
+
+  const isGroup = room?.roomType === "group"
+  const isQuestionRoom = room?.roomType === "question"
+  const questionId = isQuestionRoom ? room?.questionId ?? undefined : undefined
+  const { data: questionSummary } = useQuestionSummary(questionId ?? 0, questionId != null)
+  const meetingId = isGroup ? room?.meetingId ?? undefined : undefined
+  const { data: meeting } = useMeeting(meetingId ?? 0, meetingId != null)
+  const participantQueryEnabled = session.authenticated && moreOpen && isGroup && meetingId != null
+  const {
+    data: meetingParticipants,
+    isLoading: isMeetingParticipantsLoading,
+    isError: isMeetingParticipantsError,
+    error: meetingParticipantsError,
+  } = useMeetingParticipants(meetingId ?? 0, participantQueryEnabled)
+  const kickMemberMutation = useKickMember(meetingId ?? 0)
 
   const chatMessages = React.useMemo(
     () => mergeMessages(initialMessages, liveMessages),
@@ -230,8 +263,9 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       setLiveMessages((prev) => {
         // 내 메시지 에코면, 먼저 그려둔 pending 낙관 말풍선 중 같은 내용 하나를 제거(대체)한다.
         // 서버가 clientNonce를 주지 않으므로 내용 일치로 가장 오래된 pending 항목을 매칭한다.
-        if (incoming.sender === "me") {
+        if (incoming.messageType === "user" && incoming.sender === "me") {
           const idx = prev.findIndex((message) =>
+            message.messageType === "user" &&
             message.pending &&
             // 이미지 에코는 이미지 낙관 말풍선과, 텍스트 에코는 텍스트 낙관 말풍선과만 매칭한다.
             // ('사진' 텍스트 메시지가 이미지 에코와 오매칭되는 것을 방지)
@@ -247,6 +281,30 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       })
       // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
       queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })
+      if (incoming.messageType === "system" && isGroup && meetingId != null) {
+        queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
+        queryClient.invalidateQueries({ queryKey: meetupKeys.participants(meetingId) })
+      }
+    },
+    onRoomEvent: (event) => {
+      if (!isActiveRoomRemoval(event, session.activeRoomId)) return
+      removeRoomFromAllLoadedListCaches(queryClient, [...chatKeys.all, "rooms"], roomId)
+      if (isGroup && meetingId != null) {
+        queryClient.removeQueries({ queryKey: meetupKeys.detail(meetingId) })
+        queryClient.removeQueries({ queryKey: meetupKeys.participants(meetingId) })
+      }
+      // 서버가 보낸 remove는 이 방의 접근권이 이미 제거됐다는 확정 신호다.
+      // HTTP mutation의 응답 순서와 무관하게 즉시 열린 방을 정리하고 이동한다.
+      queryClient.removeQueries({ queryKey: chatKeys.room(roomId) })
+      queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
+      setLiveMessages([])
+      setMoreOpen(false)
+      setCameraMenuOpen(false)
+      setActiveMessageId(null)
+      setConfirmLeaveOpen(false)
+      setConfirmDisbandOpen(false)
+      setKickTarget(null)
+      router.replace(routes.chats())
     },
     onError: (error) => setSocketError(error.message),
     onConnectedChange: (isConnected) => {
@@ -264,12 +322,6 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.activeRoomId])
 
-  const questionId = room?.roomType === "question" ? room.questionId ?? undefined : undefined
-  const { data: questionSummary } = useQuestionSummary(questionId ?? 0, questionId != null)
-
-  const meetingId = room?.roomType === "group" ? room.meetingId ?? undefined : undefined
-  const { data: meeting } = useMeeting(meetingId ?? 0, meetingId != null)
-
   // 제목: group=모임 제목, question=질문 제목, direct=상대 닉네임. 도메인 제목이 오기 전엔 닉네임으로 폴백.
   const roomTitle = room
     ? room.roomType === "group" && meeting?.title
@@ -278,12 +330,22 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         ? questionSummary.title
         : resolveRoomTitle(room.members, myUserId, room.roomType)
     : ""
-  const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
+  const roomMembers = React.useMemo(
+    () => room?.members.map((member) => adaptMember(member, myUserId)) ?? [],
+    [room?.members, myUserId]
+  )
   const counterpart = room?.counterpart ? adaptMember(room.counterpart, myUserId) : undefined
+  const groupMembers = React.useMemo(
+    () =>
+      buildGroupChatMemberList({
+        currentUserId: myUserId,
+        participants: meetingParticipants ?? [],
+        roomMembers,
+      }),
+    [meetingParticipants, myUserId, roomMembers]
+  )
   const notificationOn = room?.notifyEnabled ?? true
   const roomPinned = room?.pinned ?? false
-  const isGroup = room?.roomType === "group"
-  const isQuestionRoom = room?.roomType === "question"
   const roomAvatarSrc = resolveChatRoomAvatar(
     room?.roomType ?? "direct",
     roomMembers,
@@ -294,10 +356,15 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const isMeetingHost = isGroup && meeting?.host.userId === session.userId
   const canConfigureRoomNotification = room !== undefined
   const canPinRoom = room !== undefined && room.roomType !== "question"
+  // room 응답에 있는 도메인 식별자를 그대로 보존한다. group은 meetingId가 없어도
+  // generic leave로 폴백하지 않고 mutation의 typed local failure로 끝난다.
+  const leaveTarget: LeaveChatRoomTarget | null = room
+    ? { roomId: room.roomId, roomType: room.roomType, meetingId: room.meetingId }
+    : null
 
   // 메시지를 한국 날짜(KST) 단위로 묶어서 날짜가 바뀔 때마다 구분선을 표시한다.
   const dateGroups = React.useMemo(() => {
-    const groups: { dateKey: string; label: string; messages: ChatBubbleMessage[] }[] = []
+    const groups: { dateKey: string; label: string; messages: ChatMessageView[] }[] = []
     for (const message of chatMessages) {
       const dateKey = getKstDateKey(message.createdAt)
       const lastGroup = groups[groups.length - 1]
@@ -394,6 +461,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     setLiveMessages((prev) => [
       ...prev,
       {
+        messageType: "user",
         id: `pending-${tempId}`,
         messageId: tempId,
         senderId: myUserId,
@@ -423,6 +491,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     setLiveMessages((prev) => [
       ...prev,
       {
+        messageType: "user",
         id: `pending-${tempId}`,
         messageId: tempId,
         senderId: myUserId,
@@ -584,27 +653,33 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                   className="flex flex-col"
                 >
                   <ChatDateDivider text={group.label} />
-                  {buildMessageRuns(group.messages).map((run) => (
-                    <ChatMessageGroup
-                      key={run.runKey}
-                      sender={run.sender}
-                      name={run.name}
-                      time={run.time}
-                      avatarSrc={run.avatarSrc}
-                    >
-                      {run.messages.map((message, index) => (
-                        <MessageRow
-                          key={message.id}
-                          message={message}
-                          position={bubblePosition(index, run.messages.length)}
-                          menuOpen={activeMessageId === message.id}
-                          menuItems={messageMenuItems(message)}
-                          onOpenMenu={() => setActiveMessageId(message.id)}
-                          onCloseMenu={() => setActiveMessageId(null)}
-                        />
-                      ))}
-                    </ChatMessageGroup>
-                  ))}
+                  {buildChatTimeline(group.messages, getKstMinuteKey).map((item) => {
+                    if (item.kind === "system") {
+                      return <ChatSystemMessage key={item.message.id} content={item.message.content} />
+                    }
+
+                    return (
+                      <ChatMessageGroup
+                        key={item.runKey}
+                        sender={item.sender}
+                        name={item.name}
+                        time={item.time}
+                        avatarSrc={item.avatarSrc}
+                      >
+                        {item.messages.map((message, index) => (
+                          <MessageRow
+                            key={message.id}
+                            message={message}
+                            position={bubblePosition(index, item.messages.length)}
+                            menuOpen={activeMessageId === message.id}
+                            menuItems={messageMenuItems(message)}
+                            onOpenMenu={() => setActiveMessageId(message.id)}
+                            onCloseMenu={() => setActiveMessageId(null)}
+                          />
+                        ))}
+                      </ChatMessageGroup>
+                    )
+                  })}
                 </div>
               ))}
               <div ref={bottomRef} />
@@ -694,20 +769,60 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                   />
                 )}
                 <div className="flex w-full flex-col rounded-2xl bg-gray-50">
-                  <SectionTitle title={messages.chat.membersTitle} count={roomMembers.length} padding="12" />
-                  {roomMembers.map((member) => (
-                    <ChatRoomMemberItem
-                      key={member.userId}
-                      name={member.name}
-                      avatarSrc={member.avatarSrc}
-                      isMe={member.isMe}
-                      flagSrc={member.countryFlagSrc}
-                      nation={member.nationalityCode ? messages.countries[member.nationalityCode] : undefined}
-                    />
-                  ))}
+                  <SectionTitle
+                    title={messages.chat.membersTitle}
+                    count={isGroup ? groupMembers.length : roomMembers.length}
+                    padding="12"
+                  />
+                  {isGroup ? (
+                    isMeetingParticipantsLoading ? (
+                      <div className="flex justify-center p-4">
+                        <span className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+                      </div>
+                    ) : isMeetingParticipantsError ? (
+                      <p className="px-3 pb-3 text-body-regular-13 text-red-500">
+                        {getMeetupErrorMessage(meetingParticipantsError, messages)}
+                      </p>
+                    ) : (
+                      groupMembers.map((member) => (
+                        <ChatRoomMemberItem
+                          key={member.userId}
+                          name={member.name}
+                          avatarSrc={resolveFileUrl(member.profileImageUrl)}
+                          isMe={member.isMe}
+                          isOwner={member.isOwner}
+                          flagSrc={member.countryFlagSrc}
+                          nation={member.nationalityCode ? messages.countries[member.nationalityCode] : undefined}
+                          onRemove={
+                            member.canRemove
+                              ? () => {
+                                  if (kickMemberMutation.isPending) return
+                                  setSocketError(null)
+                                  setKickTarget(member)
+                                }
+                              : undefined
+                          }
+                          disabled={kickMemberMutation.isPending}
+                          removeLabel={messages.meetup.kickButton}
+                        />
+                      ))
+                    )
+                  ) : (
+                    roomMembers.map((member) => (
+                      <ChatRoomMemberItem
+                        key={member.userId}
+                        name={member.name}
+                        avatarSrc={member.avatarSrc}
+                        isMe={member.isMe}
+                        flagSrc={member.countryFlagSrc}
+                        nation={member.nationalityCode ? messages.countries[member.nationalityCode] : undefined}
+                      />
+                    ))
+                  )}
                 </div>
                 <ChatRoomDangerActions
                   className="w-full"
+                  leaveLabel={isGroup ? messages.meetup.leaveButton : undefined}
                   onLeave={() => {
                     if (session.authenticated) setConfirmLeaveOpen(true)
                   }}
@@ -728,15 +843,22 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         onOpenChange={(open) => {
           if (session.authenticated) setConfirmLeaveOpen(open)
         }}
-        title={messages.chat.leaveChatConfirmTitle}
-        description={messages.chat.leaveChatConfirmDescription}
-        cancelLabel={messages.chat.cancelButton}
-        confirmLabel={messages.chat.leaveChatAction}
+        title={isGroup ? messages.meetup.leaveConfirmTitle : messages.chat.leaveChatConfirmTitle}
+        description={isGroup ? messages.meetup.leaveConfirmDescription : messages.chat.leaveChatConfirmDescription}
+        cancelLabel={isGroup ? messages.meetup.confirmCancelLabel : messages.chat.cancelButton}
+        confirmLabel={isGroup ? messages.meetup.leaveButton : messages.chat.leaveChatAction}
+        confirmDisabled={leaveChatRoomMutation.isPending || leaveTarget === null}
         onConfirm={() => {
-          if (!session.authenticated) return
-          leaveRoomMutation.mutate(roomId, {
+          if (!session.authenticated || !leaveTarget) return
+          leaveChatRoomMutation.mutate(leaveTarget, {
             onSuccess: () => router.push(routes.chats()),
-            onError: () => setSocketError(messages.chat.leaveFailed),
+            onError: (error) => {
+              setSocketError(
+                leaveTarget.roomType === "group"
+                  ? getMeetupErrorMessage(error, messages)
+                  : messages.chat.leaveFailed
+              )
+            },
           })
         }}
       />
@@ -755,6 +877,28 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           disbandMeetingMutation.mutate({ meetingId, roomId }, {
             onSuccess: () => router.push(routes.chats()),
             onError: () => setSocketError(messages.chat.disbandFailed),
+          })
+        }}
+      />
+      <ConfirmDialog
+        open={session.authenticated && kickTarget !== null}
+        onOpenChange={(open) => {
+          if (!session.authenticated || kickMemberMutation.isPending || open) return
+          setKickTarget(null)
+        }}
+        title={messages.meetup.kickConfirmTitle}
+        description={messages.meetup.kickConfirmDescription}
+        cancelLabel={messages.meetup.confirmCancelLabel}
+        confirmLabel={messages.meetup.kickButton}
+        confirmDisabled={kickMemberMutation.isPending || kickTarget === null || meetingId == null}
+        onConfirm={() => {
+          if (!session.authenticated || !kickTarget || meetingId == null || kickMemberMutation.isPending) return
+          kickMemberMutation.mutate(kickTarget.userId, {
+            onSuccess: () => {
+              setKickTarget(null)
+              queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
+            },
+            onError: (error) => setSocketError(getMeetupErrorMessage(error, messages)),
           })
         }}
       />

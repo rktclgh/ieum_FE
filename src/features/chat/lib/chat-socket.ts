@@ -19,6 +19,7 @@ function resolveBrokerUrl() {
 
 interface ChatSocketHandlers {
   onMessage?: (event: WsMessageEvent) => void
+  onRoomEvent?: (event: WsRoomEvent) => void
   onError?: (error: ChatWebSocketErrorResponse) => void
   onConnectedChange?: (connected: boolean) => void
 }
@@ -54,6 +55,16 @@ function useChatRoomSocket(activeRoomId: number | null, handlers: ChatSocketHand
           try {
             const event = JSON.parse(message.body) as WsMessageEvent
             handlersRef.current.onMessage?.(event)
+          } catch {
+            // malformed payload는 무시한다.
+          }
+        })
+
+        // 열린 방에서도 사용자 단위 remove 이벤트를 받아야 강퇴 대상이 즉시 접근을 종료할 수 있다.
+        client.subscribe("/user/queue/rooms", (message: IMessage) => {
+          try {
+            const event = JSON.parse(message.body) as WsRoomEvent
+            handlersRef.current.onRoomEvent?.(event)
           } catch {
             // malformed payload는 무시한다.
           }

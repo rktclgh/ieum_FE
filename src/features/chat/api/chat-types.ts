@@ -2,6 +2,15 @@
 // 주의: 방 목록/상세 응답에는 방 제목이 없다 → 제목은 members(다이렉트=상대 닉네임)로 FE에서 파생한다.
 
 type RoomType = "direct" | "group" | "question"
+type ChatMessageType = "user" | "system"
+
+// 채팅방 나가기의 정본 도메인을 고르는 데 필요한 최소 식별자.
+// group은 채팅 API가 아닌 모임 API로만 나가야 한다.
+interface LeaveChatRoomTarget {
+  roomId: number
+  roomType: RoomType
+  meetingId: number | null
+}
 
 interface ChatMessageResponse {
   messageId: number
@@ -12,6 +21,8 @@ interface ChatMessageResponse {
   content: string | null
   imageUrl: string | null
   createdAt: string
+  // 롤링 배포 중 구 서버 응답을 허용한다. adapter에서 user로 정규화한다.
+  messageType?: ChatMessageType
 }
 
 interface ChatRoomSummaryResponse {
@@ -68,6 +79,8 @@ interface WsMessageEvent {
   content: string | null
   imageUrl: string | null
   createdAt: string
+  // ChatMessageResponse와 같은 wire contract. 구 서버 이벤트도 잠시 허용한다.
+  messageType?: ChatMessageType
 }
 
 // WebSocket /user/queue/rooms 로 내려오는 사용자 단위 방 요약 이벤트 (BE 이슈 #103).
@@ -97,6 +110,8 @@ interface ChatWebSocketErrorResponse {
 
 export type {
   RoomType,
+  ChatMessageType,
+  LeaveChatRoomTarget,
   ChatMessageResponse,
   ChatRoomSummaryResponse,
   ChatRoomMemberResponse,
