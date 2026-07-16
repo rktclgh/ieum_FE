@@ -16,7 +16,9 @@ pnpm exec tsc \
   --esModuleInterop \
   --rootDir . \
   --outDir "$tmp_dir" \
-  scripts/ci/test-initial-map-center.ts
+  scripts/ci/test-initial-map-center.ts \
+  scripts/ci/test-geolocation-initial-status.ts
 
 node --test "$tmp_dir/scripts/ci/test-initial-map-center.js"
+node --test "$tmp_dir/scripts/ci/test-geolocation-initial-status.js"
 node --test scripts/ci/test-map-source-contracts.mjs

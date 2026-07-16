@@ -7,20 +7,22 @@ import { fileURLToPath } from "node:url"
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const read = (relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), "utf8")
 
-test("geolocation은 첫 terminal 결과를 initialStatus로 고정한다", () => {
+test("geolocation은 권한 거부만 최초 fallback으로 확정하고 일시 오류는 계속 대기한다", () => {
   const source = read("src/features/map/hooks/use-geolocation.ts")
 
   assert.match(
     source,
     /const \[initialStatus, setInitialStatus\] = React\.useState<GeolocationStatus>\("loading"\)/
   )
+  assert.match(source, /resolveInitialGeolocationStatus/)
+  assert.match(source, /if \(!isSupported \|\| !enabled\) return/)
   assert.match(
     source,
-    /setInitialStatus\(\(currentStatus\) =>\s*currentStatus === "loading" \? "success" : currentStatus\s*\)/
+    /setInitialStatus\(\(currentStatus\) =>\s*resolveInitialGeolocationStatus\(currentStatus, \{ type: "success" \}\)\s*\)/
   )
   assert.match(
     source,
-    /setInitialStatus\(\(currentStatus\) =>\s*currentStatus === "loading" \? "error" : currentStatus\s*\)/
+    /setInitialStatus\(\(currentStatus\) =>\s*resolveInitialGeolocationStatus\(currentStatus, \{\s*type: "error",\s*errorCode: error\.code,\s*\}\)\s*\)/
   )
   assert.match(source, /initialStatus: isSupported \? initialStatus : "error"/)
 })
@@ -28,8 +30,27 @@ test("geolocation은 첫 terminal 결과를 initialStatus로 고정한다", () =
 test("장소 선택 picker가 geolocation initialStatus를 map step에 전달한다", () => {
   const source = read("src/features/meetup/components/meetup-location-picker.tsx")
 
-  assert.match(source, /const \{ position, initialStatus \} = useGeolocation\(\)/)
+  assert.match(
+    source,
+    /const \{ position: watchedPosition, initialStatus: watchedInitialStatus \} = useGeolocation\(\{\s*enabled: !currentPosition,\s*\}\)/
+  )
+  assert.match(source, /const position = currentPosition \?\? watchedPosition/)
+  assert.match(source, /const initialStatus: GeolocationStatus = position \? "success" : watchedInitialStatus/)
   assert.match(source, /<MeetupLocationMap[\s\S]*initialStatus=\{initialStatus\}/)
+})
+
+test("홈 GPS 위치를 모임·질문 생성 picker까지 전달한다", () => {
+  const home = read("src/features/map/components/home-map-screen.tsx")
+  const meetup = read("src/features/meetup/components/create-meetup-screen.tsx")
+  const question = read("src/features/question/components/create-question-screen.tsx")
+
+  assert.match(home, /<CreateMeetupScreen[\s\S]*currentPosition=\{position\}/)
+  assert.match(home, /<CreateQuestionScreen[\s\S]*currentPosition=\{position\}/)
+  assert.match(meetup, /currentPosition\?: Coordinates \| null/)
+  assert.match(meetup, /<MeetupLocationPicker[\s\S]*currentPosition=\{currentPosition\}/)
+  assert.match(question, /currentPosition\?: Coordinates \| null/)
+  assert.match(question, /<CreateQuestionForm[\s\S]*currentPosition=\{currentPosition\}/)
+  assert.match(question, /<MeetupLocationPicker[\s\S]*currentPosition=\{currentPosition\}/)
 })
 
 test("장소 선택 map은 최초 fallback을 고정하고 명시적 GPS 재중심으로만 해제한다", () => {
