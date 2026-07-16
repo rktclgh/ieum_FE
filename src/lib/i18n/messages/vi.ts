@@ -19,7 +19,7 @@ export const vi: Messages = {
     backendUnavailable: "Không thể kết nối với máy chủ. Vui lòng thử lại sau.",
   },
   login: {
-    logoAlt: "Logo",
+    logoText: "이음",
     emailPlaceholder: "Nhập email",
     passwordPlaceholder: "Nhập mật khẩu",
     submit: "Đăng nhập",

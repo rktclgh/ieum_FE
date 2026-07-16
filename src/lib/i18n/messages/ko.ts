@@ -22,7 +22,7 @@ export interface Messages {
     backendUnavailable: string
   }
   login: {
-    logoAlt: string
+    logoText: string
     emailPlaceholder: string
     passwordPlaceholder: string
     submit: string
@@ -459,7 +459,7 @@ export const ko: Messages = {
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   login: {
-    logoAlt: "로고",
+    logoText: "이음",
     emailPlaceholder: "이메일 입력",
     passwordPlaceholder: "비밀번호 입력",
     submit: "로그인",

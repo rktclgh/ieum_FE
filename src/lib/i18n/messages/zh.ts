@@ -19,7 +19,7 @@ export const zh: Messages = {
     backendUnavailable: "无法连接到服务器，请稍后重试。",
   },
   login: {
-    logoAlt: "标志",
+    logoText: "이음",
     emailPlaceholder: "请输入邮箱",
     passwordPlaceholder: "请输入密码",
     submit: "登录",

@@ -33,11 +33,11 @@ function LoginContent() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center gap-6 px-4 pt-16 pb-4">
-      <LanguageToggle />
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center justify-center gap-4 px-4 py-6 sm:gap-5">
+      <LanguageToggle className="self-end" />
 
-      <div className="flex h-30 w-full items-center justify-center">
-        <span className="text-title-bold-28 text-black">{messages.login.logoAlt}</span>
+      <div className="flex h-12 w-full items-center justify-center sm:h-14">
+        <span className="text-title-bold-28 text-black">{messages.login.logoText}</span>
       </div>
 
       <form onSubmit={handleSubmit} className="flex w-full flex-col items-center gap-3">
