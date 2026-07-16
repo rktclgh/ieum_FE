@@ -51,12 +51,14 @@ import {
   resolveRoomTitle,
   type ChatBubbleMessage,
 } from "@/features/chat/lib/chat-adapter"
+import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
 import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { getKstDateKey, formatKstFullDate, formatKstShortDate, formatKstTime } from "@/lib/date/kst"
+import { resolveFileUrl } from "@/lib/api/file-url"
 import { routes } from "@/lib/navigation/routes"
 import { cn } from "@/lib/utils"
 
@@ -277,11 +279,19 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         : resolveRoomTitle(room.members, myUserId, room.roomType)
     : ""
   const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
+  const counterpart = room?.counterpart ? adaptMember(room.counterpart, myUserId) : undefined
   const notificationOn = room?.notifyEnabled ?? true
   const roomPinned = room?.pinned ?? false
   const isGroup = room?.roomType === "group"
-  const isMeetingHost = isGroup && meeting?.host.userId === session.userId
   const isQuestionRoom = room?.roomType === "question"
+  const roomAvatarSrc = resolveChatRoomAvatar(
+    room?.roomType ?? "direct",
+    roomMembers,
+    myUserId,
+    resolveFileUrl(meeting?.imageUrl),
+    counterpart
+  )
+  const isMeetingHost = isGroup && meeting?.host.userId === session.userId
 
   // 메시지를 한국 날짜(KST) 단위로 묶어서 날짜가 바뀔 때마다 구분선을 표시한다.
   const dateGroups = React.useMemo(() => {
@@ -578,6 +588,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                       sender={run.sender}
                       name={run.name}
                       time={run.time}
+                      avatarSrc={run.avatarSrc}
                     >
                       {run.messages.map((message, index) => (
                         <MessageRow
@@ -668,7 +679,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
               <SidePanelContent className="items-center gap-3 px-4 pb-6">
                 <ChatRoomProfile
                   title={roomTitle}
-                  avatarSrc={isQuestionRoom ? questionSummary?.imageUrl : undefined}
+                  avatarSrc={roomAvatarSrc}
                 />
                 {!isQuestionRoom && (
                   <ChatRoomInfoSection
