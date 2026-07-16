@@ -19,7 +19,7 @@ export const ru: Messages = {
     backendUnavailable: "Не удалось подключиться к серверу. Попробуйте ещё раз чуть позже.",
   },
   login: {
-    logoText: "이음",
+    logoText: "ieum",
     emailPlaceholder: "Введите email",
     passwordPlaceholder: "Введите пароль",
     submit: "Войти",

@@ -19,7 +19,7 @@ export const th: Messages = {
     backendUnavailable: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ โปรดลองอีกครั้งในภายหลัง",
   },
   login: {
-    logoText: "이음",
+    logoText: "ieum",
     emailPlaceholder: "กรอกอีเมล",
     passwordPlaceholder: "กรอกรหัสผ่าน",
     submit: "เข้าสู่ระบบ",
