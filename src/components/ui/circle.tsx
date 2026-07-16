@@ -26,8 +26,8 @@ interface CircleProps
     VariantProps<typeof circleVariants> {
   iconSrc: string
   iconAlt?: string
-  /** true면 아이콘을 45도 회전시킨다 (예: plus → x 토글). transition-transform으로 부드럽게 애니메이션된다. */
-  iconRotated?: boolean
+  /** 내부 아이콘 이미지에 추가할 CSS 클래스명 (예: 회전/트랜지션 애니메이션은 호출부에서 주입) */
+  iconClassName?: string
 }
 
 function Circle({
@@ -36,7 +36,7 @@ function Circle({
   tone,
   iconSrc,
   iconAlt = "",
-  iconRotated = false,
+  iconClassName,
   ...props
 }: CircleProps) {
   return (
@@ -46,16 +46,7 @@ function Circle({
       className={cn(circleVariants({ background, tone, className }))}
       {...props}
     >
-      <Image
-        src={iconSrc}
-        alt={iconAlt}
-        width={24}
-        height={24}
-        className={cn(
-          "size-6 transition-transform duration-200 ease-in-out",
-          iconRotated && "rotate-45"
-        )}
-      />
+      <Image src={iconSrc} alt={iconAlt} width={24} height={24} className={cn("size-6", iconClassName)} />
     </button>
   )
 }

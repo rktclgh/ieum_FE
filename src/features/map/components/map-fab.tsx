@@ -66,7 +66,7 @@ function MapFab({ onCreateMeetup, onCreateQuestion, className }: MapFabProps) {
         <Circle
           background="primary"
           iconSrc="/icons/circle/plus-white.svg"
-          iconRotated={open}
+          iconClassName={cn("transition-transform duration-200 ease-in-out", open && "rotate-45")}
           aria-label={open ? messages.home.createMenuCloseLabel : messages.home.createMenuOpenLabel}
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
