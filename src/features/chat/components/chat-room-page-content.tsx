@@ -44,7 +44,10 @@ import {
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
 import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
-import { isActiveRoomRemoval } from "@/features/chat/lib/chat-room-event"
+import {
+  isActiveRoomRemoval,
+  removeRoomFromAllLoadedListCaches,
+} from "@/features/chat/lib/chat-room-event"
 import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
 import { uploadChatImage } from "@/features/chat/api/chat-file-api"
 import {
@@ -284,8 +287,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       }
     },
     onRoomEvent: (event) => {
-      // 자진 나가기는 mutation 성공 경로가 캐시 정리와 이동을 소유한다.
-      if (leaveChatRoomMutation.isPending || !isActiveRoomRemoval(event, session.activeRoomId)) return
+      if (!isActiveRoomRemoval(event, session.activeRoomId)) return
+      removeRoomFromAllLoadedListCaches(queryClient, [...chatKeys.all, "rooms"], roomId)
+      if (isGroup && meetingId != null) {
+        queryClient.removeQueries({ queryKey: meetupKeys.detail(meetingId) })
+        queryClient.removeQueries({ queryKey: meetupKeys.participants(meetingId) })
+      }
+      // 자진 나가기는 mutation 성공 경로가 열린 방의 정리와 이동을 소유한다.
+      if (leaveChatRoomMutation.isPending) return
       queryClient.removeQueries({ queryKey: chatKeys.room(roomId) })
       queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
       setLiveMessages([])
