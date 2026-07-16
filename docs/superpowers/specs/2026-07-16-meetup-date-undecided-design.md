@@ -1,7 +1,7 @@
 # 새 모임 작성 날짜 미정 설계
 
-**Issue:** #173  
-**Branch:** `feat/#173-meetup-date-undecided`  
+**Issue:** #173
+**Branch:** `feat/#173-meetup-date-undecided`
 **Status:** approved by the supplied creation-screen design and implementation request
 
 ## 목표
@@ -44,7 +44,7 @@
 | 날짜 미정 상태로 날짜 필드 재진입 후 실제 날짜 완료 | 선택값 | 없음 | 날짜 미정 해제, 시간 재선택 필요 |
 | 날짜 미정 상태로 제출 | 없음 | 없음 | `schedule` 키 생략 |
 
-바텀시트에서는 휠 아래와 버튼 위에 `role="checkbox"`/`aria-checked`인 한 줄짜리 옵션을 배치한다. 선택된 동안 휠은 흐리게 보이고 포인터 입력을 받지 않는다. 완료를 누를 때만 부모 폼에 반영하므로 취소는 기존과 동일하게 초안 전체를 버린다.
+바텀시트에서는 휠 아래와 버튼 위에 `role="checkbox"`/`aria-checked`인 한 줄짜리 옵션을 배치한다. 선택된 동안 휠은 흐리게 보이고 `inert`로 포인터·키보드 입력을 모두 받지 않는다. 완료를 누를 때만 부모 폼에 반영하므로 취소는 기존과 동일하게 초안 전체를 버린다.
 
 ## 컴포넌트 경계
 
@@ -53,7 +53,7 @@
 - `src/features/meetup/components/meetup-select-field.tsx`: 기존 날짜·시간·장소 선택 필드에 native `disabled` 표현만 추가한다.
 - `src/features/meetup/lib/create-meetup-schedule.ts`: 화면 상태를 API의 선택적 `schedule` 값으로 바꾸는 순수 함수다.
 - `src/features/meetup/components/create-meetup-screen.tsx`: 표현과 제출 조립만 담당하고, 날짜 미정일 때 시간 모달을 열지 않는다.
-- `src/features/meetup/api/meetup-types.ts`: 백엔드와 맞게 `schedule`을 선택 속성으로, `firstScheduleId`를 nullable로 표현한다.
+- `src/features/meetup/api/meetup-types.ts`: one-time에만 선택적인 `schedule`, recurring에는 필수 `schedule`, nullable `firstScheduleId`를 표현한다.
 
 ## API 계약
 
@@ -71,11 +71,14 @@
 
 이 계약은 서버가 `schedule` 미전송을 허용하고 `firstScheduleId: null`을 반환하는 현재 API 사양에 맞춘다.
 
+반복 모임은 이 예외의 대상이 아니다. 타입 계약에서 recurring 요청은 계속 `schedule`을 필수로 유지한다.
+
 ## 접근성·디자인 시스템
 
 - 기존 `Drawer`, `WheelPicker`, primary/gray 토큰, 버튼 타이포그래피를 사용한다.
 - 새 에셋은 넣지 않는다. 체크 시각화는 `ReportReasonOption`과 같은 CSS 원형 선택 표시를 재사용한다.
 - 비활성 시간 필드는 실제 `disabled` 버튼으로 만들어 키보드 탭과 클릭에서 모두 제외한다.
+- 날짜 미정 상태의 휠은 `inert`로 만들어 키보드 포커스·조작에서도 제외한다.
 - 날짜 미정 체크는 스크린 리더가 상태를 읽을 수 있도록 `role="checkbox"`와 `aria-checked`를 사용한다.
 
 ## 오류 처리
