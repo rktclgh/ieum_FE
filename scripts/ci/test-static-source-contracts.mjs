@@ -690,11 +690,22 @@ test("chat room controls wait for canonical state and never act before room type
   assert.ok(listPage.includes('constcanPinRoom=chat.category!=="question"'))
   assert.ok(listPage.includes("...(canPinRoom?[{") )
   assert.ok(listPage.includes("disabled:setPinnedMutation.isPending"))
-  assert.ok(listPage.includes("disabled:leaveRoomMutation.isPending"))
+  assert.ok(listPage.includes("disabled:leaveChatRoomMutation.isPending"))
   assert.match(
     mutations,
     /functionuseSetNotify\(\).*?onSuccess:\(_data,\{roomId\}\)=>Promise\.all\(/s,
   )
+})
+
+test("답변 채택 확인창은 사용자 이벤트에서 작성자 이름을 보존한다", () => {
+  const detail = compact(read("src/features/question/components/question-detail-screen.tsx"))
+
+  assert.ok(
+    detail.includes(
+      "constopenAcceptConfirm=(answer:QuestionAnswerView)=>{setLastAcceptedAuthorName(answer.authorName)setPendingAcceptId(answer.answerId)}"
+    )
+  )
+  assert.doesNotMatch(detail, /React\.useEffect\(\(\)=>\{if\(pendingAcceptAnswer\?\.authorName\)/)
 })
 
 test("profile upload failure is visible and does not change the meeting failure contract", () => {
