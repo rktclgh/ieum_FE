@@ -69,14 +69,14 @@ function useLeaveChatRoom() {
     mutationFn: (target: LeaveChatRoomTarget) =>
       executeLeaveChatRoom(target, { leaveRoom, leaveMeeting }),
     // 방이 목록에서 사라짐 → 목록 갱신 + 해당 방의 상세·메시지 캐시 제거.
-    // group은 모임 참여자·상세도 정본 API 결과로 다시 읽게 한다.
+    // group 이탈 뒤에는 해당 모임 조회 권한이 없으므로 refetch하지 않고 캐시를 제거한다.
     onSuccess: (_data, target) => {
       queryClient.invalidateQueries({ queryKey: roomsListKey })
       queryClient.removeQueries({ queryKey: chatKeys.room(target.roomId) })
       queryClient.removeQueries({ queryKey: chatKeys.messages(target.roomId) })
       if (target.roomType === "group" && target.meetingId != null) {
-        queryClient.invalidateQueries({ queryKey: meetupKeys.detail(target.meetingId) })
-        queryClient.invalidateQueries({ queryKey: meetupKeys.participants(target.meetingId) })
+        queryClient.removeQueries({ queryKey: meetupKeys.detail(target.meetingId) })
+        queryClient.removeQueries({ queryKey: meetupKeys.participants(target.meetingId) })
       }
     },
   })

@@ -293,8 +293,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         queryClient.removeQueries({ queryKey: meetupKeys.detail(meetingId) })
         queryClient.removeQueries({ queryKey: meetupKeys.participants(meetingId) })
       }
-      // 자진 나가기는 mutation 성공 경로가 열린 방의 정리와 이동을 소유한다.
-      if (leaveChatRoomMutation.isPending) return
+      // 서버가 보낸 remove는 이 방의 접근권이 이미 제거됐다는 확정 신호다.
+      // HTTP mutation의 응답 순서와 무관하게 즉시 열린 방을 정리하고 이동한다.
       queryClient.removeQueries({ queryKey: chatKeys.room(roomId) })
       queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
       setLiveMessages([])
