@@ -131,6 +131,6 @@ Run: `pnpm verify`
 
 Expected: PASS, or isolate and document an unchanged base-branch failure with its exact command output.
 
-- [ ] **Step 4: Commit and publish**
+- [x] **Step 4: Commit and publish**
 
 Commit the implementation and tests, push `fix/#192-place-picker-gps`, and open a PR that closes #192.
