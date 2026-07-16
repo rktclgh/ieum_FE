@@ -43,7 +43,7 @@ import {
   useSetNotify,
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
-import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
+import type { ChatReplyPreview, LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
 import {
   isActiveRoomRemoval,
   removeRoomFromAllLoadedListCaches,
@@ -63,6 +63,12 @@ import {
   type GroupChatMemberListItem,
 } from "@/features/chat/lib/chat-member-management"
 import { buildChatTimeline, dedupeServerMessages } from "@/features/chat/lib/chat-timeline"
+import {
+  canReplyToMessage,
+  formatReplyLabel,
+  matchesReplyTargetForEcho,
+  replyTargetFromMessage,
+} from "@/features/chat/lib/chat-reply"
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
 import { useKickMember } from "@/features/meetup/hooks/use-meetup-mutations"
 import { meetupKeys, useMeeting, useMeetingParticipants } from "@/features/meetup/hooks/use-meetup-queries"
@@ -101,6 +107,15 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const isMe = message.sender === "me"
+  const replyLabel = message.replyTo
+    ? formatReplyLabel(message, message.replyTo, {
+        mine: messages.chat.replyToLabel,
+        others: messages.chat.replyFromToLabel,
+      })
+    : undefined
+  const replyQuote = message.replyTo
+    ? message.replyTo.content?.trim() || messages.chat.replyImageLabel
+    : undefined
 
   const handleOpenMenu = () => {
     const rect = rowRef.current?.getBoundingClientRect()
@@ -121,6 +136,10 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
         imageUrl={message.imageUrl}
         imageAlt={messages.chat.imageAlt}
         uploading={message.imageUploading}
+        replyLabel={replyLabel}
+        replyQuote={replyQuote}
+        replyImageUrl={message.replyTo?.imageUrl}
+        replyImageAlt={messages.chat.replyImageLabel}
         position={position}
         variant={message.variant}
         className={cn(menuOpen && "relative z-50")}
@@ -177,6 +196,7 @@ function mergeMessages(base: ChatMessageView[], live: ChatMessageView[]): ChatMe
         (pending.imageUploading
           ? Boolean(message.imageUrl)
           : !message.imageUrl && message.texts[0] === pending.texts[0]) &&
+        matchesReplyTargetForEcho(pending, message) &&
         Math.abs(new Date(message.createdAt).getTime() - pendingAt) < PENDING_MATCH_WINDOW_MS
     )
     if (match) claimed.add(match.messageId)
@@ -210,6 +230,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const [moreOpen, setMoreOpen] = React.useState(false)
   const [cameraMenuOpen, setCameraMenuOpen] = React.useState(false)
   const [activeMessageId, setActiveMessageId] = React.useState<string | null>(null)
+  const [selectedReply, setSelectedReply] = React.useState<ChatReplyPreview | null>(null)
   const [confirmLeaveOpen, setConfirmLeaveOpen] = React.useState(false)
   const [confirmDisbandOpen, setConfirmDisbandOpen] = React.useState(false)
   const [kickTarget, setKickTarget] = React.useState<GroupChatMemberListItem | null>(null)
@@ -271,7 +292,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             // ('사진' 텍스트 메시지가 이미지 에코와 오매칭되는 것을 방지)
             (incoming.imageUrl
               ? message.imageUploading
-              : !message.imageUploading && message.texts[0] === incoming.texts[0])
+              : !message.imageUploading && message.texts[0] === incoming.texts[0]) &&
+            matchesReplyTargetForEcho(message, incoming)
           )
           if (idx !== -1) {
             return [...prev.slice(0, idx), ...prev.slice(idx + 1), incoming]
@@ -301,6 +323,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       setMoreOpen(false)
       setCameraMenuOpen(false)
       setActiveMessageId(null)
+      setSelectedReply(null)
       setConfirmLeaveOpen(false)
       setConfirmDisbandOpen(false)
       setKickTarget(null)
@@ -443,13 +466,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   const activeDateBadgeText = activeDateKey ? formatKstShortDate(activeDateKey) : undefined
 
-  const handleSend = (value: string) => {
-    if (!session.authenticated) return
+  const handleSend = (value: string): boolean => {
+    if (!session.authenticated) return false
     const text = value.trim()
-    if (!text) return
-    if (!send({ content: text })) {
+    if (!text) return false
+    const replyTo = selectedReply
+    if (!send({ content: text, ...(replyTo ? { replyToMessageId: replyTo.messageId } : {}) })) {
       setSocketError(messages.chat.sendFailed)
-      return
+      return false
     }
     // 내가 보낸 메시지는 위로 스크롤 중이었더라도 항상 맨 아래로 따라 내려간다.
     isAtBottomRef.current = true
@@ -468,11 +492,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         sender: "me",
         variant: text.length > 30 ? "long" : "short",
         texts: [text],
+        replyTo,
         time: formatKstTime(nowIso),
         createdAt: nowIso,
         pending: true,
       },
     ])
+    setSelectedReply(null)
+    return true
   }
 
   // 카메라/앨범에서 고른 이미지를 presign 업로드 → imageFileId로 WS 전송한다.
@@ -484,6 +511,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     if (!file || !session.authenticated) return
 
     const previewUrl = URL.createObjectURL(file)
+    const replyTo = selectedReply
     const nowIso = new Date().toISOString()
     const tempId = tempMessageIdRef.current
     tempMessageIdRef.current -= 1
@@ -500,6 +528,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         texts: [""],
         imageUrl: previewUrl,
         imageUploading: true,
+        replyTo,
         time: formatKstTime(nowIso),
         createdAt: nowIso,
         pending: true,
@@ -508,7 +537,10 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
     try {
       const fileId = await uploadChatImage(file)
-      if (!send({ imageFileId: fileId })) throw new Error("send failed")
+      if (!send({ imageFileId: fileId, ...(replyTo ? { replyToMessageId: replyTo.messageId } : {}) })) {
+        throw new Error("send failed")
+      }
+      setSelectedReply(null)
     } catch {
       setLiveMessages((prev) => prev.filter((message) => message.messageId !== tempId))
       URL.revokeObjectURL(previewUrl)
@@ -564,7 +596,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   const messageMenuItems = (message: ChatBubbleMessage): ChatContextMenuItem[] => {
     const text = message.texts?.[0]
-    return [
+    const items: ChatContextMenuItem[] = []
+    if (canReplyToMessage(message)) {
+      items.push({
+        icon: <Image src="/icons/chat/respond.svg" alt="" width={24} height={24} />,
+        label: messages.chat.replyAction,
+        onClick: () => {
+          setSelectedReply(replyTargetFromMessage(message))
+          setActiveMessageId(null)
+        },
+      })
+    }
+    items.push(
       {
         icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
         label: messages.chat.registerAsNoticeAction,
@@ -582,7 +625,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           router.push(routes.chatReport(roomId, message.messageId, message.name || undefined))
         },
       },
-    ]
+    )
+    return items
   }
 
   const cameraMenuItems: ChatContextMenuItem[] = [
@@ -725,6 +769,17 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             disabled={!session.authenticated}
             onSend={handleSend}
             onCameraClick={() => setCameraMenuOpen((prev) => !prev)}
+            replyPreview={
+              selectedReply
+                ? {
+                    messageId: selectedReply.messageId,
+                    label: messages.chat.replyToLabel(selectedReply.senderNickname),
+                    quote: selectedReply.content?.trim() || messages.chat.replyImageLabel,
+                    imageUrl: selectedReply.imageUrl,
+                  }
+                : null
+            }
+            onCancelReply={() => setSelectedReply(null)}
           />
         </div>
       </main>

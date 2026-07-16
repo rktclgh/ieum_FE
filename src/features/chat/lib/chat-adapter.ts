@@ -4,6 +4,7 @@ import type { ChatFilterCategory } from "@/features/chat/components/chat-filter-
 import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
 import type {
   ChatMessageResponse,
+  ChatReplyPreview,
   ChatRoomDetailResponse,
   ChatRoomMemberResponse,
   ChatRoomSummaryResponse,
@@ -48,6 +49,7 @@ interface ChatBubbleMessage {
   pending?: boolean
   // 이미지 업로드/전송 진행 중인 낙관적 이미지 말풍선. 흐리게 + 스피너로 표시한다.
   imageUploading?: boolean
+  replyTo?: ChatReplyPreview | null
 }
 
 type ChatUserBubbleMessage = ChatBubbleMessage
@@ -159,6 +161,14 @@ function messagePreview(message: ChatMessageResponse | WsMessageEvent): string {
   return ""
 }
 
+function adaptReplyPreview(replyTo: ChatReplyPreview | null | undefined): ChatReplyPreview | null | undefined {
+  if (replyTo == null) return replyTo
+  return {
+    ...replyTo,
+    imageUrl: resolveFileUrl(replyTo.imageUrl) ?? null,
+  }
+}
+
 // 서버 메시지/실시간 이벤트를 말풍선 모델로 변환한다.
 function adaptMessage(
   message: ChatMessageResponse | WsMessageEvent,
@@ -188,6 +198,7 @@ function adaptMessage(
     avatarSrc: resolveFileUrl(message.senderProfileImageUrl),
     texts: content ? [content] : message.imageUrl ? ["사진"] : [""],
     imageUrl: resolveFileUrl(message.imageUrl),
+    replyTo: adaptReplyPreview(message.replyTo),
     time: formatKstTime(message.createdAt),
     createdAt: message.createdAt,
   }
@@ -212,6 +223,7 @@ export {
   adaptMessage,
   adaptMember,
   messagePreview,
+  adaptReplyPreview,
 }
 export type {
   ChatListEntry,

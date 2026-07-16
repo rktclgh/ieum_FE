@@ -359,6 +359,10 @@ export interface Messages {
     disableNotificationAction: string
     deleteAction: string
     replyAction: string
+    replyToLabel: (targetName: string) => string
+    replyFromToLabel: (senderName: string, targetName: string) => string
+    replyImageLabel: string
+    cancelReplyAction: string
     reportAction: string
     registerAsNoticeAction: string
     setChatNoticeAction: string
@@ -822,6 +826,10 @@ export const ko: Messages = {
     disableNotificationAction: "알림 끄기",
     deleteAction: "삭제",
     replyAction: "답글 달기",
+    replyToLabel: (targetName) => `${targetName}님에게 답장`,
+    replyFromToLabel: (senderName, targetName) => `${senderName}님이 ${targetName}님에게 답장`,
+    replyImageLabel: "사진",
+    cancelReplyAction: "답장 취소",
     reportAction: "신고",
     registerAsNoticeAction: "공지로 등록",
     setChatNoticeAction: "채팅방 공지 등록하기",
