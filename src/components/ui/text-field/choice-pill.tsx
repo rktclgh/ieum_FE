@@ -28,7 +28,7 @@ function ChoicePill({ className, label, selected, onClick, ...props }: ChoicePil
       <span
         className={cn(
           "flex size-[18px] shrink-0 items-center justify-center rounded-full border transition-colors",
-          selected ? "border-gray-900 bg-gray-900" : "border-gray-200"
+          selected ? "border-gray-900 bg-gray-900" : "border-gray-200 bg-transparent"
         )}
       >
         {selected && (
