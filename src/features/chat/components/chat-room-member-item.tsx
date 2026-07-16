@@ -16,6 +16,8 @@ interface ChatRoomMemberItemProps extends React.ComponentProps<"div"> {
   flagSrc?: string
   nation?: string
   onRemove?: () => void
+  disabled?: boolean
+  removeLabel?: string
 }
 
 function ChatRoomMemberItem({
@@ -27,6 +29,8 @@ function ChatRoomMemberItem({
   flagSrc,
   nation,
   onRemove,
+  disabled,
+  removeLabel,
   ...props
 }: ChatRoomMemberItemProps) {
   const { messages } = useTranslation()
@@ -60,7 +64,9 @@ function ChatRoomMemberItem({
         <button
           type="button"
           onClick={onRemove}
-          className="flex w-[73px] items-center justify-center rounded-lg border border-gray-200 px-3 py-2 text-body-regular-13 text-gray-600"
+          disabled={disabled}
+          aria-label={removeLabel ?? messages.chat.removeMemberButton}
+          className="flex w-[73px] items-center justify-center rounded-lg border border-gray-200 px-3 py-2 text-body-regular-13 text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {messages.chat.removeMemberButton}
         </button>
