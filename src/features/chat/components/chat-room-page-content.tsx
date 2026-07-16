@@ -38,11 +38,12 @@ import {
 } from "@/features/chat/hooks/use-chat-queries"
 import {
   useDisbandMeeting,
-  useLeaveRoom,
+  useLeaveChatRoom,
   useMarkRead,
   useSetNotify,
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
+import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
 import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
 import { uploadChatImage } from "@/features/chat/api/chat-file-api"
 import {
@@ -56,6 +57,7 @@ import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
 import { buildChatTimeline, dedupeServerMessages } from "@/features/chat/lib/chat-timeline"
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
 import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
+import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -221,7 +223,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const markReadMutation = useMarkRead()
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
-  const leaveRoomMutation = useLeaveRoom()
+  const leaveChatRoomMutation = useLeaveChatRoom()
   const disbandMeetingMutation = useDisbandMeeting()
 
   const chatMessages = React.useMemo(
@@ -301,6 +303,11 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const isMeetingHost = isGroup && meeting?.host.userId === session.userId
   const canConfigureRoomNotification = room !== undefined
   const canPinRoom = room !== undefined && room.roomType !== "question"
+  // room 응답에 있는 도메인 식별자를 그대로 보존한다. group은 meetingId가 없어도
+  // generic leave로 폴백하지 않고 mutation의 typed local failure로 끝난다.
+  const leaveTarget: LeaveChatRoomTarget | null = room
+    ? { roomId: room.roomId, roomType: room.roomType, meetingId: room.meetingId }
+    : null
 
   // 메시지를 한국 날짜(KST) 단위로 묶어서 날짜가 바뀔 때마다 구분선을 표시한다.
   const dateGroups = React.useMemo(() => {
@@ -723,6 +730,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                 </div>
                 <ChatRoomDangerActions
                   className="w-full"
+                  leaveLabel={isGroup ? messages.meetup.leaveButton : undefined}
                   onLeave={() => {
                     if (session.authenticated) setConfirmLeaveOpen(true)
                   }}
@@ -743,15 +751,22 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         onOpenChange={(open) => {
           if (session.authenticated) setConfirmLeaveOpen(open)
         }}
-        title={messages.chat.leaveChatConfirmTitle}
-        description={messages.chat.leaveChatConfirmDescription}
-        cancelLabel={messages.chat.cancelButton}
-        confirmLabel={messages.chat.leaveChatAction}
+        title={isGroup ? messages.meetup.leaveConfirmTitle : messages.chat.leaveChatConfirmTitle}
+        description={isGroup ? messages.meetup.leaveConfirmDescription : messages.chat.leaveChatConfirmDescription}
+        cancelLabel={isGroup ? messages.meetup.confirmCancelLabel : messages.chat.cancelButton}
+        confirmLabel={isGroup ? messages.meetup.leaveButton : messages.chat.leaveChatAction}
+        confirmDisabled={leaveChatRoomMutation.isPending || leaveTarget === null}
         onConfirm={() => {
-          if (!session.authenticated) return
-          leaveRoomMutation.mutate(roomId, {
+          if (!session.authenticated || !leaveTarget) return
+          leaveChatRoomMutation.mutate(leaveTarget, {
             onSuccess: () => router.push(routes.chats()),
-            onError: () => setSocketError(messages.chat.leaveFailed),
+            onError: (error) => {
+              setSocketError(
+                leaveTarget.roomType === "group"
+                  ? getMeetupErrorMessage(error, messages)
+                  : messages.chat.leaveFailed
+              )
+            },
           })
         }}
       />

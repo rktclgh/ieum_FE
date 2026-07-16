@@ -7,11 +7,18 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface ChatRoomDangerActionsProps extends React.ComponentProps<"div"> {
   onLeave?: () => void
+  leaveLabel?: string
   /** 방장에게만 노출되는 채팅방 해체 액션 */
   onDisband?: () => void
 }
 
-function ChatRoomDangerActions({ className, onLeave, onDisband, ...props }: ChatRoomDangerActionsProps) {
+function ChatRoomDangerActions({
+  className,
+  onLeave,
+  leaveLabel,
+  onDisband,
+  ...props
+}: ChatRoomDangerActionsProps) {
   const { messages } = useTranslation()
 
   return (
@@ -21,7 +28,7 @@ function ChatRoomDangerActions({ className, onLeave, onDisband, ...props }: Chat
       {...props}
     >
       <button type="button" onClick={onLeave} className="flex items-center px-4 py-2 text-left">
-        <span className="text-body-medium-16 text-red">{messages.chat.leaveChatAction}</span>
+        <span className="text-body-medium-16 text-red">{leaveLabel ?? messages.chat.leaveChatAction}</span>
       </button>
       {onDisband && (
         <button type="button" onClick={onDisband} className="flex items-center px-4 py-2 text-left">

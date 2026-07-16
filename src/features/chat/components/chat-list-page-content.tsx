@@ -13,11 +13,12 @@ import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/compo
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import { useChatRoomsView } from "@/features/chat/hooks/use-chat-queries"
 import {
-  useLeaveRoom,
+  useLeaveChatRoom,
   useSetNotify,
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
 import type { ChatListEntry } from "@/features/chat/lib/chat-adapter"
+import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { hangulIncludes } from "@/lib/hangul-includes"
 import { routes } from "@/lib/navigation/routes"
@@ -84,11 +85,12 @@ function ChatListPageContent() {
   const [query, setQuery] = React.useState("")
   const [category, setCategory] = React.useState<ChatFilterCategory>("all")
   const [openMenuRoomId, setOpenMenuRoomId] = React.useState<number | null>(null)
+  const [leaveError, setLeaveError] = React.useState<string | null>(null)
 
   const { entries, isLoading } = useChatRoomsView()
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
-  const leaveRoomMutation = useLeaveRoom()
+  const leaveChatRoomMutation = useLeaveChatRoom()
 
   const filteredChats = React.useMemo(() => {
     const normalizedQuery = query.trim()
@@ -131,11 +133,23 @@ function ChatListPageContent() {
     },
     {
       icon: <Image src="/icons/chat/trash.svg" alt="" width={24} height={24} />,
-      label: messages.chat.deleteAction,
+      label: chat.roomType === "group" ? messages.meetup.leaveButton : messages.chat.deleteAction,
       tone: "destructive",
-      disabled: leaveRoomMutation.isPending,
+      disabled: leaveChatRoomMutation.isPending,
       onClick: () => {
-        leaveRoomMutation.mutate(chat.roomId)
+        setLeaveError(null)
+        leaveChatRoomMutation.mutate(
+          { roomId: chat.roomId, roomType: chat.roomType, meetingId: chat.meetingId },
+          {
+            onError: (error) => {
+              setLeaveError(
+                chat.roomType === "group"
+                  ? getMeetupErrorMessage(error, messages)
+                  : messages.chat.leaveFailed
+              )
+            },
+          }
+        )
         setOpenMenuRoomId(null)
       },
     },
@@ -161,6 +175,11 @@ function ChatListPageContent() {
           />
         </div>
         <ChatFilterChips value={category} onChange={setCategory} />
+        {leaveError && (
+          <p role="alert" className="px-1 text-body-regular-12 text-red">
+            {leaveError}
+          </p>
+        )}
         <div className="flex flex-col">
           {filteredChats.map((chat) => (
             <ChatRow

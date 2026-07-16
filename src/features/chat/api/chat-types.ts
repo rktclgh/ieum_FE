@@ -4,6 +4,14 @@
 type RoomType = "direct" | "group" | "question"
 type ChatMessageType = "user" | "system"
 
+// 채팅방 나가기의 정본 도메인을 고르는 데 필요한 최소 식별자.
+// group은 채팅 API가 아닌 모임 API로만 나가야 한다.
+interface LeaveChatRoomTarget {
+  roomId: number
+  roomType: RoomType
+  meetingId: number | null
+}
+
 interface ChatMessageResponse {
   messageId: number
   roomId: number
@@ -103,6 +111,7 @@ interface ChatWebSocketErrorResponse {
 export type {
   RoomType,
   ChatMessageType,
+  LeaveChatRoomTarget,
   ChatMessageResponse,
   ChatRoomSummaryResponse,
   ChatRoomMemberResponse,

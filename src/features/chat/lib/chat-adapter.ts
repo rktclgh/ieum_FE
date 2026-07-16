@@ -18,6 +18,8 @@ import { normalizeMessageType } from "@/features/chat/lib/chat-timeline"
 
 interface ChatListEntry {
   roomId: number
+  roomType: RoomType
+  meetingId: number | null
   title: string
   category: Exclude<ChatFilterCategory, "all">
   avatarSrc?: string
@@ -131,6 +133,8 @@ function adaptRoomSummary(
         : `채팅방 ${summary.roomId}`
   return {
     roomId: summary.roomId,
+    roomType: summary.roomType,
+    meetingId: summary.meetingId,
     title,
     category: roomCategory(summary.roomType),
     avatarSrc: resolveRoomAvatar(
