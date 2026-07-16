@@ -4,6 +4,7 @@ import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { Explanation } from "@/components/ui/text-field/explanation"
+import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { uploadMeetingImage } from "@/features/meetup/api/meetup-file-api"
 import {
   DEFAULT_MAX_MEMBERS,
@@ -29,6 +30,8 @@ interface CreateMeetupScreenProps {
   onClose: () => void
   /** 지도 홈 핀에서 넘어온 초기 장소 — 있으면 장소 칸을 프리필한다 */
   initialPlace?: MeetupPlaceValue | null
+  /** 지도 홈이 이미 확보한 최신 GPS 좌표 — 장소 picker의 첫 지도 중심에 사용한다 */
+  currentPosition?: Coordinates | null
 }
 
 /**
@@ -36,7 +39,11 @@ interface CreateMeetupScreenProps {
  * 제목·날짜·시간·장소·내용을 채우면 제출 버튼이 활성화되고, 제출 시 POST /meetings 로 생성한다.
  * 장소는 Figma 지도 기반 MeetupLocationPicker에서 좌표(lat/lng)·주소·라벨까지 확보한다.
  */
-function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreenProps) {
+function CreateMeetupScreen({
+  onClose,
+  initialPlace = null,
+  currentPosition = null,
+}: CreateMeetupScreenProps) {
   const { messages } = useTranslation()
   const t = messages.createMeetup
   const form = useCreateMeetupForm(initialPlace)
@@ -248,6 +255,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
       {locationPickerOpen ? (
         <MeetupLocationPicker
           value={form.place?.label ?? null}
+          currentPosition={currentPosition}
           onConfirm={form.setPlace}
           onClose={() => setLocationPickerOpen(false)}
         />

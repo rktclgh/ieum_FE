@@ -252,11 +252,19 @@ function HomeMapScreen() {
       ) : null}
 
       {createMeetupOpen ? (
-        <CreateMeetupScreen initialPlace={selectedPlace} onClose={() => setCreateMeetupOpen(false)} />
+        <CreateMeetupScreen
+          initialPlace={selectedPlace}
+          currentPosition={position}
+          onClose={() => setCreateMeetupOpen(false)}
+        />
       ) : null}
 
       {createQuestionOpen ? (
-        <CreateQuestionScreen initialPlace={selectedPlace} onClose={() => setCreateQuestionOpen(false)} />
+        <CreateQuestionScreen
+          initialPlace={selectedPlace}
+          currentPosition={position}
+          onClose={() => setCreateQuestionOpen(false)}
+        />
       ) : null}
 
       {selectedMeetingId !== null ? (

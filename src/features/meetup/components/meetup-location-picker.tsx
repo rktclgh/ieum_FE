@@ -3,7 +3,7 @@
 import * as React from "react"
 
 import type { Place } from "@/features/map/api/place-search-api"
-import type { Coordinates } from "@/features/map/hooks/use-geolocation"
+import type { Coordinates, GeolocationStatus } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
 import { MeetupLocationMap } from "@/features/meetup/components/meetup-location-map"
@@ -13,6 +13,8 @@ import { MeetupLocationSearch } from "@/features/meetup/components/meetup-locati
 interface MeetupLocationPickerProps {
   /** 확정된 장소명 (직접입력 화면 초기값) */
   value: string | null
+  /** 홈 지도에서 이미 확보한 최신 GPS 좌표. 있으면 새 watch 없이 첫 지도 중심으로 쓴다. */
+  currentPosition?: Coordinates | null
   /** 장소를 확정하면 좌표·주소·라벨을 담아 넘긴다 (POST /meetings location) */
   onConfirm: (place: MeetupPlaceValue) => void
   /** 닫기 (오버레이 언마운트는 부모가 담당) */
@@ -29,9 +31,18 @@ type Step =
  * 확정 시 좌표(lat/lng)·도로명 주소·라벨을 담은 MeetupPlaceValue를 내보내 POST /meetings에 매핑한다.
  * 부모가 조건부로 마운트하므로 열 때마다 지도 단계에서 새로 시작한다.
  */
-function MeetupLocationPicker({ value, onConfirm, onClose }: MeetupLocationPickerProps) {
+function MeetupLocationPicker({
+  value,
+  currentPosition = null,
+  onConfirm,
+  onClose,
+}: MeetupLocationPickerProps) {
   const [step, setStep] = React.useState<Step>({ name: "map" })
-  const { position, initialStatus } = useGeolocation()
+  const { position: watchedPosition, initialStatus: watchedInitialStatus } = useGeolocation({
+    enabled: !currentPosition,
+  })
+  const position = currentPosition ?? watchedPosition
+  const initialStatus: GeolocationStatus = position ? "success" : watchedInitialStatus
 
   const confirm = (place: MeetupPlaceValue) => {
     onConfirm(place)

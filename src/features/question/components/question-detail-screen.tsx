@@ -67,11 +67,11 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
   const pendingAcceptAnswer =
     question?.answers.find((a) => a.answerId === pendingAcceptId) ?? null
   const [lastAcceptedAuthorName, setLastAcceptedAuthorName] = React.useState("")
-  React.useEffect(() => {
-    if (pendingAcceptAnswer?.authorName) {
-      setLastAcceptedAuthorName(pendingAcceptAnswer.authorName)
-    }
-  }, [pendingAcceptAnswer])
+
+  const openAcceptConfirm = (answer: QuestionAnswerView) => {
+    setLastAcceptedAuthorName(answer.authorName)
+    setPendingAcceptId(answer.answerId)
+  }
 
   const handleSend = () => {
     const value = reply.trim()
@@ -189,7 +189,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                         isMine={a.authorUserId === me.data?.userId}
                         isReported={false}
                         canAccept={!question.isResolved && !hasAcceptedAnswer}
-                        onAccept={() => setPendingAcceptId(a.answerId)}
+                        onAccept={() => openAcceptConfirm(a)}
                         onStartChat={() => handleStartChat(a.authorUserId)}
                         onLongPress={(rect) => setActiveAnswer({ id: a.answerId, rect, view: a })}
                       />
@@ -210,7 +210,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                     key={answer.answerId}
                     answer={answer}
                     canAccept={false}
-                    onAccept={() => setPendingAcceptId(answer.answerId)}
+                    onAccept={() => openAcceptConfirm(answer)}
                   />
                 ))
               )}

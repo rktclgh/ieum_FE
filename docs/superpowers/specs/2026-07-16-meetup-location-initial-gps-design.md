@@ -2,6 +2,11 @@
 
 작성일: 2026-07-16 · 브랜치: fix/#170-map-initial-gps · 기준 브랜치: develop
 
+> **#192로 대체된 정책:** 이 문서의 “첫 error 뒤 늦은 GPS success를 자동 채택하지 않는다”는 규칙은
+> `TIMEOUT`·`POSITION_UNAVAILABLE`까지 fallback으로 확정해 실제 GPS를 버리는 문제가 확인되어 변경됐다.
+> 현재 계약은 [#192 장소 선택 현재 위치 복구 설계](./2026-07-16-place-picker-geolocation-recovery-design.md)를 따른다.
+> 권한 거부·미지원만 fallback으로 확정하고, 홈에서 이미 확보한 GPS 좌표는 생성 picker가 재사용한다.
+
 ## 배경
 
 새 모임 작성에서 장소 선택을 열면 MeetupLocationPicker의 geolocation 결과가 아직 null인 상태에도 MeetupLocationMap이 즉시 MapCanvas를 렌더한다. MapCanvas는 null center를 서울시청 기본 좌표로 바꿔 MapContainer를 생성한다. 그 뒤 첫 GPS 결과가 도착하면 장소 선택 화면의 초기 중심 effect가 recenterKey를 증가시키고, header/sheet inset이 있는 경로가 flyToBounds를 실행한다.
