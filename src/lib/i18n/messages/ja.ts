@@ -434,6 +434,12 @@ export const ja: Messages = {
     searchEmpty: "検索結果がありません。",
     searching: "検索中...",
   },
+  translate: {
+    menuLabel: "翻訳",
+    viewOriginalLabel: "原文を見る",
+    translatingLabel: "翻訳中...",
+    translateFailedLabel: "翻訳に失敗しました。もう一度お試しください。",
+  },
   languages: {
     ko: "韓国語",
     en: "英語",

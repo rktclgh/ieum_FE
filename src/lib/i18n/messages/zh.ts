@@ -434,6 +434,12 @@ export const zh: Messages = {
     searchEmpty: "没有搜索结果。",
     searching: "搜索中...",
   },
+  translate: {
+    menuLabel: "翻译",
+    viewOriginalLabel: "查看原文",
+    translatingLabel: "翻译中...",
+    translateFailedLabel: "翻译失败，请稍后重试。",
+  },
   languages: {
     ko: "韩语",
     en: "英语",

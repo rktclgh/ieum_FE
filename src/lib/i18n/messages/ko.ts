@@ -437,6 +437,12 @@ export interface Messages {
     searchEmpty: string
     searching: string
   }
+  translate: {
+    menuLabel: string
+    viewOriginalLabel: string
+    translatingLabel: string
+    translateFailedLabel: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -873,6 +879,12 @@ export const ko: Messages = {
     loadError: "친구 목록을 불러오지 못했어요.",
     searchEmpty: "검색 결과가 없어요.",
     searching: "검색 중...",
+  },
+  translate: {
+    menuLabel: "번역",
+    viewOriginalLabel: "원문 보기",
+    translatingLabel: "번역 중...",
+    translateFailedLabel: "번역에 실패했어요. 잠시 후 다시 시도해 주세요.",
   },
   languages: {
     ko: "한국어",

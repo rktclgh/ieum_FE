@@ -434,6 +434,12 @@ export const th: Messages = {
     searchEmpty: "ไม่พบผลลัพธ์",
     searching: "กำลังค้นหา...",
   },
+  translate: {
+    menuLabel: "แปล",
+    viewOriginalLabel: "ดูข้อความต้นฉบับ",
+    translatingLabel: "กำลังแปล...",
+    translateFailedLabel: "แปลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+  },
   languages: {
     ko: "เกาหลี",
     en: "อังกฤษ",

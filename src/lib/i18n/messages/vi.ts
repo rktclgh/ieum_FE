@@ -435,6 +435,12 @@ export const vi: Messages = {
     searchEmpty: "Không có kết quả.",
     searching: "Đang tìm kiếm...",
   },
+  translate: {
+    menuLabel: "Dịch",
+    viewOriginalLabel: "Xem bản gốc",
+    translatingLabel: "Đang dịch...",
+    translateFailedLabel: "Dịch thất bại. Vui lòng thử lại sau.",
+  },
   languages: {
     ko: "Tiếng Hàn",
     en: "Tiếng Anh",

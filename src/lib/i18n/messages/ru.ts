@@ -435,6 +435,12 @@ export const ru: Messages = {
     searchEmpty: "Ничего не найдено.",
     searching: "Поиск...",
   },
+  translate: {
+    menuLabel: "Перевести",
+    viewOriginalLabel: "Показать оригинал",
+    translatingLabel: "Перевод...",
+    translateFailedLabel: "Не удалось перевести. Попробуйте ещё раз.",
+  },
   languages: {
     ko: "Корейский",
     en: "Английский",
