@@ -455,6 +455,8 @@ export const ru: Messages = {
     deleteConfirmConfirm: "Удалить",
     bellLabel: "Уведомления",
     unreadBadgeLabel: (count) => `${count} непрочитанных уведомлений`,
+    aiAnswerSourceLabel: "Ответ ИИ",
+    humanAnswerSourceLabel: "Ответ пользователя",
   },
   languages: {
     ko: "Корейский",

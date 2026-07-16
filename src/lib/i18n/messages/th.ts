@@ -454,6 +454,8 @@ export const th: Messages = {
     deleteConfirmConfirm: "ลบ",
     bellLabel: "การแจ้งเตือน",
     unreadBadgeLabel: (count) => `การแจ้งเตือนที่ยังไม่อ่าน ${count} รายการ`,
+    aiAnswerSourceLabel: "คำตอบจาก AI",
+    humanAnswerSourceLabel: "คำตอบจากผู้ใช้",
   },
   languages: {
     ko: "เกาหลี",

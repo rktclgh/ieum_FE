@@ -455,6 +455,8 @@ export const vi: Messages = {
     deleteConfirmConfirm: "Xóa",
     bellLabel: "Thông báo",
     unreadBadgeLabel: (count) => `${count} thông báo chưa đọc`,
+    aiAnswerSourceLabel: "Câu trả lời AI",
+    humanAnswerSourceLabel: "Câu trả lời người dùng",
   },
   languages: {
     ko: "Tiếng Hàn",

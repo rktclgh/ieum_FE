@@ -46,16 +46,32 @@ function NotificationItem({ entry, onOpen, onLongPress }: NotificationItemProps)
         )}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span
-          className={cn(
-            "truncate",
-            entry.isRead
-              ? "text-body-medium-15 text-gray-700"
-              : "text-title-semibold-16 text-gray-900"
-          )}
-        >
-          {entry.title}
-        </span>
+        <div className="flex min-w-0 items-center gap-2">
+          {entry.isAiAnswer !== null ? (
+            <span
+              className={cn(
+                "shrink-0 rounded-full px-2 py-0.5 text-body-medium-12",
+                entry.isAiAnswer
+                  ? "bg-primary-50 text-primary-700"
+                  : "bg-gray-100 text-gray-600"
+              )}
+            >
+              {entry.isAiAnswer
+                ? messages.notification.aiAnswerSourceLabel
+                : messages.notification.humanAnswerSourceLabel}
+            </span>
+          ) : null}
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate",
+              entry.isRead
+                ? "text-body-medium-15 text-gray-700"
+                : "text-title-semibold-16 text-gray-900"
+            )}
+          >
+            {entry.title}
+          </span>
+        </div>
         {entry.body ? (
           <span className="line-clamp-2 text-body-regular-14 text-gray-500">{entry.body}</span>
         ) : null}

@@ -454,6 +454,8 @@ export const ja: Messages = {
     deleteConfirmConfirm: "削除",
     bellLabel: "お知らせ",
     unreadBadgeLabel: (count) => `未読のお知らせ${count}件`,
+    aiAnswerSourceLabel: "AI回答",
+    humanAnswerSourceLabel: "ユーザー回答",
   },
   languages: {
     ko: "韓国語",

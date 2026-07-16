@@ -457,6 +457,8 @@ export interface Messages {
     deleteConfirmConfirm: string
     bellLabel: string
     unreadBadgeLabel: (count: number) => string
+    aiAnswerSourceLabel: string
+    humanAnswerSourceLabel: string
   }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
@@ -915,6 +917,8 @@ export const ko: Messages = {
     deleteConfirmConfirm: "삭제",
     bellLabel: "알림",
     unreadBadgeLabel: (count) => `읽지 않은 알림 ${count}건`,
+    aiAnswerSourceLabel: "AI 답변",
+    humanAnswerSourceLabel: "사용자 답변",
   },
   languages: {
     ko: "한국어",

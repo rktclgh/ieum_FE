@@ -454,6 +454,8 @@ export const zh: Messages = {
     deleteConfirmConfirm: "删除",
     bellLabel: "通知",
     unreadBadgeLabel: (count) => `${count} 条未读通知`,
+    aiAnswerSourceLabel: "AI回答",
+    humanAnswerSourceLabel: "用户回答",
   },
   languages: {
     ko: "韩语",

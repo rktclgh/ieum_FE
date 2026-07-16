@@ -455,6 +455,8 @@ export const en: Messages = {
     deleteConfirmConfirm: "Delete",
     bellLabel: "Notifications",
     unreadBadgeLabel: (count) => `${count} unread notifications`,
+    aiAnswerSourceLabel: "AI answer",
+    humanAnswerSourceLabel: "Human answer",
   },
   languages: {
     ko: "Korean",
