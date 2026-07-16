@@ -146,6 +146,7 @@ export const ru: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `Название должно быть не длиннее ${max} символов.`,
     datePlaceholder: "Выбрать дату",
+    dateUndecidedLabel: "Дата не определена",
     timePlaceholder: "Выбрать время",
     addressPlaceholder: "Выбрать место",
     descriptionPlaceholder: "Введите описание встречи.",

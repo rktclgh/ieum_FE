@@ -10,7 +10,6 @@ import {
   TITLE_MAX_LENGTH,
   formatDateValue,
   formatTimeValue,
-  toKstIso,
   type MeetupPlaceValue,
 } from "@/features/meetup/constants/create-meetup"
 import { MeetupDatePicker } from "@/features/meetup/components/meetup-date-picker"
@@ -20,6 +19,7 @@ import { MeetupSelectField } from "@/features/meetup/components/meetup-select-fi
 import { MeetupTimePicker } from "@/features/meetup/components/meetup-time-picker"
 import { useCreateMeetupForm } from "@/features/meetup/hooks/use-create-meetup-form"
 import { useCreateMeeting } from "@/features/meetup/hooks/use-meetup-mutations"
+import { buildMeetupSchedule } from "@/features/meetup/lib/create-meetup-schedule"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -76,8 +76,14 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
 
   const handleSubmit = async () => {
     if (!form.canSubmit || submitting) return
-    if (!form.date || !form.time || !form.place) return
+    if (!form.place) return
     setError(null)
+
+    const schedule = buildMeetupSchedule({
+      date: form.date,
+      time: form.time,
+      isDateUndecided: form.isDateUndecided,
+    })
 
     // 이미지 업로드 실패와 모임 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
     let imageFileId: string | undefined
@@ -101,7 +107,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
           address: form.place.address,
           label: form.place.label,
         },
-        schedule: { startsAt: toKstIso(form.date, form.time) },
+        ...(schedule ? { schedule } : {}),
         maxMembers: DEFAULT_MAX_MEMBERS,
         imageFileId,
       })
@@ -149,7 +155,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
             iconSrc="/icons/write/calendar-200.svg"
             selectedIconSrc="/icons/write/calendar-700.svg"
             placeholder={t.datePlaceholder}
-            value={dateValue}
+            value={form.isDateUndecided ? t.dateUndecidedLabel : dateValue}
             active={datePickerOpen}
             onClick={() => setDatePickerOpen(true)}
           />
@@ -159,6 +165,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
             placeholder={t.timePlaceholder}
             value={timeValue}
             active={timePickerOpen}
+            disabled={form.isDateUndecided}
             onClick={() => setTimePickerOpen(true)}
           />
         </div>
@@ -229,7 +236,8 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
         open={datePickerOpen}
         onOpenChange={setDatePickerOpen}
         value={form.date}
-        onConfirm={form.setDate}
+        isDateUndecided={form.isDateUndecided}
+        onConfirm={form.setDateSelection}
       />
       <MeetupTimePicker
         open={timePickerOpen}

@@ -146,6 +146,7 @@ export const en: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `Please keep the title within ${max} characters.`,
     datePlaceholder: "Select date",
+    dateUndecidedLabel: "Date undecided",
     timePlaceholder: "Select time",
     addressPlaceholder: "Select location",
     descriptionPlaceholder: "Enter the meetup details.",

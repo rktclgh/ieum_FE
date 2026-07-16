@@ -145,6 +145,7 @@ export const zh: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `聚会标题请控制在${max}个字以内。`,
     datePlaceholder: "选择日期",
+    dateUndecidedLabel: "日期待定",
     timePlaceholder: "选择时间",
     addressPlaceholder: "选择地点",
     descriptionPlaceholder: "请输入聚会内容。",
