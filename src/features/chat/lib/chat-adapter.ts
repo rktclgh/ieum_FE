@@ -40,6 +40,8 @@ interface ChatBubbleMessage {
   createdAt: string
   // 낙관적으로 먼저 그린 내 말풍선(서버 에코 전). 에코 도착 시 대체된다.
   pending?: boolean
+  // 원문 언어. BE 미구현 시 undefined → 번역 버튼 항상 노출(이슈 #163).
+  sourceLang?: string | null
 }
 
 interface ChatMemberEntry {
@@ -128,6 +130,7 @@ function adaptMessage(
     imageUrl: resolveFileUrl(message.imageUrl),
     time: formatKstTime(message.createdAt),
     createdAt: message.createdAt,
+    sourceLang: message.sourceLang,
   }
 }
 

@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
+import { Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -53,6 +54,8 @@ import {
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
 import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
+import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
+import { shouldShowTranslateButton } from "@/features/translate/lib/translate-lang"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { getKstDateKey, formatKstFullDate, formatKstShortDate, formatKstTime } from "@/lib/date/kst"
@@ -75,6 +78,7 @@ interface MessageRowProps {
 }
 
 function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onCloseMenu }: MessageRowProps) {
+  const { messages, language } = useTranslation()
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const isMe = message.sender === "me"
@@ -90,18 +94,42 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
 
   const longPress = useLongPress({ onLongPress: handleOpenMenu })
 
+  // 낙관적(pending) 말풍선은 아직 서버 contentId가 없어 번역 대상에서 제외한다.
+  const text = message.texts[0]
+  const canTranslate = !message.pending && Boolean(text) && shouldShowTranslateButton(message.sourceLang, language)
+  const translate = useTranslateToggle({ contentId: message.messageId, sourceLang: message.sourceLang })
+  const displayText = translate.isShowingTranslation && translate.translatedText ? translate.translatedText : text ?? ""
+
+  const fullMenuItems: ChatContextMenuItem[] = canTranslate
+    ? [
+        {
+          icon: <Globe className="size-6 text-gray-900" />,
+          label: translate.isLoading
+            ? messages.translate.translatingLabel
+            : translate.isShowingTranslation
+              ? messages.translate.viewOriginalLabel
+              : messages.translate.menuLabel,
+          onClick: () => {
+            translate.toggle()
+            onCloseMenu()
+          },
+        },
+        ...menuItems,
+      ]
+    : menuItems
+
   return (
     <div ref={rowRef} className="relative" {...longPress}>
       <ChatBubbleSegment
         sender={message.sender}
-        text={message.texts[0] ?? ""}
+        text={displayText}
         position={position}
         variant={message.variant}
         className={cn(menuOpen && "relative z-50")}
       />
       {menuOpen && (
         <ChatContextMenu
-          items={menuItems}
+          items={fullMenuItems}
           dimmed
           onDismiss={onCloseMenu}
           className={cn(
