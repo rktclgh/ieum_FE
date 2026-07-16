@@ -94,3 +94,25 @@ test("REST and WebSocket duplicates remain deduped by messageId before timeline 
     assert.equal(merged[0].time, "오전 10:01")
   }
 })
+
+test("a later REST snapshot retains its reply preview over an older WebSocket echo", () => {
+  const websocketEcho = { ...userMessage(1, "2026-07-16T10:00:01+09:00"), replyTo: null }
+  const rest = {
+    ...websocketEcho,
+    replyTo: {
+      messageId: 99,
+      senderId: 11,
+      senderNickname: "연두",
+      content: "떡볶이 먹을까?",
+      imageUrl: null,
+    },
+  }
+
+  const merged = dedupeServerMessages([websocketEcho, rest])
+
+  assert.equal(merged.length, 1)
+  assert.equal(merged[0]?.messageType, "user")
+  if (merged[0]?.messageType === "user") {
+    assert.deepEqual(merged[0].replyTo, rest.replyTo)
+  }
+})
