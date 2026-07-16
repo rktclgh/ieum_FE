@@ -37,7 +37,17 @@ function useTranslateToggle({ contentId, sourceLang }: UseTranslateToggleOptions
       }),
   })
 
+  // 언어/대상 콘텐츠가 바뀌면 이전 번역 결과·노출 상태를 초기화한다.
+  const reset = mutation.reset
+  React.useEffect(() => {
+    reset()
+    setIsShowingTranslation(false)
+  }, [language, contentId, reset])
+
   const toggle = () => {
+    if (mutation.isPending) {
+      return
+    }
     if (isShowingTranslation) {
       setIsShowingTranslation(false)
       return

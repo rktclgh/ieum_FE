@@ -140,7 +140,7 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
 
   // 낙관적(pending) 말풍선은 아직 서버 contentId가 없어 번역 대상에서 제외한다.
   const text = message.texts[0]
-  const canTranslate = !message.pending && Boolean(text) && shouldShowTranslateButton(message.sourceLang, language)
+  const canTranslate = !message.pending && message.hasText && shouldShowTranslateButton(message.sourceLang, language)
   const translate = useTranslateToggle({ contentId: message.messageId, sourceLang: message.sourceLang })
   const displayText = translate.isShowingTranslation && translate.translatedText ? translate.translatedText : text ?? ""
 
@@ -554,6 +554,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       time: formatKstTime(nowIso),
       createdAt: nowIso,
       pending: true,
+      hasText: true,
     }
     updateLiveMessages((previous) => [
       ...previous,
