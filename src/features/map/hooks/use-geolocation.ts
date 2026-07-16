@@ -21,6 +21,7 @@ function useGeolocation() {
   const [position, setPosition] = React.useState<Coordinates | null>(null)
   const [accuracy, setAccuracy] = React.useState<number | null>(null)
   const [status, setStatus] = React.useState<GeolocationStatus>("loading")
+  const [initialStatus, setInitialStatus] = React.useState<GeolocationStatus>("loading")
 
   const isSupported = typeof navigator !== "undefined" && Boolean(navigator.geolocation)
 
@@ -32,15 +33,29 @@ function useGeolocation() {
         setPosition({ lat: result.coords.latitude, lng: result.coords.longitude })
         setAccuracy(result.coords.accuracy)
         setStatus("success")
+        setInitialStatus((currentStatus) =>
+          currentStatus === "loading" ? "success" : currentStatus
+        )
       },
-      () => setStatus("error"),
+      () => {
+        setStatus("error")
+        setInitialStatus((currentStatus) =>
+          currentStatus === "loading" ? "error" : currentStatus
+        )
+      },
       GEOLOCATION_OPTIONS
     )
 
     return () => navigator.geolocation.clearWatch(watchId)
   }, [isSupported])
 
-  return { position, accuracy, status: isSupported ? status : "error", isSupported }
+  return {
+    position,
+    accuracy,
+    status: isSupported ? status : "error",
+    initialStatus: isSupported ? initialStatus : "error",
+    isSupported,
+  }
 }
 
 export { useGeolocation }

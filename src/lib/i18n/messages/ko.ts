@@ -181,6 +181,7 @@ export interface Messages {
     doneButton: string
     currentLocationLabel: string
     loadingAddress: string
+    locationUnavailable: string
     searchEmpty: string
     clearLabel: string
   }
@@ -633,6 +634,7 @@ export const ko: Messages = {
     doneButton: "완료",
     currentLocationLabel: "내 위치",
     loadingAddress: "주소를 불러오는 중…",
+    locationUnavailable: "현재 위치를 찾지 못해 서울 시청 주변을 표시합니다.",
     searchEmpty: "검색 결과가 없어요.",
     clearLabel: "지우기",
   },
