@@ -56,7 +56,7 @@ function SearchBox({
           onBlur?.(event)
         }}
         className={cn(
-          "w-full bg-transparent text-body-regular-15 caret-primary-400 outline-none placeholder:text-body-regular-15 placeholder:text-gray-400",
+          "w-full bg-transparent text-body-regular-15 caret-gray-900 outline-none placeholder:text-body-regular-15 placeholder:text-gray-400",
           hasValue ? "text-body-medium-15 text-gray-900" : "text-gray-400"
         )}
         {...props}

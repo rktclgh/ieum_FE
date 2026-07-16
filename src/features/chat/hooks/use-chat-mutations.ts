@@ -4,13 +4,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
   createDirectRoom,
-  disbandRoom,
   leaveRoom,
   markRead,
   setNotify,
   setPinned,
 } from "@/features/chat/api/chat-api"
 import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
+import { deleteMeeting } from "@/features/meetup/api/meetup-api"
+import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
 
 // 방 목록 요약 쿼리는 type별(chatKeys.rooms(type))로 나뉘어 있어 접두사 키로 한 번에 무효화한다.
 // 목록 요약(getRooms)에 unreadCount·pinned·notifyEnabled가 모두 담겨 있고,
@@ -72,15 +73,17 @@ function useLeaveRoom() {
   })
 }
 
-function useDisbandRoom() {
+function useDisbandMeeting() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (roomId: number) => disbandRoom(roomId),
-    // 방 해체 → 목록 갱신 + 해당 방의 상세·메시지 캐시 제거
-    onSuccess: (_data, roomId) => {
+    mutationFn: ({ meetingId }: { meetingId: number; roomId: number }) => deleteMeeting(meetingId),
+    // 모임 해체 → 연결 채팅방·모임 캐시를 함께 제거한다.
+    onSuccess: (_data, { meetingId, roomId }) => {
       queryClient.invalidateQueries({ queryKey: roomsListKey })
       queryClient.removeQueries({ queryKey: chatKeys.room(roomId) })
       queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
+      queryClient.removeQueries({ queryKey: meetupKeys.detail(meetingId) })
+      queryClient.removeQueries({ queryKey: meetupKeys.participants(meetingId) })
     },
   })
 }
@@ -91,5 +94,5 @@ export {
   useSetPinned,
   useSetNotify,
   useLeaveRoom,
-  useDisbandRoom,
+  useDisbandMeeting,
 }

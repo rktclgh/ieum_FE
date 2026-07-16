@@ -43,6 +43,10 @@ async function kickMember(meetingId: number, userId: number) {
   await apiClient.post(`/api/v1/meetings/${meetingId}/kick`, { userId })
 }
 
+async function deleteMeeting(meetingId: number) {
+  await apiClient.delete(`/api/v1/meetings/${meetingId}`)
+}
+
 export {
   getMeeting,
   getParticipants,
@@ -50,4 +54,5 @@ export {
   joinMeeting,
   leaveMeeting,
   kickMember,
+  deleteMeeting,
 }

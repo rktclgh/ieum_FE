@@ -31,7 +31,7 @@ type Step =
  */
 function MeetupLocationPicker({ value, onConfirm, onClose }: MeetupLocationPickerProps) {
   const [step, setStep] = React.useState<Step>({ name: "map" })
-  const { position } = useGeolocation()
+  const { position, initialStatus } = useGeolocation()
 
   const confirm = (place: MeetupPlaceValue) => {
     onConfirm(place)
@@ -47,6 +47,7 @@ function MeetupLocationPicker({ value, onConfirm, onClose }: MeetupLocationPicke
       {step.name === "map" && (
         <MeetupLocationMap
           position={position}
+          initialStatus={initialStatus}
           onBack={onClose}
           onOpenSearch={() => setStep({ name: "search" })}
           onCreateName={(address, coords) => setStep({ name: "create", address, coords })}

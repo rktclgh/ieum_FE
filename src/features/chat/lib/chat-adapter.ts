@@ -1,6 +1,7 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
 import { formatKstTime, getKstMinuteKey } from "@/lib/date/kst"
 import type { ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
+import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
 import type {
   ChatMessageResponse,
   ChatRoomDetailResponse,
@@ -34,12 +35,15 @@ interface ChatBubbleMessage {
   sender: "me" | "others"
   variant: "long" | "short"
   name?: string
+  avatarSrc?: string
   texts: string[]
   imageUrl?: string
   time: string
   createdAt: string
   // 낙관적으로 먼저 그린 내 말풍선(서버 에코 전). 에코 도착 시 대체된다.
   pending?: boolean
+  // 이미지 업로드/전송 진행 중인 낙관적 이미지 말풍선. 흐리게 + 스피너로 표시한다.
+  imageUploading?: boolean
 }
 
 interface ChatMemberEntry {
@@ -69,9 +73,29 @@ function resolveRoomTitle(members: ChatRoomMemberResponse[], myUserId: number, r
   return others.length > 2 ? `${names} 외 ${others.length - 2}명` : names
 }
 
-function resolveRoomAvatar(members: ChatRoomMemberResponse[], myUserId: number): string | undefined {
-  const other = members.find((member) => member.userId !== myUserId)
-  return resolveFileUrl(other?.profileImageUrl)
+function resolveRoomAvatar(
+  members: ChatRoomMemberResponse[],
+  myUserId: number,
+  roomType: RoomType,
+  meetingImageUrl?: string | null,
+  counterpart?: ChatRoomMemberResponse | null
+): string | undefined {
+  if (roomType === "group") return resolveFileUrl(meetingImageUrl)
+  return resolveChatRoomAvatar(
+    roomType,
+    members.map((member) => ({
+      userId: member.userId,
+      avatarSrc: resolveFileUrl(member.profileImageUrl),
+    })),
+    myUserId,
+    undefined,
+    counterpart
+      ? {
+          userId: counterpart.userId,
+          avatarSrc: resolveFileUrl(counterpart.profileImageUrl),
+        }
+      : undefined
+  )
 }
 
 // summary + detail(제목 파생용)을 목록 항목으로 합친다.
@@ -80,7 +104,8 @@ function adaptRoomSummary(
   summary: ChatRoomSummaryResponse,
   detail: ChatRoomDetailResponse | undefined,
   myUserId: number,
-  domainTitle?: string
+  domainTitle?: string,
+  meetingImageUrl?: string | null
 ): ChatListEntry {
   const members = detail?.members ?? []
   const last = summary.lastMessage
@@ -94,7 +119,13 @@ function adaptRoomSummary(
     roomId: summary.roomId,
     title,
     category: roomCategory(summary.roomType),
-    avatarSrc: resolveRoomAvatar(members, myUserId),
+    avatarSrc: resolveRoomAvatar(
+      members,
+      myUserId,
+      summary.roomType,
+      meetingImageUrl,
+      detail?.counterpart
+    ),
     memberCount: summary.roomType === "direct" ? undefined : members.length || undefined,
     lastMessage: last ? messagePreview(last) : undefined,
     time: last ? formatKstTime(last.createdAt) : undefined,
@@ -124,6 +155,7 @@ function adaptMessage(
     sender: isMe ? "me" : "others",
     variant: content.length > 30 ? "long" : "short",
     name: isMe ? undefined : message.senderNickname,
+    avatarSrc: resolveFileUrl(message.senderProfileImageUrl),
     texts: content ? [content] : message.imageUrl ? ["사진"] : [""],
     imageUrl: resolveFileUrl(message.imageUrl),
     time: formatKstTime(message.createdAt),
@@ -135,6 +167,7 @@ interface ChatMessageRun {
   runKey: string
   sender: "me" | "others"
   name?: string
+  avatarSrc?: string
   time: string
   messages: ChatBubbleMessage[]
 }
@@ -154,6 +187,7 @@ function buildMessageRuns(messages: ChatBubbleMessage[]): ChatMessageRun[] {
         runKey: message.id,
         sender: message.sender,
         name: message.name,
+        avatarSrc: message.avatarSrc,
         time: message.time,
         messages: [message],
       })

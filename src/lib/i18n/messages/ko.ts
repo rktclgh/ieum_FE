@@ -22,7 +22,7 @@ export interface Messages {
     backendUnavailable: string
   }
   login: {
-    logoAlt: string
+    logoText: string
     emailPlaceholder: string
     passwordPlaceholder: string
     submit: string
@@ -148,6 +148,7 @@ export interface Messages {
     titleCounter: (current: number, max: number) => string
     titleTooLongExplanation: (max: number) => string
     datePlaceholder: string
+    dateUndecidedLabel: string
     timePlaceholder: string
     addressPlaceholder: string
     descriptionPlaceholder: string
@@ -181,6 +182,7 @@ export interface Messages {
     doneButton: string
     currentLocationLabel: string
     loadingAddress: string
+    locationUnavailable: string
     searchEmpty: string
     clearLabel: string
   }
@@ -376,6 +378,8 @@ export interface Messages {
     disbandChatConfirmDescription: string
     messageInputPlaceholder: string
     sendButtonLabel: string
+    imageAlt: string
+    imageUploadFailed: string
   }
   schedule: {
     addButtonLabel: string
@@ -437,6 +441,19 @@ export interface Messages {
     searchEmpty: string
     searching: string
   }
+  notification: {
+    appBarTitle: string
+    empty: string
+    loadError: string
+    readAllButton: string
+    deleteAction: string
+    deleteConfirmTitle: string
+    deleteConfirmDescription: string
+    deleteConfirmCancel: string
+    deleteConfirmConfirm: string
+    bellLabel: string
+    unreadBadgeLabel: (count: number) => string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -459,7 +476,7 @@ export const ko: Messages = {
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   login: {
-    logoAlt: "로고",
+    logoText: "이음",
     emailPlaceholder: "이메일 입력",
     passwordPlaceholder: "비밀번호 입력",
     submit: "로그인",
@@ -585,6 +602,7 @@ export const ko: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `모임 제목을 ${max}글자 이내로 적어주세요.`,
     datePlaceholder: "날짜 선택",
+    dateUndecidedLabel: "날짜 미정",
     timePlaceholder: "시간 선택",
     addressPlaceholder: "주소 선택",
     descriptionPlaceholder: "모임 내용을 입력해주세요.",
@@ -618,6 +636,7 @@ export const ko: Messages = {
     doneButton: "완료",
     currentLocationLabel: "내 위치",
     loadingAddress: "주소를 불러오는 중…",
+    locationUnavailable: "현재 위치를 찾지 못해 서울 시청 주변을 표시합니다.",
     searchEmpty: "검색 결과가 없어요.",
     clearLabel: "지우기",
   },
@@ -803,17 +822,19 @@ export const ko: Messages = {
     meLabel: "나",
     removeMemberButton: "내보내기",
     leaveChatAction: "채팅방 나가기",
-    disbandChatAction: "채팅방 해체하기",
+    disbandChatAction: "모임 해체하기",
     sendFailed: "메시지를 보낼 수 없습니다. 연결을 확인해주세요.",
     leaveFailed: "채팅방 나가기에 실패했습니다.",
-    disbandFailed: "채팅방 해체에 실패했습니다.",
+    disbandFailed: "모임 해체에 실패했습니다.",
     connecting: "연결 중…",
     leaveChatConfirmTitle: "채팅방을 나갑니다",
     leaveChatConfirmDescription: "정말로 나가시겠습니까?",
-    disbandChatConfirmTitle: "채팅방을 해체합니다",
-    disbandChatConfirmDescription: "채팅방을 해체하면 모든 대화 상대가 채팅방에서 나가게 되며, 되돌릴 수 없습니다.",
+    disbandChatConfirmTitle: "모임을 해체합니다",
+    disbandChatConfirmDescription: "모임을 해체하면 연결된 채팅방과 참여자 목록에서도 모두 제거되며, 되돌릴 수 없습니다.",
     messageInputPlaceholder: "메시지 입력",
     sendButtonLabel: "전송",
+    imageAlt: "전송한 사진",
+    imageUploadFailed: "사진 전송에 실패했어요. 다시 시도해주세요.",
   },
   schedule: {
     addButtonLabel: "일정 추가",
@@ -874,6 +895,19 @@ export const ko: Messages = {
     loadError: "친구 목록을 불러오지 못했어요.",
     searchEmpty: "검색 결과가 없어요.",
     searching: "검색 중...",
+  },
+  notification: {
+    appBarTitle: "알림",
+    empty: "받은 알림이 없어요.",
+    loadError: "알림을 불러오지 못했어요.",
+    readAllButton: "전체 읽음",
+    deleteAction: "삭제",
+    deleteConfirmTitle: "알림을 삭제할까요?",
+    deleteConfirmDescription: "삭제한 알림은 복구할 수 없어요.",
+    deleteConfirmCancel: "취소",
+    deleteConfirmConfirm: "삭제",
+    bellLabel: "알림",
+    unreadBadgeLabel: (count) => `읽지 않은 알림 ${count}건`,
   },
   languages: {
     ko: "한국어",
