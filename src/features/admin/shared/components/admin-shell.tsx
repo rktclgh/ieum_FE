@@ -35,7 +35,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 aria-current={isCurrent ? "page" : undefined}
-                className="rounded-lg px-3 py-2.5 text-body-medium-15 text-gray-700 transition-colors hover:bg-gray-50 aria-[current=page]:bg-primary aria-[current=page]:text-primary"
+                className="rounded-lg px-3 py-2.5 text-body-medium-15 text-gray-700 transition-colors hover:bg-gray-50 aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary"
               >
                 {item.label}
               </Link>

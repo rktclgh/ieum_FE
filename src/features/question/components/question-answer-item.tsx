@@ -25,7 +25,7 @@ function QuestionAnswerItem({ answer, canAccept, onAccept }: QuestionAnswerItemP
           </div>
           <span className="text-title-semibold-16 text-gray-900">{answer.authorName}</span>
           {answer.isAi ? (
-            <span className="rounded-full bg-primary px-2 py-0.5 text-body-medium-14 text-primary">
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-body-medium-14 text-primary">
               {messages.question.aiBadge}
             </span>
           ) : null}
