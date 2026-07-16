@@ -482,6 +482,12 @@ export const en: Messages = {
     aiAnswerSourceLabel: "AI answer",
     humanAnswerSourceLabel: "Human answer",
   },
+  translate: {
+    menuLabel: "Translate",
+    viewOriginalLabel: "View original",
+    translatingLabel: "Translating...",
+    translateFailedLabel: "Translation failed. Please try again.",
+  },
   languages: {
     ko: "Korean",
     en: "English",

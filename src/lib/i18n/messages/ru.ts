@@ -482,6 +482,12 @@ export const ru: Messages = {
     aiAnswerSourceLabel: "Ответ ИИ",
     humanAnswerSourceLabel: "Ответ пользователя",
   },
+  translate: {
+    menuLabel: "Перевести",
+    viewOriginalLabel: "Показать оригинал",
+    translatingLabel: "Перевод...",
+    translateFailedLabel: "Не удалось перевести. Попробуйте ещё раз.",
+  },
   languages: {
     ko: "Корейский",
     en: "Английский",

@@ -482,6 +482,12 @@ export const vi: Messages = {
     aiAnswerSourceLabel: "Câu trả lời AI",
     humanAnswerSourceLabel: "Câu trả lời người dùng",
   },
+  translate: {
+    menuLabel: "Dịch",
+    viewOriginalLabel: "Xem bản gốc",
+    translatingLabel: "Đang dịch...",
+    translateFailedLabel: "Dịch thất bại. Vui lòng thử lại sau.",
+  },
   languages: {
     ko: "Tiếng Hàn",
     en: "Tiếng Anh",
