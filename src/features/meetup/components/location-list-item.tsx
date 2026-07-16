@@ -51,8 +51,8 @@ function LocationListItem({
         className={cn(
           "flex h-8 shrink-0 items-center justify-center rounded-lg px-3 py-2 text-body-regular-13 transition-colors disabled:cursor-not-allowed disabled:opacity-40",
           actionVariant === "filled"
-            ? "bg-primary-400 text-white"
-            : "border border-primary-400 text-primary-400"
+            ? "bg-primary text-white"
+            : "border border-primary text-primary"
         )}
       >
         {actionLabel}

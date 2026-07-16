@@ -18,7 +18,7 @@ function HighlightedText({ text, query }: HighlightedTextProps) {
   return (
     <>
       {before}
-      <span className="text-primary-400">{match}</span>
+      <span className="text-primary">{match}</span>
       {after}
     </>
   )

@@ -124,15 +124,15 @@ function MeetupDatePickerContent({
         role="checkbox"
         aria-checked={isDateUndecided}
         onClick={() => setIsDateUndecided((current) => !current)}
-        className="flex w-full items-center gap-2 rounded-md px-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
+        className="flex w-full items-center gap-2 rounded-md px-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       >
         <span
           className={cn(
             "flex size-5 items-center justify-center rounded-full border-[1.5px]",
-            isDateUndecided ? "border-primary-400" : "border-gray-200"
+            isDateUndecided ? "border-primary" : "border-gray-200"
           )}
         >
-          {isDateUndecided ? <span className="size-2.5 rounded-full bg-primary-400" /> : null}
+          {isDateUndecided ? <span className="size-2.5 rounded-full bg-primary" /> : null}
         </span>
         <span className="text-body-regular-14 text-gray-700">{t.dateUndecidedLabel}</span>
       </button>
@@ -140,14 +140,14 @@ function MeetupDatePickerContent({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-full border border-primary-400 px-4 py-3 text-center text-body-medium-14 text-primary-400"
+          className="flex-1 rounded-full border border-primary px-4 py-3 text-center text-body-medium-14 text-primary"
         >
           {t.cancelButton}
         </button>
         <button
           type="button"
           onClick={handleConfirm}
-          className="flex-1 rounded-full bg-primary-400 px-4 py-3 text-center text-body-medium-14 text-white"
+          className="flex-1 rounded-full bg-primary px-4 py-3 text-center text-body-medium-14 text-white"
         >
           {t.confirmButton}
         </button>

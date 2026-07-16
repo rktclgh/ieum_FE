@@ -37,9 +37,9 @@ interface MapCanvasProps {
   onSelectedPositionClick?: () => void
 }
 
-const LIVE_ACCENT = "#316CED"
+const LIVE_ACCENT = "#FC7045"
 
-// Figma Location/XL (node 1716:12220): 파란 물방울 핀 + 흰 구멍 + 회색 그림자 타원. 팁이 좌표를 가리킨다.
+// Figma Location/XL (node 1716:12220): primary 색 물방울 핀 + 흰 구멍 + 회색 그림자 타원. 팁이 좌표를 가리킨다.
 const selectedLocationIcon = L.divIcon({
   html: `<svg width="40" height="47" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
     <ellipse cx="12" cy="24.3" rx="4.5" ry="1.5" fill="#9AA5A8" fill-opacity="0.5"/>
@@ -57,7 +57,7 @@ const userLocationIcon = L.divIcon({
       <g filter="url(#user_loc_halo_blur)"><circle cx="24" cy="24" r="22" fill="${LIVE_ACCENT}" fill-opacity="0.2"/></g>
       <defs><filter id="user_loc_halo_blur" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/></filter></defs>
     </svg>
-    <div style="position:absolute;left:18px;top:18px;width:12px;height:12px;border-radius:9999px;background:${LIVE_ACCENT};outline:3px solid #ffffff;box-shadow:0 0 8px 0 rgba(49,108,237,0.6),0 0 4px 0 rgba(0,0,0,0.25)"></div>
+    <div style="position:absolute;left:18px;top:18px;width:12px;height:12px;border-radius:9999px;background:${LIVE_ACCENT};outline:3px solid #ffffff;box-shadow:0 0 8px 0 rgba(252,112,69,0.6),0 0 4px 0 rgba(0,0,0,0.25)"></div>
   </div>`,
   className: "",
   iconSize: [48, 48],

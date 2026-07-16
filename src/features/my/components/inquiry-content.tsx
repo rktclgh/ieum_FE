@@ -56,7 +56,7 @@ function InquiryContent() {
           value={content}
           onChange={(event) => setContent(event.target.value)}
           placeholder={messages.my.inquiry.placeholder}
-          className="h-40 w-full resize-none rounded-lg border border-gray-100 p-4 text-body-regular-14 text-gray-900 caret-primary-400 outline-none transition-colors placeholder:text-gray-400 focus-within:border-primary-400"
+          className="h-40 w-full resize-none rounded-lg border border-gray-100 p-4 text-body-regular-14 text-gray-900 caret-primary outline-none transition-colors placeholder:text-gray-400 focus-within:border-primary"
         />
 
         <ul className="flex w-full flex-col gap-2">
@@ -74,7 +74,7 @@ function InquiryContent() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex flex-1 items-center justify-center rounded-full border border-primary-400 px-4 py-3 text-body-medium-14 text-primary-400"
+            className="flex flex-1 items-center justify-center rounded-full border border-primary px-4 py-3 text-body-medium-14 text-primary"
           >
             {messages.my.inquiry.cancel}
           </button>
@@ -84,7 +84,7 @@ function InquiryContent() {
             disabled={!canSubmit}
             className={cn(
               "flex flex-1 items-center justify-center rounded-full px-4 py-3 text-body-medium-14 text-white transition-colors",
-              canSubmit ? "bg-primary-400" : "bg-gray-200"
+              canSubmit ? "bg-primary" : "bg-gray-200"
             )}
           >
             {messages.my.inquiry.submit}

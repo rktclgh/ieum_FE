@@ -86,7 +86,7 @@ function ChatBubbleSegment({
       data-slot="chat-bubble-segment"
       className={cn(
         "px-4 py-3",
-        isMe ? "bg-primary-400" : "bg-gray-50",
+        isMe ? "bg-primary" : "bg-gray-50",
         radiusMap[position],
         variant === "long" && "w-[253px] max-w-full",
         className

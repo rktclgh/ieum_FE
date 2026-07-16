@@ -118,7 +118,7 @@ function ChatListItem({
           <span className="whitespace-nowrap text-body-regular-12 text-gray-200">{time}</span>
         )}
         {hasUnread && (
-          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-400 text-body-regular-12 text-white">
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-body-regular-12 text-white">
             {unreadCount}
           </span>
         )}

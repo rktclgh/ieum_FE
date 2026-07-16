@@ -38,7 +38,7 @@ function MeetupSelectField({
       disabled={disabled}
       className={cn(
         "flex h-[3.375rem] w-full items-center gap-1 rounded-xl border border-gray-100 p-4 text-left transition-colors",
-        active && !disabled && "border-primary-400",
+        active && !disabled && "border-primary",
         disabled && "cursor-not-allowed bg-gray-50 text-gray-300",
         className
       )}

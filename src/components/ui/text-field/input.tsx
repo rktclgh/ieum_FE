@@ -48,7 +48,7 @@ function Input({
         }}
         onFocus={onFocus}
         onBlur={onBlur}
-        className="w-full bg-transparent text-body-medium-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
+        className="w-full bg-transparent text-body-medium-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
         {...props}
       />
       {endAdornment ?? (

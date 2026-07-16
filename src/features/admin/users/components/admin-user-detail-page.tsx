@@ -192,7 +192,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
                   href={user.profileImageUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded text-primary-700 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+                  className="rounded text-primary underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {user.profileImageUrl}
                 </a>
@@ -325,7 +325,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
                 setInvalidField(null)
               }}
               disabled={sanctionBusy}
-              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:opacity-50"
+              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
             >
               <option value="temporary">{messages.admin.users.temporary}</option>
               <option value="permanent">{messages.admin.users.permanent}</option>
@@ -340,7 +340,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
                 value={endsAt}
                 onChange={(event) => setEndsAt(event.target.value)}
                 disabled={sanctionBusy}
-                className="h-11 w-full rounded-xl border border-gray-200 px-3 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:opacity-50"
+                className="h-11 w-full rounded-xl border border-gray-200 px-3 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
               />
             </label>
           )}
@@ -352,7 +352,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
               onChange={(event) => setReason(event.target.value)}
               maxLength={500}
               disabled={sanctionBusy}
-              className="min-h-32 w-full rounded-xl border border-gray-200 p-3 text-body-regular-14 text-gray-900 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:opacity-50"
+              className="min-h-32 w-full rounded-xl border border-gray-200 p-3 text-body-regular-14 text-gray-900 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
             />
           </label>
 

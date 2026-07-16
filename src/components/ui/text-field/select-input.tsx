@@ -134,7 +134,7 @@ function SelectInput({
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder={searchPlaceholder}
-                    className="w-full bg-transparent text-body-regular-15 text-gray-900 caret-primary-400 outline-none placeholder:text-gray-400"
+                    className="w-full bg-transparent text-body-regular-15 text-gray-900 caret-primary outline-none placeholder:text-gray-400"
                   />
                 </div>
               )}

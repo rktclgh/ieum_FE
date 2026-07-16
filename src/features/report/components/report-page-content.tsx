@@ -104,7 +104,7 @@ function ReportPageContent({ messageId, targetName }: ReportPageContentProps) {
         <button
           type="button"
           onClick={handleClose}
-          className="flex-1 rounded-full border border-primary-400 px-4 py-3 text-center text-body-medium-14 text-primary-400"
+          className="flex-1 rounded-full border border-primary px-4 py-3 text-center text-body-medium-14 text-primary"
         >
           {messages.report.cancelButton}
         </button>
@@ -112,7 +112,7 @@ function ReportPageContent({ messageId, targetName }: ReportPageContentProps) {
           type="button"
           disabled={!selectedReason || submitReport.isPending}
           onClick={() => setConfirmOpen(true)}
-          className="flex-1 rounded-full bg-primary-400 px-4 py-3 text-center text-body-medium-14 text-white disabled:opacity-50"
+          className="flex-1 rounded-full bg-primary px-4 py-3 text-center text-body-medium-14 text-white disabled:opacity-50"
         >
           {messages.report.submitButton}
         </button>

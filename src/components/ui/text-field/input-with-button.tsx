@@ -53,7 +53,7 @@ function InputWithButton({
         }}
         onFocus={onFocus}
         onBlur={onBlur}
-        className="w-full min-w-0 bg-transparent text-body-medium-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
+        className="w-full min-w-0 bg-transparent text-body-medium-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
         {...props}
       />
       <div className="flex shrink-0 items-center gap-2">
@@ -65,7 +65,7 @@ function InputWithButton({
           onClick={onButtonClick}
           className={cn(
             "rounded-lg px-3 py-2.5 text-body-regular-13 text-white transition-colors",
-            isButtonActive ? "bg-primary-400" : "bg-gray-400"
+            isButtonActive ? "bg-primary" : "bg-gray-400"
           )}
         >
           {buttonLabel}

@@ -130,7 +130,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3">
         {/* 제목 — 15자(공백 포함)까지만 입력 가능, 포커스 시 카운터 표시 */}
         <div className="shrink-0">
-          <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-400">
+          <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary">
             <input
               value={form.title}
               // maxLength만으로는 한글(IME) 조합 중 16번째 글자가 새어 들어가므로 상태에서 직접 자름
@@ -139,7 +139,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
               onBlur={() => setTitleFocused(false)}
               maxLength={TITLE_MAX_LENGTH}
               placeholder={t.titlePlaceholder}
-              className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
+              className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
             />
             {titleFocused ? (
               <span className="shrink-0 text-body-regular-14 text-gray-400">
@@ -182,12 +182,12 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
         />
 
         {/* 내용 + 사진 첨부 */}
-        <div className="relative min-h-40 flex-1 rounded-lg border border-gray-100 transition-colors focus-within:border-primary-400">
+        <div className="relative min-h-40 flex-1 rounded-lg border border-gray-100 transition-colors focus-within:border-primary">
           <textarea
             value={form.description}
             onChange={(event) => form.setDescription(event.target.value)}
             placeholder={t.descriptionPlaceholder}
-            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary-400 outline-none placeholder:text-gray-400"
+            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary outline-none placeholder:text-gray-400"
           />
           <MeetupImagePicker
             image={form.image?.preview ?? null}
@@ -208,7 +208,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
           onClick={handleSubmit}
           className={cn(
             "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            form.canSubmit && !submitting ? "bg-primary-400" : "bg-gray-200"
+            form.canSubmit && !submitting ? "bg-primary" : "bg-gray-200"
           )}
         >
           {submitting ? t.submittingButton : t.submitButton}
