@@ -51,3 +51,19 @@ test("날짜 미정 요청은 schedule 없이 만들고 null 일정 응답을 �
   assert.equal("schedule" in request, false)
   assert.equal(response.firstScheduleId, null)
 })
+
+test("반복 모임은 schedule 없이 만들 수 없다", () => {
+  // @ts-expect-error recurring meeting requests must retain a required schedule.
+  const invalidRequest: CreateMeetingRequest = {
+    title: "반복 모임",
+    type: "recurring",
+    location: {
+      lat: 37.5665,
+      lng: 126.978,
+      address: "서울특별시 중구 세종대로 110",
+    },
+    maxMembers: 99,
+  }
+
+  assert.ok(invalidRequest)
+})

@@ -21,17 +21,28 @@ interface MeetingScheduleInput {
   endsAt?: string
 }
 
-// POST /meetings 요청 바디.
-interface CreateMeetingRequest {
+interface CreateMeetingRequestBase {
   title: string
   content?: string
-  type: MeetingType
   location: LocationSnapshot
-  schedule?: MeetingScheduleInput
   recurrenceRule?: string
   maxMembers: number
   imageFileId?: string
 }
+
+// 날짜 미정은 one_time에만 허용한다. 반복 모임은 서버 계약상 시작 일정이 반드시 필요하다.
+interface OneTimeCreateMeetingRequest extends CreateMeetingRequestBase {
+  type: "one_time"
+  schedule?: MeetingScheduleInput
+}
+
+interface RecurringCreateMeetingRequest extends CreateMeetingRequestBase {
+  type: "recurring"
+  schedule: MeetingScheduleInput
+}
+
+// POST /meetings 요청 바디.
+type CreateMeetingRequest = OneTimeCreateMeetingRequest | RecurringCreateMeetingRequest
 
 // POST /meetings 응답.
 interface CreateMeetingResponse {
