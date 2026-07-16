@@ -22,7 +22,7 @@ export interface Messages {
     backendUnavailable: string
   }
   login: {
-    logoAlt: string
+    logoText: string
     emailPlaceholder: string
     passwordPlaceholder: string
     submit: string
@@ -148,6 +148,7 @@ export interface Messages {
     titleCounter: (current: number, max: number) => string
     titleTooLongExplanation: (max: number) => string
     datePlaceholder: string
+    dateUndecidedLabel: string
     timePlaceholder: string
     addressPlaceholder: string
     descriptionPlaceholder: string
@@ -181,6 +182,7 @@ export interface Messages {
     doneButton: string
     currentLocationLabel: string
     loadingAddress: string
+    locationUnavailable: string
     searchEmpty: string
     clearLabel: string
   }
@@ -201,7 +203,7 @@ export interface Messages {
     acceptedBadge: string
     acceptButton: string
     acceptConfirmTitle: string
-    acceptConfirmDescription: string
+    acceptConfirmDescription: (name: string) => string
     acceptConfirmCancel: string
     createTitle: string
     editTitle: string
@@ -474,7 +476,7 @@ export const ko: Messages = {
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   login: {
-    logoAlt: "로고",
+    logoText: "이음",
     emailPlaceholder: "이메일 입력",
     passwordPlaceholder: "비밀번호 입력",
     submit: "로그인",
@@ -600,6 +602,7 @@ export const ko: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `모임 제목을 ${max}글자 이내로 적어주세요.`,
     datePlaceholder: "날짜 선택",
+    dateUndecidedLabel: "날짜 미정",
     timePlaceholder: "시간 선택",
     addressPlaceholder: "주소 선택",
     descriptionPlaceholder: "모임 내용을 입력해주세요.",
@@ -633,6 +636,7 @@ export const ko: Messages = {
     doneButton: "완료",
     currentLocationLabel: "내 위치",
     loadingAddress: "주소를 불러오는 중…",
+    locationUnavailable: "현재 위치를 찾지 못해 서울 시청 주변을 표시합니다.",
     searchEmpty: "검색 결과가 없어요.",
     clearLabel: "지우기",
   },
@@ -652,8 +656,9 @@ export const ko: Messages = {
     aiBadge: "AI",
     acceptedBadge: "채택됨",
     acceptButton: "채택",
-    acceptConfirmTitle: "이 답변을 채택할까요?",
-    acceptConfirmDescription: "채택하면 이 답변 작성자와 채팅을 시작할 수 있어요.",
+    acceptConfirmTitle: "답변을 채택했습니다",
+    acceptConfirmDescription: (name) =>
+      `${name}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,
     acceptConfirmCancel: "취소",
     createTitle: "질문하기",
     editTitle: "질문 수정",

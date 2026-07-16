@@ -50,8 +50,8 @@ function PasswordInput({
     <div
       data-slot="password-input-wrapper"
       className={cn(
-        "flex h-[3.375rem] w-full items-center gap-2 rounded-2xl border border-gray-100 p-4 transition-colors focus-within:border-primary has-disabled:cursor-not-allowed has-disabled:opacity-50",
-        error && "border-red focus-within:border-red",
+        "flex h-[3.375rem] w-full items-center gap-2 rounded-2xl border border-gray-100 p-4 transition focus-within:border-gray-900 focus-within:ring-1 focus-within:ring-gray-900 has-disabled:cursor-not-allowed has-disabled:opacity-50",
+        error && "border-red focus-within:border-red focus-within:ring-red",
         className
       )}
     >

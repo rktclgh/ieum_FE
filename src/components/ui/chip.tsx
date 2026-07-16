@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 const chipVariants = cva("inline-flex shrink-0 items-center gap-1 rounded-full px-4 py-2 text-body-medium-14 transition-colors", {
   variants: {
     selected: {
-      true: "bg-primary text-white",
+      true: "bg-gray-900 text-white",
       false: "bg-white text-gray-900",
     },
     tone: {

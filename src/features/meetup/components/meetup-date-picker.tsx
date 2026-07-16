@@ -11,9 +11,14 @@ import {
   DrawerViewport,
 } from "@/components/ui/drawer"
 import { WheelPicker } from "@/components/ui/wheel-picker"
-import { daysInMonth, type MeetupDateValue } from "@/features/meetup/constants/create-meetup"
+import {
+  daysInMonth,
+  type MeetupDateSelection,
+  type MeetupDateValue,
+} from "@/features/meetup/constants/create-meetup"
 import { getKstDateKey } from "@/lib/date/kst"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { cn } from "@/lib/utils"
 
 /** 오늘부터 선택 가능한 연도 범위 (올해 포함 6개 연도) */
 const YEAR_SPAN = 5
@@ -22,18 +27,21 @@ interface MeetupDatePickerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   value: MeetupDateValue | null
-  onConfirm: (value: MeetupDateValue) => void
+  isDateUndecided: boolean
+  onConfirm: (value: MeetupDateSelection) => void
 }
 
 interface MeetupDatePickerContentProps {
   initialValue: MeetupDateValue
+  initialIsDateUndecided: boolean
   todayYear: number
   onCancel: () => void
-  onConfirm: (value: MeetupDateValue) => void
+  onConfirm: (value: MeetupDateSelection) => void
 }
 
 function MeetupDatePickerContent({
   initialValue,
+  initialIsDateUndecided,
   todayYear,
   onCancel,
   onConfirm,
@@ -44,6 +52,7 @@ function MeetupDatePickerContent({
   const [draftYear, setDraftYear] = React.useState(initialValue.year)
   const [draftMonth, setDraftMonth] = React.useState(initialValue.month)
   const [draftDay, setDraftDay] = React.useState(initialValue.day)
+  const [isDateUndecided, setIsDateUndecided] = React.useState(initialIsDateUndecided)
 
   const years = React.useMemo(
     () => Array.from({ length: YEAR_SPAN + 1 }, (_, index) => todayYear + index),
@@ -61,12 +70,26 @@ function MeetupDatePickerContent({
   const dayLabels = days.map((day) => t.dayLabel(day))
 
   const handleConfirm = () => {
-    onConfirm({ year: draftYear, month: draftMonth, day: selectedDay })
+    if (isDateUndecided) {
+      onConfirm({ date: null, isDateUndecided: true })
+      return
+    }
+
+    onConfirm({
+      date: { year: draftYear, month: draftMonth, day: selectedDay },
+      isDateUndecided: false,
+    })
   }
 
   return (
     <DrawerContent className="gap-6 pb-2">
-      <div className="relative flex w-full items-center justify-center gap-2 py-1">
+      <div
+        inert={isDateUndecided}
+        className={cn(
+          "relative flex w-full items-center justify-center gap-2 py-1",
+          isDateUndecided && "pointer-events-none opacity-40"
+        )}
+      >
         <div className="pointer-events-none absolute inset-x-0 top-1/2 h-10 -translate-y-1/2 rounded-lg bg-gray-50" />
         <WheelPicker
           options={yearLabels}
@@ -96,6 +119,23 @@ function MeetupDatePickerContent({
           className="relative z-10 flex-1"
         />
       </div>
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={isDateUndecided}
+        onClick={() => setIsDateUndecided((current) => !current)}
+        className="flex w-full items-center gap-2 rounded-md px-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      >
+        <span
+          className={cn(
+            "flex size-5 items-center justify-center rounded-full border-[1.5px]",
+            isDateUndecided ? "border-primary" : "border-gray-200"
+          )}
+        >
+          {isDateUndecided ? <span className="size-2.5 rounded-full bg-primary" /> : null}
+        </span>
+        <span className="text-body-regular-14 text-gray-700">{t.dateUndecidedLabel}</span>
+      </button>
       <div className="flex w-full items-center gap-2">
         <button
           type="button"
@@ -117,14 +157,20 @@ function MeetupDatePickerContent({
 }
 
 /** 년/월/일 3열 휠 피커 바텀시트. 확정 전까지는 draft 상태로만 굴리고 완료 시 onConfirm. */
-function MeetupDatePicker({ open, onOpenChange, value, onConfirm }: MeetupDatePickerProps) {
+function MeetupDatePicker({
+  open,
+  onOpenChange,
+  value,
+  isDateUndecided,
+  onConfirm,
+}: MeetupDatePickerProps) {
   const today = React.useMemo<MeetupDateValue>(() => {
     const [year, month, day] = getKstDateKey().split("-").map(Number)
     return { year, month, day }
   }, [])
   const initialValue = value ?? today
 
-  const handleConfirm = (nextValue: MeetupDateValue) => {
+  const handleConfirm = (nextValue: MeetupDateSelection) => {
     onConfirm(nextValue)
     onOpenChange(false)
   }
@@ -137,6 +183,7 @@ function MeetupDatePicker({ open, onOpenChange, value, onConfirm }: MeetupDatePi
           <DrawerPopup>
             <MeetupDatePickerContent
               initialValue={initialValue}
+              initialIsDateUndecided={isDateUndecided}
               todayYear={today.year}
               onCancel={() => onOpenChange(false)}
               onConfirm={handleConfirm}

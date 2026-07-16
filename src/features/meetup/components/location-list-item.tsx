@@ -14,6 +14,8 @@ interface LocationListItemProps {
   actionLabel: string
   /** outlined: 테두리(선택), filled: 파란 채움(입력) */
   actionVariant?: "filled" | "outlined"
+  /** 주소 등 액션에 필요한 정보가 아직 없을 때 비활성화 */
+  disabled?: boolean
   onAction: () => void
 }
 
@@ -27,6 +29,7 @@ function LocationListItem({
   subtitle,
   actionLabel,
   actionVariant = "outlined",
+  disabled = false,
   onAction,
 }: LocationListItemProps) {
   return (
@@ -43,8 +46,10 @@ function LocationListItem({
       <button
         type="button"
         onClick={onAction}
+        disabled={disabled}
+        aria-disabled={disabled || undefined}
         className={cn(
-          "flex h-8 shrink-0 items-center justify-center rounded-lg px-3 py-2 text-body-regular-13 transition-colors",
+          "flex h-8 shrink-0 items-center justify-center rounded-lg px-3 py-2 text-body-regular-13 transition-colors disabled:cursor-not-allowed disabled:opacity-40",
           actionVariant === "filled"
             ? "bg-primary text-white"
             : "border border-primary text-primary"
