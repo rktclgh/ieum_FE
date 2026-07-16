@@ -16,6 +16,7 @@ import {
 } from "@/features/chat/lib/chat-session"
 import { useChatRoomsSocket } from "@/features/chat/lib/chat-socket"
 import { getMeeting } from "@/features/meetup/api/meetup-api"
+import type { MeetingDetailResponse } from "@/features/meetup/api/meetup-types"
 import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
 import { getQuestion } from "@/features/question/api/question-api"
 import { questionKeys } from "@/features/question/hooks/use-question-queries"
@@ -150,11 +151,22 @@ function useChatRoomsView(type?: RoomType) {
   })
 
   const entries: ChatListEntry[] = rooms.map((room, index) => {
+    const domainData = domainQueries[index]?.data
     const domainTitle =
       room.roomType === "direct"
         ? undefined
-        : (domainQueries[index]?.data as { title?: string } | null | undefined)?.title
-    return adaptRoomSummary(room, detailQueries[index]?.data, myUserId, domainTitle)
+        : (domainData as { title?: string } | null | undefined)?.title
+    const meetingImageUrl =
+      room.roomType === "group"
+        ? (domainData as MeetingDetailResponse | undefined)?.imageUrl
+        : undefined
+    return adaptRoomSummary(
+      room,
+      detailQueries[index]?.data,
+      myUserId,
+      domainTitle,
+      meetingImageUrl
+    )
   })
 
   return {

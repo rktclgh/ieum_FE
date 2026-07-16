@@ -8,6 +8,7 @@ interface ChatMessageResponse {
   roomId: number
   senderId: number
   senderNickname: string
+  senderProfileImageUrl: string | null
   content: string | null
   imageUrl: string | null
   createdAt: string
@@ -60,6 +61,7 @@ interface WsMessageEvent {
   roomId: number
   senderId: number
   senderNickname: string
+  senderProfileImageUrl: string | null
   content: string | null
   imageUrl: string | null
   createdAt: string
