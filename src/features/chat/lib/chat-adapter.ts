@@ -50,6 +50,8 @@ interface ChatBubbleMessage {
   // 이미지 업로드/전송 진행 중인 낙관적 이미지 말풍선. 흐리게 + 스피너로 표시한다.
   imageUploading?: boolean
   replyTo?: ChatReplyPreview | null
+  // 원문 언어. BE 미구현 시 undefined -> 번역 버튼 항상 노출(이슈 #163).
+  sourceLang?: string | null
 }
 
 type ChatUserBubbleMessage = ChatBubbleMessage
@@ -201,6 +203,7 @@ function adaptMessage(
     replyTo: adaptReplyPreview(message.replyTo),
     time: formatKstTime(message.createdAt),
     createdAt: message.createdAt,
+    sourceLang: message.sourceLang,
   }
 }
 
