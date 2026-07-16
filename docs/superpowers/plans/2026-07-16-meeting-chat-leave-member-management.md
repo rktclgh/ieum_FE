@@ -97,7 +97,7 @@ In the **same atomic change**, add `ChatSystemMessage` and branch the page rende
 </div>
 ```
 
-It has no avatar, timestamp, `MessageRow`, long-press handler, context menu, or image affordance.
+It has no avatar, timestamp, `MessageRow`, long-press handler, context menu, image affordance, or `aria-live` announcement. Persisted history and reconnect backfill must remain static text; if a future product requirement needs spoken real-time departure alerts, add one page-level announcer for incoming events only.
 
 - [ ] **Step 4: Run focused GREEN and contracts**
 
@@ -131,7 +131,7 @@ git commit -m "채팅 시스템 메시지 타임라인 분리"
 
 - [ ] **Step 1: Review the render branch after the atomic type conversion**
 
-Extend the timeline/component contract test where practical to prove a system item takes the `ChatSystemMessage` branch, not `ChatMessageGroup`/`MessageRow`. Explicitly assert the system item has no message action target.
+Extend the timeline/component contract test where practical to prove a system item takes the `ChatSystemMessage` branch, not `ChatMessageGroup`/`MessageRow`. Explicitly assert the system item has no message action target and that persisted/backfilled history is not rendered as a live region.
 
 - [ ] **Step 2: Run visual/type validation**
 
