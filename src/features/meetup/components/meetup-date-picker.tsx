@@ -79,6 +79,7 @@ function MeetupDatePickerContent({
   return (
     <DrawerContent className="gap-6 pb-2">
       <div
+        inert={isDateUndecided}
         className={cn(
           "relative flex w-full items-center justify-center gap-2 py-1",
           isDateUndecided && "pointer-events-none opacity-40"

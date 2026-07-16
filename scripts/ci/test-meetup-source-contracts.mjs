@@ -30,6 +30,7 @@ test("날짜 미정 선택은 접근 가능한 체크 상태와 휠 비활성화
   assert.match(picker, /role="checkbox"/)
   assert.match(picker, /aria-checked=\{isDateUndecided\}/)
   assert.match(picker, /pointer-events-none opacity-40/)
+  assert.match(picker, /inert=\{isDateUndecided\}/)
   assert.match(screen, /onConfirm=\{form\.setDateSelection\}/)
 })
 
