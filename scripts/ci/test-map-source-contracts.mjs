@@ -60,8 +60,8 @@ test("장소 선택 map은 최초 fallback을 고정하고 명시적 GPS 재중�
 test("모임 마커 썸네일은 파일 URL을 정규화한다", () => {
   const source = read("src/features/map/components/pin-marker.tsx")
 
-  assert.match(source, /import \{ resolveFileUrl \} from "@\/lib\/api\/file-url"/)
-  assert.match(source, /const thumbnailUrl = resolveFileUrl\(pin\.thumbnailUrl\)/)
-  assert.match(source, /escapeAttr\(thumbnailUrl\)/)
-  assert.doesNotMatch(source, /escapeAttr\(pin\.thumbnailUrl\)/)
+  assert.match(source, /import\s+\{\s*resolveFileUrl\s*\}\s+from\s+['"]@\/lib\/api\/file-url['"]/)
+  assert.match(source, /const\s+thumbnailUrl\s*=\s*resolveFileUrl\(\s*pin\.thumbnailUrl\s*\)/)
+  assert.match(source, /escapeAttr\(\s*thumbnailUrl\s*\)/)
+  assert.doesNotMatch(source, /escapeAttr\(\s*pin\.thumbnailUrl\s*\)/)
 })
