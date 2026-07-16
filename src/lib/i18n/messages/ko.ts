@@ -353,8 +353,8 @@ export interface Messages {
     addFriendButton: string
     requestedButton: string
     pinAction: string
-    muteAction: string
-    notificationLabel: string
+    enableNotificationAction: string
+    disableNotificationAction: string
     deleteAction: string
     replyAction: string
     reportAction: string
@@ -811,8 +811,8 @@ export const ko: Messages = {
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
     pinAction: "고정",
-    muteAction: "알림 해제",
-    notificationLabel: "알림",
+    enableNotificationAction: "알림 켜기",
+    disableNotificationAction: "알림 끄기",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     reportAction: "신고",

@@ -108,8 +108,18 @@ function ChatListPageContent() {
       },
     },
     {
-      icon: <Image src="/icons/chat/alarm-off.svg" alt="" width={24} height={24} />,
-      label: messages.chat.muteAction,
+      icon: (
+        <Image
+          src={chat.notifyEnabled ? "/icons/chat/alarm-off.svg" : "/icons/chat/alarm-on.svg"}
+          alt=""
+          width={24}
+          height={24}
+        />
+      ),
+      label: chat.notifyEnabled
+        ? messages.chat.disableNotificationAction
+        : messages.chat.enableNotificationAction,
+      disabled: setNotifyMutation.isPending,
       onClick: () => {
         setNotifyMutation.mutate({ roomId: chat.roomId, enabled: !chat.notifyEnabled })
         setOpenMenuRoomId(null)

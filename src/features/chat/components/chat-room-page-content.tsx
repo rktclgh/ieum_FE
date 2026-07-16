@@ -664,10 +664,11 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             <SidePanelPopup>
               <ChatRoomMoreHeader
                 onBack={() => setMoreOpen(false)}
-                showActions={!isQuestionRoom}
+                showPinAction={!isQuestionRoom}
+                notificationPending={setNotifyMutation.isPending}
                 notificationOn={notificationOn}
                 onToggleNotification={() => {
-                  if (!session.authenticated) return
+                  if (!session.authenticated || setNotifyMutation.isPending) return
                   setNotifyMutation.mutate({ roomId, enabled: !notificationOn })
                 }}
                 pinned={roomPinned}
