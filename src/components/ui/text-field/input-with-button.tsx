@@ -37,7 +37,7 @@ function InputWithButton({
     <div
       data-slot="input-with-button-wrapper"
       className={cn(
-        "flex h-[3.375rem] w-full items-center justify-between gap-2 rounded-2xl border border-gray-100 py-4 pr-2 pl-4 transition-colors focus-within:border-primary-400 has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50",
+        "flex h-[3.375rem] w-full items-center justify-between gap-2 rounded-2xl border border-gray-100 py-4 pr-2 pl-4 transition-colors focus-within:border-2 focus-within:border-gray-900 has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50",
         error && "border-red focus-within:border-red",
         className
       )}
