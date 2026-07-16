@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { useChatRoom, useChatSessionAccess } from "@/features/chat/hooks/use-chat-queries"
 import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
+import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { ScheduleCalendar } from "@/features/schedule/components/schedule-calendar"
 import { ScheduleEditor } from "@/features/schedule/components/schedule-editor"
 import { ScheduleListItem } from "@/features/schedule/components/schedule-list-item"
@@ -28,7 +29,10 @@ import {
 import { buildScheduleActions } from "@/features/schedule/lib/schedule-actions"
 import { getScheduleErrorMessage } from "@/features/schedule/lib/schedule-error"
 import { isPastScheduleDate, type ScheduleEditorRequest } from "@/features/schedule/lib/schedule-editor"
+import { isMeetingAccessErrorCode } from "@/features/schedule/lib/schedule-query-error"
+import { buildKstMonthScheduleRange } from "@/features/schedule/lib/schedule-query-range"
 import { formatYearMonth, toDateKey } from "@/features/schedule/lib/calendar"
+import { getApiErrorCode } from "@/lib/api/errors"
 import { getKstDateKey } from "@/lib/date/kst"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
@@ -62,10 +66,9 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
   const [editor, setEditor] = React.useState<ScheduleEditorState | null>(null)
   const [actionError, setActionError] = React.useState<string | null>(null)
 
-  // 보이는 달의 1일~말일을 모임 일정 조회 기간으로 사용한다.
+  // OffsetDateTime controller contract에 맞춰 보이는 달 전체를 KST offset으로 조회한다.
   const range = React.useMemo(() => {
-    const lastDay = new Date(year, month, 0).getDate()
-    return { from: toDateKey(year, month, 1), to: toDateKey(year, month, lastDay) }
+    return buildKstMonthScheduleRange(year, month)
   }, [year, month])
 
   const schedulesQuery = useMeetingSchedules(
@@ -92,6 +95,9 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
   const selectedDateIsPast = isPastScheduleDate(selectedDate, today)
   const isOneTimeMeeting = meetingQuery.data?.type === "one_time"
   const isEditorPending = createSchedule.isPending || updateSchedule.isPending
+  const meetingAccessError = [roomQuery.error, meetingQuery.error, schedulesQuery.error].find((error) =>
+    isMeetingAccessErrorCode(getApiErrorCode(error))
+  )
 
   React.useEffect(() => {
     if (!actionError) return
@@ -170,6 +176,16 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
     return <RoutePageState kind="loading" />
   }
 
+  if (meetingAccessError) {
+    return (
+      <main className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center px-4">
+        <p role="alert" className="text-center text-body-medium-16 text-gray-900">
+          {getMeetupErrorMessage(meetingAccessError, messages)}
+        </p>
+      </main>
+    )
+  }
+
   if (roomQuery.isError || meetingQuery.isError || !hasMeetingLink) {
     return <RoutePageState kind="invalid-link" />
   }
@@ -189,6 +205,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
           <ScheduleListItem
             event={event}
             onMoreClick={menuItems.length > 0 ? () => openMenu(event.scheduleId) : undefined}
+            moreAriaLabel={messages.common.more}
           />
           {activeMenuId === event.scheduleId ? (
             <ChatContextMenu

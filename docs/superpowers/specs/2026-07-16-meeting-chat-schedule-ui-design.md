@@ -27,7 +27,7 @@ chatId
 현재 `ScheduleCalendar`, `MonthYearWheelPicker`, `ScheduleListItem`을 그대로 사용한다.
 
 - 선택 날짜는 KST `YYYY-MM-DD`로 유지한다.
-- 월 조회 범위는 해당 월의 첫날~마지막 날이다.
+- 월 조회 범위는 해당 월의 첫날 `00:00:00+09:00`부터 마지막 날 `23:59:59.999+09:00`까지의 KST offset datetime이다. meeting-scoped controller가 `OffsetDateTime`을 바인딩하므로 date-only query를 보내지 않는다.
 - 일정 카드는 기존 `rounded-2xl bg-gray-50 p-3`, 시계·map pin 아이콘, 상대시간 pill을 재사용한다.
 - 일자 점, selected primary 원형, wheel picker 동작을 새로 구현하지 않는다.
 - 카드 본문을 눌러 채팅방으로 이동하던 현재 동작은 이 채팅방 전용 화면에서는 제거한다. 카드의 목적은 해당 모임 일정 관리다.
@@ -97,6 +97,8 @@ type ScheduleEditorRequest = {
 | 수정 | `PATCH /api/v1/meetings/{meetingId}/schedules/{scheduleId}` |
 | 삭제 | `DELETE /api/v1/meetings/{meetingId}/schedules/{scheduleId}` |
 | 신고 | `POST /api/v1/meetings/{meetingId}/schedules/{scheduleId}/report` |
+
+`PATCH` 성공 응답은 갱신된 `MeetingScheduleItem`이다. 화면은 현재 응답을 직접 합성하지 않고 해당 meeting schedule cache를 invalidate한다.
 
 create/update/delete/report 성공 시 이 meeting의 schedule query와 해당 month cache만 invalidate한다. unrelated global calendar queries와 chat message cache는 갱신하지 않는다.
 

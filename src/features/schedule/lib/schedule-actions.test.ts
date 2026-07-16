@@ -31,3 +31,10 @@ test("buildScheduleActions suppresses the more menu when the server grants no ca
     []
   )
 })
+
+test("buildScheduleActions keeps recurring schedules non-editable when the server capability is false", () => {
+  assert.deepEqual(
+    buildScheduleActions({ canEdit: false, canDelete: false, canReport: true }),
+    ["report"]
+  )
+})

@@ -5,9 +5,10 @@ import type {
   AddScheduleResponse,
   CalendarRange,
   CalendarResponse,
+  MeetingScheduleItem,
+  MeetingScheduleRange,
   MeetingSchedulesResponse,
   ScheduleEditorRequest,
-  ScheduleMutationResponse,
   ScheduleReportRequest,
   ScheduleReportResponse,
 } from "@/features/schedule/api/schedule-types"
@@ -22,7 +23,7 @@ async function getCalendar(range: CalendarRange = {}) {
   return data.items
 }
 
-async function getMeetingSchedules(meetingId: number, range: CalendarRange = {}) {
+async function getMeetingSchedules(meetingId: number, range: MeetingScheduleRange = {}) {
   const { data } = await apiClient.get<MeetingSchedulesResponse>(
     meetingSchedulePath(meetingId),
     { params: range }
@@ -41,7 +42,7 @@ async function addSchedule(meetingId: number, body: AddScheduleRequest) {
 }
 
 async function updateSchedule(meetingId: number, scheduleId: number, body: ScheduleEditorRequest) {
-  const { data } = await apiClient.patch<ScheduleMutationResponse>(
+  const { data } = await apiClient.patch<MeetingScheduleItem>(
     meetingSchedulePath(meetingId, scheduleId),
     body
   )

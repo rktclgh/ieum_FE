@@ -57,6 +57,12 @@ interface CalendarRange {
   to?: string
 }
 
+// 모임 채팅 일정 조회는 controller의 OffsetDateTime 바인딩에 맞춰 KST offset을 포함한다.
+interface MeetingScheduleRange {
+  from?: string
+  to?: string
+}
+
 // 모임 채팅 일정 생성/수정 요청. 위치의 좌표는 모임 장소 picker에서만 쓰고,
 // 일정 API에는 사람이 읽을 수 있는 이름만 전달한다.
 interface ScheduleEditorRequest {
@@ -69,11 +75,9 @@ interface ScheduleEditorRequest {
 // 기존 사용처와의 이름 호환을 유지한다.
 type AddScheduleRequest = ScheduleEditorRequest
 
-interface ScheduleMutationResponse {
+interface AddScheduleResponse {
   scheduleId: number
 }
-
-type AddScheduleResponse = ScheduleMutationResponse
 
 interface ScheduleReportRequest {
   reason: "spam" | "ad" | "abuse" | "obscene" | "harassment" | "etc"
@@ -92,8 +96,8 @@ export type {
   CalendarResponse,
   MeetingSchedulesResponse,
   CalendarRange,
+  MeetingScheduleRange,
   ScheduleEditorRequest,
-  ScheduleMutationResponse,
   AddScheduleRequest,
   AddScheduleResponse,
   ScheduleReportRequest,
