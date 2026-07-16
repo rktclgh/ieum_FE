@@ -146,6 +146,7 @@ export const vi: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `Vui lòng nhập tiêu đề trong ${max} ký tự.`,
     datePlaceholder: "Chọn ngày",
+    dateUndecidedLabel: "Chưa chọn ngày",
     timePlaceholder: "Chọn giờ",
     addressPlaceholder: "Chọn địa điểm",
     descriptionPlaceholder: "Nhập nội dung buổi gặp mặt.",

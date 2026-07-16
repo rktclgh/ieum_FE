@@ -7,5 +7,7 @@ bash scripts/ci/test-transport-contracts.sh
 bash scripts/ci/test-chat-avatar-contracts.sh
 bash scripts/ci/test-admin-contracts.sh
 bash scripts/ci/test-map-contracts.sh
+bash scripts/ci/test-meetup-contracts.sh
+node --test scripts/ci/test-meetup-source-contracts.mjs
 node --test scripts/ci/test-static-export-routes.mjs
 node --test scripts/ci/test-static-source-contracts.mjs

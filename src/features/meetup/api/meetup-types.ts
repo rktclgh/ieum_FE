@@ -27,7 +27,7 @@ interface CreateMeetingRequest {
   content?: string
   type: MeetingType
   location: LocationSnapshot
-  schedule: MeetingScheduleInput
+  schedule?: MeetingScheduleInput
   recurrenceRule?: string
   maxMembers: number
   imageFileId?: string
@@ -38,7 +38,7 @@ interface CreateMeetingResponse {
   meetingId: number
   pinId: number
   roomId: number
-  firstScheduleId?: number
+  firstScheduleId: number | null
 }
 
 interface MeetingHost {

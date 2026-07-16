@@ -148,6 +148,7 @@ export interface Messages {
     titleCounter: (current: number, max: number) => string
     titleTooLongExplanation: (max: number) => string
     datePlaceholder: string
+    dateUndecidedLabel: string
     timePlaceholder: string
     addressPlaceholder: string
     descriptionPlaceholder: string
@@ -601,6 +602,7 @@ export const ko: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `모임 제목을 ${max}글자 이내로 적어주세요.`,
     datePlaceholder: "날짜 선택",
+    dateUndecidedLabel: "날짜 미정",
     timePlaceholder: "시간 선택",
     addressPlaceholder: "주소 선택",
     descriptionPlaceholder: "모임 내용을 입력해주세요.",

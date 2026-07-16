@@ -145,6 +145,7 @@ export const th: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `กรุณาตั้งชื่อไม่เกิน ${max} ตัวอักษร`,
     datePlaceholder: "เลือกวันที่",
+    dateUndecidedLabel: "ยังไม่กำหนดวันที่",
     timePlaceholder: "เลือกเวลา",
     addressPlaceholder: "เลือกสถานที่",
     descriptionPlaceholder: "กรอกรายละเอียดกลุ่มพบปะ",

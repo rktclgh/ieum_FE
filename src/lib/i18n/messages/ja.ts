@@ -145,6 +145,7 @@ export const ja: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `タイトルは${max}文字以内で入力してください。`,
     datePlaceholder: "日付を選択",
+    dateUndecidedLabel: "日程未定",
     timePlaceholder: "時間を選択",
     addressPlaceholder: "場所を選択",
     descriptionPlaceholder: "集まりの内容を入力してください。",
