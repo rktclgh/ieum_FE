@@ -36,7 +36,7 @@ import {
   useChatSessionAccess,
 } from "@/features/chat/hooks/use-chat-queries"
 import {
-  useDisbandRoom,
+  useDisbandMeeting,
   useLeaveRoom,
   useMarkRead,
   useSetNotify,
@@ -214,7 +214,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
   const leaveRoomMutation = useLeaveRoom()
-  const disbandRoomMutation = useDisbandRoom()
+  const disbandMeetingMutation = useDisbandMeeting()
 
   const chatMessages = React.useMemo(
     () => mergeMessages(initialMessages, liveMessages),
@@ -280,6 +280,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const notificationOn = room?.notifyEnabled ?? true
   const roomPinned = room?.pinned ?? false
   const isGroup = room?.roomType === "group"
+  const isMeetingHost = isGroup && meeting?.host.userId === session.userId
   const isQuestionRoom = room?.roomType === "question"
 
   // 메시지를 한국 날짜(KST) 단위로 묶어서 날짜가 바뀔 때마다 구분선을 표시한다.
@@ -695,7 +696,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                     if (session.authenticated) setConfirmLeaveOpen(true)
                   }}
                   onDisband={
-                    isGroup && session.authenticated
+                    isMeetingHost && session.authenticated
                       ? () => setConfirmDisbandOpen(true)
                       : undefined
                   }
@@ -734,7 +735,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         confirmLabel={messages.chat.disbandChatAction}
         onConfirm={() => {
           if (!session.authenticated) return
-          disbandRoomMutation.mutate(roomId, {
+          if (meetingId == null) return
+          disbandMeetingMutation.mutate({ meetingId, roomId }, {
             onSuccess: () => router.push(routes.chats()),
             onError: () => setSocketError(messages.chat.disbandFailed),
           })
