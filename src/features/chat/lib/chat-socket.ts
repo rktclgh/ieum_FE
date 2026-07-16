@@ -9,6 +9,11 @@ import type {
   WsMessageEvent,
   WsRoomEvent,
 } from "@/features/chat/api/chat-types"
+import {
+  acceptsRoomMessageForChannel,
+  roomMessageDestination,
+  type RoomMessageChannel,
+} from "@/features/chat/lib/chat-room-message-subscription"
 import { DEV_BACKEND_ORIGIN, toWebSocketUrl } from "@/lib/runtime/dev-backend-origin"
 
 // 운영은 정적 앱과 같은 브라우저 origin, 로컬 next dev만 명시한 백엔드 origin을 사용한다.
@@ -25,7 +30,8 @@ interface ChatSocketHandlers {
 }
 
 // 방 하나에 대한 STOMP 연결을 관리하는 훅.
-// - /topic/rooms/{roomId} 구독 → 메시지 수신
+// - /user/queue/rooms/{roomId} 구독 → 일반 user message 수신 (개인 queue)
+// - /topic/rooms/{roomId} 구독 → system message 수신
 // - /user/queue/errors 구독 → 검증/세션 에러 수신
 // - send()로 /app/rooms/{roomId}/send 발행
 function useChatRoomSocket(activeRoomId: number | null, handlers: ChatSocketHandlers) {
@@ -51,14 +57,21 @@ function useChatRoomSocket(activeRoomId: number | null, handlers: ChatSocketHand
         setConnected(true)
         handlersRef.current.onConnectedChange?.(true)
 
-        client.subscribe(`/topic/rooms/${activeRoomId}`, (message: IMessage) => {
-          try {
-            const event = JSON.parse(message.body) as WsMessageEvent
-            handlersRef.current.onMessage?.(event)
-          } catch {
-            // malformed payload는 무시한다.
-          }
-        })
+        const subscribeRoomMessages = (channel: RoomMessageChannel) => {
+          client.subscribe(roomMessageDestination(activeRoomId, channel), (message: IMessage) => {
+            try {
+              const event = JSON.parse(message.body) as WsMessageEvent
+              if (acceptsRoomMessageForChannel(event, channel)) {
+                handlersRef.current.onMessage?.(event)
+              }
+            } catch {
+              // malformed payload는 무시한다.
+            }
+          })
+        }
+        // 재연결 때마다 onConnect가 두 subscription을 모두 다시 등록한다.
+        subscribeRoomMessages("user")
+        subscribeRoomMessages("system")
 
         // 열린 방에서도 사용자 단위 remove 이벤트를 받아야 강퇴 대상이 즉시 접근을 종료할 수 있다.
         client.subscribe("/user/queue/rooms", (message: IMessage) => {

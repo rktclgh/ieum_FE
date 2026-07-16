@@ -78,7 +78,8 @@ interface ChatRoomResponse {
   questionId: number | null
 }
 
-// WebSocket /topic/rooms/{roomId} 로 브로드캐스트되는 이벤트. ChatMessageResponse와 필드가 동일하다.
+// WebSocket message event. user는 /user/queue/rooms/{roomId}, system은 /topic/rooms/{roomId}로 전달된다.
+// ChatMessageResponse와 필드가 동일하다.
 interface WsMessageEvent {
   messageId: number
   roomId: number

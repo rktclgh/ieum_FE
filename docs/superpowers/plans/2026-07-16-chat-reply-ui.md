@@ -55,3 +55,8 @@
 - [ ] Optimistic reconciliation distinguishes ordinary and reply messages with identical text.
 - [ ] Existing chat design system and message grouping behavior remain intact.
 
+## AS-BUILT security fanout adjustment (2026-07-17)
+
+- 일반 user message는 `/user/queue/rooms/{roomId}` 개인 queue에서 받고, system message는 `/topic/rooms/{roomId}`에서 받는다.
+- 두 경로 모두 기존 `WsMessageEvent`를 사용하며, `messageType`이 channel과 일치하는 event만 기존 message handler로 전달한다.
+- 재연결은 기존 `onConnect` lifecycle 안에서 두 subscription을 함께 복원한다.

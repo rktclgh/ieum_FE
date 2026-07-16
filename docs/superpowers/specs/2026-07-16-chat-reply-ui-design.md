@@ -40,6 +40,10 @@ type SendChatMessageRequest = {
 
 `ChatMessageResponse`/`WsMessageEvent.replyTo`는 optional nullable로 둔다. 구 서버 응답이 field를 생략해도 adapter가 `undefined`로 처리한다. `ChatBubbleMessage`은 reply preview를 보존하며, `ChatSystemMessage`은 reply field를 갖지 않는다.
 
+### AS-BUILT: STOMP message fanout (2026-07-17)
+
+일반 user message는 개인 구독 `/user/queue/rooms/{roomId}`에서만 받고, system message는 기존 `/topic/rooms/{roomId}`에서만 받는다. 두 destination은 같은 `WsMessageEvent` wire shape를 사용한다. FE는 `messageType`이 destination 역할과 일치할 때만 기존 `onMessage` 흐름으로 넘겨 중복/잘못된 channel delivery를 막는다. STOMP 재연결 시 같은 `onConnect`에서 두 subscription을 모두 다시 등록한다.
+
 ## 4. 사용자 흐름
 
 ```text
