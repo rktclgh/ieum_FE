@@ -63,6 +63,12 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
   const isAuthor = question != null && me.data?.userId === question.authorUserId
   const pendingAcceptAnswer =
     question?.answers.find((a) => a.answerId === pendingAcceptId) ?? null
+  const [lastAcceptedAuthorName, setLastAcceptedAuthorName] = React.useState("")
+  React.useEffect(() => {
+    if (pendingAcceptAnswer?.authorName) {
+      setLastAcceptedAuthorName(pendingAcceptAnswer.authorName)
+    }
+  }, [pendingAcceptAnswer])
 
   const handleSend = () => {
     const value = reply.trim()
@@ -276,7 +282,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
         onOpenChange={(open) => !open && setPendingAcceptId(null)}
         title={messages.question.acceptConfirmTitle}
         description={messages.question.acceptConfirmDescription(
-          pendingAcceptAnswer?.authorName ?? ""
+          pendingAcceptAnswer?.authorName ?? lastAcceptedAuthorName
         )}
         cancelLabel={messages.question.acceptConfirmCancel}
         confirmLabel={messages.question.acceptButton}
