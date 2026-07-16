@@ -42,6 +42,8 @@ interface ChatBubbleMessage {
   pending?: boolean
   // 원문 언어. BE 미구현 시 undefined → 번역 버튼 항상 노출(이슈 #163).
   sourceLang?: string | null
+  // 실제 텍스트 본문 존재 여부. 이미지 전용 메시지("사진" 플레이스홀더)는 번역 대상에서 제외한다.
+  hasText: boolean
 }
 
 interface ChatMemberEntry {
@@ -131,6 +133,7 @@ function adaptMessage(
     time: formatKstTime(message.createdAt),
     createdAt: message.createdAt,
     sourceLang: message.sourceLang,
+    hasText: Boolean(content),
   }
 }
 
