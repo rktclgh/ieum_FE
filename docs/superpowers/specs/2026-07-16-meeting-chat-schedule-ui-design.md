@@ -53,14 +53,17 @@ chatId
 
 ### 3.3 action menu
 
-기존 `ChatContextMenu`의 dim overlay, `bg-white/80`, blur, destructive red action을 재사용한다. 메뉴는 server capability 배열에서만 만들어진다.
+기존 `ChatContextMenu`의 dim overlay, `bg-white/80`, blur, destructive red action을 재사용한다. 메뉴는 서버 capability만으로 만들며, 클라이언트가 방장/작성자 여부를 추론하지 않는다.
 
-| capability 조합 | 메뉴 |
+| capability | 직접 제어하는 메뉴 |
 | --- | --- |
-| `canEdit` | 수정, 삭제(`canDelete`) |
-| `canReport` + `canDelete` | 신고, 삭제 |
-| `canReport`만 | 신고 |
-| 모두 false | 더보기 버튼 없음 |
+| `canEdit` | 수정 |
+| `canReport` | 신고 |
+| `canDelete` | 삭제 |
+
+- `buildScheduleActions`는 세 capability를 독립적으로 평가하고 `수정 → 신고 → 삭제` 순서로 true인 항목만 표시한다.
+- 예를 들어 작성자 일정은 `canEdit + canDelete`로 수정·삭제를, 방장이 관리하는 타인 일정은 `canReport + canDelete`로 신고·삭제를 표시한다.
+- 세 capability가 모두 false이면 더보기 버튼을 렌더링하지 않는다.
 
 - 수정은 editor에 target item을 넣는다.
 - 삭제는 현재 `ConfirmDialog`를 사용하고 pending 동안 confirm과 trigger를 disable한다.
