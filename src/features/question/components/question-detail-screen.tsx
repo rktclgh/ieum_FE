@@ -61,6 +61,9 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
 
   const question = detailQuery.data
   const isAuthor = question != null && me.data?.userId === question.authorUserId
+  // 질문에 이미 채택된 답변이 있는지(question.isResolved 대신 답변 목록의 isAccepted를
+  // 직접 근거로 삼는다). 이미 채택된 답변이 있으면 그 답변 외에는 채택 버튼을 숨긴다.
+  const hasAcceptedAnswer = question != null && question.answers.some((a) => a.isAccepted)
 
   const handleSend = () => {
     const value = reply.trim()
@@ -177,7 +180,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                         answer={a}
                         isMine={a.authorUserId === me.data?.userId}
                         isReported={false}
-                        canAccept={!question.isResolved}
+                        canAccept={!question.isResolved && !hasAcceptedAnswer}
                         onAccept={() => setPendingAcceptId(a.answerId)}
                         onStartChat={() => handleStartChat(a.authorUserId)}
                         onLongPress={(rect) => setActiveAnswer({ id: a.answerId, rect, view: a })}
@@ -198,7 +201,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   <QuestionAnswerItem
                     key={answer.answerId}
                     answer={answer}
-                    canAccept={!question.isResolved && !answer.isAccepted}
+                    canAccept={false}
                     onAccept={() => setPendingAcceptId(answer.answerId)}
                   />
                 ))
