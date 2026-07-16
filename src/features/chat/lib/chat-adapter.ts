@@ -1,5 +1,5 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
-import { formatKstTime, getKstMinuteKey } from "@/lib/date/kst"
+import { formatKstTime } from "@/lib/date/kst"
 import type { ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
 import type {
@@ -12,6 +12,7 @@ import type {
 } from "@/features/chat/api/chat-types"
 import { flagFromIso2, fromIso2 } from "@/features/join/lib/nationality-map"
 import type { CountryCode } from "@/lib/constants/countries"
+import { normalizeMessageType } from "@/features/chat/lib/chat-timeline"
 
 // 목록/방 UI가 공통으로 쓰는 뷰 모델.
 
@@ -29,6 +30,7 @@ interface ChatListEntry {
 }
 
 interface ChatBubbleMessage {
+  messageType: "user"
   id: string
   messageId: number
   senderId: number
@@ -45,6 +47,18 @@ interface ChatBubbleMessage {
   // 이미지 업로드/전송 진행 중인 낙관적 이미지 말풍선. 흐리게 + 스피너로 표시한다.
   imageUploading?: boolean
 }
+
+type ChatUserBubbleMessage = ChatBubbleMessage
+
+interface ChatSystemMessage {
+  messageType: "system"
+  id: string
+  messageId: number
+  content: string
+  createdAt: string
+}
+
+type ChatMessageView = ChatUserBubbleMessage | ChatSystemMessage
 
 interface ChatMemberEntry {
   userId: number
@@ -145,10 +159,22 @@ function messagePreview(message: ChatMessageResponse | WsMessageEvent): string {
 function adaptMessage(
   message: ChatMessageResponse | WsMessageEvent,
   myUserId: number
-): ChatBubbleMessage {
+): ChatMessageView {
+  const messageType = normalizeMessageType(message.messageType)
+  if (messageType === "system") {
+    return {
+      messageType,
+      id: String(message.messageId),
+      messageId: message.messageId,
+      content: message.content ?? "",
+      createdAt: message.createdAt,
+    }
+  }
+
   const isMe = message.senderId === myUserId
   const content = message.content ?? ""
   return {
+    messageType,
     id: String(message.messageId),
     messageId: message.messageId,
     senderId: message.senderId,
@@ -161,40 +187,6 @@ function adaptMessage(
     time: formatKstTime(message.createdAt),
     createdAt: message.createdAt,
   }
-}
-
-interface ChatMessageRun {
-  runKey: string
-  sender: "me" | "others"
-  name?: string
-  avatarSrc?: string
-  time: string
-  messages: ChatBubbleMessage[]
-}
-
-// 연속된 같은 발신자(senderId)·같은 분(minute) 메시지를 하나의 run으로 묶는다.
-// 입력은 이미 오래된→최신 정렬 + 같은 날짜 그룹 내 메시지를 가정한다.
-function buildMessageRuns(messages: ChatBubbleMessage[]): ChatMessageRun[] {
-  const runs: ChatMessageRun[] = []
-  let currentKey: string | null = null
-  for (const message of messages) {
-    const minuteKey = `${message.senderId}|${getKstMinuteKey(message.createdAt)}`
-    const lastRun = runs[runs.length - 1]
-    if (lastRun && currentKey === minuteKey) {
-      lastRun.messages.push(message)
-    } else {
-      runs.push({
-        runKey: message.id,
-        sender: message.sender,
-        name: message.name,
-        avatarSrc: message.avatarSrc,
-        time: message.time,
-        messages: [message],
-      })
-    }
-    currentKey = minuteKey
-  }
-  return runs
 }
 
 function adaptMember(member: ChatRoomMemberResponse, myUserId: number): ChatMemberEntry {
@@ -216,6 +208,12 @@ export {
   adaptMessage,
   adaptMember,
   messagePreview,
-  buildMessageRuns,
 }
-export type { ChatListEntry, ChatBubbleMessage, ChatMemberEntry, ChatMessageRun }
+export type {
+  ChatListEntry,
+  ChatBubbleMessage,
+  ChatMemberEntry,
+  ChatMessageView,
+  ChatSystemMessage,
+  ChatUserBubbleMessage,
+}

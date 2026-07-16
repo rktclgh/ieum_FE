@@ -9,7 +9,12 @@ import type {
   RoomType,
   WsRoomEvent,
 } from "@/features/chat/api/chat-types"
-import { adaptMessage, adaptRoomSummary, type ChatListEntry } from "@/features/chat/lib/chat-adapter"
+import {
+  adaptMessage,
+  adaptRoomSummary,
+  type ChatListEntry,
+  type ChatMessageView,
+} from "@/features/chat/lib/chat-adapter"
 import {
   resolveChatSessionAccess,
   type ChatSessionAccess,
@@ -205,7 +210,7 @@ function useChatMessages(roomId: number, session: ChatSessionAccess) {
   })
 
   const userId = session.userId ?? -1
-  const messages = useMemo(() => {
+  const messages: ChatMessageView[] = useMemo(() => {
     if (!enabled || !query.data) return []
     return query.data.pages
       .slice()
