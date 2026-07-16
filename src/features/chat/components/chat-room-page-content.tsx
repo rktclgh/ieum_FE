@@ -70,6 +70,7 @@ import {
   canReplyToMessage,
   findPendingEchoMatch,
   formatReplyLabel,
+  hasUnconfirmedReplyPendingForEcho,
   replyTargetFromMessage,
   shouldClearDraftAfterAcceptedEcho,
   shouldClearSelectedReplyAfterAcceptedEcho,
@@ -179,7 +180,8 @@ interface ChatRoomSessionContentProps extends ChatRoomPageContentProps {
 //    서버가 clientNonce를 주지 않아 (내가 보냄 + 같은 내용 + 시간 창 이내)로 매칭한다. 한 서버 메시지는 최대 한 pending만 흡수.
 function mergeMessages(base: ChatMessageView[], live: ChatMessageView[]): ChatMessageView[] {
   const server = dedupeServerMessages(
-    [...base, ...live].filter((message) => message.messageType !== "user" || !message.pending)
+    // 같은 messageId의 재조회 결과는 WS의 구버전 payload보다 상세한 replyTo를 보존한다.
+    [...live, ...base].filter((message) => message.messageType !== "user" || !message.pending)
   )
 
   const pendings = live
@@ -291,6 +293,10 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         incoming.messageType === "user" && incoming.sender === "me"
           ? findPendingEchoMatch(pendingMessages, incoming, PENDING_MATCH_WINDOW_MS)
           : undefined
+      const needsReplyHistoryBackfill =
+        incoming.messageType === "user" &&
+        incoming.sender === "me" &&
+        hasUnconfirmedReplyPendingForEcho(pendingMessages, incoming, PENDING_MATCH_WINDOW_MS)
 
       updateLiveMessages((previous) =>
         matchedPending
@@ -305,6 +311,10 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         setMessageDraft((current) =>
           shouldClearDraftAfterAcceptedEcho(current, matchedPending) ? "" : current
         )
+      }
+      if (needsReplyHistoryBackfill) {
+        // 구 이벤트 형식에는 replyTo가 없을 수 있다. 확정 링크가 보이는 REST snapshot을 다시 읽는다.
+        queryClient.invalidateQueries({ queryKey: chatKeys.messages(roomId) })
       }
       // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
       queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })

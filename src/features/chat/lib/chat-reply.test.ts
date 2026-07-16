@@ -4,7 +4,7 @@ import test from "node:test"
 import type { ChatReplyPreview } from "../api/chat-types"
 import type { ChatBubbleMessage, ChatMessageView } from "./chat-adapter"
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import { canReplyToMessage, findPendingEchoMatch, formatReplyLabel, matchesReplyTargetForEcho, replyTargetFromMessage, sameReplyTarget, shouldClearDraftAfterAcceptedEcho, shouldClearSelectedReplyAfterAcceptedEcho } from "./chat-reply.ts"
+import { canReplyToMessage, findPendingEchoMatch, formatReplyLabel, hasUnconfirmedReplyPendingForEcho, matchesReplyTargetForEcho, replyTargetFromMessage, sameReplyTarget, shouldClearDraftAfterAcceptedEcho, shouldClearSelectedReplyAfterAcceptedEcho } from "./chat-reply.ts"
 
 function userMessage(overrides: Partial<ChatBubbleMessage> = {}): ChatBubbleMessage {
   return {
@@ -114,7 +114,7 @@ test("an old-field echo waits for REST backfill when ordinary and reply candidat
   assert.equal(findPendingEchoMatch([ordinary, reply], oldFieldEcho, 60_000), undefined)
 })
 
-test("a unique old-field echo uses the same 60-second backfill window", () => {
+test("an old-field echo never confirms a reply pending message", () => {
   const pending = userMessage({
     id: "pending--1",
     messageId: -1,
@@ -132,8 +132,30 @@ test("a unique old-field echo uses the same 60-second backfill window", () => {
   })
   const outsideWindow = { ...inWindow, messageId: 303, createdAt: "2026-07-16T08:22:01+09:00" }
 
-  assert.equal(findPendingEchoMatch([pending], inWindow, 60_000), pending)
+  assert.equal(findPendingEchoMatch([pending], inWindow, 60_000), undefined)
   assert.equal(findPendingEchoMatch([pending], outsideWindow, 60_000), undefined)
+  assert.equal(hasUnconfirmedReplyPendingForEcho([pending], inWindow, 60_000), true)
+  assert.equal(hasUnconfirmedReplyPendingForEcho([pending], outsideWindow, 60_000), false)
+})
+
+test("a unique old-field echo can still confirm an ordinary pending message", () => {
+  const pending = userMessage({
+    id: "pending--1",
+    messageId: -1,
+    sender: "me",
+    pending: true,
+    replyTo: null,
+    createdAt: "2026-07-16T08:21:00+09:00",
+  })
+  const oldFieldEcho = userMessage({
+    id: "303",
+    messageId: 303,
+    sender: "me",
+    replyTo: undefined,
+    createdAt: "2026-07-16T08:21:30+09:00",
+  })
+
+  assert.equal(findPendingEchoMatch([pending], oldFieldEcho, 60_000), pending)
 })
 
 test("a reply-aware echo selects its matching reply pending message", () => {

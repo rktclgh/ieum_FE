@@ -78,10 +78,28 @@ function findPendingEchoMatch(
   )
 
   if (incoming.replyTo === undefined) {
-    return deliveryCandidates.length === 1 ? deliveryCandidates[0] : undefined
+    if (deliveryCandidates.some((pending) => pending.replyTo != null)) return undefined
+    return deliveryCandidates.length === 1 && deliveryCandidates[0]?.replyTo === null
+      ? deliveryCandidates[0]
+      : undefined
   }
 
   return deliveryCandidates.find((pending) => matchesReplyTargetForEcho(pending, incoming))
+}
+
+function hasUnconfirmedReplyPendingForEcho(
+  pendingMessages: ChatBubbleMessage[],
+  incoming: ChatBubbleMessage,
+  matchWindowMs: number
+): boolean {
+  if (incoming.replyTo !== undefined) return false
+
+  return pendingMessages.some(
+    (pending) =>
+      pending.replyTo != null &&
+      matchesPendingMessagePayload(pending, incoming) &&
+      isWithinPendingMatchWindow(pending, incoming, matchWindowMs)
+  )
 }
 
 function shouldClearSelectedReplyAfterAcceptedEcho(
@@ -103,6 +121,7 @@ export {
   canReplyToMessage,
   formatReplyLabel,
   findPendingEchoMatch,
+  hasUnconfirmedReplyPendingForEcho,
   matchesReplyTargetForEcho,
   replyTargetFromMessage,
   sameReplyTarget,
