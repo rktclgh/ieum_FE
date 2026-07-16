@@ -373,6 +373,8 @@ export const th: Messages = {
     disbandChatConfirmDescription: "การยุบห้องแชทจะทำให้สมาชิกทุกคนออกจากห้อง และไม่สามารถย้อนกลับได้",
     messageInputPlaceholder: "พิมพ์ข้อความ",
     sendButtonLabel: "ส่ง",
+    imageAlt: "รูปภาพที่ส่ง",
+    imageUploadFailed: "ส่งรูปภาพไม่สำเร็จ กรุณาลองอีกครั้ง",
   },
   schedule: {
     addButtonLabel: "เพิ่มกำหนดการ",
@@ -433,6 +435,19 @@ export const th: Messages = {
     loadError: "ไม่สามารถโหลดรายชื่อเพื่อนได้",
     searchEmpty: "ไม่พบผลลัพธ์",
     searching: "กำลังค้นหา...",
+  },
+  notification: {
+    appBarTitle: "การแจ้งเตือน",
+    empty: "ยังไม่มีการแจ้งเตือน",
+    loadError: "ไม่สามารถโหลดการแจ้งเตือนได้",
+    readAllButton: "อ่านทั้งหมด",
+    deleteAction: "ลบ",
+    deleteConfirmTitle: "ลบการแจ้งเตือนนี้หรือไม่?",
+    deleteConfirmDescription: "การแจ้งเตือนที่ลบแล้วไม่สามารถกู้คืนได้",
+    deleteConfirmCancel: "ยกเลิก",
+    deleteConfirmConfirm: "ลบ",
+    bellLabel: "การแจ้งเตือน",
+    unreadBadgeLabel: (count) => `การแจ้งเตือนที่ยังไม่อ่าน ${count} รายการ`,
   },
   languages: {
     ko: "เกาหลี",

@@ -3,7 +3,7 @@ import axios from "axios"
 import { apiClient } from "@/lib/api/client"
 
 // 이미지 업로드 3단계(presign → S3 직접 PUT → complete). 계약: ieum_BE/docs/api-endpoints.md §10.
-export type UploadPurpose = "profile" | "meeting" | "question"
+export type UploadPurpose = "profile" | "meeting" | "question" | "chat"
 
 interface PresignResponse {
   fileId: string

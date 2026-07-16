@@ -28,6 +28,7 @@ const routes = {
   chats: () => "/chats/",
   questions: () => "/questions/",
   friends: () => "/friends/",
+  notifications: () => "/notifications/",
   my: () => "/my/",
   myEdit: () => "/my/edit/",
   myNotifications: () => "/my/notifications/",

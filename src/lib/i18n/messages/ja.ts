@@ -373,6 +373,8 @@ export const ja: Messages = {
     disbandChatConfirmDescription: "解散すると参加者全員が退出することになり、元に戻せません。",
     messageInputPlaceholder: "メッセージを入力",
     sendButtonLabel: "送信",
+    imageAlt: "送信した写真",
+    imageUploadFailed: "写真を送信できませんでした。もう一度お試しください。",
   },
   schedule: {
     addButtonLabel: "予定を追加",
@@ -433,6 +435,19 @@ export const ja: Messages = {
     loadError: "友達リストを読み込めませんでした。",
     searchEmpty: "検索結果がありません。",
     searching: "検索中...",
+  },
+  notification: {
+    appBarTitle: "お知らせ",
+    empty: "お知らせはありません。",
+    loadError: "お知らせを読み込めませんでした。",
+    readAllButton: "すべて既読",
+    deleteAction: "削除",
+    deleteConfirmTitle: "お知らせを削除しますか？",
+    deleteConfirmDescription: "削除したお知らせは復元できません。",
+    deleteConfirmCancel: "キャンセル",
+    deleteConfirmConfirm: "削除",
+    bellLabel: "お知らせ",
+    unreadBadgeLabel: (count) => `未読のお知らせ${count}件`,
   },
   languages: {
     ko: "韓国語",

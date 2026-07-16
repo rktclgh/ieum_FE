@@ -374,6 +374,8 @@ export const vi: Messages = {
     disbandChatConfirmDescription: "Giải tán sẽ khiến mọi thành viên rời khỏi phòng chat và không thể hoàn tác.",
     messageInputPlaceholder: "Nhập tin nhắn",
     sendButtonLabel: "Gửi",
+    imageAlt: "Ảnh đã gửi",
+    imageUploadFailed: "Không thể gửi ảnh. Vui lòng thử lại.",
   },
   schedule: {
     addButtonLabel: "Thêm lịch trình",
@@ -434,6 +436,19 @@ export const vi: Messages = {
     loadError: "Không thể tải danh sách bạn bè.",
     searchEmpty: "Không có kết quả.",
     searching: "Đang tìm kiếm...",
+  },
+  notification: {
+    appBarTitle: "Thông báo",
+    empty: "Chưa có thông báo nào.",
+    loadError: "Không thể tải thông báo.",
+    readAllButton: "Đọc tất cả",
+    deleteAction: "Xóa",
+    deleteConfirmTitle: "Xóa thông báo này?",
+    deleteConfirmDescription: "Thông báo đã xóa không thể khôi phục.",
+    deleteConfirmCancel: "Hủy",
+    deleteConfirmConfirm: "Xóa",
+    bellLabel: "Thông báo",
+    unreadBadgeLabel: (count) => `${count} thông báo chưa đọc`,
   },
   languages: {
     ko: "Tiếng Hàn",

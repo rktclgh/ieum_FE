@@ -374,6 +374,8 @@ export const ru: Messages = {
     disbandChatConfirmDescription: "После роспуска все участники покинут чат, отменить это будет нельзя.",
     messageInputPlaceholder: "Введите сообщение",
     sendButtonLabel: "Отправить",
+    imageAlt: "Отправленное фото",
+    imageUploadFailed: "Не удалось отправить фото. Попробуйте ещё раз.",
   },
   schedule: {
     addButtonLabel: "Добавить событие",
@@ -434,6 +436,19 @@ export const ru: Messages = {
     loadError: "Не удалось загрузить список друзей.",
     searchEmpty: "Ничего не найдено.",
     searching: "Поиск...",
+  },
+  notification: {
+    appBarTitle: "Уведомления",
+    empty: "Уведомлений пока нет.",
+    loadError: "Не удалось загрузить уведомления.",
+    readAllButton: "Прочитать все",
+    deleteAction: "Удалить",
+    deleteConfirmTitle: "Удалить это уведомление?",
+    deleteConfirmDescription: "Удалённые уведомления нельзя восстановить.",
+    deleteConfirmCancel: "Отмена",
+    deleteConfirmConfirm: "Удалить",
+    bellLabel: "Уведомления",
+    unreadBadgeLabel: (count) => `${count} непрочитанных уведомлений`,
   },
   languages: {
     ko: "Корейский",

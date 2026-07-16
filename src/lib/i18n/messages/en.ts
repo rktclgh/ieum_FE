@@ -374,6 +374,8 @@ export const en: Messages = {
     disbandChatConfirmDescription: "Disbanding will remove everyone from the chat and cannot be undone.",
     messageInputPlaceholder: "Type a message",
     sendButtonLabel: "Send",
+    imageAlt: "Sent photo",
+    imageUploadFailed: "Couldn't send the photo. Please try again.",
   },
   schedule: {
     addButtonLabel: "Add schedule",
@@ -434,6 +436,19 @@ export const en: Messages = {
     loadError: "Couldn't load your friends.",
     searchEmpty: "No results found.",
     searching: "Searching...",
+  },
+  notification: {
+    appBarTitle: "Notifications",
+    empty: "No notifications yet.",
+    loadError: "Couldn't load notifications.",
+    readAllButton: "Mark all read",
+    deleteAction: "Delete",
+    deleteConfirmTitle: "Delete this notification?",
+    deleteConfirmDescription: "Deleted notifications can't be recovered.",
+    deleteConfirmCancel: "Cancel",
+    deleteConfirmConfirm: "Delete",
+    bellLabel: "Notifications",
+    unreadBadgeLabel: (count) => `${count} unread notifications`,
   },
   languages: {
     ko: "Korean",

@@ -373,6 +373,8 @@ export const zh: Messages = {
     disbandChatConfirmDescription: "解散后所有成员都将被移出聊天室,且无法撤销。",
     messageInputPlaceholder: "输入消息",
     sendButtonLabel: "发送",
+    imageAlt: "已发送的照片",
+    imageUploadFailed: "照片发送失败，请重试。",
   },
   schedule: {
     addButtonLabel: "添加日程",
@@ -433,6 +435,19 @@ export const zh: Messages = {
     loadError: "无法加载好友列表。",
     searchEmpty: "没有搜索结果。",
     searching: "搜索中...",
+  },
+  notification: {
+    appBarTitle: "通知",
+    empty: "暂无通知。",
+    loadError: "无法加载通知。",
+    readAllButton: "全部已读",
+    deleteAction: "删除",
+    deleteConfirmTitle: "要删除该通知吗？",
+    deleteConfirmDescription: "删除后的通知无法恢复。",
+    deleteConfirmCancel: "取消",
+    deleteConfirmConfirm: "删除",
+    bellLabel: "通知",
+    unreadBadgeLabel: (count) => `${count} 条未读通知`,
   },
   languages: {
     ko: "韩语",
