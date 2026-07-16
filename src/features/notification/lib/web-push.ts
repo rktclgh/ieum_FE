@@ -89,8 +89,10 @@ function serviceWorkerContainer() {
   return navigator.serviceWorker
 }
 
-function registerWebPushServiceWorker() {
-  return serviceWorkerContainer().register("/sw.js", { scope: "/" })
+async function registerWebPushServiceWorker() {
+  const container = serviceWorkerContainer()
+  await container.register("/sw.js", { scope: "/" })
+  return container.ready
 }
 
 async function getExistingWebPushSubscription(
