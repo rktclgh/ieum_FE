@@ -259,6 +259,12 @@ export interface Messages {
     notifications: {
       title: string
       notifyAllLabel: string
+      pushDeviceConnected: string
+      pushDeviceConnect: string
+      pushDeviceUnsupported: string
+      pushDevicePermissionDenied: string
+      pushDeviceUnavailable: string
+      pushDeviceError: string
       notifyRadiusLabel: string
       radiusOption: (km: number) => string
       saveError: string
@@ -349,8 +355,8 @@ export interface Messages {
     addFriendButton: string
     requestedButton: string
     pinAction: string
-    muteAction: string
-    notificationLabel: string
+    enableNotificationAction: string
+    disableNotificationAction: string
     deleteAction: string
     replyAction: string
     reportAction: string
@@ -453,6 +459,8 @@ export interface Messages {
     deleteConfirmConfirm: string
     bellLabel: string
     unreadBadgeLabel: (count: number) => string
+    aiAnswerSourceLabel: string
+    humanAnswerSourceLabel: string
   }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
@@ -714,6 +722,12 @@ export const ko: Messages = {
     notifications: {
       title: "알림 설정",
       notifyAllLabel: "전체 알림",
+      pushDeviceConnected: "이 기기에서 푸시 알림을 받고 있어요.",
+      pushDeviceConnect: "이 기기 연결",
+      pushDeviceUnsupported: "이 브라우저는 푸시 알림을 지원하지 않아요.",
+      pushDevicePermissionDenied: "브라우저 설정에서 알림 권한을 허용해 주세요.",
+      pushDeviceUnavailable: "푸시 알림을 지금 사용할 수 없어요.",
+      pushDeviceError: "푸시 알림을 연결하지 못했어요. 다시 시도해 주세요.",
       notifyRadiusLabel: "알림 반경",
       radiusOption: (km) => `${km}km`,
       saveError: "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
@@ -804,8 +818,8 @@ export const ko: Messages = {
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
     pinAction: "고정",
-    muteAction: "알림 해제",
-    notificationLabel: "알림",
+    enableNotificationAction: "알림 켜기",
+    disableNotificationAction: "알림 끄기",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     reportAction: "신고",
@@ -908,6 +922,8 @@ export const ko: Messages = {
     deleteConfirmConfirm: "삭제",
     bellLabel: "알림",
     unreadBadgeLabel: (count) => `읽지 않은 알림 ${count}건`,
+    aiAnswerSourceLabel: "AI 답변",
+    humanAnswerSourceLabel: "사용자 답변",
   },
   languages: {
     ko: "한국어",

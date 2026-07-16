@@ -98,18 +98,32 @@ function ChatListPageContent() {
       .sort((a, b) => Number(b.pinned) - Number(a.pinned))
   }, [entries, query, category])
 
-  const menuItemsFor = (chat: ChatListEntry): ChatContextMenuItem[] => [
+  const menuItemsFor = (chat: ChatListEntry): ChatContextMenuItem[] => {
+    const canPinRoom = chat.category !== "question"
+
+    return [
+      ...(canPinRoom ? [{
+        icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
+        label: messages.chat.pinAction,
+        disabled: setPinnedMutation.isPending,
+        onClick: () => {
+          setPinnedMutation.mutate({ roomId: chat.roomId, pinned: !chat.pinned })
+          setOpenMenuRoomId(null)
+        },
+      }] : []),
     {
-      icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
-      label: messages.chat.pinAction,
-      onClick: () => {
-        setPinnedMutation.mutate({ roomId: chat.roomId, pinned: !chat.pinned })
-        setOpenMenuRoomId(null)
-      },
-    },
-    {
-      icon: <Image src="/icons/chat/alarm-off.svg" alt="" width={24} height={24} />,
-      label: messages.chat.muteAction,
+      icon: (
+        <Image
+          src={chat.notifyEnabled ? "/icons/chat/alarm-off.svg" : "/icons/chat/alarm-on.svg"}
+          alt=""
+          width={24}
+          height={24}
+        />
+      ),
+      label: chat.notifyEnabled
+        ? messages.chat.disableNotificationAction
+        : messages.chat.enableNotificationAction,
+      disabled: setNotifyMutation.isPending,
       onClick: () => {
         setNotifyMutation.mutate({ roomId: chat.roomId, enabled: !chat.notifyEnabled })
         setOpenMenuRoomId(null)
@@ -119,12 +133,14 @@ function ChatListPageContent() {
       icon: <Image src="/icons/chat/trash.svg" alt="" width={24} height={24} />,
       label: messages.chat.deleteAction,
       tone: "destructive",
+      disabled: leaveRoomMutation.isPending,
       onClick: () => {
         leaveRoomMutation.mutate(chat.roomId)
         setOpenMenuRoomId(null)
       },
     },
-  ]
+    ]
+  }
 
   return (
     <>

@@ -642,3 +642,57 @@ test("REST, map, and WebSocket consumers keep the same-origin transport contract
     )
   }
 })
+
+test("Web Push async work is fenced to the originating session", () => {
+  const hook = compact(
+    read("src/features/notification/hooks/use-web-push-subscription.ts"),
+  )
+  const api = compact(read("src/features/notification/api/web-push-api.ts"))
+
+  assert.ok(hook.includes("useQueryClient()"))
+  assert.ok(hook.includes("getSessionGeneration(queryClient)"))
+  assert.ok(hook.includes("getSessionAbortSignal(queryClient)"))
+  assert.ok(hook.includes("isSessionGenerationCurrent(queryClient,generation)"))
+  assert.ok(hook.includes("getWebPushConfig({signal:sessionSignal})"))
+  assert.ok(hook.includes("upsertWebPushSubscription(subscription.toJSON(),{signal:sessionSignal})"))
+  assert.ok(api.includes("signal?:AbortSignal"))
+})
+
+test("Web Push device status follows the account switch and does not log subscription data", () => {
+  const notifications = compact(
+    read("src/features/my/components/notifications-content.tsx"),
+  )
+  const hook = read("src/features/notification/hooks/use-web-push-subscription.ts")
+
+  assert.ok(
+    notifications.includes("constshowPushDeviceStatus=settings.notifyAll&&!isWebPushLoading"),
+  )
+  assert.ok(notifications.includes("{showPushDeviceStatus&&("))
+  assert.doesNotMatch(hook, /console\.warn\([^\n]*,\s*error\)/)
+})
+
+test("chat room controls wait for canonical state and never act before room type is known", () => {
+  const roomPage = compact(read("src/features/chat/components/chat-room-page-content.tsx"))
+  const listPage = compact(read("src/features/chat/components/chat-list-page-content.tsx"))
+  const moreHeader = compact(read("src/features/chat/components/chat-room-more-header.tsx"))
+  const mutations = compact(read("src/features/chat/hooks/use-chat-mutations.ts"))
+
+  assert.ok(roomPage.includes('constcanPinRoom=room!==undefined&&room.roomType!=="question"'))
+  assert.ok(roomPage.includes("constcanConfigureRoomNotification=room!==undefined"))
+  assert.ok(roomPage.includes("showPinAction={canPinRoom}"))
+  assert.ok(roomPage.includes("showNotificationAction={canConfigureRoomNotification}"))
+  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending}"))
+  assert.ok(roomPage.includes("if(!session.authenticated||!canConfigureRoomNotification||setNotifyMutation.isPending)return"))
+  assert.ok(roomPage.includes("if(!session.authenticated||!canPinRoom||setPinnedMutation.isPending)return"))
+  assert.ok(moreHeader.includes("pinPending?:boolean"))
+  assert.ok(moreHeader.includes("aria-busy={pinPending}"))
+  assert.ok(moreHeader.includes("disabled={pinPending}"))
+  assert.ok(listPage.includes('constcanPinRoom=chat.category!=="question"'))
+  assert.ok(listPage.includes("...(canPinRoom?[{") )
+  assert.ok(listPage.includes("disabled:setPinnedMutation.isPending"))
+  assert.ok(listPage.includes("disabled:leaveRoomMutation.isPending"))
+  assert.match(
+    mutations,
+    /functionuseSetNotify\(\).*?onSuccess:\(_data,\{roomId\}\)=>Promise\.all\(/s,
+  )
+})

@@ -9,7 +9,7 @@ interface NotificationEntry {
   title: string
   body: string
   isRead: boolean
-  isAiAnswer: boolean
+  isAiAnswer: boolean | null
   createdAt: string
   href: string | null
 }
