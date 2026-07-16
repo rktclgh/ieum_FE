@@ -43,7 +43,7 @@ function NotificationListAppBar({
         type="button"
         onClick={onReadAll}
         disabled={readAllDisabled}
-        className="shrink-0 text-body-medium-14 text-primary-500 disabled:text-gray-300"
+        className="shrink-0 text-body-medium-14 text-primary disabled:text-gray-300"
       >
         {messages.notification.readAllButton}
       </button>

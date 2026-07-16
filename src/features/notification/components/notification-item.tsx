@@ -35,14 +35,14 @@ function NotificationItem({ entry, onOpen, onLongPress }: NotificationItemProps)
       {...longPress}
       className={cn(
         "flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]",
-        entry.isRead ? "bg-white" : "bg-primary-50"
+        entry.isRead ? "bg-white" : "bg-primary"
       )}
     >
       <span
         aria-hidden
         className={cn(
           "mt-1.5 size-2 shrink-0 rounded-full",
-          entry.isRead ? "bg-transparent" : "bg-primary-400"
+          entry.isRead ? "bg-transparent" : "bg-primary"
         )}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">

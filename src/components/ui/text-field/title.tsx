@@ -26,7 +26,7 @@ function Title({ className, text, variant, num, ...props }: TitleProps) {
     <div data-slot="title" className={cn(titleVariants({ variant }), className)} {...props}>
       <p className="text-body-medium-14 text-gray-900">{text}</p>
       {variant !== "default" && num && (
-        <p className="text-body-semibold-15 text-primary-400">{num}</p>
+        <p className="text-body-semibold-15 text-primary">{num}</p>
       )}
     </div>
   )

@@ -10,17 +10,6 @@
   --color-black: #000000;
   --color-white: #ffffff;
 
-  --color-primary-50: #ecf2fd;
-  --color-primary-100: #bdd0f9;
-  --color-primary-200: #8eaff5;
-  --color-primary-300: #608ef1;
-  --color-primary-400: #316ced;
-  --color-primary-500: #1351d8;
-  --color-primary-600: #0f40ab;
-  --color-primary-700: #0b2e7a;
-  --color-primary-800: #071c4b;
-  --color-primary-900: #020b1c;
-
   --color-gray-50: #fafafa;
   --color-gray-100: #eceeee;
   --color-gray-200: #d0d6d7;
@@ -164,7 +153,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: var(--color-primary-500);
+  /* Issue #165: single primary token replaces the old blue 50-900 scale */
+  --primary: #fc7045;
   --primary-foreground: var(--color-white);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -175,7 +165,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: var(--color-primary-300);
+  --ring: var(--primary);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -199,7 +189,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: var(--color-primary-400);
+  --primary: #fc7045;
   --primary-foreground: var(--color-gray-900);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -210,7 +200,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: var(--color-primary-500);
+  --ring: var(--primary);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

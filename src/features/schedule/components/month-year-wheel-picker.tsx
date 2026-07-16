@@ -72,14 +72,14 @@ function MonthYearWheelPickerContent({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-full border border-primary-400 px-4 py-3 text-center text-body-medium-14 text-primary-400"
+          className="flex-1 rounded-full border border-primary px-4 py-3 text-center text-body-medium-14 text-primary"
         >
           {messages.chat.cancelButton}
         </button>
         <button
           type="button"
           onClick={handleConfirm}
-          className="flex-1 rounded-full bg-primary-400 px-4 py-3 text-center text-body-medium-14 text-white"
+          className="flex-1 rounded-full bg-primary px-4 py-3 text-center text-body-medium-14 text-white"
         >
           {messages.schedule.confirmButton}
         </button>

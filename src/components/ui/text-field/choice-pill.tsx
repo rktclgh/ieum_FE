@@ -20,7 +20,7 @@ function ChoicePill({ className, label, selected, onClick, ...props }: ChoicePil
       onClick={onClick}
       className={cn(
         "flex h-[3.375rem] items-center gap-2 rounded-2xl border p-4 text-body-regular-16 transition-colors",
-        selected ? "border-primary-400 text-gray-900" : "border-gray-100 text-gray-400",
+        selected ? "border-primary text-gray-900" : "border-gray-100 text-gray-400",
         className
       )}
       {...props}
@@ -28,7 +28,7 @@ function ChoicePill({ className, label, selected, onClick, ...props }: ChoicePil
       <span
         className={cn(
           "flex size-[18px] shrink-0 items-center justify-center rounded-full border transition-colors",
-          selected ? "border-primary-400 bg-primary-400" : "border-gray-200"
+          selected ? "border-primary bg-primary" : "border-gray-200"
         )}
       >
         {selected && (

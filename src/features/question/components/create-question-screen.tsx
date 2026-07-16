@@ -215,13 +215,13 @@ function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pt-3 pb-4">
         {/* 제목 */}
-        <div className="flex h-[3.375rem] w-full shrink-0 items-center rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-400">
+        <div className="flex h-[3.375rem] w-full shrink-0 items-center rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary">
           <input
             value={title}
             onChange={(event) => setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
             maxLength={TITLE_MAX_LENGTH}
             placeholder={t.titlePlaceholder}
-            className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
+            className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
           />
         </div>
 
@@ -237,13 +237,13 @@ function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }
         />
 
         {/* 내용 + 사진 첨부 */}
-        <div className="relative h-[18.75rem] shrink-0 rounded-lg border border-gray-100 transition-colors focus-within:border-primary-400">
+        <div className="relative h-[18.75rem] shrink-0 rounded-lg border border-gray-100 transition-colors focus-within:border-primary">
           <textarea
             value={content}
             onChange={(event) => setContent(event.target.value.slice(0, CONTENT_MAX_LENGTH))}
             maxLength={CONTENT_MAX_LENGTH}
             placeholder={t.contentPlaceholder}
-            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary-400 outline-none placeholder:text-gray-400"
+            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary outline-none placeholder:text-gray-400"
           />
           <MeetupImagePicker
             image={image?.preview ?? existingImageUrl}
@@ -271,7 +271,7 @@ function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }
           onClick={handleSubmit}
           className={cn(
             "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            canSubmit ? "bg-primary-400" : "bg-gray-200"
+            canSubmit ? "bg-primary" : "bg-gray-200"
           )}
         >
           {submitting ? t.submittingButton : mode === "edit" ? t.updateButton : t.submitButton}

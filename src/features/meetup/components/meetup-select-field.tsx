@@ -34,7 +34,7 @@ function MeetupSelectField({
       onClick={onClick}
       className={cn(
         "flex h-[3.375rem] w-full items-center gap-1 rounded-xl border border-gray-100 p-4 text-left transition-colors",
-        active && "border-primary-400",
+        active && "border-primary",
         className
       )}
     >
