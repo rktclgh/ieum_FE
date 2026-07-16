@@ -41,6 +41,9 @@ interface ChatRoomDetailResponse {
   pinned: boolean
   notifyEnabled: boolean
   members: ChatRoomMemberResponse[]
+  // direct/question의 대화 상대. 상대가 나가도 남아 있는 사용자의 대표 이미지용으로 유지된다.
+  // 점진 배포 중 이전 백엔드 응답과도 호환되도록 optional이다.
+  counterpart?: ChatRoomMemberResponse | null
 }
 
 interface ChatCursorPage<T> {

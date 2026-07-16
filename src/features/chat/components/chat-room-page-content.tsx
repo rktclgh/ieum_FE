@@ -279,18 +279,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         : resolveRoomTitle(room.members, myUserId, room.roomType)
     : ""
   const roomMembers = room?.members.map((member) => adaptMember(member, myUserId)) ?? []
+  const counterpart = room?.counterpart ? adaptMember(room.counterpart, myUserId) : undefined
   const notificationOn = room?.notifyEnabled ?? true
   const roomPinned = room?.pinned ?? false
   const isGroup = room?.roomType === "group"
   const isQuestionRoom = room?.roomType === "question"
-  const roomAvatarSrc = isQuestionRoom
-    ? questionSummary?.imageUrl
-    : resolveChatRoomAvatar(
-        room?.roomType ?? "direct",
-        roomMembers,
-        myUserId,
-        resolveFileUrl(meeting?.imageUrl)
-      )
+  const roomAvatarSrc = resolveChatRoomAvatar(
+    room?.roomType ?? "direct",
+    roomMembers,
+    myUserId,
+    resolveFileUrl(meeting?.imageUrl),
+    counterpart
+  )
   const isMeetingHost = isGroup && meeting?.host.userId === session.userId
 
   // 메시지를 한국 날짜(KST) 단위로 묶어서 날짜가 바뀔 때마다 구분선을 표시한다.

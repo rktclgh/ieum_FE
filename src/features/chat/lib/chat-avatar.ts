@@ -9,10 +9,12 @@ function resolveChatRoomAvatar(
   roomType: ChatRoomAvatarType,
   members: readonly ChatAvatarMember[],
   myUserId: number,
-  meetingAvatarSrc?: string
+  meetingAvatarSrc?: string,
+  counterpart?: ChatAvatarMember | null
 ): string | undefined {
   if (roomType === "group") return meetingAvatarSrc
-  return members.find((member) => member.userId !== myUserId)?.avatarSrc
+  const counterpartAvatar = counterpart && counterpart.userId !== myUserId ? counterpart.avatarSrc : undefined
+  return counterpartAvatar ?? members.find((member) => member.userId !== myUserId)?.avatarSrc
 }
 
 export { resolveChatRoomAvatar }

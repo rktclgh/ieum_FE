@@ -12,7 +12,8 @@
 
 - `direct` representative image is the counterpart profile image.
 - `group` representative image is the meeting image only; no participant-profile fallback.
-- `question` detail-panel image retains the existing question-image behavior.
+- `question` representative image is the counterpart profile image, because it is a 1:1 room after answer acceptance.
+- `members` remains an active-member list; direct/question may carry a nullable `counterpart` for the other user's representative profile after they leave.
 - `senderProfileImageUrl` is nullable and represents the sender's current profile, not a database snapshot.
 - No schema migration or per-message profile fetch is allowed.
 - All file URLs are normalized through the existing `resolveFileUrl` boundary.
@@ -83,13 +84,13 @@
 - Test runner: `scripts/ci/test-chat-avatar-contracts.sh`
 - Test runner: `scripts/ci/test-client-contracts.sh`
 
-**Consumes:** `roomType`, active room members, `MeetingDetailResponse.imageUrl`, question summary image.
+**Consumes:** `roomType`, active room members, optional direct/question counterpart metadata, `MeetingDetailResponse.imageUrl`.
 
 **Produces:** A normalized `avatarSrc` for chat lists and the detail-panel top profile.
 
 - [ ] **Step 1: Write failing selector tests**
 
-  Cover four cases in `test-chat-avatar.ts`: direct returns the counterpart URL; group returns the provided meeting URL; group with no meeting URL returns `undefined`; question falls back to the counterpart URL for the list flow.
+  Cover direct/question counterparts from active members and from the nullable counterpart metadata after leave; group returns only the provided meeting URL and uses no participant fallback.
 
 - [ ] **Step 2: Verify selector tests fail**
 
@@ -103,11 +104,11 @@
 
 - [ ] **Step 3: Add the minimal selector**
 
-  Implement `resolveChatRoomAvatar(roomType, members, myUserId, meetingAvatarSrc)`. Return `meetingAvatarSrc` for `group`; otherwise select the member whose `userId` differs from `myUserId`.
+  Implement `resolveChatRoomAvatar(roomType, members, myUserId, meetingAvatarSrc, counterpart)`. Return `meetingAvatarSrc` for `group`; otherwise prefer the supplied counterpart and fall back to the active member whose `userId` differs from `myUserId`.
 
 - [ ] **Step 4: Connect list and detail-panel data**
 
-  Pass `MeetingDetailResponse.imageUrl` through `useChatRoomsView` to `adaptRoomSummary`, normalizing in `chat-adapter.ts`. In `chat-room-page-content.tsx`, keep `questionSummary.imageUrl` for question rooms and use the selector for direct/group rooms.
+  Pass `MeetingDetailResponse.imageUrl` through `useChatRoomsView` to `adaptRoomSummary`, normalizing in `chat-adapter.ts`. Consume the optional detail `counterpart` for direct/question list and detail-panel avatar selection; use the selector for all room types.
 
 - [ ] **Step 5: Verify selector tests pass**
 

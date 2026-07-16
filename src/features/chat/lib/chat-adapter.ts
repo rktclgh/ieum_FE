@@ -77,8 +77,10 @@ function resolveRoomAvatar(
   members: ChatRoomMemberResponse[],
   myUserId: number,
   roomType: RoomType,
-  meetingImageUrl?: string | null
+  meetingImageUrl?: string | null,
+  counterpart?: ChatRoomMemberResponse | null
 ): string | undefined {
+  if (roomType === "group") return resolveFileUrl(meetingImageUrl)
   return resolveChatRoomAvatar(
     roomType,
     members.map((member) => ({
@@ -86,7 +88,13 @@ function resolveRoomAvatar(
       avatarSrc: resolveFileUrl(member.profileImageUrl),
     })),
     myUserId,
-    resolveFileUrl(meetingImageUrl)
+    undefined,
+    counterpart
+      ? {
+          userId: counterpart.userId,
+          avatarSrc: resolveFileUrl(counterpart.profileImageUrl),
+        }
+      : undefined
   )
 }
 
@@ -111,7 +119,13 @@ function adaptRoomSummary(
     roomId: summary.roomId,
     title,
     category: roomCategory(summary.roomType),
-    avatarSrc: resolveRoomAvatar(members, myUserId, summary.roomType, meetingImageUrl),
+    avatarSrc: resolveRoomAvatar(
+      members,
+      myUserId,
+      summary.roomType,
+      meetingImageUrl,
+      detail?.counterpart
+    ),
     memberCount: summary.roomType === "direct" ? undefined : members.length || undefined,
     lastMessage: last ? messagePreview(last) : undefined,
     time: last ? formatKstTime(last.createdAt) : undefined,
