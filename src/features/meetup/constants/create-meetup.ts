@@ -21,11 +21,10 @@ export interface MeetupDateValue {
   day: number
 }
 
-/** 날짜 선택의 명시적 결과. 비어 있는 날짜와 날짜 미정 선택을 구분한다. */
-export interface MeetupDateSelection {
-  date: MeetupDateValue | null
-  isDateUndecided: boolean
-}
+/** 날짜 선택의 명시적 결과. 날짜 미정일 때는 실제 날짜를 함께 보낼 수 없다. */
+export type MeetupDateSelection =
+  | { date: null; isDateUndecided: true }
+  | { date: MeetupDateValue | null; isDateUndecided: false }
 
 export interface MeetupTimeValue {
   period: "am" | "pm"

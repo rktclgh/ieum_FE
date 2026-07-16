@@ -70,9 +70,14 @@ function MeetupDatePickerContent({
   const dayLabels = days.map((day) => t.dayLabel(day))
 
   const handleConfirm = () => {
+    if (isDateUndecided) {
+      onConfirm({ date: null, isDateUndecided: true })
+      return
+    }
+
     onConfirm({
-      date: isDateUndecided ? null : { year: draftYear, month: draftMonth, day: selectedDay },
-      isDateUndecided,
+      date: { year: draftYear, month: draftMonth, day: selectedDay },
+      isDateUndecided: false,
     })
   }
 
@@ -119,7 +124,7 @@ function MeetupDatePickerContent({
         role="checkbox"
         aria-checked={isDateUndecided}
         onClick={() => setIsDateUndecided((current) => !current)}
-        className="flex w-full items-center gap-2 px-1 text-left"
+        className="flex w-full items-center gap-2 rounded-md px-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2"
       >
         <span
           className={cn(

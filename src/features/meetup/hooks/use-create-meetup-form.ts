@@ -32,10 +32,18 @@ function useCreateMeetupForm(initialPlace: MeetupPlaceValue | null = null) {
 
   const titleTooLong = title.length > TITLE_MAX_LENGTH
 
-  const setDateSelection = ({ date, isDateUndecided }: MeetupDateSelection) => {
-    setIsDateUndecided(isDateUndecided)
-    setDate(isDateUndecided ? null : date)
-    setTime(null)
+  const setDateSelection = ({ date: nextDate, isDateUndecided: nextIsDateUndecided }: MeetupDateSelection) => {
+    const isDateChanged =
+      isDateUndecided !== nextIsDateUndecided ||
+      date?.year !== nextDate?.year ||
+      date?.month !== nextDate?.month ||
+      date?.day !== nextDate?.day
+
+    setIsDateUndecided(nextIsDateUndecided)
+    setDate(nextIsDateUndecided ? null : nextDate)
+    if (isDateChanged) {
+      setTime(null)
+    }
   }
 
   // 이미지는 선택 항목. 나머지 필수값이 모두 채워지고 제목 글자 수가 유효할 때만 제출 가능.

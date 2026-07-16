@@ -21,11 +21,23 @@ interface MeetingScheduleInput {
   endsAt?: string
 }
 
+type RecurrenceFrequency = "daily" | "weekly" | "monthly"
+
+interface CreateMeetingRecurrenceRule {
+  frequency: RecurrenceFrequency
+  intervalValue: number
+  daysOfWeek?: number[]
+  dayOfMonth?: number
+  startsOn: string
+  endsOn?: string
+  maxOccurrences?: number
+  timezone?: string
+}
+
 interface CreateMeetingRequestBase {
   title: string
   content?: string
   location: LocationSnapshot
-  recurrenceRule?: string
   maxMembers: number
   imageFileId?: string
 }
@@ -34,11 +46,13 @@ interface CreateMeetingRequestBase {
 interface OneTimeCreateMeetingRequest extends CreateMeetingRequestBase {
   type: "one_time"
   schedule?: MeetingScheduleInput
+  recurrenceRule?: never
 }
 
 interface RecurringCreateMeetingRequest extends CreateMeetingRequestBase {
   type: "recurring"
   schedule: MeetingScheduleInput
+  recurrenceRule: CreateMeetingRecurrenceRule
 }
 
 // POST /meetings 요청 바디.
@@ -112,6 +126,8 @@ export type {
   MeetingStatus,
   MeetingMyStatus,
   MeetingScheduleInput,
+  RecurrenceFrequency,
+  CreateMeetingRecurrenceRule,
   CreateMeetingRequest,
   CreateMeetingResponse,
   MeetingHost,
