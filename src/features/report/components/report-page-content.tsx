@@ -10,18 +10,16 @@ import { ReportReasonOption } from "@/features/report/components/report-reason-o
 import { useSubmitReport } from "@/features/report/hooks/use-report-mutation"
 import { toReportReason } from "@/features/report/lib/report-reason-map"
 import { getReportErrorMessage } from "@/features/report/lib/report-error"
+import type { ReportTarget } from "@/features/report/lib/report-target"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 const MAX_DETAIL_LENGTH = 1000
 
 interface ReportPageContentProps {
-  /** 신고 대상 메시지 id — POST /reports 필수 필드 */
-  messageId: number
-  /** 신고 대상(메시지 발신자) 이름. 확인 다이얼로그 제목에 사용 */
-  targetName?: string
+  target: ReportTarget
 }
 
-function ReportPageContent({ messageId, targetName }: ReportPageContentProps) {
+function ReportPageContent({ target }: ReportPageContentProps) {
   const router = useRouter()
   const { messages } = useTranslation()
   const [selectedReason, setSelectedReason] = React.useState<ReportReasonKey | null>(null)
@@ -42,7 +40,7 @@ function ReportPageContent({ messageId, targetName }: ReportPageContentProps) {
     if (!selectedReason || submitReport.isPending) return
     setConfirmOpen(false)
     submitReport.mutate(
-      { messageId, reason: toReportReason(selectedReason), detail: detail.trim() || undefined },
+      { target, reason: toReportReason(selectedReason), detail: detail.trim() || undefined },
       {
         onSuccess: () => router.back(),
         onError: (error) => setSubmitError(getReportErrorMessage(error, messages)),
@@ -121,7 +119,15 @@ function ReportPageContent({ messageId, targetName }: ReportPageContentProps) {
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title={targetName ? messages.report.confirmTitle(targetName) : messages.report.confirmTitleGeneric}
+        title={
+          target.kind === "schedule"
+            ? target.targetName
+              ? messages.report.confirmScheduleTitle(target.targetName)
+              : messages.report.confirmScheduleTitleGeneric
+            : target.targetName
+              ? messages.report.confirmTitle(target.targetName)
+              : messages.report.confirmTitleGeneric
+        }
         description={messages.report.confirmDescription}
         cancelLabel={messages.report.cancelButton}
         confirmLabel={messages.report.submitButton}

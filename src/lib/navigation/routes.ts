@@ -49,6 +49,13 @@ const routes = {
       messageId: requirePositiveInteger(messageId, "messageId"),
       ...(target === undefined ? {} : { target }),
     }),
+  chatScheduleReport: (meetingId: number, scheduleId: number, target?: string) =>
+    queryRoute("/chats/report/", {
+      kind: "schedule",
+      meetingId: requirePositiveInteger(meetingId, "meetingId"),
+      scheduleId: requirePositiveInteger(scheduleId, "scheduleId"),
+      ...(target === undefined ? {} : { target }),
+    }),
   chatSchedule: (chatId: number) =>
     queryRoute("/chats/schedule/", { chatId: requirePositiveInteger(chatId, "chatId") }),
   meetupDetail: (meetingId: number) =>

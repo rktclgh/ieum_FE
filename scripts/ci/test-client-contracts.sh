@@ -18,3 +18,7 @@ node --experimental-strip-types --test src/features/chat/components/chat-system-
 node --experimental-strip-types --test src/features/chat/lib/chat-leave.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-member-management.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-room-event.test.ts
+node --experimental-strip-types --test src/features/schedule/lib/schedule-actions.test.ts
+node --experimental-strip-types --test src/features/schedule/lib/schedule-contract.test.ts
+node --experimental-strip-types --test src/features/schedule/lib/schedule-editor.test.ts
+node --experimental-strip-types --test src/features/report/lib/report-target.test.ts

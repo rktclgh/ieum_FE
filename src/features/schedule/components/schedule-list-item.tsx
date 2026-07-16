@@ -4,10 +4,10 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
-import type { ScheduleEntry } from "@/features/schedule/lib/schedule-adapter"
+import type { ScheduleCardEntry } from "@/features/schedule/lib/schedule-adapter"
 
 interface ScheduleListItemProps extends React.ComponentProps<"div"> {
-  event: ScheduleEntry
+  event: ScheduleCardEntry
   onSelect?: () => void
   onMoreClick?: () => void
 }
@@ -41,7 +41,11 @@ function ScheduleListItem({ className, event, onSelect, onMoreClick, ...props }:
         </span>
       </ContentWrapper>
       {onMoreClick && (
-        <button type="button" onClick={onMoreClick} className="flex size-5 shrink-0 items-center justify-center">
+        <button
+          type="button"
+          onClick={onMoreClick}
+          className="-my-2 -mr-2 flex size-11 shrink-0 items-center justify-center"
+        >
           <Image src="/icons/schedule/edit.svg" alt="" width={20} height={20} className="size-5" />
         </button>
       )}
