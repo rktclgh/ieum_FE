@@ -55,18 +55,21 @@ function EditProfileForm({ user }: { user: MeUser }) {
   const { upload, isUploading } = useProfileImageUpload()
   const { remove } = useDeleteProfileImage()
   const [editorSrc, setEditorSrc] = React.useState<string | null>(null)
+  const [profileImageUploadError, setProfileImageUploadError] = React.useState<string | null>(null)
 
   const handleFileSelected = (file: File) => {
+    setProfileImageUploadError(null)
     // 방어적: 편집기 재선택 시 이전 objectURL 을 먼저 폐기해 리크를 막는다.
     if (editorSrc) URL.revokeObjectURL(editorSrc)
     setEditorSrc(URL.createObjectURL(file))
   }
 
   const handleCropped = async (blob: Blob) => {
+    setProfileImageUploadError(null)
     try {
       await upload(blob)
     } catch {
-      // 실패 시 me 캐시는 그대로 — 사용자에게 별도 토스트 없이 프리뷰 롤백(현재 user.profileImageUrl 유지)
+      setProfileImageUploadError(messages.profileImage.uploadFailed)
     }
   }
 
@@ -179,6 +182,14 @@ function EditProfileForm({ user }: { user: MeUser }) {
             >
               {messages.profileImage.deleteLabel}
             </button>
+          )}
+          {profileImageUploadError && (
+            <Explanation
+              variant="error"
+              role="alert"
+              text={profileImageUploadError}
+              className="mt-2"
+            />
           )}
         </div>
 

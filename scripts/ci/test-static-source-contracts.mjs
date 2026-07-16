@@ -696,3 +696,27 @@ test("chat room controls wait for canonical state and never act before room type
     /functionuseSetNotify\(\).*?onSuccess:\(_data,\{roomId\}\)=>Promise\.all\(/s,
   )
 })
+
+test("profile upload failure is visible and does not change the meeting failure contract", () => {
+  const profile = read("src/features/my/components/edit-profile-content.tsx")
+
+  assert.match(
+    profile,
+    /const \[profileImageUploadError, setProfileImageUploadError\] = React\.useState<string \| null>\(null\)/,
+  )
+  assert.match(
+    profile,
+    /const handleFileSelected = \(file: File\) => \{\s*setProfileImageUploadError\(null\)/,
+  )
+  assert.match(
+    profile,
+    /const handleCropped = async \(blob: Blob\) => \{\s*setProfileImageUploadError\(null\)[\s\S]*?catch \{\s*setProfileImageUploadError\(messages\.profileImage\.uploadFailed\)/,
+  )
+  assert.match(
+    profile,
+    /profileImageUploadError && \(\s*<Explanation\s+variant="error"\s+role="alert"\s+text=\{profileImageUploadError\}/,
+  )
+
+  const meetup = read("src/features/meetup/components/create-meetup-screen.tsx")
+  assert.match(meetup, /catch \{\s*setError\(t\.imageUploadFailed\)\s*return/)
+})
