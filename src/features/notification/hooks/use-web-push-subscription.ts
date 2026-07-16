@@ -118,7 +118,7 @@ function useWebPushSubscription() {
           error: null,
           isLoading: false,
         }))
-      } catch (error) {
+      } catch {
         if (
           cancelled ||
           latestRequest.current !== request ||
@@ -132,7 +132,7 @@ function useWebPushSubscription() {
           error: "connection-failed",
           isLoading: false,
         }))
-        console.warn("Failed to inspect Web Push subscription", error)
+        console.warn("Failed to inspect Web Push subscription")
       }
     }
 
@@ -213,7 +213,7 @@ function useWebPushSubscription() {
         })
       }
       return true
-    } catch (error) {
+    } catch {
       if (
         latestRequest.current === request &&
         isSessionWorkCurrent(queryClient, generation, sessionSignal)
@@ -224,7 +224,7 @@ function useWebPushSubscription() {
           isConnecting: false,
           isLoading: false,
         }))
-        console.warn("Failed to connect Web Push subscription", error)
+        console.warn("Failed to connect Web Push subscription")
       }
       return false
     }
@@ -265,9 +265,9 @@ function useReconcileWebPushSubscription({
         if (!isCurrent() || !subscription) return
 
         await upsertWebPushSubscription(subscription.toJSON(), { signal: sessionSignal })
-      } catch (error) {
+      } catch {
         if (isCurrent()) {
-          console.warn("Failed to reconcile Web Push subscription", error)
+          console.warn("Failed to reconcile Web Push subscription")
         }
       }
     }

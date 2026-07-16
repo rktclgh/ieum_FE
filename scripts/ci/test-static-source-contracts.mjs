@@ -658,6 +658,19 @@ test("Web Push async work is fenced to the originating session", () => {
   assert.ok(api.includes("signal?:AbortSignal"))
 })
 
+test("Web Push device status follows the account switch and does not log subscription data", () => {
+  const notifications = compact(
+    read("src/features/my/components/notifications-content.tsx"),
+  )
+  const hook = read("src/features/notification/hooks/use-web-push-subscription.ts")
+
+  assert.ok(
+    notifications.includes("constshowPushDeviceStatus=settings.notifyAll&&!isWebPushLoading"),
+  )
+  assert.ok(notifications.includes("{showPushDeviceStatus&&("))
+  assert.doesNotMatch(hook, /console\.warn\([^\n]*,\s*error\)/)
+})
+
 test("chat room controls wait for canonical state and never act before room type is known", () => {
   const roomPage = compact(read("src/features/chat/components/chat-room-page-content.tsx"))
   const listPage = compact(read("src/features/chat/components/chat-list-page-content.tsx"))

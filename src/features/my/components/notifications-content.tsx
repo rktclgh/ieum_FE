@@ -59,6 +59,7 @@ function NotificationsForm({ settings: serverSettings }: { settings: UserSetting
 
   const showConnectDeviceAction =
     settings.notifyAll && webPushStatus === "unsubscribed" && !isWebPushLoading
+  const showPushDeviceStatus = settings.notifyAll && !isWebPushLoading
 
   const visibleError = error
     ? messages.my.notifications.saveError
@@ -86,7 +87,7 @@ function NotificationsForm({ settings: serverSettings }: { settings: UserSetting
           />
         </div>
 
-        {!isWebPushLoading && (
+        {showPushDeviceStatus && (
           <div className="flex w-full items-center justify-between gap-3 pb-3 text-body-regular-14 text-gray-500">
             <span>{pushDeviceMessage}</span>
             {showConnectDeviceAction && (
