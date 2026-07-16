@@ -8,6 +8,8 @@
 
 **Tech Stack:** Next.js, React 19, TypeScript, TanStack Query, STOMP, Tailwind design tokens, Node 22 `node:test`, pnpm.
 
+> **As-built status (2026-07-16):** Tasks 1–5 are implemented in `5ba6850` (system timeline), `04b0bc7` (static persisted pill accessibility correction), `0b12de4` (canonical group leave), and `f25e42d` (participant-backed host management, kick synchronization, active-room `remove` redirect). The historical checkboxes below remain as the original execution record; the implementation status above is authoritative. Task 6의 cross-repository SSOT·Notion 동기화는 완료됐고, PR 검토·배포 인계만 남았다.
+
 ## Global Constraints
 
 - Base branch is `develop`; this worktree branch is `171-fix-meeting-chat-leave-member-management`.
