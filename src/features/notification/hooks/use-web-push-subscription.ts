@@ -5,7 +5,6 @@ import * as React from "react"
 import {
   getWebPushConfig,
   upsertWebPushSubscription,
-  type WebPushConfig,
 } from "@/features/notification/api/web-push-api"
 import {
   createOrReuseWebPushSubscription,
@@ -16,11 +15,7 @@ import {
   type WebPushStatus,
 } from "@/features/notification/lib/web-push"
 
-type WebPushConnectionError =
-  | "unsupported"
-  | "server-disabled"
-  | "permission-denied"
-  | "connection-failed"
+type WebPushConnectionError = "connection-failed"
 
 interface WebPushConnectionState {
   status: WebPushStatus
@@ -33,14 +28,9 @@ function browserPermission() {
   return Notification.permission
 }
 
-async function inspectWebPushDevice({
-  registerServiceWorker,
-}: {
-  registerServiceWorker: boolean
-}) {
+async function inspectWebPushDevice() {
   if (!isWebPushSupported()) {
     return {
-      config: null,
       status: "unsupported" as const,
     }
   }
@@ -50,14 +40,11 @@ async function inspectWebPushDevice({
   let browserSubscribed = false
 
   if (config.enabled && permission !== "denied") {
-    const registration = registerServiceWorker
-      ? await registerWebPushServiceWorker()
-      : await navigator.serviceWorker.getRegistration("/")
+    const registration = await registerWebPushServiceWorker()
     browserSubscribed = Boolean(await getExistingWebPushSubscription(registration))
   }
 
   return {
-    config,
     status: resolveWebPushStatus({
       supported: true,
       serverEnabled: config.enabled,
@@ -83,7 +70,7 @@ function useWebPushSubscription() {
 
     const inspect = async () => {
       try {
-        const result = await inspectWebPushDevice({ registerServiceWorker: true })
+        const result = await inspectWebPushDevice()
         if (cancelled || latestRequest.current !== request) return
 
         setState((current) => ({
@@ -119,7 +106,7 @@ function useWebPushSubscription() {
         setState((current) => ({
           ...current,
           status: "unsupported",
-          error: "unsupported",
+          error: null,
           isConnecting: false,
           isLoading: false,
         }))
@@ -136,7 +123,7 @@ function useWebPushSubscription() {
           setState((current) => ({
             ...current,
             status: "permission-denied",
-            error: "permission-denied",
+            error: null,
             isConnecting: false,
             isLoading: false,
           }))
@@ -150,7 +137,7 @@ function useWebPushSubscription() {
           setState((current) => ({
             ...current,
             status: "server-disabled",
-            error: "server-disabled",
+            error: null,
             isConnecting: false,
             isLoading: false,
           }))
@@ -235,4 +222,4 @@ export {
   useReconcileWebPushSubscription,
   useWebPushSubscription,
 }
-export type { WebPushConfig, WebPushConnectionError }
+export type { WebPushConnectionError }
