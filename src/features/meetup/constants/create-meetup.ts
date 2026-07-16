@@ -21,6 +21,12 @@ export interface MeetupDateValue {
   day: number
 }
 
+/** 날짜 선택의 명시적 결과. 비어 있는 날짜와 날짜 미정 선택을 구분한다. */
+export interface MeetupDateSelection {
+  date: MeetupDateValue | null
+  isDateUndecided: boolean
+}
+
 export interface MeetupTimeValue {
   period: "am" | "pm"
   /** 12시간제 시각 (1–12) */
