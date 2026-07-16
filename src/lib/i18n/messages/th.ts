@@ -178,6 +178,7 @@ export const th: Messages = {
     doneButton: "เสร็จ",
     currentLocationLabel: "ตำแหน่งของฉัน",
     loadingAddress: "กำลังโหลดที่อยู่…",
+    locationUnavailable: "ไม่สามารถระบุตำแหน่งปัจจุบันได้ จึงแสดงบริเวณศาลาว่าการกรุงโซล",
     searchEmpty: "ไม่พบผลลัพธ์",
     clearLabel: "ล้าง",
   },

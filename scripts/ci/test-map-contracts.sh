@@ -19,3 +19,4 @@ pnpm exec tsc \
   scripts/ci/test-initial-map-center.ts
 
 node --test "$tmp_dir/scripts/ci/test-initial-map-center.js"
+node --test scripts/ci/test-map-source-contracts.mjs

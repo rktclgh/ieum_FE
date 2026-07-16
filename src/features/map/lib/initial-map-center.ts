@@ -20,5 +20,18 @@ function resolveInitialMapCenter({
   return status === "error" ? fallbackCenter : null
 }
 
-export { resolveInitialMapCenter }
+function resolvePlaceSelectionTarget({
+  clicked,
+  position,
+  isFallbackLocked,
+}: {
+  clicked: InitialMapCoordinates | null
+  position: InitialMapCoordinates | null
+  isFallbackLocked: boolean
+}): InitialMapCoordinates | null {
+  if (clicked) return clicked
+  return isFallbackLocked ? null : position
+}
+
+export { resolveInitialMapCenter, resolvePlaceSelectionTarget }
 export type { InitialMapCoordinates, InitialMapStatus }

@@ -178,6 +178,7 @@ export const ja: Messages = {
     doneButton: "完了",
     currentLocationLabel: "現在地",
     loadingAddress: "住所を読み込み中…",
+    locationUnavailable: "現在地を取得できないため、ソウル市庁周辺を表示しています。",
     searchEmpty: "検索結果がありません。",
     clearLabel: "消去",
   },

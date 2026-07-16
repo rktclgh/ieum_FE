@@ -4,7 +4,7 @@
 
 **Goal:** 새 모임·질문 장소 선택의 첫 지도 viewport를 GPS 좌표로 고정하고, GPS 성공 경로의 자동 flyToBounds를 제거한다.
 
-**Architecture:** picker가 geolocation status와 position을 함께 전달하고, 순수 resolver가 지도 마운트 여부와 최초 center를 결정한다. map은 resolver가 null이면 skeleton만 렌더하고, GPS first mount에서는 recenter nonce를 증가시키지 않는다. error일 때만 서울시청 fallback과 안내를 렌더한다.
+**Architecture:** useGeolocation이 첫 terminal 결과를 immutable initialStatus로 기록하고, picker가 이를 position과 함께 전달한다. 순수 resolver가 지도 마운트 여부와 최초 center를 결정한다. map은 resolver가 null이면 skeleton만 렌더하고, GPS first mount에서는 recenter nonce를 증가시키지 않는다. 첫 error fallback은 명시적 GPS 버튼 전까지 late GPS를 입력 대상으로 쓰지 않는다.
 
 **Tech Stack:** Next.js 16, React 19, TypeScript, react-leaflet, Node built-in test, Playwright CLI.
 
@@ -13,8 +13,9 @@
 - 패키지 매니저는 pnpm만 사용하며 새 의존성을 추가하지 않는다.
 - 정상 GPS 경로에서 MapCanvas는 GPS 좌표로 최초 마운트하며 자동 recenterKey 증가와 자동 flyToBounds를 금지한다.
 - loading 상태는 browser geolocation error까지 MapLoadingSkeleton만 렌더한다. MAP_LOCATION_WAIT_MS 3.5초 타이머를 도입하지 않는다.
-- fallback은 status=error와 position=null일 때만 DEFAULT_MAP_CENTER를 사용한다.
+- fallback은 첫 terminal initialStatus가 error인 경우, 명시적 GPS recenter 전까지 DEFAULT_MAP_CENTER를 사용한다.
 - fallback 뒤 늦은 GPS 수신은 자동으로 viewport를 이동시키지 않는다.
+- fallback 뒤 늦은 GPS 수신은 사용자가 GPS 버튼을 누르기 전까지 직접입력 target으로도 쓰지 않는다. 지도 클릭 좌표는 항상 우선한다.
 - 위치 버튼을 누르는 명시적 recenter의 기존 inset 기반 동작은 보존한다.
 - UI 문자열은 i18n message를 통해 제공한다.
 - 커밋 메시지는 한국어 기존 컨벤션을 따르고 Co-Authored-By trailer를 넣지 않는다.
@@ -205,6 +206,7 @@ git commit -m "test: #170 장소 선택 초기 지도 중심 계약 추가"
 
 - Modify: src/features/meetup/components/meetup-location-picker.tsx
 - Modify: src/features/meetup/components/meetup-location-map.tsx
+- Modify: src/features/map/hooks/use-geolocation.ts
 - Modify: src/features/meetup/components/location-list-item.tsx
 - Modify: src/lib/i18n/messages/ko.ts
 - Modify: src/lib/i18n/messages/en.ts
@@ -219,7 +221,9 @@ git commit -m "test: #170 장소 선택 초기 지도 중심 계약 추가"
 **Interfaces:**
 
 - Consumes: resolveInitialMapCenter({ position, status, fallbackCenter }) from Task 1.
-- Produces: MeetupLocationMapProps.status: GeolocationStatus; only the user-triggered GPS button invokes recenterTo(position).
+- Produces: immutable useGeolocation.initialStatus and MeetupLocationMapProps.initialStatus; only the user-triggered GPS button invokes recenterTo(position) and unlocks late GPS.
+
+> **Late-success fallback amendment:** useGeolocation은 watchPosition callback 안에서 initialStatus를 loading → 첫 success/error로 한 번만 전이시킨다. picker는 status 대신 initialStatus를 map에 전달한다. map은 `initialStatus === "error" && !hasExplicitRecenter`일 때 position을 resolver와 직접입력 target에서 제외한다. 지도 클릭 좌표는 별도 clicked state가 우선하므로 fallback 중에도 계속 선택할 수 있다. 이 보강은 render 중 ref mutation과 effect의 동기 setState 없이 늦은 GPS success가 서울 fallback과 다른 보이지 않는 좌표를 자동 선택하는 문제를 막는다.
 
 - [ ] **Step 1: component source contract를 먼저 작성한다**
 
@@ -406,4 +410,3 @@ git push -u origin fix/#170-map-initial-gps
 ~~~
 
 Create a non-draft PR targeting develop, include Closes #170, the no-automatic-flyToBounds behavior, Node contract evidence, Playwright result, and all verification commands.
-

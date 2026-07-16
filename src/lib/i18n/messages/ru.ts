@@ -179,6 +179,7 @@ export const ru: Messages = {
     doneButton: "Готово",
     currentLocationLabel: "Моё местоположение",
     loadingAddress: "Загрузка адреса…",
+    locationUnavailable: "Не удалось определить ваше местоположение. Показана область вокруг мэрии Сеула.",
     searchEmpty: "Ничего не найдено.",
     clearLabel: "Очистить",
   },

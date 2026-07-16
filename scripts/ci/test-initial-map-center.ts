@@ -1,7 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { resolveInitialMapCenter } from "../../src/features/map/lib/initial-map-center"
+import {
+  resolveInitialMapCenter,
+  resolvePlaceSelectionTarget,
+} from "../../src/features/map/lib/initial-map-center"
 
 const GPS = { lat: 35.1796, lng: 129.0756 }
 const FALLBACK = { lat: 37.5665, lng: 126.978 }
@@ -45,6 +48,41 @@ test("error가 뒤따라도 이미 확보한 GPS 좌표를 우선한다", () => 
       position: GPS,
       status: "error",
       fallbackCenter: FALLBACK,
+    }),
+    GPS
+  )
+})
+
+test("fallback이 고정된 뒤 늦게 도착한 GPS는 보이지 않는 장소 입력 대상으로 쓰지 않는다", () => {
+  assert.equal(
+    resolvePlaceSelectionTarget({
+      clicked: null,
+      position: GPS,
+      isFallbackLocked: true,
+    }),
+    null
+  )
+})
+
+test("fallback이 고정돼도 사용자가 지도에서 고른 좌표는 장소 입력 대상으로 쓴다", () => {
+  const clicked = { lat: 37.4563, lng: 126.7052 }
+
+  assert.deepEqual(
+    resolvePlaceSelectionTarget({
+      clicked,
+      position: GPS,
+      isFallbackLocked: true,
+    }),
+    clicked
+  )
+})
+
+test("사용자가 GPS 재중심을 명시하면 늦게 도착한 좌표를 다시 장소 입력 대상으로 쓴다", () => {
+  assert.deepEqual(
+    resolvePlaceSelectionTarget({
+      clicked: null,
+      position: GPS,
+      isFallbackLocked: false,
     }),
     GPS
   )
