@@ -64,6 +64,14 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
   // 질문에 이미 채택된 답변이 있는지(question.isResolved 대신 답변 목록의 isAccepted를
   // 직접 근거로 삼는다). 이미 채택된 답변이 있으면 그 답변 외에는 채택 버튼을 숨긴다.
   const hasAcceptedAnswer = question != null && question.answers.some((a) => a.isAccepted)
+  const pendingAcceptAnswer =
+    question?.answers.find((a) => a.answerId === pendingAcceptId) ?? null
+  const [lastAcceptedAuthorName, setLastAcceptedAuthorName] = React.useState("")
+  React.useEffect(() => {
+    if (pendingAcceptAnswer?.authorName) {
+      setLastAcceptedAuthorName(pendingAcceptAnswer.authorName)
+    }
+  }, [pendingAcceptAnswer])
 
   const handleSend = () => {
     const value = reply.trim()
@@ -276,7 +284,9 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
         open={pendingAcceptId != null}
         onOpenChange={(open) => !open && setPendingAcceptId(null)}
         title={messages.question.acceptConfirmTitle}
-        description={messages.question.acceptConfirmDescription}
+        description={messages.question.acceptConfirmDescription(
+          pendingAcceptAnswer?.authorName ?? lastAcceptedAuthorName
+        )}
         cancelLabel={messages.question.acceptConfirmCancel}
         confirmLabel={messages.question.acceptButton}
         onConfirm={handleConfirmAccept}

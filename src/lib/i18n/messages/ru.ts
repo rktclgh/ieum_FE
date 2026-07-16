@@ -200,8 +200,9 @@ export const ru: Messages = {
     aiBadge: "AI",
     acceptedBadge: "Принят",
     acceptButton: "Принять",
-    acceptConfirmTitle: "Принять этот ответ?",
-    acceptConfirmDescription: "После принятия вы сможете начать чат с автором этого ответа.",
+    acceptConfirmTitle: "Вы приняли ответ",
+    acceptConfirmDescription: (name) =>
+      `Если у вас есть ещё вопросы к ${name}, вы можете продолжить в личном чате.`,
     acceptConfirmCancel: "Отмена",
     createTitle: "Задать вопрос",
     editTitle: "Изменить вопрос",

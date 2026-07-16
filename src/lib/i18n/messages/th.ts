@@ -199,8 +199,9 @@ export const th: Messages = {
     aiBadge: "AI",
     acceptedBadge: "เลือกแล้ว",
     acceptButton: "เลือก",
-    acceptConfirmTitle: "เลือกคำตอบนี้หรือไม่?",
-    acceptConfirmDescription: "เมื่อเลือกแล้ว คุณจะสามารถเริ่มแชทกับผู้เขียนคำตอบนี้ได้",
+    acceptConfirmTitle: "คุณเลือกคำตอบนี้แล้ว",
+    acceptConfirmDescription: (name) =>
+      `หากมีคำถามเพิ่มเติมถึง ${name} คุณสามารถพูดคุยต่อในแชทส่วนตัวได้`,
     acceptConfirmCancel: "ยกเลิก",
     createTitle: "ถามคำถาม",
     editTitle: "แก้ไขคำถาม",

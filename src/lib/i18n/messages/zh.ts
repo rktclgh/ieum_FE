@@ -199,8 +199,9 @@ export const zh: Messages = {
     aiBadge: "AI",
     acceptedBadge: "已采纳",
     acceptButton: "采纳",
-    acceptConfirmTitle: "采纳这条回答吗？",
-    acceptConfirmDescription: "采纳后即可与该回答的作者开始聊天。",
+    acceptConfirmTitle: "已采纳该回答",
+    acceptConfirmDescription: (name) =>
+      `如果还有想问${name}的问题，可以通过私聊继续提问。`,
     acceptConfirmCancel: "取消",
     createTitle: "提问",
     editTitle: "编辑问题",

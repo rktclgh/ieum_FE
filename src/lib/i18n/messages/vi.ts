@@ -200,8 +200,9 @@ export const vi: Messages = {
     aiBadge: "AI",
     acceptedBadge: "Đã chọn",
     acceptButton: "Chọn",
-    acceptConfirmTitle: "Chọn câu trả lời này?",
-    acceptConfirmDescription: "Khi chọn, bạn có thể bắt đầu trò chuyện với người trả lời này.",
+    acceptConfirmTitle: "Bạn đã chọn câu trả lời này",
+    acceptConfirmDescription: (name) =>
+      `Nếu bạn còn thắc mắc với ${name}, bạn có thể tiếp tục hỏi qua trò chuyện riêng.`,
     acceptConfirmCancel: "Hủy",
     createTitle: "Đặt câu hỏi",
     editTitle: "Sửa câu hỏi",
