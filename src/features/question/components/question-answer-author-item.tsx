@@ -1,11 +1,14 @@
 "use client"
 
 import * as React from "react"
+import { Globe } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { CountryFlag } from "@/features/chat/components/country-flag"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
+import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
+import { shouldShowTranslateButton } from "@/features/translate/lib/translate-lang"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface QuestionAnswerAuthorItemProps {
@@ -28,7 +31,7 @@ function QuestionAnswerAuthorItem({
   onStartChat,
   onLongPress,
 }: QuestionAnswerAuthorItemProps) {
-  const { messages } = useTranslation()
+  const { messages, language } = useTranslation()
   const ref = React.useRef<HTMLDivElement>(null)
   const longPress = useLongPress({
     onLongPress: () => {
@@ -36,6 +39,12 @@ function QuestionAnswerAuthorItem({
       if (rect) onLongPress(rect)
     },
   })
+
+  // 원문 언어가 이미 현재 UI 언어와 같으면 번역이 무의미하므로 버튼을 숨긴다(이슈 #163).
+  const canTranslate = shouldShowTranslateButton(answer.sourceLang, language)
+  const translate = useTranslateToggle({ contentId: answer.answerId, sourceLang: answer.sourceLang })
+  const displayContent =
+    translate.isShowingTranslation && translate.translatedText ? translate.translatedText : answer.content
 
   return (
     <div
@@ -93,8 +102,29 @@ function QuestionAnswerAuthorItem({
               : "whitespace-pre-line text-body-regular-14 text-gray-700"
           }
         >
-          {answer.content}
+          {displayContent}
         </p>
+      ) : null}
+
+      {!isReported && answer.content && canTranslate ? (
+        <Button
+          variant="ghost"
+          size="xs"
+          className="w-fit px-1.5 text-gray-400"
+          disabled={translate.isLoading}
+          onClick={translate.toggle}
+        >
+          <Globe className="size-3.5" />
+          {translate.isLoading
+            ? messages.translate.translatingLabel
+            : translate.isShowingTranslation
+              ? messages.translate.viewOriginalLabel
+              : messages.translate.menuLabel}
+        </Button>
+      ) : null}
+
+      {translate.isError ? (
+        <span className="text-body-regular-12 text-red">{messages.translate.translateFailedLabel}</span>
       ) : null}
     </div>
   )

@@ -24,6 +24,8 @@ interface QuestionAnswerView {
   content: string
   createdAt: string
   imageUrls: string[]
+  // 원문 언어. BE 미구현 시 undefined → 번역 버튼 항상 노출.
+  sourceLang?: string | null
 }
 
 interface QuestionDetailView {
@@ -52,6 +54,7 @@ function adaptAnswer(answer: AnswerResponse): QuestionAnswerView {
     nationalityCode: fromIso2(answer.author?.nationality),
     content: answer.content ?? "",
     createdAt: answer.createdAt,
+    sourceLang: answer.sourceLang,
     imageUrls: answer.imageUrls
       .map((url) => resolveFileUrl(url))
       .filter((url): url is string => Boolean(url)),

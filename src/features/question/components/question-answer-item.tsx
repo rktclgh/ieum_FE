@@ -1,7 +1,11 @@
 "use client"
 
+import { Globe } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
+import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
+import { shouldShowTranslateButton } from "@/features/translate/lib/translate-lang"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface QuestionAnswerItemProps {
@@ -11,7 +15,13 @@ interface QuestionAnswerItemProps {
 }
 
 function QuestionAnswerItem({ answer, canAccept, onAccept }: QuestionAnswerItemProps) {
-  const { messages } = useTranslation()
+  const { messages, language } = useTranslation()
+
+  // 원문 언어가 이미 현재 UI 언어와 같으면 번역이 무의미하므로 버튼을 숨긴다(이슈 #163).
+  const canTranslate = shouldShowTranslateButton(answer.sourceLang, language)
+  const translate = useTranslateToggle({ contentId: answer.answerId, sourceLang: answer.sourceLang })
+  const displayContent =
+    translate.isShowingTranslation && translate.translatedText ? translate.translatedText : answer.content
 
   return (
     <div className="flex w-full flex-col gap-2 border-b border-gray-50 py-3">
@@ -43,7 +53,28 @@ function QuestionAnswerItem({ answer, canAccept, onAccept }: QuestionAnswerItemP
       </div>
 
       {answer.content ? (
-        <p className="text-body-regular-14 whitespace-pre-line text-gray-700">{answer.content}</p>
+        <p className="text-body-regular-14 whitespace-pre-line text-gray-700">{displayContent}</p>
+      ) : null}
+
+      {answer.content && canTranslate ? (
+        <Button
+          variant="ghost"
+          size="xs"
+          className="w-fit px-1.5 text-gray-400"
+          disabled={translate.isLoading}
+          onClick={translate.toggle}
+        >
+          <Globe className="size-3.5" />
+          {translate.isLoading
+            ? messages.translate.translatingLabel
+            : translate.isShowingTranslation
+              ? messages.translate.viewOriginalLabel
+              : messages.translate.menuLabel}
+        </Button>
+      ) : null}
+
+      {translate.isError ? (
+        <span className="text-body-regular-12 text-red">{messages.translate.translateFailedLabel}</span>
       ) : null}
 
       {answer.imageUrls.length > 0 ? (
