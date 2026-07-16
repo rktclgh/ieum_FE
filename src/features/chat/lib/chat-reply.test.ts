@@ -4,7 +4,7 @@ import test from "node:test"
 import type { ChatReplyPreview } from "../api/chat-types"
 import type { ChatBubbleMessage, ChatMessageView } from "./chat-adapter"
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import { canReplyToMessage, findPendingEchoMatch, formatReplyLabel, hasUnconfirmedReplyPendingForEcho, matchesReplyTargetForEcho, replyTargetFromMessage, sameReplyTarget, shouldClearDraftAfterAcceptedEcho, shouldClearSelectedReplyAfterAcceptedEcho } from "./chat-reply.ts"
+import { canReplyToMessage, findConfirmedReplyPendingFromHistory, findPendingEchoMatch, formatReplyLabel, hasUnconfirmedReplyPendingForEcho, matchesReplyTargetForEcho, replyTargetFromMessage, sameReplyTarget, shouldClearDraftAfterAcceptedEcho, shouldClearSelectedReplyAfterAcceptedEcho } from "./chat-reply.ts"
 
 function userMessage(overrides: Partial<ChatBubbleMessage> = {}): ChatBubbleMessage {
   return {
@@ -185,6 +185,30 @@ test("a reply-aware echo selects its matching reply pending message", () => {
   })
 
   assert.equal(findPendingEchoMatch([ordinary, reply], replyEcho, 60_000), reply)
+})
+
+test("a REST-confirmed reply clears the matching pending target and sent draft", () => {
+  const pending = userMessage({
+    id: "pending--1",
+    messageId: -1,
+    sender: "me",
+    pending: true,
+    replyTo: replyTarget,
+    createdAt: "2026-07-16T08:21:00+09:00",
+  })
+  const historyMessage = userMessage({
+    id: "305",
+    messageId: 305,
+    sender: "me",
+    replyTo: replyTarget,
+    createdAt: "2026-07-16T08:21:30+09:00",
+  })
+
+  const matched = findConfirmedReplyPendingFromHistory([pending], [historyMessage], 60_000)
+
+  assert.equal(matched, pending)
+  assert.equal(shouldClearSelectedReplyAfterAcceptedEcho(replyTarget, matched), true)
+  assert.equal(shouldClearDraftAfterAcceptedEcho("떡볶이 먹을까?", matched), true)
 })
 
 test("only an accepted matching reply echo clears its selected target and unchanged text draft", () => {

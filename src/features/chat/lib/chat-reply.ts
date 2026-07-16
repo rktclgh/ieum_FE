@@ -64,8 +64,8 @@ function isWithinPendingMatchWindow(
   return Math.abs(new Date(incoming.createdAt).getTime() - new Date(pending.createdAt).getTime()) < matchWindowMs
 }
 
-// 구 서버 이벤트가 replyTo를 생략하면 답장 여부를 알 수 없다. payload·시간이 같은 pending이
-// 하나일 때만 롤링 배포 호환을 위해 대체하고, 둘 이상이면 REST backfill까지 보존한다.
+// 구 서버 이벤트가 replyTo를 생략하면 답장 여부를 알 수 없다. 답장 pending은 절대 대체하지 않고,
+// 유일한 일반 pending만 호환 처리한다. 답장은 REST backfill의 명시적 replyTo까지 보존한다.
 function findPendingEchoMatch(
   pendingMessages: ChatBubbleMessage[],
   incoming: ChatBubbleMessage,
@@ -102,6 +102,19 @@ function hasUnconfirmedReplyPendingForEcho(
   )
 }
 
+function findConfirmedReplyPendingFromHistory(
+  pendingMessages: ChatBubbleMessage[],
+  historyMessages: ChatMessageView[],
+  matchWindowMs: number
+): ChatBubbleMessage | undefined {
+  for (const message of historyMessages) {
+    if (message.messageType !== "user" || message.sender !== "me" || message.replyTo === undefined) continue
+    const match = findPendingEchoMatch(pendingMessages, message, matchWindowMs)
+    if (match?.replyTo != null) return match
+  }
+  return undefined
+}
+
 function shouldClearSelectedReplyAfterAcceptedEcho(
   selectedReply: ChatReplyPreview | null,
   matchedPending: ChatBubbleMessage
@@ -119,6 +132,7 @@ function shouldClearDraftAfterAcceptedEcho(draft: string, matchedPending: ChatBu
 
 export {
   canReplyToMessage,
+  findConfirmedReplyPendingFromHistory,
   formatReplyLabel,
   findPendingEchoMatch,
   hasUnconfirmedReplyPendingForEcho,

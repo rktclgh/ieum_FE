@@ -68,6 +68,7 @@ import {
 import { buildChatTimeline, dedupeServerMessages } from "@/features/chat/lib/chat-timeline"
 import {
   canReplyToMessage,
+  findConfirmedReplyPendingFromHistory,
   findPendingEchoMatch,
   formatReplyLabel,
   hasUnconfirmedReplyPendingForEcho,
@@ -240,6 +241,27 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const [confirmDisbandOpen, setConfirmDisbandOpen] = React.useState(false)
   const [kickTarget, setKickTarget] = React.useState<GroupChatMemberListItem | null>(null)
   const [socketError, setSocketError] = React.useState<string | null>(null)
+
+  // 구 WS 이벤트가 replyTo를 생략하면 REST snapshot의 명시적 링크로만 답장 전송을 확정한다.
+  React.useEffect(() => {
+    const pendingMessages = liveMessagesRef.current.filter(
+      (message): message is ChatBubbleMessage => message.messageType === "user" && Boolean(message.pending)
+    )
+    const matchedPending = findConfirmedReplyPendingFromHistory(
+      pendingMessages,
+      initialMessages,
+      PENDING_MATCH_WINDOW_MS
+    )
+    if (!matchedPending) return
+
+    updateLiveMessages((previous) => previous.filter((message) => message.messageId !== matchedPending.messageId))
+    setSelectedReply((current) =>
+      shouldClearSelectedReplyAfterAcceptedEcho(current, matchedPending) ? null : current
+    )
+    setMessageDraft((current) =>
+      shouldClearDraftAfterAcceptedEcho(current, matchedPending) ? "" : current
+    )
+  }, [initialMessages, updateLiveMessages])
 
   const bottomRef = React.useRef<HTMLDivElement>(null)
   const topRef = React.useRef<HTMLDivElement>(null)
