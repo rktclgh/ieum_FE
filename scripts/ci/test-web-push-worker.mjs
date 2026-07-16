@@ -94,6 +94,20 @@ test("accepts a relative chat destination but rejects a protocol-relative host",
   assert.equal(worker.shown[1].options.data.url, "/notifications/")
 })
 
+test("rejects a chat destination that normalizes to protocol-relative", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "chat",
+    title: "새 메시지",
+    body: "새 채팅 메시지가 도착했어요",
+    url: "/.//evil.example/steal",
+    tag: "chat-room-9",
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/notifications/")
+})
+
 test("marks an AI durable notification and always opens the notification center", async () => {
   const worker = loadWorker()
   await dispatchPush(worker, {
@@ -130,6 +144,24 @@ test("notification click closes and opens a validated same-origin destination", 
   await completion
 
   assert.equal(closed, true)
+  assert.deepEqual(worker.opened, ["https://ieum.example/notifications/"])
+})
+
+test("notification click rejects a normalized protocol-relative destination", async () => {
+  const worker = loadWorker()
+  let completion
+
+  worker.listeners.get("notificationclick")({
+    notification: {
+      close() {},
+      data: { url: "/.//evil.example/steal" },
+    },
+    waitUntil(promise) {
+      completion = promise
+    },
+  })
+  await completion
+
   assert.deepEqual(worker.opened, ["https://ieum.example/notifications/"])
 })
 

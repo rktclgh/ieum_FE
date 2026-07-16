@@ -10,7 +10,7 @@ function safeDestination(value) {
 
   try {
     const url = new URL(value, self.location.origin)
-    if (url.origin !== self.location.origin) return NOTIFICATION_CENTER
+    if (url.origin !== self.location.origin || url.pathname.startsWith("//")) return NOTIFICATION_CENTER
     return `${url.pathname}${url.search}${url.hash}`
   } catch {
     return NOTIFICATION_CENTER
@@ -77,7 +77,10 @@ async function showPushNotification(event) {
 
 async function openNotificationDestination(value) {
   const destination = safeDestination(value)
-  const targetUrl = new URL(destination, self.location.origin).href
+  const target = new URL(destination, self.location.origin)
+  const targetUrl = target.origin === self.location.origin
+    ? target.href
+    : new URL(NOTIFICATION_CENTER, self.location.origin).href
   const windowClients = await self.clients.matchAll({
     type: "window",
     includeUncontrolled: true,
