@@ -4,7 +4,7 @@ import test from "node:test"
 import type { ChatReplyPreview } from "../api/chat-types"
 import type { ChatBubbleMessage, ChatMessageView } from "./chat-adapter"
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import { canReplyToMessage, formatReplyLabel, matchesReplyTargetForEcho, replyTargetFromMessage, sameReplyTarget } from "./chat-reply.ts"
+import { canReplyToMessage, findPendingEchoMatch, formatReplyLabel, matchesReplyTargetForEcho, replyTargetFromMessage, sameReplyTarget, shouldClearDraftAfterAcceptedEcho, shouldClearSelectedReplyAfterAcceptedEcho } from "./chat-reply.ts"
 
 function userMessage(overrides: Partial<ChatBubbleMessage> = {}): ChatBubbleMessage {
   return {
@@ -78,9 +78,105 @@ test("optimistic matching keeps ordinary and reply messages with the same text d
   assert.equal(sameReplyTarget(ordinary, reply), false)
 })
 
-test("a rolling-deployment event without replyTo still replaces its pending message", () => {
+test("an event that omits replyTo cannot wildcard-match a pending reply", () => {
   const reply = userMessage({ sender: "me", replyTo: replyTarget })
 
-  assert.equal(matchesReplyTargetForEcho(reply, { replyTo: undefined }), true)
+  assert.equal(matchesReplyTargetForEcho(reply, { replyTo: undefined }), false)
   assert.equal(matchesReplyTargetForEcho(reply, { replyTo: null }), false)
+})
+
+test("an old-field echo waits for REST backfill when ordinary and reply candidates are ambiguous", () => {
+  const createdAt = "2026-07-16T08:21:00+09:00"
+  const ordinary = userMessage({
+    id: "pending--1",
+    messageId: -1,
+    sender: "me",
+    pending: true,
+    replyTo: null,
+    createdAt,
+  })
+  const reply = userMessage({
+    id: "pending--2",
+    messageId: -2,
+    sender: "me",
+    pending: true,
+    replyTo: replyTarget,
+    createdAt,
+  })
+  const oldFieldEcho = userMessage({
+    id: "301",
+    messageId: 301,
+    sender: "me",
+    replyTo: undefined,
+    createdAt: "2026-07-16T08:21:30+09:00",
+  })
+
+  assert.equal(findPendingEchoMatch([ordinary, reply], oldFieldEcho, 60_000), undefined)
+})
+
+test("a unique old-field echo uses the same 60-second backfill window", () => {
+  const pending = userMessage({
+    id: "pending--1",
+    messageId: -1,
+    sender: "me",
+    pending: true,
+    replyTo: replyTarget,
+    createdAt: "2026-07-16T08:21:00+09:00",
+  })
+  const inWindow = userMessage({
+    id: "302",
+    messageId: 302,
+    sender: "me",
+    replyTo: undefined,
+    createdAt: "2026-07-16T08:21:59+09:00",
+  })
+  const outsideWindow = { ...inWindow, messageId: 303, createdAt: "2026-07-16T08:22:01+09:00" }
+
+  assert.equal(findPendingEchoMatch([pending], inWindow, 60_000), pending)
+  assert.equal(findPendingEchoMatch([pending], outsideWindow, 60_000), undefined)
+})
+
+test("a reply-aware echo selects its matching reply pending message", () => {
+  const createdAt = "2026-07-16T08:21:00+09:00"
+  const ordinary = userMessage({
+    id: "pending--1",
+    messageId: -1,
+    sender: "me",
+    pending: true,
+    replyTo: null,
+    createdAt,
+  })
+  const reply = userMessage({
+    id: "pending--2",
+    messageId: -2,
+    sender: "me",
+    pending: true,
+    replyTo: replyTarget,
+    createdAt,
+  })
+  const replyEcho = userMessage({
+    id: "304",
+    messageId: 304,
+    sender: "me",
+    replyTo: replyTarget,
+    createdAt: "2026-07-16T08:21:30+09:00",
+  })
+
+  assert.equal(findPendingEchoMatch([ordinary, reply], replyEcho, 60_000), reply)
+})
+
+test("only an accepted matching reply echo clears its selected target and unchanged text draft", () => {
+  const replyPending = userMessage({
+    id: "pending--1",
+    messageId: -1,
+    sender: "me",
+    pending: true,
+    replyTo: replyTarget,
+  })
+  const anotherReply: ChatReplyPreview = { ...replyTarget, messageId: 102 }
+
+  assert.equal(shouldClearSelectedReplyAfterAcceptedEcho(replyTarget, replyPending), true)
+  assert.equal(shouldClearSelectedReplyAfterAcceptedEcho(anotherReply, replyPending), false)
+  assert.equal(shouldClearDraftAfterAcceptedEcho("떡볶이 먹을까?", replyPending), true)
+  assert.equal(shouldClearDraftAfterAcceptedEcho("새 초안", replyPending), false)
 })

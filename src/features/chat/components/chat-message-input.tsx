@@ -6,11 +6,13 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
+type ChatMessageSendResult = "published" | "awaiting-echo" | "failed"
+
 interface ChatMessageInputProps extends Omit<React.ComponentProps<"div">, "onChange"> {
   disabled?: boolean
   value?: string
   onChange?: (value: string) => void
-  onSend?: (value: string) => boolean | void
+  onSend?: (value: string) => ChatMessageSendResult | void
   onCameraClick?: () => void
   replyPreview?: {
     messageId: number
@@ -51,7 +53,7 @@ function ChatMessageInput({
   const handleSend = () => {
     if (disabled || !currentValue.trim()) return
     const sent = onSend?.(currentValue)
-    if (sent !== false) setValue("")
+    if (sent !== "failed" && sent !== "awaiting-echo") setValue("")
   }
 
   const input = (
@@ -129,3 +131,4 @@ function ChatMessageInput({
 }
 
 export { ChatMessageInput }
+export type { ChatMessageSendResult }
