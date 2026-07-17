@@ -1627,7 +1627,7 @@ test("disabled credential fields also disable their auxiliary controls", () => {
   )
 })
 
-test("the admin shell has six fixed destinations, current-page semantics, and logout", () => {
+test("the admin shell has six fixed destinations, prefix current-page semantics, and logout", () => {
   const source = readSource("src/features/admin/shared/components/admin-shell.tsx")
 
   for (const route of [
@@ -1643,8 +1643,15 @@ test("the admin shell has six fixed destinations, current-page semantics, and lo
   assert.match(source, /messages\.admin\.navigation\.operations/)
   assert.match(source, /messages\.admin\.navigation\.review/)
   assert.doesNotMatch(source, /routes\.adminLogin\(\)/)
-  assert.match(source, /pathname === item\.href/)
-  assert.doesNotMatch(source, /pathname\.startsWith\(item\.href\)/)
+  assert.match(source, /function isAdminNavCurrent\(/)
+  assert.match(source, /pathname === href/)
+  assert.match(source, /pathname\.startsWith\(href\)/)
+  assert.match(source, /routes\.adminKnowledge\(\)/)
+  assert.match(source, /routes\.adminKnowledgeGraph\(\)/)
+  assert.match(source, /href === routes\.adminHome\(\)/)
+  assert.match(source, /href === routes\.adminKnowledge\(\)/)
+  assert.match(source, /!pathname\.startsWith\(routes\.adminKnowledgeGraph\(\)\)/)
+  assert.match(source, /isAdminNavCurrent\(pathname, item\.href\)/)
   assert.match(source, /aria-current=\{isCurrent \? "page" : undefined\}/)
   assert.match(source, /<LogoutButton \/>/)
 })
