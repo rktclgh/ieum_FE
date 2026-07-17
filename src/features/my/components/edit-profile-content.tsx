@@ -56,6 +56,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
   const { remove } = useDeleteProfileImage()
   const [editorSrc, setEditorSrc] = React.useState<string | null>(null)
   const [profileImageUploadError, setProfileImageUploadError] = React.useState<string | null>(null)
+  const [hasProfileImageChange, setHasProfileImageChange] = React.useState(false)
 
   const handleFileSelected = (file: File) => {
     setProfileImageUploadError(null)
@@ -68,6 +69,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
     setProfileImageUploadError(null)
     try {
       await upload(blob)
+      setHasProfileImageChange(true)
     } catch {
       setProfileImageUploadError(messages.profileImage.uploadFailed)
     }
@@ -76,6 +78,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
   const handleDelete = async () => {
     try {
       await remove()
+      setHasProfileImageChange(true)
     } catch {
       // 삭제 실패 시 me 캐시는 그대로 — 아바타를 현재 상태로 유지한다
     }
@@ -144,7 +147,8 @@ function EditProfileForm({ user }: { user: MeUser }) {
   if (gender && gender !== user.gender) payload.gender = gender
   if (nextNationality && nextNationality !== user.nationality) payload.nationality = nextNationality
 
-  const hasChanges = Object.keys(payload).length > 0
+  const hasTextChanges = Object.keys(payload).length > 0
+  const hasChanges = hasTextChanges || hasProfileImageChange
   const isFormValid =
     isNicknameValid && isNicknameConfirmed && !isBirthDateInvalid && gender !== null && nationality !== ""
   const canSave = hasChanges && isFormValid && !updateMe.isPending
@@ -156,6 +160,10 @@ function EditProfileForm({ user }: { user: MeUser }) {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     if (!canSave) return
+    if (!hasTextChanges) {
+      router.back()
+      return
+    }
     updateMe.mutate(payload, { onSuccess: () => router.back() })
   }
 

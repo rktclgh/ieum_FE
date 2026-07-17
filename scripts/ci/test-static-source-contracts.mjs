@@ -731,3 +731,18 @@ test("profile upload failure is visible and does not change the meeting failure 
   const meetup = read("src/features/meetup/components/create-meetup-screen.tsx")
   assert.match(meetup, /catch \{\s*setError\(t\.imageUploadFailed\)\s*return/)
 })
+
+test("profile image success enables confirmation without an empty profile patch", () => {
+  const profile = read("src/features/my/components/edit-profile-content.tsx")
+
+  assert.match(
+    profile,
+    /const \[hasProfileImageChange, setHasProfileImageChange\] = React\.useState\(false\)/,
+  )
+  assert.match(profile, /await upload\(blob\)\s*setHasProfileImageChange\(true\)/)
+  assert.match(profile, /await remove\(\)\s*setHasProfileImageChange\(true\)/)
+  assert.match(profile, /const hasTextChanges = Object\.keys\(payload\)\.length > 0/)
+  assert.match(profile, /const hasChanges = hasTextChanges \|\| hasProfileImageChange/)
+  assert.match(profile, /if \(!hasTextChanges\) \{\s*router\.back\(\)\s*return\s*\}/)
+  assert.match(profile, /updateMe\.mutate\(payload, \{ onSuccess: \(\) => router\.back\(\) \}\)/)
+})
