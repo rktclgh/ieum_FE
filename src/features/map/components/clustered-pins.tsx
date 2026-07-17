@@ -9,6 +9,7 @@ import { ClusterMarker } from "@/features/map/components/cluster-marker"
 import { PinMarker } from "@/features/map/components/pin-marker"
 import { usePinClusters } from "@/features/map/hooks/use-pin-clusters"
 import { getClusterExpansionZoom, getClusterLeaves } from "@/features/map/lib/cluster-index"
+import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 // flyToBounds 시 클러스터 핀이 화면 가장자리에 붙지 않도록 주는 여백(px).
@@ -33,6 +34,8 @@ function ClusteredPins({ pins, onPinClick, topInset = 0, bottomInset = 0 }: Clus
 
   const handleClusterClick = React.useCallback(
     (clusterId: number) => {
+      if (!isLeafletMapActive(map)) return
+
       const leaves = getClusterLeaves(index, clusterId)
       if (leaves.length === 0) return
 

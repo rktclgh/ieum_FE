@@ -10,6 +10,7 @@ import { ClusteredPins } from "@/features/map/components/clustered-pins"
 import { VectorTileLayer } from "@/features/map/components/vector-tile-layer"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
+import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 
 interface MapCanvasProps {
   /** 재중심 시 이동할 좌표. 실시간 위치 갱신은 여기에 반영되어도 뷰를 움직이지 않는다(recenterKey로만 이동). */
@@ -87,10 +88,10 @@ function MapCenterUpdater({
     if (appliedKeyRef.current === recenterKey) return
     // center가 아직 없으면 key를 소비하지 않는다. center는 deps에 있어 값이 채워지면 이 effect가
     // 다시 실행되고, 그때 비로소 재중심 후 key를 소비한다(요청 유실 방지).
-    if (!center) return
-    appliedKeyRef.current = recenterKey
+    if (!center || !isLeafletMapActive(map)) return
 
     const targetZoom = zoom ?? map.getZoom()
+    appliedKeyRef.current = recenterKey
 
     // 헤더·하단 시트가 지도를 가리면 그만큼 패딩을 줘, 보이는 영역의 정중앙에 오도록 flyToBounds로 이동.
     if (topInset > 0 || bottomInset > 0) {
@@ -124,32 +125,45 @@ function MapClickListener({ onMapClick }: { onMapClick: (position: Coordinates) 
 function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) {
   const map = useMap()
   const onBoundsChangeRef = React.useRef(onBoundsChange)
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   React.useEffect(() => {
     onBoundsChangeRef.current = onBoundsChange
-  })
-
-  const emit = React.useCallback(() => {
-    const bounds = map.getBounds()
-    const sw = bounds.getSouthWest()
-    const ne = bounds.getNorthEast()
-    onBoundsChangeRef.current({ swLat: sw.lat, swLng: sw.lng, neLat: ne.lat, neLng: ne.lng })
-  }, [map])
-
-  const scheduleEmit = React.useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(emit, 250)
-  }, [emit])
+  }, [onBoundsChange])
 
   React.useEffect(() => {
-    emit() // 최초 1회 즉시 방출
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [emit])
+    let disposed = false
+    let timer: ReturnType<typeof setTimeout> | null = null
 
-  useMapEvents({ moveend: scheduleEmit, zoomend: scheduleEmit })
+    const emit = () => {
+      if (disposed || !isLeafletMapActive(map)) return
+
+      const bounds = map.getBounds()
+      const sw = bounds.getSouthWest()
+      const ne = bounds.getNorthEast()
+      onBoundsChangeRef.current({ swLat: sw.lat, swLng: sw.lng, neLat: ne.lat, neLng: ne.lng })
+    }
+
+    const scheduleEmit = () => {
+      if (disposed) return
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => {
+        timer = null
+        emit()
+      }, 250)
+    }
+
+    // Leaflet이 준비된 뒤에만 최초 bounds를 읽고, 해제 시 listener와 지연 작업을 함께 제거한다.
+    map.whenReady(emit)
+    map.on("moveend", scheduleEmit)
+    map.on("zoomend", scheduleEmit)
+
+    return () => {
+      disposed = true
+      if (timer) clearTimeout(timer)
+      map.off("moveend", scheduleEmit)
+      map.off("zoomend", scheduleEmit)
+    }
+  }, [map])
 
   return null
 }
@@ -171,9 +185,12 @@ function MapCanvas({
   onSelectedPositionClick,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
+  // React refresh/조건부 재마운트에서 이전 Leaflet map의 remove가 늦더라도 새 map은 다른 DOM 컨테이너를 쓴다.
+  const [mapContainerKey] = React.useState(() => crypto.randomUUID())
 
   return (
     <MapContainer
+      key={mapContainerKey}
       center={[initialCenter.lat, initialCenter.lng]}
       zoom={DEFAULT_MAP_ZOOM}
       zoomControl={false}

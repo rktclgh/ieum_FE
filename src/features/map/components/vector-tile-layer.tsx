@@ -8,6 +8,7 @@ import "maplibre-gl/dist/maplibre-gl.css"
 import "@maplibre/maplibre-gl-leaflet"
 
 import { MAP_CATEGORY_COLORS, MAP_STYLE_URL } from "@/features/map/constants/map"
+import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 
 // 스타일의 각 레이어를 source-layer 기준으로 매칭해 지정 색으로 덮어쓴다.
 // (레이어 id가 아니라 source-layer 기준이라, 여러 개로 쪼개진 도로 레이어 등도 한 번에 처리된다.)
@@ -43,7 +44,7 @@ function VectorTileLayer() {
   React.useEffect(() => {
     // MapContainer가 해제되는 중이면 Leaflet의 pane도 함께 사라진다. 이 시점에 레이어를 붙이면
     // maplibre-gl-leaflet 내부에서 제거된 mapPane을 읽어 예외가 나므로, 현재 map이 살아 있을 때만 시작한다.
-    if (!map.getPane("tilePane")) return
+    if (!isLeafletMapActive(map)) return
 
     const layer = L.maplibreGL({ style: MAP_STYLE_URL })
     layer.addTo(map)
@@ -63,7 +64,7 @@ function VectorTileLayer() {
         glMap.off("styledata", recolor)
       }
       // 부모 MapContainer가 먼저 제거한 경우에는 이미 layer가 빠져 있다.
-      if (map.hasLayer(layer)) {
+      if (isLeafletMapActive(map) && map.hasLayer(layer)) {
         map.removeLayer(layer)
       }
     }
