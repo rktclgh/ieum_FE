@@ -16,7 +16,7 @@ interface QuestionAnswerView {
   answerId: number
   isAi: boolean
   isAccepted: boolean
-  authorUserId: number
+  authorUserId: number | null
   authorName: string
   authorAvatarUrl?: string
   countryFlagSrc?: string
@@ -45,11 +45,11 @@ function adaptAnswer(answer: AnswerResponse): QuestionAnswerView {
     answerId: answer.answerId,
     isAi: answer.isAi,
     isAccepted: answer.isAccepted,
-    authorUserId: answer.author.userId,
-    authorName: answer.author.nickname,
-    authorAvatarUrl: resolveFileUrl(answer.author.profileImageUrl),
-    countryFlagSrc: flagFromIso2(answer.author.nationality),
-    nationalityCode: fromIso2(answer.author.nationality),
+    authorUserId: answer.author?.userId ?? null,
+    authorName: answer.author?.nickname ?? "",
+    authorAvatarUrl: resolveFileUrl(answer.author?.profileImageUrl),
+    countryFlagSrc: flagFromIso2(answer.author?.nationality),
+    nationalityCode: fromIso2(answer.author?.nationality),
     content: answer.content ?? "",
     createdAt: answer.createdAt,
     imageUrls: answer.imageUrls
@@ -83,8 +83,7 @@ function adaptQuestionSummary(detail: QuestionDetailResponse): QuestionSummary {
     id: String(detail.questionId),
     authorUserId: detail.author.userId,
     answeredUserIds: detail.answers
-      .filter((answer) => !answer.isAi)
-      .map((answer) => answer.author.userId),
+      .flatMap((answer) => (!answer.isAi && answer.author ? [answer.author.userId] : [])),
     authorName: detail.author.nickname,
     authorAvatarUrl: resolveFileUrl(detail.author.profileImageUrl),
     countryFlagSrc: flagFromIso2(detail.author.nationality),
