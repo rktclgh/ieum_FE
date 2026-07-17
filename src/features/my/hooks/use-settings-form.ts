@@ -4,6 +4,11 @@ import * as React from "react"
 
 import { useUpdateSettings } from "@/features/my/hooks/use-my-mutations"
 import type { UpdateSettingsRequest } from "@/features/my/api/my-types"
+import {
+  applySettingsPatchError,
+  applySettingsPatchStart,
+  applySettingsPatchSuccess,
+} from "@/features/my/lib/settings-form-language"
 import type { UserSettings } from "@/features/session/api/session-api"
 import { useLanguageStore } from "@/lib/i18n/store"
 
@@ -29,18 +34,21 @@ function useSettingsForm(serverSettings: UserSettings) {
     (partial: UpdateSettingsRequest) => {
       setError(false)
       const previous = settings
-      setSettings((current) => ({ ...current, ...partial }))
-      if (partial.language) setLanguage(partial.language)
+      const optimistic = applySettingsPatchStart(settings, partial)
+      setSettings(optimistic.settings)
+      if (optimistic.language) setLanguage(optimistic.language)
 
       updateSettings.mutate(partial, {
         onSuccess: (nextSettings) => {
-          setSyncedServerSettings(nextSettings)
-          setSettings(nextSettings)
-          setLanguage(nextSettings.language)
+          const success = applySettingsPatchSuccess(nextSettings)
+          setSyncedServerSettings(success.syncedServerSettings)
+          setSettings(success.settings)
+          setLanguage(success.language)
         },
         onError: () => {
-          setSettings(previous)
-          if (partial.language) setLanguage(previous.language)
+          const failure = applySettingsPatchError(previous, partial)
+          setSettings(failure.settings)
+          if (failure.language) setLanguage(failure.language)
           setError(true)
         },
       })

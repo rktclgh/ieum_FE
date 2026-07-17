@@ -1,45 +1,121 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
-import { resolve } from "node:path"
 import test from "node:test"
 
-function compactSource(path: string) {
-  return readFileSync(resolve(process.cwd(), path), "utf8").replace(/\s+/g, "")
-}
+import {
+  applySettingsPatchError,
+  applySettingsPatchStart,
+  applySettingsPatchSuccess,
+  isLanguageSelectorDisabled,
+} from "@/features/my/lib/settings-form-language"
+import { DEFAULT_LANGUAGE, resolveDeviceLanguage } from "@/lib/i18n/languages"
+import {
+  getLanguagePersistenceUpdate,
+  resolveGuestLanguageBootstrap,
+  shouldSyncServerLanguage,
+} from "@/lib/i18n/language-sync"
 
-test("query provider syncs authenticated server language into i18n state", () => {
-  const provider = compactSource("src/lib/query/query-provider.tsx")
+test("guest language bootstrap keeps existing localStorage state before device detection", () => {
+  const bootstrap = resolveGuestLanguageBootstrap(
+    '{"state":{"language":"ko"},"version":0}',
+    "ja"
+  )
 
-  assert.match(
-    provider,
-    /functionLanguageSessionSync\(\)\{const\{data:user\}=useMe\(\);/,
-  )
-  assert.match(
-    provider,
-    /constserverLanguage=user\?\.settings\.language;/,
-  )
-  assert.match(
-    provider,
-    /if\(!serverLanguage\)return;setLanguage\(serverLanguage\)/,
-  )
-  assert.match(provider, /<LanguageSessionSync\/><WebPushSessionReconciler\/>/)
+  assert.deepEqual(bootstrap, { kind: "persisted" })
 })
 
-test("settings form keeps i18n language aligned with server success and rollback", () => {
-  const hook = compactSource("src/features/my/hooks/use-settings-form.ts")
+test("guest language bootstrap uses device language when localStorage is empty", () => {
+  const bootstrap = resolveGuestLanguageBootstrap(null, "ru")
 
-  assert.match(hook, /onSuccess:\(nextSettings\)=>\{/)
-  assert.match(hook, /setSettings\(nextSettings\)/)
-  assert.match(hook, /setSyncedServerSettings\(nextSettings\)/)
-  assert.match(hook, /setLanguage\(nextSettings\.language\)/)
-  assert.match(hook, /onError:\(\)=>\{/)
-  assert.match(hook, /setSettings\(previous\)/)
-  assert.match(hook, /setLanguage\(previous\.language\)/)
+  assert.deepEqual(bootstrap, { kind: "device", language: "ru" })
 })
 
-test("language selector blocks a second choice while its settings patch is pending", () => {
-  const component = compactSource("src/features/my/components/language-setting-item.tsx")
+test("device language resolution falls back to English when the browser has no supported locale", () => {
+  assert.equal(resolveDeviceLanguage(["fr-FR", "de"]), DEFAULT_LANGUAGE)
+})
 
-  assert.match(component, /constform=useSettingsForm\(settings\)/)
-  assert.match(component, /disabled=\{form\.isPending\}/)
+test("language persistence update is skipped for the current language", () => {
+  assert.equal(getLanguagePersistenceUpdate("en", "en"), undefined)
+  assert.deepEqual(getLanguagePersistenceUpdate("ko", "en"), { language: "en" })
+})
+
+const baseSettings = {
+  language: "ko",
+  cameraPermission: false,
+  pushPermission: false,
+  notifyAll: true,
+  notifyMeeting: true,
+  notifyQuestion: true,
+  notifyRadiusKm: 5,
+} as const
+
+test("settings language patch applies optimistic language before server response", () => {
+  const result = applySettingsPatchStart(baseSettings, { language: "en" })
+
+  assert.equal(result.settings.language, "en")
+  assert.equal(result.language, "en")
+})
+
+test("settings language patch success finalizes the server language", () => {
+  const serverSettings = { ...baseSettings, language: "ja" } as const
+  const result = applySettingsPatchSuccess(serverSettings)
+
+  assert.equal(result.settings.language, "ja")
+  assert.equal(result.syncedServerSettings.language, "ja")
+  assert.equal(result.language, "ja")
+})
+
+test("settings language patch error rolls back to the previous language", () => {
+  const result = applySettingsPatchError(baseSettings, { language: "en" })
+
+  assert.equal(result.settings.language, "ko")
+  assert.equal(result.language, "ko")
+  assert.equal(result.error, true)
+})
+
+test("language selector is disabled only while settings patch is pending", () => {
+  assert.equal(isLanguageSelectorDisabled(true), true)
+  assert.equal(isLanguageSelectorDisabled(false), false)
+})
+
+test("actual language store setter does not persist when language is unchanged", async (t) => {
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window")
+  const cleanup: { resetLanguageStore?: () => void } = {}
+
+  t.after(() => {
+    cleanup.resetLanguageStore?.()
+    if (previousWindow) {
+      Object.defineProperty(globalThis, "window", previousWindow)
+    } else {
+      Reflect.deleteProperty(globalThis, "window")
+    }
+  })
+
+  const setItemCalls: string[] = []
+  const storage = {
+    getItem: () => null,
+    setItem: (key: string) => {
+      setItemCalls.push(key)
+    },
+    removeItem: () => undefined,
+  }
+
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { localStorage: storage },
+  })
+
+  const { useLanguageStore } = await import("@/lib/i18n/store")
+  cleanup.resetLanguageStore = () => useLanguageStore.setState({ language: "ko" })
+  useLanguageStore.setState({ language: "ko" })
+  setItemCalls.length = 0
+
+  useLanguageStore.getState().setLanguage("ko")
+
+  assert.deepEqual(setItemCalls, [])
+})
+
+test("authenticated server language sync only runs when the server language differs", () => {
+  assert.equal(shouldSyncServerLanguage("en", undefined), false)
+  assert.equal(shouldSyncServerLanguage("en", "en"), false)
+  assert.equal(shouldSyncServerLanguage("ko", "en"), true)
 })

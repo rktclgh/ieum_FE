@@ -6,6 +6,7 @@ import { useReconcileWebPushSubscription } from "@/features/notification/hooks/u
 import { useMe } from "@/features/session/hooks/use-me";
 import { resetSessionCache } from "@/features/session/lib/session-cache";
 import { subscribeSessionExpired } from "@/features/session/lib/session-events";
+import { shouldSyncServerLanguage } from "@/lib/i18n/language-sync";
 import { useLanguageStore } from "@/lib/i18n/store";
 import { makeQueryClient } from "./query-client";
 
@@ -25,12 +26,13 @@ function WebPushSessionReconciler() {
 function LanguageSessionSync() {
   const { data: user } = useMe();
   const serverLanguage = user?.settings.language;
+  const language = useLanguageStore((state) => state.language);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
 
   useEffect(() => {
-    if (!serverLanguage) return;
+    if (!shouldSyncServerLanguage(language, serverLanguage)) return;
     setLanguage(serverLanguage);
-  }, [serverLanguage, setLanguage]);
+  }, [language, serverLanguage, setLanguage]);
 
   return null;
 }

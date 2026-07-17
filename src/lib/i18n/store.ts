@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
+import { getLanguagePersistenceUpdate, LANGUAGE_STORAGE_KEY } from "@/lib/i18n/language-sync"
 import type { LanguageCode } from "@/lib/i18n/languages"
 
 interface LanguageState {
@@ -10,12 +11,17 @@ interface LanguageState {
 
 export const useLanguageStore = create<LanguageState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       language: "ko",
-      setLanguage: (language) => set({ language }),
+      setLanguage: (language) => {
+        const update = getLanguagePersistenceUpdate(get().language, language)
+        if (!update) return
+
+        set(update)
+      },
     }),
     {
-      name: "ieum-language",
+      name: LANGUAGE_STORAGE_KEY,
       skipHydration: true,
     }
   )
