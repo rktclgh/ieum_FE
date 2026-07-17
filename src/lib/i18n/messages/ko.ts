@@ -483,6 +483,12 @@ export interface Messages {
     aiAnswerSourceLabel: string
     humanAnswerSourceLabel: string
   }
+  translate: {
+    menuLabel: string
+    viewOriginalLabel: string
+    translatingLabel: string
+    translateFailedLabel: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -966,6 +972,12 @@ export const ko: Messages = {
     unreadBadgeLabel: (count) => `읽지 않은 알림 ${count}건`,
     aiAnswerSourceLabel: "AI 답변",
     humanAnswerSourceLabel: "사용자 답변",
+  },
+  translate: {
+    menuLabel: "번역",
+    viewOriginalLabel: "원문 보기",
+    translatingLabel: "번역 중...",
+    translateFailedLabel: "번역에 실패했어요. 잠시 후 다시 시도해 주세요.",
   },
   languages: {
     ko: "한국어",

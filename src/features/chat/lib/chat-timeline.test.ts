@@ -19,6 +19,7 @@ function userMessage(messageId: number, createdAt: string, senderId = 10): ChatM
     texts: ["안녕하세요"],
     time: "오전 10:00",
     createdAt,
+    hasText: true,
   }
 }
 

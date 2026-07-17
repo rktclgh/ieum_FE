@@ -19,7 +19,7 @@ interface LocationSnapshot {
 interface CalendarItem {
   meetingId: number
   scheduleId: number
-  title: string
+  title: string | null
   location: LocationSnapshot
   startsAt: string
   endsAt: string | null
@@ -32,8 +32,8 @@ interface CalendarItem {
 // 권한은 화면에서 재계산하지 않고 서버가 내려준 capability만 사용한다.
 interface MeetingScheduleItem {
   scheduleId: number
-  title: string
-  locationName: string
+  title: string | null
+  locationName: string | null
   startsAt: string
   endsAt: string | null
   status: ScheduleStatus

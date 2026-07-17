@@ -12,6 +12,9 @@ bash scripts/ci/test-admin-contracts.sh
 bash scripts/ci/test-map-contracts.sh
 bash scripts/ci/test-meetup-contracts.sh
 node --test scripts/ci/test-meetup-source-contracts.mjs
+node --test scripts/ci/test-translation-source-contracts.mjs
+node --test scripts/ci/test-translation-ui-surface-contracts.mjs
+node --test scripts/ci/test-question-translation-ui.mjs
 node --test scripts/ci/test-static-export-routes.mjs
 node --test scripts/ci/test-static-source-contracts.mjs
 node --experimental-strip-types --test src/features/chat/lib/chat-timeline.test.ts

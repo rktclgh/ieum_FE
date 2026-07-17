@@ -481,6 +481,12 @@ export const th: Messages = {
     aiAnswerSourceLabel: "คำตอบจาก AI",
     humanAnswerSourceLabel: "คำตอบจากผู้ใช้",
   },
+  translate: {
+    menuLabel: "แปล",
+    viewOriginalLabel: "ดูต้นฉบับ",
+    translatingLabel: "กำลังแปล...",
+    translateFailedLabel: "แปลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+  },
   languages: {
     ko: "เกาหลี",
     en: "อังกฤษ",

@@ -481,6 +481,12 @@ export const ja: Messages = {
     aiAnswerSourceLabel: "AI回答",
     humanAnswerSourceLabel: "ユーザー回答",
   },
+  translate: {
+    menuLabel: "翻訳",
+    viewOriginalLabel: "原文を見る",
+    translatingLabel: "翻訳中...",
+    translateFailedLabel: "翻訳に失敗しました。もう一度お試しください。",
+  },
   languages: {
     ko: "韓国語",
     en: "英語",
