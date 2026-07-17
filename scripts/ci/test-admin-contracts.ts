@@ -19,6 +19,7 @@ import {
 } from "../../src/features/admin/inquiries/lib/admin-inquiry.js"
 import { compactQuery } from "../../src/features/admin/shared/lib/admin-query.js"
 import { validateSanctionDraft } from "../../src/features/admin/users/lib/admin-sanction.js"
+import { routes } from "../../src/lib/navigation/routes.js"
 import type {
   AdminInquiriesParams,
   AdminInquiryItem,
@@ -174,7 +175,14 @@ type ExpectedAdminMessages = {
     | "loginError"
   >
   navigation: StringMessages<
-    "operations" | "review" | "dashboard" | "users" | "reports" | "inquiries" | "knowledge"
+    | "operations"
+    | "review"
+    | "dashboard"
+    | "users"
+    | "reports"
+    | "inquiries"
+    | "knowledge"
+    | "knowledgeGraph"
   >
   dashboard: StringMessages<
     | "title"
@@ -349,6 +357,23 @@ type ExpectedAdminMessages = {
     | "reject"
     | "conflictRefreshed"
     | "convergenceError"
+    | "graphTitle"
+    | "graphDescription"
+    | "graphSearch"
+    | "graphQuery"
+    | "graphQueryPlaceholder"
+    | "resetFilters"
+    | "showWholeGraph"
+    | "graphContext"
+    | "focusNode"
+    | "nodes"
+    | "edges"
+    | "zoom"
+    | "graphCanvas"
+    | "truncatedGraph"
+    | "emptyGraph"
+    | "inspector"
+    | "selectEdgeHint"
   >
 }
 
@@ -422,7 +447,9 @@ const expectedAdminMessageKeys = {
   auth: [
     "description", "desktopOnly", "email", "forbidden", "loginError", "password", "submit", "switchAccount", "title",
   ],
-  navigation: ["dashboard", "inquiries", "knowledge", "operations", "reports", "review", "users"],
+  navigation: [
+    "dashboard", "inquiries", "knowledge", "knowledgeGraph", "operations", "reports", "review", "users",
+  ],
   dashboard: [
     "accepted", "acceptedRate", "activeUsers", "aiReviewed", "answers", "applyRange", "cachedError",
     "confirmed", "contentTrend", "days", "deadReports", "dismissed", "from", "invalidRange",
@@ -451,10 +478,12 @@ const expectedAdminMessageKeys = {
   knowledge: [
     "answerContent", "answerId", "approve", "backToList", "chunk", "chunkContent", "confidence", "conflictRefreshed",
     "context", "convergenceError", "createdAt", "detail", "eligible", "evidence", "extractionModel",
-    "extractionProvider", "notEligible", "object", "predicate", "promotionRelation", "questionContent", "questionId",
+    "extractionProvider", "focusNode", "graphCanvas", "graphContext", "graphDescription", "graphQuery",
+    "graphQueryPlaceholder", "graphSearch", "graphTitle", "edges", "emptyGraph", "inspector", "nodes",
+    "notEligible", "object", "predicate", "promotionRelation", "questionContent", "questionId",
     "questionTitle", "reject", "rejectReason", "relation", "review", "reviewedAt", "reviewer", "reviewNote",
-    "sameSourceRelations", "source", "sourceEligibility", "sourceStatus", "status", "subject", "title", "updatedAt",
-    "validUntil", "version",
+    "resetFilters", "sameSourceRelations", "selectEdgeHint", "showWholeGraph", "source", "sourceEligibility",
+    "sourceStatus", "status", "subject", "title", "truncatedGraph", "updatedAt", "validUntil", "version", "zoom",
   ],
 } as const
 
@@ -529,6 +558,11 @@ test("admin message types and both translations expose the exact agreed keys", (
     assert.deepEqual(Object.keys(adminKo[group as keyof AdminMessages]).sort(), sortedExpectedKeys)
     assert.deepEqual(Object.keys(adminEn[group as keyof AdminMessages]).sort(), sortedExpectedKeys)
   }
+})
+
+test("admin knowledge graph keeps a separate route from candidate review", () => {
+  assert.equal(routes.adminKnowledge(), "/admin/knowledge/")
+  assert.equal(routes.adminKnowledgeGraph(), "/admin/knowledge/graph/")
 })
 
 test("admin report resolution and sanction labels preserve their exact semantics", () => {

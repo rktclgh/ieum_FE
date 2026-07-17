@@ -7,6 +7,16 @@ import { LogoutButton } from "@/features/session/components/logout-button"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
+function isAdminNavCurrent(pathname: string, href: string) {
+  if (pathname === href) return true
+  if (href === routes.adminHome()) return false
+  if (href === routes.adminKnowledge()) {
+    return pathname.startsWith(href) && !pathname.startsWith(routes.adminKnowledgeGraph())
+  }
+
+  return pathname.startsWith(href)
+}
+
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { messages } = useTranslation()
@@ -24,6 +34,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         { href: routes.adminReports(), label: messages.admin.navigation.reports },
         { href: routes.adminInquiries(), label: messages.admin.navigation.inquiries },
         { href: routes.adminKnowledge(), label: messages.admin.navigation.knowledge },
+        { href: routes.adminKnowledgeGraph(), label: messages.admin.navigation.knowledgeGraph },
       ],
     },
   ]
@@ -40,10 +51,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               <h2 className="px-3 text-body-medium-12 text-gray-500">{group.label}</h2>
               <div className="flex flex-col gap-1">
                 {group.items.map((item) => {
-                  const isCurrent =
-                    item.href === routes.adminHome()
-                      ? pathname === item.href
-                      : pathname.startsWith(item.href)
+                  const isCurrent = isAdminNavCurrent(pathname, item.href)
 
                   return (
                     <Link

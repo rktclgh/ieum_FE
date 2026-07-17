@@ -46,6 +46,7 @@ const routes = {
   adminReports: () => "/admin/reports/",
   adminInquiries: () => "/admin/inquiries/",
   adminKnowledge: () => "/admin/knowledge/",
+  adminKnowledgeGraph: () => "/admin/knowledge/graph/",
   chatRoom: (chatId: number) =>
     queryRoute("/chats/room/", { chatId: requirePositiveInteger(chatId, "chatId") }),
   chatNotices: (chatId: number) =>

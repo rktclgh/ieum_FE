@@ -1381,6 +1381,42 @@ function assertKnowledgeCandidateContracts({
   assert.match(shellSource, /messages\.admin\.navigation\.knowledge/)
 }
 
+function assertKnowledgeGraphApiContracts({ apiSource, hookSource }) {
+  const compactApi = compactSource(apiSource)
+  const compactHook = compactSource(hookSource)
+
+  assert.match(apiSource, /interface AdminKnowledgeGraphNode \{/)
+  assert.match(apiSource, /id: string/)
+  assert.match(apiSource, /label: string/)
+  assert.match(apiSource, /degree: number/)
+  assert.match(apiSource, /interface AdminKnowledgeGraphEdge \{/)
+  assert.match(apiSource, /relationId: number/)
+  assert.match(apiSource, /source: string/)
+  assert.match(apiSource, /target: string/)
+  assert.match(apiSource, /predicate: string/)
+  assert.match(apiSource, /confidence: number \| null/)
+  assert.match(apiSource, /sourceId: number/)
+  assert.match(apiSource, /evidenceChunkId: number \| null/)
+  assert.match(apiSource, /sourceDisplayName: string/)
+  assert.match(apiSource, /evidencePreview: string/)
+  assert.match(apiSource, /createdAt: string/)
+  assert.match(apiSource, /interface AdminKnowledgeGraphResponse \{/)
+  assert.match(apiSource, /nodes: AdminKnowledgeGraphNode\[\]/)
+  assert.match(apiSource, /edges: AdminKnowledgeGraphEdge\[\]/)
+  assert.match(apiSource, /truncated: boolean/)
+  assert.match(
+    compactApi,
+    /apiClient\.get<AdminKnowledgeGraphResponse>\( "\/api\/v1\/admin\/ai\/knowledge\/graph", \{ params: compactQuery\(\{ query: params\.query, focus: params\.focus, predicate: params\.predicate, limit: params\.limit,? \}\), \}, \)/,
+  )
+  assert.doesNotMatch(apiSource, /"\/api\/v1\/admin\/knowledge\/graph"/)
+  assert.match(compactHook, /all: \["admin", "knowledge", "graph"\] as const/)
+  assert.match(
+    compactHook,
+    /detail: \(\{ query, focus, predicate, limit \}: AdminKnowledgeGraphParams\) => \[ \.\.\.adminKnowledgeGraphKeys\.all, \{ query, focus, predicate, limit \}, \] as const/,
+  )
+  assert.match(compactHook, /queryFn: \(\) => getAdminKnowledgeGraph\(params\)/)
+}
+
 function assertAdminStatsOverviewContract({
   apiSource,
   hookSource,
@@ -1592,7 +1628,7 @@ test("disabled credential fields also disable their auxiliary controls", () => {
   )
 })
 
-test("the admin shell has five fixed destinations, current-page semantics, and logout", () => {
+test("the admin shell has six fixed destinations, prefix current-page semantics, and logout", () => {
   const source = readSource("src/features/admin/shared/components/admin-shell.tsx")
 
   for (const route of [
@@ -1601,12 +1637,22 @@ test("the admin shell has five fixed destinations, current-page semantics, and l
     "adminReports",
     "adminInquiries",
     "adminKnowledge",
+    "adminKnowledgeGraph",
   ]) {
     assert.match(source, new RegExp(`routes\\.${route}\\(\\)`))
   }
   assert.match(source, /messages\.admin\.navigation\.operations/)
   assert.match(source, /messages\.admin\.navigation\.review/)
   assert.doesNotMatch(source, /routes\.adminLogin\(\)/)
+  assert.match(source, /function isAdminNavCurrent\(/)
+  assert.match(source, /pathname === href/)
+  assert.match(source, /pathname\.startsWith\(href\)/)
+  assert.match(source, /routes\.adminKnowledge\(\)/)
+  assert.match(source, /routes\.adminKnowledgeGraph\(\)/)
+  assert.match(source, /href === routes\.adminHome\(\)/)
+  assert.match(source, /href === routes\.adminKnowledge\(\)/)
+  assert.match(source, /!pathname\.startsWith\(routes\.adminKnowledgeGraph\(\)\)/)
+  assert.match(source, /isAdminNavCurrent\(pathname, item\.href\)/)
   assert.match(source, /aria-current=\{isCurrent \? "page" : undefined\}/)
   assert.match(source, /<LogoutButton \/>/)
 })
@@ -2381,6 +2427,17 @@ test("knowledge candidate admin UI owns API paths, pending defaults, select revi
     routeSource: readSource("src/app/admin/(protected)/knowledge/page.tsx"),
     shellSource: readSource(
       "src/features/admin/shared/components/admin-shell.tsx",
+    ),
+  })
+})
+
+test("knowledge graph admin API owns its endpoint, bounded filters, and query key", () => {
+  assertKnowledgeGraphApiContracts({
+    apiSource: readSource(
+      "src/features/admin/knowledge/api/admin-knowledge-graph-api.ts",
+    ),
+    hookSource: readSource(
+      "src/features/admin/knowledge/hooks/use-admin-knowledge-graph.ts",
     ),
   })
 })

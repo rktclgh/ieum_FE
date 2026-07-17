@@ -28,6 +28,7 @@ interface AdminMessages {
     reports: string
     inquiries: string
     knowledge: string
+    knowledgeGraph: string
   }
   dashboard: {
     title: string
@@ -201,6 +202,23 @@ interface AdminMessages {
     reject: string
     conflictRefreshed: string
     convergenceError: string
+    graphTitle: string
+    graphDescription: string
+    graphSearch: string
+    graphQuery: string
+    graphQueryPlaceholder: string
+    resetFilters: string
+    showWholeGraph: string
+    graphContext: string
+    focusNode: string
+    nodes: string
+    edges: string
+    zoom: string
+    graphCanvas: string
+    truncatedGraph: string
+    emptyGraph: string
+    inspector: string
+    selectEdgeHint: string
   }
 }
 
@@ -234,6 +252,7 @@ const adminKo: AdminMessages = {
     reports: "신고",
     inquiries: "문의",
     knowledge: "지식",
+    knowledgeGraph: "지식 그래프",
   },
   dashboard: {
     title: "운영 현황",
@@ -407,6 +426,23 @@ const adminKo: AdminMessages = {
     reject: "반려",
     conflictRefreshed: "이미 처리되었거나 상태가 변경된 후보입니다. 최신 정보를 불러왔습니다.",
     convergenceError: "최신 후보 상태를 확인하지 못했습니다.",
+    graphTitle: "지식 그래프",
+    graphDescription: "승인된 개념과 관계를 검색하고 근거를 확인합니다.",
+    graphSearch: "검색과 필터",
+    graphQuery: "개념 검색",
+    graphQueryPlaceholder: "주어 또는 목적어",
+    resetFilters: "초기화",
+    showWholeGraph: "전체 보기",
+    graphContext: "그래프 범위",
+    focusNode: "중심 노드",
+    nodes: "노드",
+    edges: "엣지",
+    zoom: "확대",
+    graphCanvas: "개념 그래프",
+    truncatedGraph: "결과가 잘렸습니다. 검색하거나 노드를 선택해 범위를 좁혀 주세요.",
+    emptyGraph: "표시할 관계가 없습니다. 검색어나 필터를 조정해 주세요.",
+    inspector: "관계 근거",
+    selectEdgeHint: "그래프의 관계선을 선택하면 신뢰도, 출처, 근거 문장이 표시됩니다.",
   },
 }
 
@@ -440,6 +476,7 @@ const adminEn: AdminMessages = {
     reports: "Reports",
     inquiries: "Inquiries",
     knowledge: "Knowledge",
+    knowledgeGraph: "Knowledge graph",
   },
   dashboard: {
     title: "Operations overview",
@@ -613,6 +650,23 @@ const adminEn: AdminMessages = {
     reject: "Reject",
     conflictRefreshed: "This candidate was already resolved or changed. The latest data is now displayed.",
     convergenceError: "Could not verify the latest candidate state.",
+    graphTitle: "Knowledge graph",
+    graphDescription: "Search approved concepts and inspect relation evidence.",
+    graphSearch: "Search and filters",
+    graphQuery: "Concept search",
+    graphQueryPlaceholder: "Subject or object",
+    resetFilters: "Reset",
+    showWholeGraph: "Whole view",
+    graphContext: "Graph scope",
+    focusNode: "Focus node",
+    nodes: "Nodes",
+    edges: "Edges",
+    zoom: "Zoom",
+    graphCanvas: "Concept graph",
+    truncatedGraph: "Results were truncated. Search or focus a node to narrow the graph.",
+    emptyGraph: "No relations to display. Adjust the search or filters.",
+    inspector: "Relation evidence",
+    selectEdgeHint: "Select a relation line to inspect confidence, source, and evidence.",
   },
 }
 
