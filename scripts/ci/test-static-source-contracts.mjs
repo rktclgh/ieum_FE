@@ -287,14 +287,6 @@ test("fixed query pages validate IDs before mounting data content", () => {
       content: "<NoticePageContent",
     },
     {
-      path: "src/app/chats/report/page.tsx",
-      params: [
-        { query: "chatId", variable: "roomId" },
-        { query: "messageId", variable: "messageId" },
-      ],
-      content: "<ReportPageContent",
-    },
-    {
       path: "src/app/chats/schedule/page.tsx",
       params: [{ query: "chatId", variable: "roomId" }],
       content: "<SchedulePageContent",
@@ -359,6 +351,55 @@ test("fixed query pages validate IDs before mounting data content", () => {
       `${page.path} must guard before mounting content`,
     )
   }
+})
+
+test("report page validates its parsed target before mounting data content", () => {
+  const pagePath = "src/app/chats/report/page.tsx"
+  const source = read(pagePath)
+  const sourceFile = parse(pagePath)
+
+  assert.match(source, /<React\.Suspense\b/, `${pagePath} must own a Suspense boundary`)
+  assert.ok(
+    compact(source).includes("consttarget=parseReportTarget(searchParams)"),
+    `${pagePath} must parse its target from the search parameters`,
+  )
+
+  const invalidGuard = visit(sourceFile, (node) =>
+    ts.isIfStatement(node) &&
+    compact(node.expression.getText(sourceFile)) === "target===null",
+  )[0]
+  assert.ok(invalidGuard, `${pagePath} must render the invalid-link state for a null target`)
+
+  const guardStatements = ts.isBlock(invalidGuard.thenStatement)
+    ? invalidGuard.thenStatement.statements
+    : [invalidGuard.thenStatement]
+  assert.equal(
+    guardStatements.length,
+    1,
+    `${pagePath} invalid guard must have exactly one blocking return`,
+  )
+  const invalidReturn = guardStatements[0]
+  assert.ok(
+    ts.isReturnStatement(invalidReturn),
+    `${pagePath} invalid guard must return before data content can mount`,
+  )
+  assert.ok(
+    ts.isJsxSelfClosingElement(invalidReturn.expression) &&
+      invalidReturn.expression.tagName.getText(sourceFile) === "RoutePageState" &&
+      invalidReturn.expression.attributes.properties.some(
+        (attribute) =>
+          ts.isJsxAttribute(attribute) &&
+          attribute.name.text === "kind" &&
+          ts.isStringLiteral(attribute.initializer) &&
+          attribute.initializer.text === "invalid-link",
+      ),
+    `${pagePath} invalid guard must return <RoutePageState kind="invalid-link" />`,
+  )
+
+  assert.ok(
+    source.indexOf("<ReportPageContent") > invalidGuard.end,
+    `${pagePath} must guard before mounting content`,
+  )
 })
 
 test("source contains no legacy runtime-ID navigation templates", () => {

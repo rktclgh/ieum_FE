@@ -2,7 +2,7 @@
 
 import L from "leaflet"
 import * as React from "react"
-import { Circle, MapContainer, Marker, useMap, useMapEvents } from "react-leaflet"
+import { MapContainer, Marker, useMap, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
@@ -30,7 +30,6 @@ interface MapCanvasProps {
   pins?: MapPin[]
   onPinClick?: (pin: MapPin) => void
   livePosition?: Coordinates | null
-  liveAccuracy?: number | null
   /** 사용자가 지도에서 고른 지점 — Figma Location/XL 핀으로 표시 */
   selectedPosition?: Coordinates | null
   /** 선택 핀 마커를 클릭했을 때 (핀 토글 제거용). 미지정이면 마커 클릭 무반응 */
@@ -168,7 +167,6 @@ function MapCanvas({
   pins,
   onPinClick,
   livePosition,
-  liveAccuracy,
   selectedPosition,
   onSelectedPositionClick,
 }: MapCanvasProps) {
@@ -209,16 +207,7 @@ function MapCanvas({
         />
       )}
       {livePosition && (
-        <>
-          {liveAccuracy ? (
-            <Circle
-              center={[livePosition.lat, livePosition.lng]}
-              radius={liveAccuracy}
-              pathOptions={{ stroke: false, fillColor: LIVE_ACCENT, fillOpacity: 0.1 }}
-            />
-          ) : null}
-          <Marker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
-        </>
+        <Marker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
       )}
     </MapContainer>
   )
