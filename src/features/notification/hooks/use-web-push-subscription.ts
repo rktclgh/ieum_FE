@@ -278,7 +278,7 @@ function useReconcileWebPushSubscription({
           !subscription ||
           !shouldUpsertReconciledSubscription({
             serverEnabled: config.enabled,
-            hasBrowserSubscription: true,
+            hasBrowserSubscription: Boolean(subscription),
             backendSubscribed: config.subscribed,
           })
         ) {
