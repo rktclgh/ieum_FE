@@ -199,10 +199,10 @@ export const ja: Messages = {
     aiBadge: "AI",
     acceptedBadge: "採用済み",
     acceptButton: "採用",
-    acceptConfirmTitle: "回答を採用しました",
-    acceptConfirmDescription: (name) =>
-      `${name}さんにもっと聞きたいことがあれば、個人チャットで続けて質問できます。`,
+    acceptConfirmTitle: (name) => `${name}さんの回答を採用しますか？`,
+    acceptConfirmDescription: "採用後は変更できません。",
     acceptConfirmCancel: "キャンセル",
+    acceptConfirmConfirm: "採用",
     createTitle: "質問する",
     editTitle: "質問を編集",
     titlePlaceholder: "質問のタイトル",
