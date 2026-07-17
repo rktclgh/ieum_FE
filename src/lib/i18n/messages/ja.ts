@@ -243,6 +243,8 @@ export const ja: Messages = {
       SELF_ACCEPT_NOT_ALLOWED: "自分の回答は採用できません。",
       ANSWER_SELECTION_FINALIZED: "すでに採用された質問です。",
       VALIDATION_FAILED: "入力内容を確認してください。",
+      INVALID_IMAGE: "画像を確認できませんでした。もう一度添付してください。",
+      QUESTION_RESOLVED: "すでに確定した質問は編集できません。",
       ROOM_CREATE_FAILED: "チャットを開始できませんでした。しばらくしてからもう一度お試しください。",
       REPORT_FAILED: "通報に失敗しました。しばらくしてからもう一度お試しください。",
       default: "しばらくしてからもう一度お試しください。",

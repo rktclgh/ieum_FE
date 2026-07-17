@@ -185,15 +185,10 @@ function CreateQuestionForm({
 
     if (mode === "edit" && questionId != null) {
       try {
+        // 계약(PATCH /questions/{id})에 위치 필드가 없어 수정 시에는 title/content/imageFileIds만 보낸다.
         await updateQuestion.mutateAsync({
           title: title.trim(),
           content: content.trim(),
-          location: {
-            lat: place.lat,
-            lng: place.lng,
-            address: place.address,
-            label: place.label,
-          },
           imageFileIds,
         })
         onClose()

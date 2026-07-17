@@ -244,6 +244,8 @@ export const en: Messages = {
       SELF_ACCEPT_NOT_ALLOWED: "You can't accept your own answer.",
       ANSWER_SELECTION_FINALIZED: "This question is already resolved.",
       VALIDATION_FAILED: "Please check your input.",
+      INVALID_IMAGE: "We couldn't verify that image. Please attach it again.",
+      QUESTION_RESOLVED: "This question is already resolved and can't be edited.",
       ROOM_CREATE_FAILED: "Couldn't start the chat. Please try again later.",
       REPORT_FAILED: "Failed to submit the report. Please try again later.",
       default: "Please try again in a moment.",

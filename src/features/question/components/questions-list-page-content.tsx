@@ -87,11 +87,16 @@ function QuestionsListPageContent() {
           onDismiss={() => setActive(null)}
           actions={
             [
-              {
-                icon: <Pencil className="size-5 text-gray-900" />,
-                label: messages.question.editAction,
-                onClick: () => setEditId(active.id),
-              },
+              // resolved(확정) 질문은 삭제만 허용 — 수정 진입점을 숨긴다(BE 409 QUESTION_RESOLVED).
+              ...(active.view.isResolved
+                ? []
+                : [
+                    {
+                      icon: <Pencil className="size-5 text-gray-900" />,
+                      label: messages.question.editAction,
+                      onClick: () => setEditId(active.id),
+                    },
+                  ]),
               {
                 icon: <Trash2 className="size-5 text-red" />,
                 label: messages.question.deleteAction,
