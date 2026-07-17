@@ -45,12 +45,7 @@ function invalidateAdminSanctionQueries(
   return Promise.all([
     invalidateAdminUserQueries(queryClient, userId),
     queryClient.invalidateQueries({
-      queryKey: adminStatsKeys.users,
-      exact: true,
-    }),
-    queryClient.invalidateQueries({
-      queryKey: adminStatsKeys.reports,
-      exact: true,
+      queryKey: adminStatsKeys.overview,
     }),
   ])
 }
@@ -94,8 +89,7 @@ function useActivateAdminUser(userId: number) {
       Promise.all([
         invalidateAdminUserQueries(queryClient, userId),
         queryClient.invalidateQueries({
-          queryKey: adminStatsKeys.users,
-          exact: true,
+          queryKey: adminStatsKeys.overview,
         }),
       ]),
   })

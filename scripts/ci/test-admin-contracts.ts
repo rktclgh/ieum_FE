@@ -173,24 +173,39 @@ type ExpectedAdminMessages = {
     | "submit"
     | "loginError"
   >
-  navigation: StringMessages<"dashboard" | "users" | "reports" | "inquiries">
+  navigation: StringMessages<
+    "operations" | "review" | "dashboard" | "users" | "reports" | "inquiries"
+  >
   dashboard: StringMessages<
     | "title"
+    | "from"
+    | "to"
+    | "applyRange"
+    | "invalidRange"
+    | "cachedError"
+    | "pendingReports"
+    | "retryReports"
+    | "deadReports"
+    | "pendingInquiries"
     | "signup"
     | "activeUsers"
     | "suspendedUsers"
-    | "pins"
     | "questions"
-    | "meetings"
     | "answers"
+    | "accepted"
     | "acceptedRate"
-    | "messages"
     | "reports"
     | "aiReviewed"
     | "confirmed"
     | "dismissed"
     | "sanctions"
-  > & { range: (from: string, to: string) => string }
+    | "userTrend"
+    | "contentTrend"
+    | "reportTrend"
+  > & {
+    range: (from: string, to: string) => string
+    days: (days: number) => string
+  }
   users: StringMessages<
     | "title"
     | "search"
@@ -364,10 +379,12 @@ const expectedAdminMessageKeys = {
   auth: [
     "description", "desktopOnly", "email", "forbidden", "loginError", "password", "submit", "switchAccount", "title",
   ],
-  navigation: ["dashboard", "inquiries", "reports", "users"],
+  navigation: ["dashboard", "inquiries", "operations", "reports", "review", "users"],
   dashboard: [
-    "acceptedRate", "activeUsers", "aiReviewed", "answers", "confirmed", "dismissed", "meetings",
-    "messages", "pins", "questions", "range", "reports", "sanctions", "signup", "suspendedUsers", "title",
+    "accepted", "acceptedRate", "activeUsers", "aiReviewed", "answers", "applyRange", "cachedError",
+    "confirmed", "contentTrend", "days", "deadReports", "dismissed", "from", "invalidRange",
+    "pendingInquiries", "pendingReports", "questions", "range", "reportTrend", "reports", "retryReports",
+    "sanctions", "signup", "suspendedUsers", "title", "to", "userTrend",
   ],
   users: [
     "accepted", "activate", "activationConfirm", "activationScopeNotice", "activity", "answers", "birthDate",
