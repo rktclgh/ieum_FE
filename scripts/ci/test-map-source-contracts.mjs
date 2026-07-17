@@ -10,10 +10,13 @@ const read = (relativePath) => fs.readFileSync(path.join(repoRoot, relativePath)
 test("홈 지도 현재 위치는 정확도 반경 없이 마커 halo만 표시한다", () => {
   const canvas = read("src/features/map/components/map-canvas.tsx")
   const home = read("src/features/map/components/home-map-screen.tsx")
+  const liveMarkerPattern = new RegExp(
+    String.raw`<Marker\b(?=[^>]*\bposition\s*=\s*\{\s*\[\s*livePosition\.lat\s*,\s*livePosition\.lng\s*\]\s*\})(?=[^>]*\bicon\s*=\s*\{\s*userLocationIcon\s*\})[^>]*\/?>`
+  )
 
   assert.doesNotMatch(canvas, /liveAccuracy/)
   assert.doesNotMatch(canvas, /<Circle/)
-  assert.match(canvas, /<Marker position=\{\[livePosition\.lat, livePosition\.lng\]\} icon=\{userLocationIcon\}/)
+  assert.match(canvas, liveMarkerPattern)
   assert.doesNotMatch(home, /liveAccuracy=\{accuracy\}/)
 })
 

@@ -366,7 +366,7 @@ test("report page validates its parsed target before mounting data content", () 
 
   const invalidGuard = visit(sourceFile, (node) =>
     ts.isIfStatement(node) &&
-    node.expression.getText(sourceFile) === "target === null",
+    compact(node.expression.getText(sourceFile)) === "target===null",
   )[0]
   assert.ok(invalidGuard, `${pagePath} must render the invalid-link state for a null target`)
 
