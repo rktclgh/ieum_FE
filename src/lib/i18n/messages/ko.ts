@@ -262,6 +262,7 @@ export interface Messages {
       pushDeviceConnected: string
       pushDeviceConnect: string
       pushDeviceUnsupported: string
+      pushDeviceIosInstall: string
       pushDevicePermissionDenied: string
       pushDeviceUnavailable: string
       pushDeviceError: string
@@ -752,6 +753,7 @@ export const ko: Messages = {
       pushDeviceConnected: "이 기기에서 푸시 알림을 받고 있어요.",
       pushDeviceConnect: "이 기기 연결",
       pushDeviceUnsupported: "이 브라우저는 푸시 알림을 지원하지 않아요.",
+      pushDeviceIosInstall: "홈 화면에 추가하면 푸시 알림을 받을 수 있어요.",
       pushDevicePermissionDenied: "브라우저 설정에서 알림 권한을 허용해 주세요.",
       pushDeviceUnavailable: "푸시 알림을 지금 사용할 수 없어요.",
       pushDeviceError: "푸시 알림을 연결하지 못했어요. 다시 시도해 주세요.",

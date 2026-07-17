@@ -12,10 +12,12 @@ import {
   createOrReuseWebPushSubscription,
   getExistingWebPushSubscription,
   isWebPushSupported,
+  readIosInstallGate,
   registerWebPushServiceWorker,
   resolveWebPushStatus,
   shouldStartWebPushReconcile,
   shouldUpsertReconciledSubscription,
+  unsupportedWebPushStatus,
   type WebPushStatus,
 } from "@/features/notification/lib/web-push"
 import {
@@ -51,7 +53,7 @@ function isSessionWorkCurrent(
 async function inspectWebPushDevice(config: WebPushConfig | null) {
   if (!isWebPushSupported()) {
     return {
-      status: "unsupported" as const,
+      status: unsupportedWebPushStatus(),
     }
   }
 
@@ -72,6 +74,7 @@ async function inspectWebPushDevice(config: WebPushConfig | null) {
       permission,
       backendSubscribed: config.subscribed,
       browserSubscribed,
+      iosInstallRequired: readIosInstallGate(),
     }),
   }
 }
@@ -79,6 +82,8 @@ async function inspectWebPushDevice(config: WebPushConfig | null) {
 function useWebPushSubscription() {
   const queryClient = useQueryClient()
   const [state, setState] = React.useState<WebPushConnectionState>(() => ({
+    // The iOS gate reads matchMedia and the user agent, which prerender cannot
+    // answer. The mount effect resolves the real status while isLoading hides it.
     status: isWebPushSupported() ? "unsubscribed" : "unsupported",
     error: null,
     isLoading: true,
@@ -154,7 +159,7 @@ function useWebPushSubscription() {
       if (!isWebPushSupported()) {
         setState((current) => ({
           ...current,
-          status: "unsupported",
+          status: unsupportedWebPushStatus(),
           error: null,
           isConnecting: false,
           isLoading: false,

@@ -261,6 +261,7 @@ export const en: Messages = {
       pushDeviceConnected: "This device is receiving push notifications.",
       pushDeviceConnect: "Connect this device",
       pushDeviceUnsupported: "This browser does not support push notifications.",
+      pushDeviceIosInstall: "Add this app to your Home Screen to receive push notifications.",
       pushDevicePermissionDenied: "Allow notifications in your browser settings.",
       pushDeviceUnavailable: "Push notifications are not available right now.",
       pushDeviceError: "Couldn't connect push notifications. Please try again.",

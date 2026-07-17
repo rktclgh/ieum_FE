@@ -13,6 +13,7 @@ import {
   useWebPushSubscription,
   type WebPushConnectionError,
 } from "@/features/notification/hooks/use-web-push-subscription"
+import type { WebPushStatus } from "@/features/notification/lib/web-push"
 import type { UserSettings } from "@/features/session/api/session-api"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -133,12 +134,13 @@ function getPushDeviceMessage({
   error,
   messages,
 }: {
-  status: "unsupported" | "server-disabled" | "permission-denied" | "subscribed" | "unsubscribed"
+  status: WebPushStatus
   error: WebPushConnectionError | null
   messages: ReturnType<typeof useTranslation>["messages"]["my"]["notifications"]
 }) {
   if (error === "connection-failed") return messages.pushDeviceError
   if (status === "subscribed") return messages.pushDeviceConnected
+  if (status === "ios-install-required") return messages.pushDeviceIosInstall
   if (status === "unsupported") return messages.pushDeviceUnsupported
   if (status === "permission-denied") return messages.pushDevicePermissionDenied
   return messages.pushDeviceUnavailable

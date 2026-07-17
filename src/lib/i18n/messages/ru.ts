@@ -261,6 +261,7 @@ export const ru: Messages = {
       pushDeviceConnected: "Это устройство получает push-уведомления.",
       pushDeviceConnect: "Подключить это устройство",
       pushDeviceUnsupported: "Этот браузер не поддерживает push-уведомления.",
+      pushDeviceIosInstall: "Добавьте приложение на главный экран, чтобы получать push-уведомления.",
       pushDevicePermissionDenied: "Разрешите уведомления в настройках браузера.",
       pushDeviceUnavailable: "Push-уведомления сейчас недоступны.",
       pushDeviceError: "Не удалось подключить push-уведомления. Повторите попытку.",
