@@ -190,7 +190,9 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                         isReported={false}
                         canAccept={!question.isResolved && !hasAcceptedAnswer}
                         onAccept={() => openAcceptConfirm(a)}
-                        onStartChat={() => handleStartChat(a.authorUserId)}
+                        onStartChat={() => {
+                          if (a.authorUserId != null) handleStartChat(a.authorUserId)
+                        }}
                         onLongPress={(rect) => setActiveAnswer({ id: a.answerId, rect, view: a })}
                       />
                     ))}
@@ -205,14 +207,18 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   {messages.question.emptyAnswers}
                 </p>
               ) : (
-                question.answers.map((answer) => (
-                  <QuestionAnswerItem
-                    key={answer.answerId}
-                    answer={answer}
-                    canAccept={false}
-                    onAccept={() => openAcceptConfirm(answer)}
-                  />
-                ))
+                question.answers.map((answer) =>
+                  answer.isAi ? (
+                    <QuestionAiAnswerCard key={answer.answerId} answer={answer} />
+                  ) : (
+                    <QuestionAnswerItem
+                      key={answer.answerId}
+                      answer={answer}
+                      canAccept={false}
+                      onAccept={() => openAcceptConfirm(answer)}
+                    />
+                  )
+                )
               )}
             </div>
           </div>

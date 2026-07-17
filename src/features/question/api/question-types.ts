@@ -22,7 +22,7 @@ interface QuestionAuthor {
 interface AnswerResponse {
   answerId: number
   isAi: boolean
-  author: QuestionAuthor
+  author: QuestionAuthor | null
   content: string | null
   isAccepted: boolean
   createdAt: string
