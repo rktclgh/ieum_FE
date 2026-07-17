@@ -1263,6 +1263,124 @@ function assertAdminInquiryAnswerConvergence(source) {
   assert.match(page, /convergenceState=\{rowConvergenceState\}/)
 }
 
+function assertKnowledgeCandidateContracts({
+  apiSource,
+  hookSource,
+  pageSource,
+  routeSource,
+  shellSource,
+}) {
+  const compactApi = compactSource(apiSource)
+  const compactHook = compactSource(hookSource)
+  const compactPage = compactSource(pageSource)
+  const compactRoute = compactSource(routeSource)
+  const predicateSource = compactSource(
+    boundedSource(
+      apiSource,
+      "const KNOWLEDGE_RELATION_PREDICATES = [",
+      "] as const",
+    ),
+  )
+
+  for (const endpoint of [
+    '"/api/v1/admin/knowledge/relation-candidates"',
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}`",
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}/approve`",
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}/reject`",
+  ]) {
+    assert.match(apiSource, new RegExp(escapeRegExp(endpoint)))
+  }
+  assert.match(
+    compactApi,
+    /interface ApproveKnowledgeCandidateRequest \{ version: number subject: string predicate: KnowledgeRelationPredicate object: string \}/,
+  )
+  assert.match(
+    compactApi,
+    /interface RejectKnowledgeCandidateRequest \{ version: number reason\?: string \}/,
+  )
+  assert.match(compactApi, /type KnowledgeCandidateStatus = \| "pending" \| "approved" \| "rejected" \| "invalidated"/)
+  assert.match(apiSource, /type KnowledgeRelationPredicate =/)
+  assert.match(apiSource, /evidenceChunkId: number/)
+  assert.match(apiSource, /evidenceExcerpt: string/)
+  assert.match(apiSource, /reviewerUserId: number \| null/)
+  assert.match(apiSource, /reviewedAt: string \| null/)
+  assert.match(apiSource, /reviewNote: string \| null/)
+  assert.match(apiSource, /promotionRelationId: number \| null/)
+  assert.match(apiSource, /questionId: number/)
+  assert.match(apiSource, /answerId: number/)
+  assert.match(apiSource, /displayName: string/)
+  assert.match(apiSource, /validUntil: string \| null/)
+  assert.match(apiSource, /eligible: boolean/)
+  assert.match(apiSource, /questionTitle: string/)
+  assert.match(apiSource, /questionContent: string/)
+  assert.match(apiSource, /answerContent: string/)
+  assert.match(apiSource, /chunkContent: string/)
+  assert.match(apiSource, /sourceId: number/)
+  assert.match(
+    compactApi,
+    /interface AdminKnowledgeCandidateDecisionResponse \{ candidateId: number status: KnowledgeCandidateStatus version: number relation: AdminKnowledgeSameSourceRelation \| null \}/,
+  )
+  assert.doesNotMatch(apiSource, /sourceType: string/)
+  assert.doesNotMatch(apiSource, /canonicalUrl: string/)
+  assert.doesNotMatch(apiSource, /chunkId: number/)
+  assert.doesNotMatch(apiSource, /evidenceText: string/)
+  assert.equal(
+    predicateSource,
+    'const KNOWLEDGE_RELATION_PREDICATES = [ "requires", "applies_to", "located_in", "exception_of", "prevents", "supports", "has_deadline", "depends_on", "reported_to", "used_for", ',
+  )
+  assert.match(compactApi, /params: compactQuery\(\{ status: params\.status, cursor: params\.cursor, size: params\.size,? \}\)/)
+  assert.match(compactApi, /apiClient\.post<AdminKnowledgeCandidateDecisionResponse>\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/approve`, body,? \)/)
+  assert.match(compactApi, /apiClient\.post<AdminKnowledgeCandidateDecisionResponse>\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/reject`, body,? \)/)
+
+  assert.match(
+    compactHook,
+    /list: \(\{ status, size \}: Omit<AdminKnowledgeCandidatesParams, "cursor">\) => \[ \.\.\.adminKnowledgeCandidateKeys\.lists\(\), \{ status, size \}, \] as const/,
+  )
+  assert.match(compactPage, /React\.useState<KnowledgeCandidateStatus>\("pending"\)/)
+  assert.match(compactPage, /useAdminKnowledgeCandidates\(\{ status, size: 20 \}\)/)
+  assert.match(compactRoute, /searchParams\.get\("candidateId"\)/)
+  assert.match(compactRoute, /parsePositiveInteger\(candidateIdValue\)/)
+  assert.match(compactRoute, /<AdminKnowledgeCandidateDetailPage key=\{candidateId\} candidateId=\{candidateId\} \/>/)
+  assert.match(pageSource, /routes\.adminKnowledgeCandidate\(candidate\.candidateId\)/)
+  assert.match(pageSource, /<select[^>]*id="admin-knowledge-predicate"/)
+  assert.match(pageSource, /KNOWLEDGE_RELATION_PREDICATES\.map/)
+  assert.match(pageSource, /const canAct = candidate\??\.status === "pending"/)
+  assert.match(pageSource, /\{canAct \? \(/)
+  assert.match(pageSource, /candidate\.evidenceExcerpt/)
+  assert.match(pageSource, /candidate\.sourceId/)
+  assert.match(pageSource, /candidate\.source\.displayName/)
+  assert.match(pageSource, /candidate\.source\.questionTitle/)
+  assert.match(pageSource, /candidate\.source\.questionContent/)
+  assert.match(pageSource, /candidate\.source\.answerContent/)
+  assert.match(pageSource, /candidate\.source\.chunkContent/)
+  assert.match(pageSource, /candidate\.evidenceChunkId/)
+  assert.doesNotMatch(pageSource, /candidate\.source\.sourceType/)
+  assert.doesNotMatch(pageSource, /candidate\.source\.canonicalUrl/)
+  assert.doesNotMatch(pageSource, /candidate\.chunkId/)
+  assert.doesNotMatch(pageSource, /candidate\.evidenceText/)
+  assert.doesNotMatch(pageSource, /dangerouslySetInnerHTML/)
+  assert.match(pageSource, /detailQuery\.isError/)
+  assert.match(pageSource, /onRetry=\{\(\) => void detailQuery\.refetch\(\)\}/)
+  assert.match(pageSource, /messages\.route\.invalidLink/)
+  assert.match(pageSource, /getApiErrorStatus\(error\) === 409/)
+  assert.match(pageSource, /code === "KNOWLEDGE_CANDIDATE_CONCURRENTLY_CHANGED"/)
+  assert.match(pageSource, /code === "KNOWLEDGE_CANDIDATE_SOURCE_INELIGIBLE"/)
+  assert.doesNotMatch(pageSource, /getApiErrorCode\(error\) === "KNOWLEDGE_CANDIDATE_CONFLICT"/)
+  assert.match(pageSource, /detailQuery\.refetch\(\{ cancelRefetch: true \}\)/)
+  assert.match(
+    hookSource,
+    /queryClient\.invalidateQueries\(\{ queryKey: adminKnowledgeCandidateKeys\.lists\(\) \}\)/,
+  )
+  assert.match(
+    compactHook,
+    /queryClient\.invalidateQueries\(\{ queryKey: adminKnowledgeCandidateKeys\.detail\(candidateId\), exact: true, refetchType: "none",? \}\)/,
+  )
+  assert.match(compactHook, /onSettled: \(\) => invalidateAdminKnowledgeCandidateQueries\(queryClient, candidateId\)/)
+  assert.doesNotMatch(hookSource, /onSuccess:/)
+  assert.match(shellSource, /routes\.adminKnowledge\(\)/)
+  assert.match(shellSource, /messages\.admin\.navigation\.knowledge/)
+}
+
 function assertAdminStatsOverviewContract({
   apiSource,
   hookSource,
@@ -1474,16 +1592,21 @@ test("disabled credential fields also disable their auxiliary controls", () => {
   )
 })
 
-test("the admin shell has four fixed destinations, current-page semantics, and logout", () => {
+test("the admin shell has five fixed destinations, current-page semantics, and logout", () => {
   const source = readSource("src/features/admin/shared/components/admin-shell.tsx")
 
-  for (const route of ["adminHome", "adminUsers", "adminReports", "adminInquiries"]) {
+  for (const route of [
+    "adminHome",
+    "adminUsers",
+    "adminReports",
+    "adminInquiries",
+    "adminKnowledge",
+  ]) {
     assert.match(source, new RegExp(`routes\\.${route}\\(\\)`))
   }
   assert.match(source, /messages\.admin\.navigation\.operations/)
   assert.match(source, /messages\.admin\.navigation\.review/)
   assert.doesNotMatch(source, /routes\.adminLogin\(\)/)
-  assert.doesNotMatch(source, /routes\.adminKnowledge|messages\.admin\.navigation\.(?:knowledge|kg)|지식|KG/)
   assert.match(source, /aria-current=\{isCurrent \? "page" : undefined\}/)
   assert.match(source, /<LogoutButton \/>/)
 })
@@ -2242,6 +2365,24 @@ test("admin report decisions use one detail refetch owner and one synchronous la
   }
   assert.notEqual(automaticDetailRefetchMutant, hookSource)
   assert.throws(() => assertAdminReportHooks(automaticDetailRefetchMutant))
+})
+
+test("knowledge candidate admin UI owns API paths, pending defaults, select review, terminal hiding, and 409 convergence", () => {
+  assertKnowledgeCandidateContracts({
+    apiSource: readSource(
+      "src/features/admin/knowledge/api/admin-knowledge-candidates-api.ts",
+    ),
+    hookSource: readSource(
+      "src/features/admin/knowledge/hooks/use-admin-knowledge-candidates.ts",
+    ),
+    pageSource: readSource(
+      "src/features/admin/knowledge/components/admin-knowledge-candidates-page.tsx",
+    ),
+    routeSource: readSource("src/app/admin/(protected)/knowledge/page.tsx"),
+    shellSource: readSource(
+      "src/features/admin/shared/components/admin-shell.tsx",
+    ),
+  })
 })
 
 test("each admin inquiry API owns the exact nullable DTO, filters, body, and endpoints", () => {
