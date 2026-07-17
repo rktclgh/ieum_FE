@@ -12,10 +12,12 @@ import {
   createOrReuseWebPushSubscription,
   getExistingWebPushSubscription,
   isWebPushSupported,
+  readIosInstallGate,
   registerWebPushServiceWorker,
   resolveWebPushStatus,
   shouldStartWebPushReconcile,
   shouldUpsertReconciledSubscription,
+  unsupportedWebPushStatus,
   type WebPushStatus,
 } from "@/features/notification/lib/web-push"
 import {
@@ -51,7 +53,7 @@ function isSessionWorkCurrent(
 async function inspectWebPushDevice(config: WebPushConfig | null) {
   if (!isWebPushSupported()) {
     return {
-      status: "unsupported" as const,
+      status: unsupportedWebPushStatus(),
     }
   }
 
@@ -72,6 +74,7 @@ async function inspectWebPushDevice(config: WebPushConfig | null) {
       permission,
       backendSubscribed: config.subscribed,
       browserSubscribed,
+      iosInstallRequired: readIosInstallGate(),
     }),
   }
 }
@@ -79,7 +82,7 @@ async function inspectWebPushDevice(config: WebPushConfig | null) {
 function useWebPushSubscription() {
   const queryClient = useQueryClient()
   const [state, setState] = React.useState<WebPushConnectionState>(() => ({
-    status: isWebPushSupported() ? "unsubscribed" : "unsupported",
+    status: isWebPushSupported() ? "unsubscribed" : unsupportedWebPushStatus(),
     error: null,
     isLoading: true,
     isConnecting: false,
@@ -154,7 +157,7 @@ function useWebPushSubscription() {
       if (!isWebPushSupported()) {
         setState((current) => ({
           ...current,
-          status: "unsupported",
+          status: unsupportedWebPushStatus(),
           error: null,
           isConnecting: false,
           isLoading: false,

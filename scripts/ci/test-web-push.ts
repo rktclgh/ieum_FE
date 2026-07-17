@@ -4,6 +4,7 @@ import test from "node:test"
 import {
   createOrReuseWebPushSubscription,
   getExistingWebPushSubscription,
+  isIosInstallRequired,
   isWebPushSupported,
   registerWebPushServiceWorker,
   resolveWebPushStatus,
@@ -12,6 +13,13 @@ import {
   toWebPushSubscriptionRequest,
   urlBase64ToUint8Array,
 } from "../../src/features/notification/lib/web-push"
+
+const IPHONE_UA =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+const IPADOS_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"
+const DESKTOP_MAC_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
 function replaceGlobal(name: "window" | "navigator", value: unknown) {
   const previous = Object.getOwnPropertyDescriptor(globalThis, name)
@@ -66,6 +74,7 @@ test("selects a stable status from browser and backend state", () => {
       permission: "granted",
       backendSubscribed: true,
       browserSubscribed: true,
+      iosInstallRequired: false,
     }),
     "unsupported",
   )
@@ -76,6 +85,7 @@ test("selects a stable status from browser and backend state", () => {
       permission: "granted",
       backendSubscribed: true,
       browserSubscribed: true,
+      iosInstallRequired: false,
     }),
     "server-disabled",
   )
@@ -86,6 +96,7 @@ test("selects a stable status from browser and backend state", () => {
       permission: "denied",
       backendSubscribed: true,
       browserSubscribed: true,
+      iosInstallRequired: false,
     }),
     "permission-denied",
   )
@@ -96,6 +107,7 @@ test("selects a stable status from browser and backend state", () => {
       permission: "granted",
       backendSubscribed: true,
       browserSubscribed: true,
+      iosInstallRequired: false,
     }),
     "subscribed",
   )
@@ -106,8 +118,99 @@ test("selects a stable status from browser and backend state", () => {
       permission: "default",
       backendSubscribed: false,
       browserSubscribed: false,
+      iosInstallRequired: false,
     }),
     "unsubscribed",
+  )
+})
+
+test("tells an uninstalled iOS visitor to install instead of claiming no support", () => {
+  assert.equal(
+    resolveWebPushStatus({
+      supported: false,
+      serverEnabled: true,
+      permission: "default",
+      backendSubscribed: false,
+      browserSubscribed: false,
+      iosInstallRequired: true,
+    }),
+    "ios-install-required",
+  )
+})
+
+test("keeps the install hint out of a supported iOS home screen app", () => {
+  // A standalone iOS app exposes PushManager, so the gate must not shadow real state.
+  assert.equal(
+    resolveWebPushStatus({
+      supported: true,
+      serverEnabled: true,
+      permission: "granted",
+      backendSubscribed: true,
+      browserSubscribed: true,
+      iosInstallRequired: false,
+    }),
+    "subscribed",
+  )
+})
+
+test("requires installation only for iOS browsers outside standalone display", () => {
+  assert.equal(
+    isIosInstallRequired({
+      userAgent: IPHONE_UA,
+      maxTouchPoints: 5,
+      standalone: false,
+      displayModeStandalone: false,
+    }),
+    true,
+  )
+})
+
+test("detects iPadOS that masquerades as desktop Safari via touch points", () => {
+  assert.equal(
+    isIosInstallRequired({
+      userAgent: IPADOS_UA,
+      maxTouchPoints: 5,
+      standalone: false,
+      displayModeStandalone: false,
+    }),
+    true,
+  )
+})
+
+test("never asks a real desktop Mac to install", () => {
+  assert.equal(
+    isIosInstallRequired({
+      userAgent: DESKTOP_MAC_UA,
+      maxTouchPoints: 0,
+      standalone: undefined,
+      displayModeStandalone: false,
+    }),
+    false,
+  )
+})
+
+test("stops asking once iOS reports the home screen app", () => {
+  assert.equal(
+    isIosInstallRequired({
+      userAgent: IPHONE_UA,
+      maxTouchPoints: 5,
+      standalone: true,
+      displayModeStandalone: false,
+    }),
+    false,
+  )
+})
+
+test("accepts the standalone display media query as installed evidence", () => {
+  // Older iOS exposes navigator.standalone; the display-mode query is the modern signal.
+  assert.equal(
+    isIosInstallRequired({
+      userAgent: IPHONE_UA,
+      maxTouchPoints: 5,
+      standalone: undefined,
+      displayModeStandalone: true,
+    }),
+    false,
   )
 })
 

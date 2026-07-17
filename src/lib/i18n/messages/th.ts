@@ -260,6 +260,7 @@ export const th: Messages = {
       pushDeviceConnected: "อุปกรณ์นี้กำลังรับการแจ้งเตือนแบบพุช",
       pushDeviceConnect: "เชื่อมต่ออุปกรณ์นี้",
       pushDeviceUnsupported: "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนแบบพุช",
+      pushDeviceIosInstall: "เพิ่มแอปไปที่หน้าจอโฮมเพื่อรับการแจ้งเตือนแบบพุช",
       pushDevicePermissionDenied: "โปรดอนุญาตการแจ้งเตือนในการตั้งค่าเบราว์เซอร์",
       pushDeviceUnavailable: "การแจ้งเตือนแบบพุชไม่พร้อมใช้งานในขณะนี้",
       pushDeviceError: "เชื่อมต่อการแจ้งเตือนแบบพุชไม่ได้ โปรดลองอีกครั้ง",
