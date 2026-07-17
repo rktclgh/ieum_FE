@@ -21,6 +21,8 @@ interface AdminMessages {
     loginError: string
   }
   navigation: {
+    operations: string
+    review: string
     dashboard: string
     users: string
     reports: string
@@ -29,20 +31,31 @@ interface AdminMessages {
   dashboard: {
     title: string
     range: (from: string, to: string) => string
+    days: (days: number) => string
+    from: string
+    to: string
+    applyRange: string
+    invalidRange: string
+    cachedError: string
+    pendingReports: string
+    retryReports: string
+    deadReports: string
+    pendingInquiries: string
     signup: string
     activeUsers: string
     suspendedUsers: string
-    pins: string
     questions: string
-    meetings: string
     answers: string
+    accepted: string
     acceptedRate: string
-    messages: string
     reports: string
     aiReviewed: string
     confirmed: string
     dismissed: string
     sanctions: string
+    userTrend: string
+    contentTrend: string
+    reportTrend: string
   }
   users: {
     title: string
@@ -171,6 +184,8 @@ const adminKo: AdminMessages = {
     loginError: "로그인에 실패했습니다. 계정 정보를 확인해 주세요.",
   },
   navigation: {
+    operations: "운영",
+    review: "심사",
     dashboard: "대시보드",
     users: "회원",
     reports: "신고",
@@ -179,20 +194,31 @@ const adminKo: AdminMessages = {
   dashboard: {
     title: "운영 현황",
     range: (from, to) => `${from} ~ ${to}`,
+    days: (days) => `${days}일`,
+    from: "시작일",
+    to: "종료일",
+    applyRange: "적용",
+    invalidRange: "시작일은 종료일보다 늦을 수 없습니다.",
+    cachedError: "최신 지표를 불러오지 못해 이전 데이터를 표시합니다.",
+    pendingReports: "대기 중 신고",
+    retryReports: "재시도 신고",
+    deadReports: "실패 신고",
+    pendingInquiries: "대기 중 문의",
     signup: "신규 가입",
     activeUsers: "활성 회원",
     suspendedUsers: "기간 내 제재 회원",
-    pins: "지도 핀",
     questions: "질문",
-    meetings: "모임",
     answers: "답변",
+    accepted: "채택 답변",
     acceptedRate: "채택률",
-    messages: "메시지",
     reports: "신고",
     aiReviewed: "AI 검토 완료",
     confirmed: "확정",
     dismissed: "기각",
     sanctions: "제재",
+    userTrend: "회원 추이",
+    contentTrend: "콘텐츠 추이",
+    reportTrend: "신고 처리 추이",
   },
   users: {
     title: "회원 관리",
@@ -321,6 +347,8 @@ const adminEn: AdminMessages = {
     loginError: "Sign-in failed. Check your account details and try again.",
   },
   navigation: {
+    operations: "Operations",
+    review: "Review",
     dashboard: "Dashboard",
     users: "Users",
     reports: "Reports",
@@ -329,20 +357,31 @@ const adminEn: AdminMessages = {
   dashboard: {
     title: "Operations overview",
     range: (from, to) => `${from} – ${to}`,
+    days: (days) => `${days} days`,
+    from: "From",
+    to: "To",
+    applyRange: "Apply",
+    invalidRange: "The start date cannot be after the end date.",
+    cachedError: "Unable to load fresh metrics. Showing the previous data.",
+    pendingReports: "Pending reports",
+    retryReports: "Retry reports",
+    deadReports: "Failed reports",
+    pendingInquiries: "Pending inquiries",
     signup: "New sign-ups",
     activeUsers: "Active users",
     suspendedUsers: "Users sanctioned in period",
-    pins: "Map pins",
     questions: "Questions",
-    meetings: "Meetings",
     answers: "Answers",
+    accepted: "Accepted answers",
     acceptedRate: "Acceptance rate",
-    messages: "Messages",
     reports: "Reports",
     aiReviewed: "AI reviewed",
     confirmed: "Confirmed",
     dismissed: "Dismissed",
     sanctions: "Sanctions",
+    userTrend: "User trend",
+    contentTrend: "Content trend",
+    reportTrend: "Report handling trend",
   },
   users: {
     title: "User management",

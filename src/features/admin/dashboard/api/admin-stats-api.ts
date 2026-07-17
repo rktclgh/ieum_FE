@@ -1,48 +1,68 @@
 import { apiClient } from "@/lib/api/client"
+import { compactQuery } from "@/features/admin/shared/lib/admin-query"
 
-interface UserStatsResponse {
+interface AdminStatsOverviewParams {
   from: string
   to: string
-  signupCount: number
-  activeUserCount: number
-  suspendedUserCount: number
+  bucket: "day"
 }
 
-interface ContentStatsResponse {
+interface AdminStatsOverview {
   from: string
   to: string
-  pinCount: number
-  questionCount: number
-  meetingCount: number
-  answerCount: number
-  acceptedRate: number
-  messageCount: number
+  bucket: "day"
+  summary: {
+    signupCount: number
+    activeUserCount: number
+    suspensionCount: number
+    questionCount: number
+    humanAnswerCount: number
+    acceptedHumanAnswerCount: number
+    acceptedRate: number
+    reportCount: number
+    aiReviewedCount: number
+    confirmedCount: number
+    dismissedCount: number
+    sanctionCount: number
+  }
+  series: Array<{
+    date: string
+    signupCount: number
+    activeUserCount: number
+    questionCount: number
+    humanAnswerCount: number
+    acceptedHumanAnswerCount: number
+    reportCount: number
+    aiReviewedCount: number
+    confirmedCount: number
+    dismissedCount: number
+    sanctionCount: number
+  }>
+  queues: {
+    pendingReportCount: number
+    retryReportCount: number
+    deadReportCount: number
+    pendingInquiryCount: number
+  }
 }
 
-interface ReportStatsResponse {
-  from: string
-  to: string
-  reportCount: number
-  aiReviewedCount: number
-  confirmedCount: number
-  dismissedCount: number
-  sanctionCount: number
-}
-
-async function getAdminUserStats() {
-  const { data } = await apiClient.get<UserStatsResponse>("/api/v1/admin/stats/users")
+async function getAdminStatsOverview(
+  params: AdminStatsOverviewParams,
+  signal?: AbortSignal,
+) {
+  const { data } = await apiClient.get<AdminStatsOverview>(
+    "/api/v1/admin/stats/overview",
+    {
+      params: compactQuery({
+        from: params.from,
+        to: params.to,
+        bucket: params.bucket,
+      }),
+      signal,
+    },
+  )
   return data
 }
 
-async function getAdminContentStats() {
-  const { data } = await apiClient.get<ContentStatsResponse>("/api/v1/admin/stats/content")
-  return data
-}
-
-async function getAdminReportStats() {
-  const { data } = await apiClient.get<ReportStatsResponse>("/api/v1/admin/stats/reports")
-  return data
-}
-
-export { getAdminContentStats, getAdminReportStats, getAdminUserStats }
-export type { ContentStatsResponse, ReportStatsResponse, UserStatsResponse }
+export { getAdminStatsOverview }
+export type { AdminStatsOverview, AdminStatsOverviewParams }
