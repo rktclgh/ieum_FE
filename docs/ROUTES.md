@@ -90,6 +90,7 @@
 | Canonical URL | 화면 | 백엔드 API 그룹 | 접근 계약 |
 |---|---|---|---|
 | `/admin/` | 운영 지표 대시보드 | `GET /api/v1/admin/stats/users`, `GET /api/v1/admin/stats/content`, `GET /api/v1/admin/stats/reports` | `role=admin` protected gate + desktop-only |
+| `/admin/knowledge/` | 지식 관계 후보 검토·승인·거절 | `GET /api/v1/admin/knowledge/relation-candidates`, `GET /api/v1/admin/knowledge/relation-candidates/{candidateId}`, `POST /api/v1/admin/knowledge/relation-candidates/{candidateId}/approve`, `POST /api/v1/admin/knowledge/relation-candidates/{candidateId}/reject` | `role=admin` protected gate + desktop-only |
 | `/admin/login/` | 운영자 로그인 | `POST /api/v1/auth/login`, `GET /api/v1/users/me` | guest 허용, admin은 대시보드 이동, 일반 사용자는 forbidden/logout + desktop-only |
 | `/admin/users/` | 회원 검색·상태 필터 목록 | `GET /api/v1/admin/users` | `role=admin` protected gate + desktop-only |
 | `/admin/users/detail/?userId={userId}` | 회원 상세·제재·활성화 | `GET /api/v1/admin/users/{userId}`, `POST /api/v1/admin/users/{userId}/sanctions`, `POST /api/v1/admin/users/{userId}/activate` | `role=admin` protected gate + desktop-only |
