@@ -200,10 +200,10 @@ export const en: Messages = {
     aiBadge: "AI",
     acceptedBadge: "Accepted",
     acceptButton: "Accept",
-    acceptConfirmTitle: "You accepted the answer",
-    acceptConfirmDescription: (name) =>
-      `If you have more questions for ${name}, you can continue in a personal chat.`,
+    acceptConfirmTitle: (name) => `Accept ${name}'s answer?`,
+    acceptConfirmDescription: "You can't change this after accepting.",
     acceptConfirmCancel: "Cancel",
+    acceptConfirmConfirm: "Accept",
     createTitle: "Ask a question",
     editTitle: "Edit question",
     titlePlaceholder: "Question title",

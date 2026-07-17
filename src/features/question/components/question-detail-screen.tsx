@@ -422,12 +422,12 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
       <ConfirmDialog
         open={pendingAcceptId != null}
         onOpenChange={(open) => !open && setPendingAcceptId(null)}
-        title={messages.question.acceptConfirmTitle}
-        description={messages.question.acceptConfirmDescription(
+        title={messages.question.acceptConfirmTitle(
           pendingAcceptAnswer?.authorName ?? lastAcceptedAuthorName
         )}
+        description={messages.question.acceptConfirmDescription}
         cancelLabel={messages.question.acceptConfirmCancel}
-        confirmLabel={messages.question.acceptButton}
+        confirmLabel={messages.question.acceptConfirmConfirm}
         onConfirm={handleConfirmAccept}
       />
 

@@ -200,10 +200,10 @@ export const vi: Messages = {
     aiBadge: "AI",
     acceptedBadge: "Đã chọn",
     acceptButton: "Chọn",
-    acceptConfirmTitle: "Bạn đã chọn câu trả lời này",
-    acceptConfirmDescription: (name) =>
-      `Nếu bạn còn thắc mắc với ${name}, bạn có thể tiếp tục hỏi qua trò chuyện riêng.`,
+    acceptConfirmTitle: (name) => `Chọn câu trả lời của ${name}?`,
+    acceptConfirmDescription: "Không thể thay đổi sau khi chọn.",
     acceptConfirmCancel: "Hủy",
+    acceptConfirmConfirm: "Xác nhận",
     createTitle: "Đặt câu hỏi",
     editTitle: "Sửa câu hỏi",
     titlePlaceholder: "Tiêu đề câu hỏi",
