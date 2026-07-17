@@ -7,10 +7,20 @@ import { fileURLToPath } from "node:url"
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 
-function loadWorker(windowClients = []) {
+function loadWorker(windowClients = [], options = {}) {
+  const {
+    csrfToken = "csrf-value",
+    cookieStoreAvailable = true,
+    existingSubscription = null,
+    resubscribeResult = null,
+  } = options
+
   const listeners = new Map()
   const shown = []
   const opened = []
+  const requests = []
+  const subscribeOptions = []
+
   const self = {
     addEventListener(type, listener) {
       listeners.set(type, listener)
@@ -27,7 +37,25 @@ function loadWorker(windowClients = []) {
       showNotification: async (title, options) => {
         shown.push({ title, options })
       },
+      pushManager: {
+        getSubscription: async () => existingSubscription,
+        subscribe: async (subscribeInit) => {
+          subscribeOptions.push(subscribeInit)
+          return resubscribeResult
+        },
+      },
     },
+    fetch: async (url, init) => {
+      requests.push({ url, init })
+      return { ok: true, status: 204 }
+    },
+  }
+
+  if (cookieStoreAvailable) {
+    self.cookieStore = {
+      get: async (name) =>
+        name === "csrf_token" && csrfToken ? { name, value: csrfToken } : null,
+    }
   }
 
   vm.runInNewContext(
@@ -36,7 +64,28 @@ function loadWorker(windowClients = []) {
     { filename: "public/sw.js" },
   )
 
-  return { listeners, opened, shown }
+  return { listeners, opened, shown, requests, subscribeOptions }
+}
+
+async function dispatchSubscriptionChange(worker, event = {}) {
+  let completion
+  worker.listeners.get("pushsubscriptionchange")({
+    ...event,
+    waitUntil(promise) {
+      completion = promise
+    },
+  })
+  await completion
+}
+
+function fakeSubscription(endpoint) {
+  return {
+    toJSON: () => ({
+      endpoint,
+      expirationTime: null,
+      keys: { p256dh: "p256dh-value", auth: "auth-value" },
+    }),
+  }
 }
 
 async function dispatchPush(worker, payload, parseFailure = false) {
@@ -55,9 +104,100 @@ async function dispatchPush(worker, payload, parseFailure = false) {
   await completion
 }
 
-test("registers only push and notification click listeners", () => {
+test("registers push, notification click, and subscription change listeners", () => {
   const worker = loadWorker()
-  assert.deepEqual([...worker.listeners.keys()].sort(), ["notificationclick", "push"])
+  assert.deepEqual(
+    [...worker.listeners.keys()].sort(),
+    ["notificationclick", "push", "pushsubscriptionchange"],
+  )
+})
+
+test("syncs the browser-supplied replacement subscription to the backend", async () => {
+  const worker = loadWorker()
+  await dispatchSubscriptionChange(worker, {
+    newSubscription: fakeSubscription("https://fcm.googleapis.com/push/new"),
+  })
+
+  assert.equal(worker.requests.length, 1)
+  const [request] = worker.requests
+  assert.equal(request.url, "/api/v1/notifications/push/subscription")
+  assert.equal(request.init.method, "PUT")
+  assert.equal(request.init.credentials, "include")
+  assert.equal(request.init.headers["X-CSRF-Token"], "csrf-value")
+  assert.deepEqual(JSON.parse(request.init.body), {
+    endpoint: "https://fcm.googleapis.com/push/new",
+    expirationTime: null,
+    keys: { p256dh: "p256dh-value", auth: "auth-value" },
+  })
+})
+
+test("resubscribes with the old application server key when newSubscription is absent", async () => {
+  // Chrome fires the event without newSubscription; the key must come from oldSubscription.
+  const applicationServerKey = new Uint8Array([1, 2, 3, 4])
+  const worker = loadWorker([], {
+    resubscribeResult: fakeSubscription("https://fcm.googleapis.com/push/rotated"),
+  })
+
+  await dispatchSubscriptionChange(worker, {
+    oldSubscription: { options: { userVisibleOnly: true, applicationServerKey } },
+  })
+
+  // The worker builds this object inside the vm realm, so compare fields rather
+  // than the object identity that a deep-equal would demand.
+  assert.equal(worker.subscribeOptions.length, 1)
+  assert.equal(worker.subscribeOptions[0].userVisibleOnly, true)
+  assert.equal(worker.subscribeOptions[0].applicationServerKey, applicationServerKey)
+  assert.equal(worker.requests.length, 1)
+  assert.equal(
+    JSON.parse(worker.requests[0].init.body).endpoint,
+    "https://fcm.googleapis.com/push/rotated",
+  )
+})
+
+test("reuses an already-active subscription instead of forcing a new one", async () => {
+  const worker = loadWorker([], {
+    existingSubscription: fakeSubscription("https://fcm.googleapis.com/push/active"),
+  })
+
+  await dispatchSubscriptionChange(worker, {})
+
+  assert.deepEqual(worker.subscribeOptions, [])
+  assert.equal(
+    JSON.parse(worker.requests[0].init.body).endpoint,
+    "https://fcm.googleapis.com/push/active",
+  )
+})
+
+test("stays silent when no CSRF token is reachable from the worker", async () => {
+  // Safari and Firefox expose no CookieStore in workers; the app reconciles instead.
+  const worker = loadWorker([], {
+    cookieStoreAvailable: false,
+    existingSubscription: fakeSubscription("https://fcm.googleapis.com/push/active"),
+  })
+
+  await dispatchSubscriptionChange(worker, {})
+
+  assert.deepEqual(worker.requests, [])
+})
+
+test("stays silent when the subscription cannot be recovered", async () => {
+  const worker = loadWorker()
+
+  await dispatchSubscriptionChange(worker, {})
+
+  assert.deepEqual(worker.requests, [])
+})
+
+test("never sends a subscription that lost its encryption keys", async () => {
+  const worker = loadWorker([], {
+    existingSubscription: {
+      toJSON: () => ({ endpoint: "https://fcm.googleapis.com/push/broken", keys: {} }),
+    },
+  })
+
+  await dispatchSubscriptionChange(worker, {})
+
+  assert.deepEqual(worker.requests, [])
 })
 
 test("shows a privacy-safe fallback when payload parsing fails", async () => {
