@@ -86,3 +86,13 @@ test("모임 마커 썸네일은 파일 URL을 정규화한다", () => {
   assert.match(source, /escapeAttr\(\s*thumbnailUrl\s*\)/)
   assert.doesNotMatch(source, /escapeAttr\(\s*pin\.thumbnailUrl\s*\)/)
 })
+
+test("벡터 타일 레이어는 해제된 Leaflet map에 다시 붙지 않는다", () => {
+  const source = read("src/features/map/components/vector-tile-layer.tsx")
+
+  assert.match(source, /if \(!map\.getPane\("tilePane"\)\) return/)
+  assert.match(
+    source,
+    /if \(map\.hasLayer\(layer\)\) \{\s*map\.removeLayer\(layer\)\s*\}/
+  )
+})
