@@ -10,18 +10,23 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 interface QuestionAnswerItemProps {
   answer: QuestionAnswerView
   canAccept: boolean
-  onAccept: () => void
   isAuthenticated: boolean
+  onAccept: () => void
 }
 
-function QuestionAnswerItem({ answer, canAccept, onAccept, isAuthenticated }: QuestionAnswerItemProps) {
+function QuestionAnswerItem({
+  answer,
+  canAccept,
+  isAuthenticated,
+  onAccept,
+}: QuestionAnswerItemProps) {
   const { messages } = useTranslation()
 
-  const hasContent = Boolean(answer.content.trim())
   const translate = useTranslateToggle({
     text: answer.content,
     isAuthenticated,
   })
+  const hasContent = answer.content.trim().length > 0
 
   return (
     <div className="flex w-full flex-col gap-2 border-b border-gray-50 py-3">

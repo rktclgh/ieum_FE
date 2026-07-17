@@ -105,13 +105,22 @@ const PENDING_MATCH_WINDOW_MS = 60_000
 interface MessageRowProps {
   message: ChatBubbleMessage
   position: "solo" | "first" | "middle" | "last"
+  isAuthenticated: boolean
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
   onOpenMenu: () => void
   onCloseMenu: () => void
 }
 
-function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onCloseMenu }: MessageRowProps) {
+function MessageRow({
+  message,
+  position,
+  isAuthenticated,
+  menuOpen,
+  menuItems,
+  onOpenMenu,
+  onCloseMenu,
+}: MessageRowProps) {
   const { messages } = useTranslation()
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
@@ -176,6 +185,11 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
         variant={message.variant}
         className={cn(menuOpen && "relative z-50")}
       />
+      {translate.isError ? (
+        <p className={cn("mt-1 text-body-regular-12 text-red", isMe ? "text-right" : "text-left")}>
+          {messages.translate.translateFailedLabel}
+        </p>
+      ) : null}
       {menuOpen && (
         <ChatContextMenu
           items={fullMenuItems}
@@ -749,8 +763,12 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             className={cn("absolute inset-0 flex flex-col gap-3 overflow-y-auto px-4", FADE_SCROLLBAR_CLASSNAME)}
           >
             {notice && (
-              <div className="sticky top-0 z-10 -mx-4 bg-white px-4 pt-2 pb-1">
-                <NoticeBanner text={notice} onClose={() => setNotice(null)} />
+              <div className="sticky top-0 z-50 -mx-4 bg-white px-4 pt-2 pb-1">
+                <NoticeBanner
+                  text={notice}
+                  isAuthenticated={session.authenticated}
+                  onClose={() => setNotice(null)}
+                />
               </div>
             )}
             <div className="flex flex-col">
@@ -788,6 +806,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                             key={message.id}
                             message={message}
                             position={bubblePosition(index, item.messages.length)}
+                            isAuthenticated={session.authenticated}
                             menuOpen={activeMessageId === message.id}
                             menuItems={messageMenuItems(message)}
                             onOpenMenu={() => setActiveMessageId(message.id)}

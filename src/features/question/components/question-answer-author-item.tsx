@@ -14,26 +14,26 @@ interface QuestionAnswerAuthorItemProps {
   answer: QuestionAnswerView
   isMine: boolean
   isReported: boolean
+  isAuthenticated: boolean
   // 채택 가능 여부. 질문이 이미 채택 확정(resolved)되면 false — 미채택 답변에 채택 버튼을 숨긴다.
   canAccept: boolean
   onAccept: () => void
   onStartChat: () => void
   onLongPress: (
     rect: DOMRect,
-    translateAction?: { label: string; disabled: boolean; onClick: () => void } | null
+    translateAction: { label: string; disabled: boolean; onClick: () => void } | null
   ) => void
-  isAuthenticated: boolean
 }
 
 function QuestionAnswerAuthorItem({
   answer,
   isMine,
   isReported,
+  isAuthenticated,
   canAccept,
   onAccept,
   onStartChat,
   onLongPress,
-  isAuthenticated,
 }: QuestionAnswerAuthorItemProps) {
   const { messages } = useTranslation()
   const ref = React.useRef<HTMLDivElement>(null)
@@ -41,9 +41,12 @@ function QuestionAnswerAuthorItem({
     text: answer.content,
     isAuthenticated,
   })
-  const translateLabel = translate.isShowingTranslation
-    ? messages.translate.viewOriginalLabel
-    : messages.translate.menuLabel
+  const hasContent = answer.content.trim().length > 0
+  const translateLabel = translate.isLoading
+    ? messages.translate.translatingLabel
+    : translate.isShowingTranslation
+      ? messages.translate.viewOriginalLabel
+      : messages.translate.menuLabel
   const longPress = useLongPress({
     onLongPress: () => {
       const rect = ref.current?.getBoundingClientRect()
@@ -106,7 +109,7 @@ function QuestionAnswerAuthorItem({
         ) : null}
       </div>
 
-      {answer.content.trim() ? (
+      {hasContent ? (
         <p
           className={
             isReported
