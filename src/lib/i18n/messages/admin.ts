@@ -25,6 +25,7 @@ interface AdminMessages {
     users: string
     reports: string
     inquiries: string
+    knowledge: string
   }
   dashboard: {
     title: string
@@ -146,6 +147,38 @@ interface AdminMessages {
     answeredConflict: string
     convergenceError: string
   }
+  knowledge: {
+    title: string
+    status: string
+    subject: string
+    predicate: string
+    object: string
+    source: string
+    confidence: string
+    createdAt: string
+    updatedAt: string
+    resolvedAt: string
+    detail: string
+    backToList: string
+    context: string
+    version: string
+    sourceStatus: string
+    sourceTitle: string
+    sourceUrl: string
+    evidence: string
+    chunk: string
+    sourceEligibility: string
+    eligible: string
+    notEligible: string
+    relation: string
+    sameSourceRelations: string
+    review: string
+    rejectReason: string
+    approve: string
+    reject: string
+    conflictRefreshed: string
+    convergenceError: string
+  }
 }
 
 const adminKo: AdminMessages = {
@@ -175,6 +208,7 @@ const adminKo: AdminMessages = {
     users: "회원",
     reports: "신고",
     inquiries: "문의",
+    knowledge: "지식",
   },
   dashboard: {
     title: "운영 현황",
@@ -296,6 +330,38 @@ const adminKo: AdminMessages = {
     answeredConflict: "이미 답변된 문의입니다. 서버의 최신 답변을 불러왔습니다.",
     convergenceError: "서버의 최신 문의 상태를 확인하지 못했습니다.",
   },
+  knowledge: {
+    title: "지식 후보 검토",
+    status: "상태",
+    subject: "주어",
+    predicate: "관계",
+    object: "목적어",
+    source: "출처",
+    confidence: "신뢰도",
+    createdAt: "생성 일시",
+    updatedAt: "수정 일시",
+    resolvedAt: "처리 일시",
+    detail: "후보 상세",
+    backToList: "목록으로",
+    context: "후보 맥락",
+    version: "버전",
+    sourceStatus: "출처 상태",
+    sourceTitle: "출처 제목",
+    sourceUrl: "출처 URL",
+    evidence: "근거 문장",
+    chunk: "근거 청크",
+    sourceEligibility: "출처 적격성",
+    eligible: "적격",
+    notEligible: "부적격",
+    relation: "관계 편집",
+    sameSourceRelations: "같은 출처 관계",
+    review: "검토",
+    rejectReason: "반려 사유",
+    approve: "승인",
+    reject: "반려",
+    conflictRefreshed: "이미 처리되었거나 상태가 변경된 후보입니다. 최신 정보를 불러왔습니다.",
+    convergenceError: "최신 후보 상태를 확인하지 못했습니다.",
+  },
 }
 
 const adminEn: AdminMessages = {
@@ -325,6 +391,7 @@ const adminEn: AdminMessages = {
     users: "Users",
     reports: "Reports",
     inquiries: "Inquiries",
+    knowledge: "Knowledge",
   },
   dashboard: {
     title: "Operations overview",
@@ -445,6 +512,38 @@ const adminEn: AdminMessages = {
     invalidAnswer: "Enter an answer between 1 and 2000 characters.",
     answeredConflict: "This inquiry was already answered. The latest server answer is now displayed.",
     convergenceError: "Unable to confirm the latest inquiry state from the server.",
+  },
+  knowledge: {
+    title: "Knowledge candidate review",
+    status: "Status",
+    subject: "Subject",
+    predicate: "Predicate",
+    object: "Object",
+    source: "Source",
+    confidence: "Confidence",
+    createdAt: "Created at",
+    updatedAt: "Updated at",
+    resolvedAt: "Resolved at",
+    detail: "Candidate detail",
+    backToList: "Back to list",
+    context: "Candidate context",
+    version: "Version",
+    sourceStatus: "Source status",
+    sourceTitle: "Source title",
+    sourceUrl: "Source URL",
+    evidence: "Evidence text",
+    chunk: "Evidence chunk",
+    sourceEligibility: "Source eligibility",
+    eligible: "Eligible",
+    notEligible: "Not eligible",
+    relation: "Relation edit",
+    sameSourceRelations: "Same-source relations",
+    review: "Review",
+    rejectReason: "Reject reason",
+    approve: "Approve",
+    reject: "Reject",
+    conflictRefreshed: "This candidate was already resolved or changed. The latest data is now displayed.",
+    convergenceError: "Could not verify the latest candidate state.",
   },
 }
 

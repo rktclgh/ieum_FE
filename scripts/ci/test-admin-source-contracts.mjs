@@ -1278,6 +1278,76 @@ function assertAdminInquiryAnswerConvergence(source) {
   assert.match(page, /convergenceState=\{rowConvergenceState\}/)
 }
 
+function assertKnowledgeCandidateContracts({
+  apiSource,
+  hookSource,
+  pageSource,
+  routeSource,
+  shellSource,
+}) {
+  const compactApi = compactSource(apiSource)
+  const compactHook = compactSource(hookSource)
+  const compactPage = compactSource(pageSource)
+  const compactRoute = compactSource(routeSource)
+
+  for (const endpoint of [
+    '"/api/v1/admin/knowledge/relation-candidates"',
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}`",
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}/approve`",
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}/reject`",
+  ]) {
+    assert.match(apiSource, new RegExp(escapeRegExp(endpoint)))
+  }
+  assert.match(
+    compactApi,
+    /interface ApproveKnowledgeCandidateRequest \{ version: number subject: string predicate: KnowledgeRelationPredicate object: string \}/,
+  )
+  assert.match(
+    compactApi,
+    /interface RejectKnowledgeCandidateRequest \{ version: number reason\?: string \}/,
+  )
+  assert.match(compactApi, /type KnowledgeCandidateStatus = \| "pending" \| "approved" \| "rejected" \| "invalidated"/)
+  assert.match(apiSource, /type KnowledgeRelationPredicate =/)
+  assert.match(compactApi, /params: compactQuery\(\{ status: params\.status, cursor: params\.cursor, size: params\.size,? \}\)/)
+  assert.match(compactApi, /apiClient\.post\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/approve`, body,? \)/)
+  assert.match(compactApi, /apiClient\.post\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/reject`, body,? \)/)
+
+  assert.match(
+    compactHook,
+    /list: \(\{ status, size \}: Omit<AdminKnowledgeCandidatesParams, "cursor">\) => \[ \.\.\.adminKnowledgeCandidateKeys\.lists\(\), \{ status, size \}, \] as const/,
+  )
+  assert.match(compactPage, /React\.useState<KnowledgeCandidateStatus>\("pending"\)/)
+  assert.match(compactPage, /useAdminKnowledgeCandidates\(\{ status, size: 20 \}\)/)
+  assert.match(compactRoute, /searchParams\.get\("candidateId"\)/)
+  assert.match(compactRoute, /parsePositiveInteger\(candidateIdValue\)/)
+  assert.match(compactRoute, /<AdminKnowledgeCandidateDetailPage key=\{candidateId\} candidateId=\{candidateId\} \/>/)
+  assert.match(pageSource, /routes\.adminKnowledgeCandidate\(candidate\.candidateId\)/)
+  assert.match(pageSource, /<select[^>]*id="admin-knowledge-predicate"/)
+  assert.match(pageSource, /KNOWLEDGE_RELATION_PREDICATES\.map/)
+  assert.match(pageSource, /const canAct = candidate\??\.status === "pending"/)
+  assert.match(pageSource, /\{canAct \? \(/)
+  assert.match(pageSource, /candidate\.evidenceText/)
+  assert.doesNotMatch(pageSource, /dangerouslySetInnerHTML/)
+  assert.match(pageSource, /detailQuery\.isError/)
+  assert.match(pageSource, /onRetry=\{\(\) => void detailQuery\.refetch\(\)\}/)
+  assert.match(pageSource, /messages\.route\.invalidLink/)
+  assert.match(pageSource, /getApiErrorCode\(error\) === "KNOWLEDGE_CANDIDATE_CONFLICT"/)
+  assert.match(pageSource, /getApiErrorStatus\(error\) === 409/)
+  assert.match(pageSource, /detailQuery\.refetch\(\{ cancelRefetch: true \}\)/)
+  assert.match(
+    hookSource,
+    /queryClient\.invalidateQueries\(\{ queryKey: adminKnowledgeCandidateKeys\.lists\(\) \}\)/,
+  )
+  assert.match(
+    compactHook,
+    /queryClient\.invalidateQueries\(\{ queryKey: adminKnowledgeCandidateKeys\.detail\(candidateId\), exact: true, refetchType: "none",? \}\)/,
+  )
+  assert.match(compactHook, /onSettled: \(\) => invalidateAdminKnowledgeCandidateQueries\(queryClient, candidateId\)/)
+  assert.doesNotMatch(hookSource, /onSuccess:/)
+  assert.match(shellSource, /routes\.adminKnowledge\(\)/)
+  assert.match(shellSource, /messages\.admin\.navigation\.knowledge/)
+}
+
 const statsApiBindings = [
   ["getAdminUserStats", "UserStatsResponse", "/api/v1/admin/stats/users"],
   ["getAdminContentStats", "ContentStatsResponse", "/api/v1/admin/stats/content"],
@@ -1451,10 +1521,16 @@ test("disabled credential fields also disable their auxiliary controls", () => {
   )
 })
 
-test("the admin shell has four fixed destinations, current-page semantics, and logout", () => {
+test("the admin shell has five fixed destinations, current-page semantics, and logout", () => {
   const source = readSource("src/features/admin/shared/components/admin-shell.tsx")
 
-  for (const route of ["adminHome", "adminUsers", "adminReports", "adminInquiries"]) {
+  for (const route of [
+    "adminHome",
+    "adminUsers",
+    "adminReports",
+    "adminInquiries",
+    "adminKnowledge",
+  ]) {
     assert.match(source, new RegExp(`routes\\.${route}\\(\\)`))
   }
   assert.doesNotMatch(source, /routes\.adminLogin\(\)/)
@@ -2365,6 +2441,24 @@ test("admin report decisions use one detail refetch owner and one synchronous la
   }
   assert.notEqual(automaticDetailRefetchMutant, hookSource)
   assert.throws(() => assertAdminReportHooks(automaticDetailRefetchMutant))
+})
+
+test("knowledge candidate admin UI owns API paths, pending defaults, select review, terminal hiding, and 409 convergence", () => {
+  assertKnowledgeCandidateContracts({
+    apiSource: readSource(
+      "src/features/admin/knowledge/api/admin-knowledge-candidates-api.ts",
+    ),
+    hookSource: readSource(
+      "src/features/admin/knowledge/hooks/use-admin-knowledge-candidates.ts",
+    ),
+    pageSource: readSource(
+      "src/features/admin/knowledge/components/admin-knowledge-candidates-page.tsx",
+    ),
+    routeSource: readSource("src/app/admin/(protected)/knowledge/page.tsx"),
+    shellSource: readSource(
+      "src/features/admin/shared/components/admin-shell.tsx",
+    ),
+  })
 })
 
 test("each admin inquiry API owns the exact nullable DTO, filters, body, and endpoints", () => {

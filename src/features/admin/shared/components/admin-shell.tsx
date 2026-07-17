@@ -15,6 +15,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     { href: routes.adminUsers(), label: messages.admin.navigation.users },
     { href: routes.adminReports(), label: messages.admin.navigation.reports },
     { href: routes.adminInquiries(), label: messages.admin.navigation.inquiries },
+    { href: routes.adminKnowledge(), label: messages.admin.navigation.knowledge },
   ]
 
   return (

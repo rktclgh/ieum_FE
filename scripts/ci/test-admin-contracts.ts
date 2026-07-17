@@ -173,7 +173,7 @@ type ExpectedAdminMessages = {
     | "submit"
     | "loginError"
   >
-  navigation: StringMessages<"dashboard" | "users" | "reports" | "inquiries">
+  navigation: StringMessages<"dashboard" | "users" | "reports" | "inquiries" | "knowledge">
   dashboard: StringMessages<
     | "title"
     | "signup"
@@ -293,6 +293,38 @@ type ExpectedAdminMessages = {
     | "answeredConflict"
     | "convergenceError"
   >
+  knowledge: StringMessages<
+    | "title"
+    | "status"
+    | "subject"
+    | "predicate"
+    | "object"
+    | "source"
+    | "confidence"
+    | "createdAt"
+    | "updatedAt"
+    | "resolvedAt"
+    | "detail"
+    | "backToList"
+    | "context"
+    | "version"
+    | "sourceStatus"
+    | "sourceTitle"
+    | "sourceUrl"
+    | "evidence"
+    | "chunk"
+    | "sourceEligibility"
+    | "eligible"
+    | "notEligible"
+    | "relation"
+    | "sameSourceRelations"
+    | "review"
+    | "rejectReason"
+    | "approve"
+    | "reject"
+    | "conflictRefreshed"
+    | "convergenceError"
+  >
 }
 
 const adminMessageTypeContracts: [
@@ -305,9 +337,10 @@ const adminMessageTypeContracts: [
   Expect<Exact<keyof AdminMessages["users"], keyof ExpectedAdminMessages["users"]>>,
   Expect<Exact<keyof AdminMessages["reports"], keyof ExpectedAdminMessages["reports"]>>,
   Expect<Exact<keyof AdminMessages["inquiries"], keyof ExpectedAdminMessages["inquiries"]>>,
+  Expect<Exact<keyof AdminMessages["knowledge"], keyof ExpectedAdminMessages["knowledge"]>>,
   Expect<Exact<typeof adminKo, AdminMessages>>,
   Expect<Exact<typeof adminEn, AdminMessages>>,
-] = [true, true, true, true, true, true, true, true, true, true, true]
+] = [true, true, true, true, true, true, true, true, true, true, true, true]
 
 const responseRoleTypeContracts: [
   Expect<Exact<UserMeResponse["role"], UserRole>>,
