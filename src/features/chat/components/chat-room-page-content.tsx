@@ -611,6 +611,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       time: formatKstTime(nowIso),
       createdAt: nowIso,
       pending: true,
+      hasText: false,
     }
     updateLiveMessages((previous) => [
       ...previous,

@@ -18,6 +18,7 @@ function userMessage(overrides: Partial<ChatBubbleMessage> = {}): ChatBubbleMess
     texts: ["떡볶이 먹을까?"],
     time: "오전 8:21",
     createdAt: "2026-07-16T08:21:00+09:00",
+    hasText: true,
     ...overrides,
   }
 }
