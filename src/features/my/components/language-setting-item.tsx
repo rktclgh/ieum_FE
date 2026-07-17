@@ -4,6 +4,7 @@ import { SelectInput } from "@/components/ui/text-field/select-input"
 import { MyMenuRow } from "@/features/my/components/my-menu-row"
 import { useSettingsForm } from "@/features/my/hooks/use-settings-form"
 import type { LanguageCode } from "@/features/my/api/my-types"
+import { isLanguageSelectorDisabled } from "@/features/my/lib/settings-form-language"
 import type { UserSettings } from "@/features/session/api/session-api"
 import { LANGUAGE_CODES, LANGUAGE_NATIVE_NAMES } from "@/lib/i18n/languages"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -23,6 +24,7 @@ function LanguageSettingItem({ settings }: { settings: UserSettings }) {
     <SelectInput
       options={languageOptions}
       value={form.settings.language}
+      disabled={isLanguageSelectorDisabled(form.isPending)}
       onValueChange={(value) => form.patch({ language: value as LanguageCode })}
       confirmLabel={messages.languagePicker.confirm}
       renderTrigger={
