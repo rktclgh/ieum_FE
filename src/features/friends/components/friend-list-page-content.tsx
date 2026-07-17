@@ -104,17 +104,19 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
   )
 
   // 알림 딥링크 강조 — 대상 요청이 목록에 있으면 스크롤해 보여주고, 잠깐 뒤 배경 강조를 페이드아웃한다.
+  // 페이드가 끝난 userId 를 기록해 두면, 다른 요청으로 강조가 바뀌어도 그 요청은 새로 강조된다.
   const highlightRowRef = React.useRef<HTMLDivElement>(null)
-  const [highlightFaded, setHighlightFaded] = React.useState(false)
+  const [fadedUserId, setFadedUserId] = React.useState<number | null>(null)
   const highlightPresent =
     highlightUserId !== null && requests.some((request) => request.userId === highlightUserId)
 
   React.useEffect(() => {
-    if (!highlightPresent) return
+    if (!highlightPresent || highlightUserId === null) return
     highlightRowRef.current?.scrollIntoView({ block: "center", behavior: "smooth" })
-    const timeoutId = window.setTimeout(() => setHighlightFaded(true), 1000)
+    const targetId = highlightUserId
+    const timeoutId = window.setTimeout(() => setFadedUserId(targetId), 1000)
     return () => window.clearTimeout(timeoutId)
-  }, [highlightPresent])
+  }, [highlightUserId, highlightPresent])
 
   React.useEffect(() => {
     if (!actionError) return
@@ -212,7 +214,9 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
                         ref={isHighlighted ? highlightRowRef : undefined}
                         className={cn(
                           "w-full rounded-2xl transition-colors duration-700 ease-out",
-                          isHighlighted && !highlightFaded ? "bg-primary/10" : "bg-transparent"
+                          isHighlighted && fadedUserId !== highlightUserId
+                            ? "bg-primary/10"
+                            : "bg-transparent"
                         )}
                       >
                         <FriendRequestItem
