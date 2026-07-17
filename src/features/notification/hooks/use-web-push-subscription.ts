@@ -82,7 +82,9 @@ async function inspectWebPushDevice(config: WebPushConfig | null) {
 function useWebPushSubscription() {
   const queryClient = useQueryClient()
   const [state, setState] = React.useState<WebPushConnectionState>(() => ({
-    status: isWebPushSupported() ? "unsubscribed" : unsupportedWebPushStatus(),
+    // The iOS gate reads matchMedia and the user agent, which prerender cannot
+    // answer. The mount effect resolves the real status while isLoading hides it.
+    status: isWebPushSupported() ? "unsubscribed" : "unsupported",
     error: null,
     isLoading: true,
     isConnecting: false,
