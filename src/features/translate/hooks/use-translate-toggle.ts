@@ -33,11 +33,16 @@ interface TranslateMutationVariables {
 // 표시 중인 텍스트만 임시로 번역문과 원문 사이에서 갈아끼운다.
 function useTranslateToggle({
   text: originalText,
-  isAuthenticated = true,
+  isAuthenticated = false,
 }: UseTranslateToggleOptions): UseTranslateToggleResult {
   const { language } = useTranslation()
   const translationKey = `${language}:${originalText}`
-  const [visibleTranslationKey, setVisibleTranslationKey] = React.useState<string | null>(null)
+  const [visibleTranslation, setVisibleTranslation] = React.useState<{
+    key: string | null
+    translationKey: string
+  }>(() => ({ key: null, translationKey }))
+  const visibleTranslationKey =
+    visibleTranslation.translationKey === translationKey ? visibleTranslation.key : null
   const isShowingTranslation = visibleTranslationKey === translationKey
   const canTranslate = isAuthenticated && originalText.trim().length > 0
 
@@ -51,7 +56,14 @@ function useTranslateToggle({
   const reset = mutation.reset
   React.useEffect(() => {
     reset()
-  }, [language, originalText, reset])
+    // Keep visibility in sync with reset mutation data so stale translations cannot return.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVisibleTranslation({ key: null, translationKey })
+  }, [reset, translationKey])
+
+  const setVisibleTranslationKey = (key: string | null) => {
+    setVisibleTranslation({ key, translationKey })
+  }
 
   const showOriginal = () => {
     setVisibleTranslationKey(null)

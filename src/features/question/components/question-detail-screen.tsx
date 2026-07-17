@@ -71,7 +71,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
 
   const question = detailQuery.data
   const isAuthor = question != null && me.data?.userId === question.authorUserId
-  const isAuthenticated = me.data != null
+  const isAuthenticated = me.data != null && me.data.userId != null
   // 질문에 이미 채택된 답변이 있는지(question.isResolved 대신 답변 목록의 isAccepted를
   // 직접 근거로 삼는다). 이미 채택된 답변이 있으면 그 답변 외에는 채택 버튼을 숨긴다.
   const hasAcceptedAnswer = question != null && question.answers.some((a) => a.isAccepted)
@@ -121,7 +121,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
   }
 
   const handleConfirmAccept = () => {
-    if (pendingAcceptId == null) return
+    if (pendingAcceptId == null || !isAuthor || !isAuthenticated) return
     acceptAnswer.mutate(pendingAcceptId, { onError: showError })
     setPendingAcceptId(null)
   }
@@ -243,7 +243,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                         isMine={a.authorUserId === me.data?.userId}
                         isReported={false}
                         isAuthenticated={isAuthenticated}
-                        canAccept={!question.isResolved && !hasAcceptedAnswer}
+                        canAccept={isAuthor && isAuthenticated && !question.isResolved && !hasAcceptedAnswer}
                         onAccept={() => openAcceptConfirm(a)}
                         onStartChat={() => {
                           if (a.authorUserId != null) handleStartChat(a.authorUserId)
@@ -281,7 +281,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                     <QuestionAnswerItem
                       key={answer.answerId}
                       answer={answer}
-                      canAccept={!question.isResolved && !answer.isAccepted}
+                      canAccept={false}
                       isAuthenticated={isAuthenticated}
                       onAccept={() => openAcceptConfirm(answer)}
                     />

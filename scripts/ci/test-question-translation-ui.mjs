@@ -28,6 +28,41 @@ assert.match(
   /label:\s*questionContentTranslate\.(?:isShowingTranslation|isLoading)/,
   "question content long-press menu should expose translate/original label"
 )
+assert.match(
+  screen,
+  /isAuthenticated\s*=\s*me\.data\s*!=\s*null\s*&&\s*me\.data\.userId\s*!=\s*null/,
+  "question screen should not treat unresolved auth as authenticated"
+)
+assert.match(
+  screen,
+  /canAccept=\{isAuthor\s*&&\s*isAuthenticated\s*&&\s*!question\.isResolved\s*&&\s*!hasAcceptedAnswer\}/,
+  "question author answer accept action must require author authentication"
+)
+assert.match(
+  screen,
+  /canAccept=\{false\}/,
+  "non-author answer list must not expose answer acceptance"
+)
+assert.match(
+  screen,
+  /if\s*\(pendingAcceptId\s*==\s*null\s*\|\|\s*!isAuthor\s*\|\|\s*!isAuthenticated\)\s*return/,
+  "answer acceptance mutation must be guarded to question authors only"
+)
+const contentOverlay = screen.match(
+  /\{activeQuestionText\?\.kind === "content"\s*&&\s*\(\s*(<LongPressActionOverlay[\s\S]*?<\/LongPressActionOverlay>)\s*\)\s*\}/
+)?.[1]
+
+assert.ok(contentOverlay, "question content long-press overlay should be present")
+assert.match(
+  contentOverlay,
+  /<p className="text-body-regular-14 whitespace-pre-line text-gray-700">\s*\{questionContentTranslate\.displayText\}\s*<\/p>/,
+  "question content overlay should render the current translated display text"
+)
+assert.doesNotMatch(
+  contentOverlay,
+  /questionContentTranslate\.originalText/,
+  "question content overlay should not revert translated content to its original text"
+)
 
 for (const [name, source] of [
   ["answer item", answerItem],
@@ -41,7 +76,7 @@ for (const [name, source] of [
   )
   assert.match(
     source,
-    /useTranslateToggle\(\{\s*text:\s*answer\.content/,
+    /useTranslateToggle\(\{\s*text:\s*(?:content|answer\.content)/,
     `${name} should translate visible answer text`
   )
   assert.match(
@@ -51,7 +86,7 @@ for (const [name, source] of [
   )
   assert.match(
     source,
-    /hasContent\s*=\s*answer\.content\.trim\(\)\.length\s*>\s*0|answer\.content/,
+    /hasContent\s*=\s*(?:content|answer\.content)\.trim\(\)\.length\s*>\s*0|answer\.content/,
     `${name} should keep rendering original answer text separately from auth-gated translation`
   )
   assert.match(

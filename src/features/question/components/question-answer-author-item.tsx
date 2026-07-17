@@ -37,11 +37,12 @@ function QuestionAnswerAuthorItem({
 }: QuestionAnswerAuthorItemProps) {
   const { messages } = useTranslation()
   const ref = React.useRef<HTMLDivElement>(null)
+  const content = answer.content ?? ""
   const translate = useTranslateToggle({
-    text: answer.content,
+    text: content,
     isAuthenticated,
   })
-  const hasContent = answer.content.trim().length > 0
+  const hasContent = content.trim().length > 0
   const translateLabel = translate.isLoading
     ? messages.translate.translatingLabel
     : translate.isShowingTranslation
@@ -64,7 +65,7 @@ function QuestionAnswerAuthorItem({
   return (
     <div
       ref={ref}
-      {...(!isReported && translate.canTranslate ? longPress : {})}
+      {...(!isReported && (!isMine || translate.canTranslate) ? longPress : {})}
       className={
         isMine
           ? "flex w-full flex-col gap-2 rounded-2xl bg-white p-4 shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]"

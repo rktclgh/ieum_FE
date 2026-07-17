@@ -21,12 +21,13 @@ function QuestionAnswerItem({
   onAccept,
 }: QuestionAnswerItemProps) {
   const { messages } = useTranslation()
+  const content = answer.content ?? ""
 
   const translate = useTranslateToggle({
-    text: answer.content,
+    text: content,
     isAuthenticated,
   })
-  const hasContent = answer.content.trim().length > 0
+  const hasContent = content.trim().length > 0
 
   return (
     <div className="flex w-full flex-col gap-2 border-b border-gray-50 py-3">

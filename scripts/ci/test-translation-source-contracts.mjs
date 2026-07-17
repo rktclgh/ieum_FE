@@ -41,6 +41,25 @@ test("translation hook swaps only display text and exposes auth-gatable action s
   assert.match(hook, /isAuthenticated\?:\s*boolean/)
   assert.match(hook, /displayText:\s*string/)
   assert.match(hook, /canTranslate:\s*boolean/)
+  assert.match(
+    hook,
+    /isAuthenticated\s*=\s*false/,
+    "translation must be opt-in for authenticated surfaces"
+  )
+  assert.match(
+    hook,
+    /visibleTranslation\.translationKey\s*===\s*translationKey\s*\?\s*visibleTranslation\.key\s*:\s*null/,
+    "translation state must return to original text when language or source text changes"
+  )
+  const resetEffect = hook.match(
+    /React\.useEffect\(\(\) => \{([\s\S]*?)\},\s*\[reset,\s*translationKey\]\)/
+  )?.[1]
+  assert.ok(resetEffect, "translation reset effect should depend on the current translation key")
+  assert.match(
+    resetEffect,
+    /^\s*reset\(\)\s*(?:\/\/[^\n]*\n\s*)*setVisibleTranslation\(\{\s*key:\s*null,\s*translationKey\s*\}\)\s*$/,
+    "switching away and back must clear active translation visibility in the mutation reset effect"
+  )
   assert.match(compactHook, /targetLang:language/)
   assert.match(compactHook, /text:originalText/)
   assert.match(hook, /translateText\(/)
@@ -70,15 +89,21 @@ test("translation controls are gated only by nonblank text and existing pending/
   const chatRoom = read("src/features/chat/components/chat-room-page-content.tsx")
 
   assert.doesNotMatch(questionItem, /shouldShowTranslateButton|sourceLang|language/)
-  assert.match(questionItem, /useTranslateToggle\(\{\s*text:\s*answer\.content,\s*isAuthenticated,/)
+  assert.match(questionItem, /const\s+content\s*=\s*answer\.content\s*\?\?\s*""/)
+  assert.match(questionItem, /useTranslateToggle\(\{\s*text:\s*content,\s*isAuthenticated,/)
   assert.match(questionItem, /translate\.canTranslate/)
   assert.match(questionItem, /translate\.displayText/)
 
   assert.doesNotMatch(questionAuthorItem, /shouldShowTranslateButton|sourceLang|language/)
-  assert.match(questionAuthorItem, /useTranslateToggle\(\{\s*text:\s*answer\.content,\s*isAuthenticated,/)
+  assert.match(questionAuthorItem, /const\s+content\s*=\s*answer\.content\s*\?\?\s*""/)
+  assert.match(questionAuthorItem, /useTranslateToggle\(\{\s*text:\s*content,\s*isAuthenticated,/)
   assert.match(questionAuthorItem, /translate\.canTranslate/)
   assert.match(questionAuthorItem, /translate\.displayText/)
-  assert.match(questionAuthorItem, /!isReported\s*&&\s*translate\.canTranslate\s*\?/)
+  assert.match(
+    questionAuthorItem,
+    /\{\.\.\.\(!isReported\s*&&\s*\(!isMine\s*\|\|\s*translate\.canTranslate\)\s*\?\s*longPress\s*:\s*\{\}\)\}/,
+    "long-press should remain available for reportable answers but avoid actionless overlays for own non-translatable answers"
+  )
 
   assert.doesNotMatch(chatRoom, /shouldShowTranslateButton|sourceLang/)
   assert.match(chatRoom, /useTranslateToggle\(\{\s*text:\s*text\s*\?\?\s*"",\s*isAuthenticated\s*\}\)/)

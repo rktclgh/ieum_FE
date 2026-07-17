@@ -82,6 +82,15 @@ test("an unresolved snapshot defaults to loading", () => {
   assert.deepEqual(resolveAuthState({}), { kind: "loading" })
 })
 
+test("translation hook defaults unauthenticated unless a caller opts in", () => {
+  const hook = readFileSync(
+    resolve(process.cwd(), "src/features/translate/hooks/use-translate-toggle.ts"),
+    "utf8",
+  )
+
+  assert.match(hook, /isAuthenticated\s*=\s*false/)
+})
+
 test("the auth hook and gate consume the refresh store without exposing children", () => {
   const hook = readFileSync(
     resolve(process.cwd(), "src/features/session/hooks/use-auth-state.ts"),
