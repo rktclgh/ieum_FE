@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Flag, Globe } from "lucide-react"
+import { CheckCircle2, Flag, Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -181,7 +181,8 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   <span className="text-body-regular-14 text-gray-500">{question.address}</span>
                 </div>
                 {question.isResolved ? (
-                  <span className="ml-auto rounded-full bg-primary px-2.5 py-1 text-body-medium-14 text-white">
+                  <span className="ml-auto flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-body-medium-14 text-white">
+                    <CheckCircle2 className="size-3.5" aria-hidden />
                     {messages.question.resolvedBadge}
                   </span>
                 ) : null}

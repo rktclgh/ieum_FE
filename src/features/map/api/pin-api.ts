@@ -24,6 +24,8 @@ function adaptPin(raw: RawMapPin): MapPin {
     location: { lat: raw.location.latitude, lng: raw.location.longitude },
     mine: raw.mine,
     createdAt: raw.createdAt,
+    // BE가 현재 내려주지 않는 필드(pin-types.ts 주석 참고) — 있으면 그대로 통과, 없으면 undefined.
+    resolved: raw.isResolved,
   }
 }
 
