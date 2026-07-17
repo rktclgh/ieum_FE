@@ -28,12 +28,19 @@ interface CalendarItem {
   isHost: boolean
 }
 
-// 10-5 GET /meetings/{id}/schedules 항목
+// 모임 채팅 일정 관리 GET /meetings/{id}/schedules 항목.
+// 권한은 화면에서 재계산하지 않고 서버가 내려준 capability만 사용한다.
 interface MeetingScheduleItem {
   scheduleId: number
+  title: string
+  locationName: string
   startsAt: string
   endsAt: string | null
   status: ScheduleStatus
+  createdByUserId: number | null
+  canEdit: boolean
+  canDelete: boolean
+  canReport: boolean
 }
 
 interface CalendarResponse {
@@ -50,14 +57,35 @@ interface CalendarRange {
   to?: string
 }
 
-// 10-7 POST /meetings/{id}/schedules 요청/응답
-interface AddScheduleRequest {
+// 모임 채팅 일정 조회는 controller의 OffsetDateTime 바인딩에 맞춰 KST offset을 포함한다.
+interface MeetingScheduleRange {
+  from?: string
+  to?: string
+}
+
+// 모임 채팅 일정 생성/수정 요청. 위치의 좌표는 모임 장소 picker에서만 쓰고,
+// 일정 API에는 사람이 읽을 수 있는 이름만 전달한다.
+interface ScheduleEditorRequest {
+  title: string
+  locationName: string
   startsAt: string
   endsAt?: string
 }
 
+// 기존 사용처와의 이름 호환을 유지한다.
+type AddScheduleRequest = ScheduleEditorRequest
+
 interface AddScheduleResponse {
   scheduleId: number
+}
+
+interface ScheduleReportRequest {
+  reason: "spam" | "ad" | "abuse" | "obscene" | "harassment" | "etc"
+  detail?: string
+}
+
+interface ScheduleReportResponse {
+  reportId: number
 }
 
 export type {
@@ -68,6 +96,10 @@ export type {
   CalendarResponse,
   MeetingSchedulesResponse,
   CalendarRange,
+  MeetingScheduleRange,
+  ScheduleEditorRequest,
   AddScheduleRequest,
   AddScheduleResponse,
+  ScheduleReportRequest,
+  ScheduleReportResponse,
 }

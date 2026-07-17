@@ -1,12 +1,13 @@
 import { getKstDateKey } from "@/lib/date/kst"
-import type { CalendarItem, ScheduleStatus } from "@/features/schedule/api/schedule-types"
+import type {
+  CalendarItem,
+  MeetingScheduleItem,
+  ScheduleStatus,
+} from "@/features/schedule/api/schedule-types"
 
-// 캘린더 화면(ScheduleListItem/ScheduleCalendar)이 소비하는 UI 모델.
-interface ScheduleEntry {
+// 일정 카드(ScheduleListItem/ScheduleCalendar)가 소비하는 공통 UI 모델.
+interface ScheduleCardEntry {
   scheduleId: number
-  meetingId: number
-  roomId: number
-  isHost: boolean
   status: ScheduleStatus
   /** KST 기준 YYYY-MM-DD */
   date: string
@@ -16,6 +17,25 @@ interface ScheduleEntry {
   /** KST 기준 시각 라벨 (ex. "오전 7:00") */
   timeLabel: string
   locationLabel: string
+}
+
+// 전역 캘린더 항목의 UI 모델. 기존 consumer를 위해 유지한다.
+interface ScheduleEntry extends ScheduleCardEntry {
+  scheduleId: number
+  meetingId: number
+  roomId: number
+  isHost: boolean
+}
+
+// 모임 채팅 일정 관리 화면의 UI 모델. capability는 서버 응답을 그대로 보존한다.
+interface MeetingScheduleEntry extends ScheduleCardEntry {
+  meetingId: number
+  startsAt: string
+  endsAt: string | null
+  createdByUserId: number | null
+  canEdit: boolean
+  canDelete: boolean
+  canReport: boolean
 }
 
 const KST_TIME_ZONE = "Asia/Seoul"
@@ -61,5 +81,28 @@ function adaptCalendarItem(item: CalendarItem, locale: string): ScheduleEntry {
   }
 }
 
-export { adaptCalendarItem }
-export type { ScheduleEntry }
+function adaptMeetingScheduleItem(
+  item: MeetingScheduleItem,
+  meetingId: number,
+  locale: string
+): MeetingScheduleEntry {
+  return {
+    scheduleId: item.scheduleId,
+    meetingId,
+    startsAt: item.startsAt,
+    endsAt: item.endsAt,
+    createdByUserId: item.createdByUserId,
+    canEdit: item.canEdit,
+    canDelete: item.canDelete,
+    canReport: item.canReport,
+    status: item.status,
+    date: getKstDateKey(item.startsAt),
+    relativeLabel: formatRelative(locale, item.startsAt),
+    title: item.title,
+    timeLabel: formatKstTime(locale, item.startsAt),
+    locationLabel: item.locationName,
+  }
+}
+
+export { adaptCalendarItem, adaptMeetingScheduleItem }
+export type { ScheduleCardEntry, ScheduleEntry, MeetingScheduleEntry }

@@ -393,6 +393,21 @@ export interface Messages {
   }
   schedule: {
     addButtonLabel: string
+    editorCreateTitle: string
+    editorEditTitle: string
+    titlePlaceholder: string
+    dateLabel: string
+    timePlaceholder: string
+    locationPlaceholder: string
+    createAction: string
+    updateAction: string
+    editAction: string
+    deleteAction: string
+    deleteConfirmTitle: string
+    deleteConfirmDescription: string
+    editorRequired: string
+    pastDateError: string
+    saveError: string
     previousMonthLabel: string
     nextMonthLabel: string
     selectMonthLabel: string
@@ -426,6 +441,8 @@ export interface Messages {
     submitButton: string
     confirmTitle: (name: string) => string
     confirmTitleGeneric: string
+    confirmScheduleTitle: (name: string) => string
+    confirmScheduleTitleGeneric: string
     confirmDescription: string
     errors: {
       REPORT_MESSAGE_NOT_FOUND: string
@@ -860,6 +877,21 @@ export const ko: Messages = {
   },
   schedule: {
     addButtonLabel: "일정 추가",
+    editorCreateTitle: "일정 등록",
+    editorEditTitle: "일정 수정",
+    titlePlaceholder: "일정 제목",
+    dateLabel: "날짜",
+    timePlaceholder: "시간 선택",
+    locationPlaceholder: "위치 선택",
+    createAction: "등록",
+    updateAction: "저장",
+    editAction: "수정",
+    deleteAction: "삭제",
+    deleteConfirmTitle: "일정을 삭제할까요?",
+    deleteConfirmDescription: "삭제한 일정은 되돌릴 수 없어요.",
+    editorRequired: "제목, 시간, 위치를 모두 입력해 주세요.",
+    pastDateError: "오늘 이전 날짜에는 일정을 등록할 수 없어요.",
+    saveError: "일정 저장에 실패했어요.",
     previousMonthLabel: "이전 달",
     nextMonthLabel: "다음 달",
     selectMonthLabel: "연도 및 월 선택",
@@ -893,6 +925,8 @@ export const ko: Messages = {
     submitButton: "신고",
     confirmTitle: (name) => `${name}님의 메시지를 신고합니다`,
     confirmTitleGeneric: "메시지를 신고합니다",
+    confirmScheduleTitle: (name) => `${name} 일정을 신고합니다`,
+    confirmScheduleTitleGeneric: "일정을 신고합니다",
     confirmDescription: "정말로 신고하시겠습니까?",
     errors: {
       REPORT_MESSAGE_NOT_FOUND: "삭제되었거나 존재하지 않는 메시지예요.",

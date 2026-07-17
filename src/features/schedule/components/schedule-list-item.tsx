@@ -4,15 +4,23 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
-import type { ScheduleEntry } from "@/features/schedule/lib/schedule-adapter"
+import type { ScheduleCardEntry } from "@/features/schedule/lib/schedule-adapter"
 
 interface ScheduleListItemProps extends React.ComponentProps<"div"> {
-  event: ScheduleEntry
+  event: ScheduleCardEntry
   onSelect?: () => void
   onMoreClick?: () => void
+  moreAriaLabel?: string
 }
 
-function ScheduleListItem({ className, event, onSelect, onMoreClick, ...props }: ScheduleListItemProps) {
+function ScheduleListItem({
+  className,
+  event,
+  onSelect,
+  onMoreClick,
+  moreAriaLabel,
+  ...props
+}: ScheduleListItemProps) {
   // onSelect가 없으면 클릭 동작이 없어 button 대신 비대화형 div로 렌더링한다(시맨틱/a11y).
   const ContentWrapper = onSelect ? "button" : "div"
 
@@ -41,7 +49,12 @@ function ScheduleListItem({ className, event, onSelect, onMoreClick, ...props }:
         </span>
       </ContentWrapper>
       {onMoreClick && (
-        <button type="button" onClick={onMoreClick} className="flex size-5 shrink-0 items-center justify-center">
+        <button
+          type="button"
+          onClick={onMoreClick}
+          aria-label={moreAriaLabel}
+          className="-my-2 -mr-2 flex size-11 shrink-0 items-center justify-center"
+        >
           <Image src="/icons/schedule/edit.svg" alt="" width={20} height={20} className="size-5" />
         </button>
       )}
