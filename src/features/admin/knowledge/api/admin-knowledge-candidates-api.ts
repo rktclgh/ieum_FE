@@ -3,13 +3,16 @@ import type { CursorPage } from "@/features/admin/shared/types/admin-types"
 import { apiClient } from "@/lib/api/client"
 
 const KNOWLEDGE_RELATION_PREDICATES = [
-  "located_in",
-  "used_for",
   "requires",
   "applies_to",
+  "located_in",
+  "exception_of",
+  "prevents",
   "supports",
-  "depends_on",
   "has_deadline",
+  "depends_on",
+  "reported_to",
+  "used_for",
 ] as const
 
 type KnowledgeCandidateStatus =

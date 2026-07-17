@@ -1289,6 +1289,13 @@ function assertKnowledgeCandidateContracts({
   const compactHook = compactSource(hookSource)
   const compactPage = compactSource(pageSource)
   const compactRoute = compactSource(routeSource)
+  const predicateSource = compactSource(
+    boundedSource(
+      apiSource,
+      "const KNOWLEDGE_RELATION_PREDICATES = [",
+      "] as const",
+    ),
+  )
 
   for (const endpoint of [
     '"/api/v1/admin/knowledge/relation-candidates"',
@@ -1308,6 +1315,10 @@ function assertKnowledgeCandidateContracts({
   )
   assert.match(compactApi, /type KnowledgeCandidateStatus = \| "pending" \| "approved" \| "rejected" \| "invalidated"/)
   assert.match(apiSource, /type KnowledgeRelationPredicate =/)
+  assert.equal(
+    predicateSource,
+    'const KNOWLEDGE_RELATION_PREDICATES = [ "requires", "applies_to", "located_in", "exception_of", "prevents", "supports", "has_deadline", "depends_on", "reported_to", "used_for", ',
+  )
   assert.match(compactApi, /params: compactQuery\(\{ status: params\.status, cursor: params\.cursor, size: params\.size,? \}\)/)
   assert.match(compactApi, /apiClient\.post\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/approve`, body,? \)/)
   assert.match(compactApi, /apiClient\.post\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/reject`, body,? \)/)
