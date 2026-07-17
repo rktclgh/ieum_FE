@@ -86,3 +86,18 @@ test("모임 마커 썸네일은 파일 URL을 정규화한다", () => {
   assert.match(source, /escapeAttr\(\s*thumbnailUrl\s*\)/)
   assert.doesNotMatch(source, /escapeAttr\(\s*pin\.thumbnailUrl\s*\)/)
 })
+
+test("벡터 타일 레이어는 해제된 Leaflet map에 다시 붙지 않는다", () => {
+  const source = read("src/features/map/components/vector-tile-layer.tsx")
+  const paneGuardIndex = source.indexOf('if (!map.getPane("tilePane")) return')
+  const layerCreationIndex = source.indexOf("const layer = L.maplibreGL({ style: MAP_STYLE_URL })")
+  const layerAddIndex = source.indexOf("layer.addTo(map)")
+
+  assert.ok(paneGuardIndex >= 0, "tilePane guard가 있어야 한다")
+  assert.ok(layerCreationIndex > paneGuardIndex, "tilePane guard 뒤에만 레이어를 생성해야 한다")
+  assert.ok(layerAddIndex > layerCreationIndex, "생성된 레이어만 map에 추가해야 한다")
+  assert.match(
+    source,
+    /if \(map\.hasLayer\(layer\)\) \{\s*map\.removeLayer\(layer\)\s*\}/
+  )
+})

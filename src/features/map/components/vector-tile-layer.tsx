@@ -41,6 +41,10 @@ function VectorTileLayer() {
   const map = useMap()
 
   React.useEffect(() => {
+    // MapContainer가 해제되는 중이면 Leaflet의 pane도 함께 사라진다. 이 시점에 레이어를 붙이면
+    // maplibre-gl-leaflet 내부에서 제거된 mapPane을 읽어 예외가 나므로, 현재 map이 살아 있을 때만 시작한다.
+    if (!map.getPane("tilePane")) return
+
     const layer = L.maplibreGL({ style: MAP_STYLE_URL })
     layer.addTo(map)
 
@@ -58,7 +62,10 @@ function VectorTileLayer() {
         glMap.off("load", recolor)
         glMap.off("styledata", recolor)
       }
-      map.removeLayer(layer)
+      // 부모 MapContainer가 먼저 제거한 경우에는 이미 layer가 빠져 있다.
+      if (map.hasLayer(layer)) {
+        map.removeLayer(layer)
+      }
     }
   }, [map])
 
