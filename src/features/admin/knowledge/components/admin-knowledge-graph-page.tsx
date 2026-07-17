@@ -76,12 +76,19 @@ function isActivationKey(event: React.KeyboardEvent) {
   return event.key === "Enter" || event.key === " "
 }
 
+type FocusedGraphItem =
+  | { kind: "edge"; id: number }
+  | { kind: "node"; id: string }
+  | null
+
 function AdminKnowledgeGraphPage() {
   const { language, messages } = useTranslation()
+  const graphCanvasTitleId = React.useId()
   const [query, setQuery] = React.useState("")
   const [predicate, setPredicate] = React.useState("")
   const [focus, setFocus] = React.useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = React.useState<number | null>(null)
+  const [focusedGraphItem, setFocusedGraphItem] = React.useState<FocusedGraphItem>(null)
   const [zoom, setZoom] = React.useState(1)
   const debouncedQuery = useDebouncedValue(query, 300)
   const graphQuery = useAdminKnowledgeGraph({
@@ -128,6 +135,7 @@ function AdminKnowledgeGraphPage() {
     [language],
   )
   const isEmpty = !graphQuery.isPending && !graphQuery.isError && layout.nodes.length === 0
+  const isGraphBlocked = graphQuery.isPending || graphQuery.isError || isEmpty
 
   return (
     <section aria-labelledby="admin-knowledge-graph-title" className="space-y-6">
@@ -292,22 +300,37 @@ function AdminKnowledgeGraphPage() {
               </GraphStatus>
             )}
             <svg
-              role="img"
-              aria-label={messages.admin.knowledge.graphCanvas}
+              role="group"
+              aria-labelledby={graphCanvasTitleId}
+              aria-hidden={isGraphBlocked}
               viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
-              className="min-h-full w-full min-w-[760px]"
+              className={`min-h-full w-full min-w-[760px] ${isGraphBlocked ? "pointer-events-none" : ""}`}
             >
+              <title id={graphCanvasTitleId}>{messages.admin.knowledge.graphCanvas}</title>
               <g transform={`translate(${GRAPH_WIDTH * (1 - zoom) / 2} ${GRAPH_HEIGHT * (1 - zoom) / 2}) scale(${zoom})`}>
                 {layout.edges.map((edge) => {
                   const source = nodeById.get(edge.source)
                   const target = nodeById.get(edge.target)
                   if (source === undefined || target === undefined) return null
                   const isSelected = edgeKey(edge) === selectedEdgeKey
+                  const isKeyboardFocused =
+                    focusedGraphItem?.kind === "edge" && focusedGraphItem.id === edge.relationId
                   const isRelated =
                     highlightedNodeIds.has(edge.source) || highlightedNodeIds.has(edge.target)
 
                   return (
                     <g key={edge.relationId}>
+                      {isKeyboardFocused && (
+                        <line
+                          x1={source.x}
+                          y1={source.y}
+                          x2={target.x}
+                          y2={target.y}
+                          stroke="#2563eb"
+                          strokeLinecap="round"
+                          strokeWidth={8}
+                        />
+                      )}
                       <line
                         x1={source.x}
                         y1={source.y}
@@ -316,12 +339,20 @@ function AdminKnowledgeGraphPage() {
                         stroke={isSelected ? "#111827" : isRelated ? "#64748b" : "#d1d5db"}
                         strokeWidth={isSelected ? 3 : 1.5}
                       />
-                      <g
+                      <a
+                        href={`#knowledge-edge-${edge.relationId}`}
                         role="button"
-                        tabIndex={0}
-                        className="cursor-pointer"
-                        onClick={() => setSelectedEdgeId(edge.relationId)}
+                        tabIndex={isGraphBlocked ? -1 : 0}
+                        className="cursor-pointer outline-none"
+                        onClick={(event) => {
+                          event.preventDefault()
+                          if (isGraphBlocked) return
+                          setSelectedEdgeId(edge.relationId)
+                        }}
+                        onFocus={() => setFocusedGraphItem({ kind: "edge", id: edge.relationId })}
+                        onBlur={() => setFocusedGraphItem(null)}
                         onKeyDown={(event) => {
+                          if (isGraphBlocked) return
                           if (!isActivationKey(event)) return
                           event.preventDefault()
                           setSelectedEdgeId(edge.relationId)
@@ -336,26 +367,34 @@ function AdminKnowledgeGraphPage() {
                           stroke="transparent"
                           strokeWidth={16}
                         />
-                      </g>
+                      </a>
                     </g>
                   )
                 })}
                 {layout.nodes.map((node) => {
                   const isFocused = focus === node.id || node.ring === 0
                   const isHighlighted = highlightedNodeIds.has(node.id) || isFocused
+                  const isKeyboardFocused =
+                    focusedGraphItem?.kind === "node" && focusedGraphItem.id === node.id
                   const radius = nodeRadius(node, isFocused)
 
                   return (
                     <g key={node.id}>
-                      <g
+                      <a
+                        href={`#knowledge-node-${encodeURIComponent(node.id)}`}
                         role="button"
-                        tabIndex={0}
-                        className="cursor-pointer"
-                        onClick={() => {
+                        tabIndex={isGraphBlocked ? -1 : 0}
+                        className="cursor-pointer outline-none"
+                        onClick={(event) => {
+                          event.preventDefault()
+                          if (isGraphBlocked) return
                           setFocus(node.id)
                           setSelectedEdgeId(null)
                         }}
+                        onFocus={() => setFocusedGraphItem({ kind: "node", id: node.id })}
+                        onBlur={() => setFocusedGraphItem(null)}
                         onKeyDown={(event) => {
+                          if (isGraphBlocked) return
                           if (!isActivationKey(event)) return
                           event.preventDefault()
                           setFocus(node.id)
@@ -363,6 +402,16 @@ function AdminKnowledgeGraphPage() {
                         }}
                         aria-label={`${messages.admin.knowledge.focusNode}: ${node.label}`}
                       >
+                        {isKeyboardFocused && (
+                          <circle
+                            cx={node.x}
+                            cy={node.y}
+                            r={radius + 6}
+                            fill="none"
+                            stroke="#2563eb"
+                            strokeWidth={4}
+                          />
+                        )}
                         <circle
                           cx={node.x}
                           cy={node.y}
@@ -371,7 +420,7 @@ function AdminKnowledgeGraphPage() {
                           stroke={isHighlighted ? "#111827" : "#cbd5e1"}
                           strokeWidth={2}
                         />
-                      </g>
+                      </a>
                       <text
                         x={node.x}
                         y={node.y + radius + 16}
