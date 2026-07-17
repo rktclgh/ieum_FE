@@ -260,6 +260,7 @@ export const zh: Messages = {
       pushDeviceConnected: "此设备正在接收推送通知。",
       pushDeviceConnect: "连接此设备",
       pushDeviceUnsupported: "此浏览器不支持推送通知。",
+      pushDeviceIosInstall: "将此应用添加到主屏幕后即可接收推送通知。",
       pushDevicePermissionDenied: "请在浏览器设置中允许通知。",
       pushDeviceUnavailable: "推送通知暂时不可用。",
       pushDeviceError: "无法连接推送通知，请重试。",

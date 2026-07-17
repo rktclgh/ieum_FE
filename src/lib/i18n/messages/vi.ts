@@ -261,6 +261,7 @@ export const vi: Messages = {
       pushDeviceConnected: "Thiết bị này đang nhận thông báo đẩy.",
       pushDeviceConnect: "Kết nối thiết bị này",
       pushDeviceUnsupported: "Trình duyệt này không hỗ trợ thông báo đẩy.",
+      pushDeviceIosInstall: "Thêm ứng dụng vào Màn hình chính để nhận thông báo đẩy.",
       pushDevicePermissionDenied: "Hãy cho phép thông báo trong cài đặt trình duyệt.",
       pushDeviceUnavailable: "Thông báo đẩy hiện chưa khả dụng.",
       pushDeviceError: "Không thể kết nối thông báo đẩy. Vui lòng thử lại.",

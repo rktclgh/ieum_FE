@@ -260,6 +260,7 @@ export const ja: Messages = {
       pushDeviceConnected: "この端末でプッシュ通知を受信しています。",
       pushDeviceConnect: "この端末を接続",
       pushDeviceUnsupported: "このブラウザはプッシュ通知に対応していません。",
+      pushDeviceIosInstall: "ホーム画面に追加すると、プッシュ通知を受け取れます。",
       pushDevicePermissionDenied: "ブラウザの設定で通知を許可してください。",
       pushDeviceUnavailable: "プッシュ通知は現在利用できません。",
       pushDeviceError: "プッシュ通知に接続できませんでした。もう一度お試しください。",

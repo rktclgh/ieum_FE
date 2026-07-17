@@ -10,12 +10,22 @@ import { routes } from "@/lib/navigation/routes"
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { messages } = useTranslation()
-  const navigation = [
-    { href: routes.adminHome(), label: messages.admin.navigation.dashboard },
-    { href: routes.adminUsers(), label: messages.admin.navigation.users },
-    { href: routes.adminReports(), label: messages.admin.navigation.reports },
-    { href: routes.adminInquiries(), label: messages.admin.navigation.inquiries },
-    { href: routes.adminKnowledge(), label: messages.admin.navigation.knowledge },
+  const navigationGroups = [
+    {
+      label: messages.admin.navigation.operations,
+      items: [
+        { href: routes.adminHome(), label: messages.admin.navigation.dashboard },
+        { href: routes.adminUsers(), label: messages.admin.navigation.users },
+      ],
+    },
+    {
+      label: messages.admin.navigation.review,
+      items: [
+        { href: routes.adminReports(), label: messages.admin.navigation.reports },
+        { href: routes.adminInquiries(), label: messages.admin.navigation.inquiries },
+        { href: routes.adminKnowledge(), label: messages.admin.navigation.knowledge },
+      ],
+    },
   ]
 
   return (
@@ -24,24 +34,31 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <p className="mb-8 text-title-bold-20 text-gray-900">
           {messages.admin.dashboard.title}
         </p>
-        <nav aria-label={messages.admin.dashboard.title} className="flex flex-1 flex-col gap-2">
-          {navigation.map((item) => {
-            const isCurrent =
-              item.href === routes.adminHome()
-                ? pathname === item.href
-                : pathname.startsWith(item.href)
+        <nav aria-label={messages.admin.dashboard.title} className="flex flex-1 flex-col gap-5">
+          {navigationGroups.map((group) => (
+            <section key={group.label} className="space-y-2">
+              <h2 className="px-3 text-body-medium-12 text-gray-500">{group.label}</h2>
+              <div className="flex flex-col gap-1">
+                {group.items.map((item) => {
+                  const isCurrent =
+                    item.href === routes.adminHome()
+                      ? pathname === item.href
+                      : pathname.startsWith(item.href)
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isCurrent ? "page" : undefined}
-                className="rounded-lg px-3 py-2.5 text-body-medium-15 text-gray-700 transition-colors hover:bg-gray-50 aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary"
-              >
-                {item.label}
-              </Link>
-            )
-          })}
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-current={isCurrent ? "page" : undefined}
+                      className="rounded-lg px-3 py-2.5 text-body-medium-15 text-gray-700 transition-colors hover:bg-gray-50 aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary"
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
         </nav>
         <LogoutButton />
       </aside>
