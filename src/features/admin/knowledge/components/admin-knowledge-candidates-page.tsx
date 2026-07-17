@@ -93,12 +93,13 @@ function AdminKnowledgeCandidateDecisionForm({
   const [rejectReason, setRejectReason] = React.useState("")
   const normalizedSubject = normalizeDraft(subject)
   const normalizedObject = normalizeDraft(object)
+  const actionBusy = activeMutationAction !== null
   const approveDisabled =
     refreshBusy ||
-    activeMutationAction === "approve" ||
+    actionBusy ||
     normalizedSubject === null ||
     normalizedObject === null
-  const rejectDisabled = refreshBusy || activeMutationAction === "reject"
+  const rejectDisabled = refreshBusy || actionBusy
 
   return (
     <>
@@ -212,11 +213,15 @@ function AdminKnowledgeCandidatesList() {
   const candidatesQuery = useAdminKnowledgeCandidates({ status, size: 20 })
   const candidates =
     candidatesQuery.data?.pages.flatMap((page) => page.items) ?? []
-  const dateFormatter = new Intl.DateTimeFormat(language, {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Seoul",
-  })
+  const dateFormatter = React.useMemo(
+    () =>
+      new Intl.DateTimeFormat(language, {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Asia/Seoul",
+      }),
+    [language],
+  )
 
   return (
     <section aria-labelledby="admin-knowledge-title" className="space-y-6">
@@ -354,6 +359,7 @@ function AdminKnowledgeCandidateDetailPage({
   const rejectMutation = useRejectAdminKnowledgeCandidate(candidateId)
   const [activeMutationAction, setActiveMutationAction] =
     React.useState<KnowledgeCandidateAction | null>(null)
+  const mutationInFlightRef = React.useRef(false)
   const [refreshingDecision, setRefreshingDecision] = React.useState(false)
   const [conflictRefreshed, setConflictRefreshed] = React.useState(false)
   const [convergenceError, setConvergenceError] = React.useState(false)
@@ -368,11 +374,17 @@ function AdminKnowledgeCandidateDetailPage({
       ? getApiErrorMessage(mutationError, messages.admin.common.loadError)
       : null
   const canAct = candidate?.status === "pending"
-  const dateFormatter = new Intl.DateTimeFormat(language, {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Seoul",
-  })
+  const mutationBusy =
+    activeMutationAction !== null || approveMutation.isPending || rejectMutation.isPending
+  const dateFormatter = React.useMemo(
+    () =>
+      new Intl.DateTimeFormat(language, {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Asia/Seoul",
+      }),
+    [language],
+  )
 
   const refreshCanonicalCandidate = async (error: unknown) => {
     setRefreshingDecision(true)
@@ -388,6 +400,7 @@ function AdminKnowledgeCandidateDetailPage({
     } catch {
       setConvergenceError(true)
     } finally {
+      mutationInFlightRef.current = false
       setRefreshingDecision(false)
       setActiveMutationAction(null)
     }
@@ -402,8 +415,9 @@ function AdminKnowledgeCandidateDetailPage({
     predicate: KnowledgeRelationPredicate
     object: string
   }) => {
-    if (!candidate || !canAct || refreshingDecision) return
+    if (!candidate || !canAct || refreshingDecision || mutationBusy || mutationInFlightRef.current) return
 
+    mutationInFlightRef.current = true
     approveMutation.reset()
     rejectMutation.reset()
     setActiveMutationAction("approve")
@@ -424,8 +438,9 @@ function AdminKnowledgeCandidateDetailPage({
   }
 
   const handleReject = (reason: string | null) => {
-    if (!candidate || !canAct || refreshingDecision) return
+    if (!candidate || !canAct || refreshingDecision || mutationBusy || mutationInFlightRef.current) return
 
+    mutationInFlightRef.current = true
     approveMutation.reset()
     rejectMutation.reset()
     setActiveMutationAction("reject")
