@@ -10,7 +10,7 @@ import { adminStatsKeys } from "@/features/admin/dashboard/lib/admin-stats-keys"
 
 function useAdminStatsOverview(range: AdminStatsOverviewParams) {
   const query = useQuery({
-    queryKey: adminStatsKeys.overview({
+    queryKey: adminStatsKeys.overviewRange({
       from: range.from,
       to: range.to,
       bucket: range.bucket,

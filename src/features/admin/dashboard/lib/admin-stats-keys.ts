@@ -2,14 +2,11 @@ import type { AdminStatsOverviewParams } from "@/features/admin/dashboard/api/ad
 
 const adminStatsKeys = {
   all: ["admin", "stats"] as const,
-  overview: ({ from, to, bucket }: AdminStatsOverviewParams) => [
-    ...adminStatsKeys.all,
-    "overview",
+  overview: ["admin", "stats", "overview"] as const,
+  overviewRange: ({ from, to, bucket }: AdminStatsOverviewParams) => [
+    ...adminStatsKeys.overview,
     { from, to, bucket },
   ] as const,
-  users: ["admin", "stats", "users"] as const,
-  content: ["admin", "stats", "content"] as const,
-  reports: ["admin", "stats", "reports"] as const,
 }
 
 export { adminStatsKeys }

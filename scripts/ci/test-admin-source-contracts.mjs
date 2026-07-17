@@ -212,16 +212,13 @@ function assertAdminSanctionStatsInvalidation(source) {
   )
 
   assert.match(invalidation, /invalidateAdminUserQueries\(queryClient, userId\)/)
-  for (const key of ["users", "reports"]) {
-    assert.match(
-      invalidation,
-      new RegExp(
-        `invalidateQueries\\(\\{ queryKey: adminStatsKeys\\.${key}, exact: true,? \\}\\)`,
-      ),
-    )
-  }
-  assert.equal((invalidation.match(/adminStatsKeys\./g) ?? []).length, 2)
-  assert.doesNotMatch(invalidation, /adminStatsKeys\.content/)
+  assert.match(
+    invalidation,
+    /invalidateQueries\(\{ queryKey: adminStatsKeys\.overview,? \}\)/,
+  )
+  assert.equal((invalidation.match(/adminStatsKeys\./g) ?? []).length, 1)
+  assert.doesNotMatch(invalidation, /adminStatsKeys\.(?:users|content|reports)/)
+  assert.doesNotMatch(invalidation, /exact: true/)
   assert.match(
     sanctionHook,
     /onSuccess: \(\) => invalidateAdminSanctionQueries\(queryClient, userId\)/,
@@ -232,10 +229,11 @@ function assertAdminSanctionStatsInvalidation(source) {
   )
   assert.match(
     activationHook,
-    /invalidateQueries\(\{ queryKey: adminStatsKeys\.users, exact: true,? \}\)/,
+    /invalidateQueries\(\{ queryKey: adminStatsKeys\.overview,? \}\)/,
   )
   assert.doesNotMatch(activationHook, /invalidateAdminSanctionQueries/)
-  assert.doesNotMatch(activationHook, /adminStatsKeys\.(?:content|reports)/)
+  assert.doesNotMatch(activationHook, /adminStatsKeys\.(?:users|content|reports)/)
+  assert.doesNotMatch(activationHook, /exact: true/)
 }
 
 function interfaceFields(source, interfaceName) {
@@ -421,8 +419,10 @@ function assertAdminReportHooks(source) {
   )
   assert.match(
     decisionInvalidation,
-    /invalidateQueries\(\{ queryKey: adminStatsKeys\.reports, exact: true,? \}\)/,
+    /invalidateQueries\(\{ queryKey: adminStatsKeys\.overview,? \}\)/,
   )
+  assert.doesNotMatch(decisionInvalidation, /adminStatsKeys\.(?:users|content|reports)/)
+  assert.doesNotMatch(decisionInvalidation, /exact: true[^}]*adminStatsKeys|adminStatsKeys[^}]*exact: true/)
   assert.doesNotMatch(decisionInvalidation, /adminUserKeys/)
 
   assert.match(
@@ -1299,13 +1299,17 @@ function assertAdminStatsOverviewContract({
 
   assert.match(
     compactKeys,
-    /overview: \(\{ from, to, bucket \}: AdminStatsOverviewParams\) => \[ \.\.\.adminStatsKeys\.all, "overview", \{ from, to, bucket \}, \] as const/,
+    /overview: \["admin", "stats", "overview"\] as const/,
+  )
+  assert.match(
+    compactKeys,
+    /overviewRange: \(\{ from, to, bucket \}: AdminStatsOverviewParams\) => \[ \.\.\.adminStatsKeys\.overview, \{ from, to, bucket \}, \] as const/,
   )
   assert.match(hookSource, /function useAdminStatsOverview\(range: AdminStatsOverviewParams\)/)
   assert.equal((hookSource.match(/useQuery\s*\(\s*\{/g) ?? []).length, 1)
   assert.match(
     compactHook,
-    /queryKey: adminStatsKeys\.overview\(\{ from: range\.from, to: range\.to, bucket: range\.bucket,? \}\)/,
+    /queryKey: adminStatsKeys\.overviewRange\(\{ from: range\.from, to: range\.to, bucket: range\.bucket,? \}\)/,
   )
   assert.match(hookSource, /queryFn: \(\{ signal \}\) => getAdminStatsOverview\(range, signal\)/)
   assert.match(hookSource, /placeholderData: \(previousData\) => previousData/)
@@ -1590,31 +1594,31 @@ test("admin user hooks preserve cursor semantics and invalidate lists plus exact
   }
 })
 
-test("sanction success invalidates exact user and report KPI caches only", () => {
+test("sanction success invalidates user records and every overview KPI range", () => {
   const source = readSource("src/features/admin/users/hooks/use-admin-users.ts")
 
   assertAdminSanctionStatsInvalidation(source)
 
   const wrongKeyMutant = source.replace(
-    "adminStatsKeys.reports",
-    "adminStatsKeys.content",
+    "adminStatsKeys.overview",
+    "adminStatsKeys.all",
   )
-  const broadKeyMutant = source.replace(
-    "queryKey: adminStatsKeys.users,\n      exact: true,",
-    "queryKey: adminStatsKeys.users,",
+  const exactOverviewMutant = source.replace(
+    "queryKey: adminStatsKeys.overview,\n    })",
+    "queryKey: adminStatsKeys.overview,\n      exact: true,\n    })",
   )
   const staleStatsMutant = source.replace(
     "onSuccess: () => invalidateAdminSanctionQueries(queryClient, userId)",
     "onSuccess: () => invalidateAdminUserQueries(queryClient, userId)",
   )
   const staleActivationStatsMutant = source.replace(
-    "queryKey: adminStatsKeys.users,\n          exact: true,",
-    "queryKey: adminStatsKeys.content,\n          exact: true,",
+    "queryClient.invalidateQueries({\n          queryKey: adminStatsKeys.overview,\n        }),",
+    "",
   )
 
   for (const mutant of [
     wrongKeyMutant,
-    broadKeyMutant,
+    exactOverviewMutant,
     staleStatsMutant,
     staleActivationStatsMutant,
   ]) {
@@ -1850,8 +1854,12 @@ test("admin report hooks preserve cursor filters and converge every decision cac
   assertAdminReportHooks(source)
 
   const wrongStatsMutant = source.replace(
-    "adminStatsKeys.reports",
-    "adminStatsKeys.users",
+    "adminStatsKeys.overview",
+    "adminStatsKeys.all",
+  )
+  const exactStatsMutant = source.replace(
+    "queryKey: adminStatsKeys.overview,\n    })",
+    "queryKey: adminStatsKeys.overview,\n      exact: true,\n    })",
   )
   const successOnlyMutant = source.replace(
     "onSettled: () => invalidateAdminReportDecisionQueries(queryClient, reportId)",
@@ -1862,7 +1870,7 @@ test("admin report hooks preserve cursor filters and converge every decision cac
     "onSettled: () => invalidateAdminReportDecisionQueries(queryClient, reportId)",
   )
 
-  for (const mutant of [wrongStatsMutant, successOnlyMutant, staleUserMutant]) {
+  for (const mutant of [wrongStatsMutant, exactStatsMutant, successOnlyMutant, staleUserMutant]) {
     assert.notEqual(mutant, source)
     assert.throws(() => assertAdminReportHooks(mutant))
   }
