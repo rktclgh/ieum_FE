@@ -21,7 +21,10 @@ import { ChatScrollDateBadge } from "@/features/chat/components/chat-scroll-date
 import { ChatSystemMessage } from "@/features/chat/components/chat-system-message"
 import { ChatBubbleSegment, bubblePosition } from "@/features/chat/components/chat-bubble-segment"
 import { ChatMessageGroup } from "@/features/chat/components/chat-message-group"
-import { ChatMessageInput } from "@/features/chat/components/chat-message-input"
+import {
+  ChatMessageInput,
+  type ChatMessageSendResult,
+} from "@/features/chat/components/chat-message-input"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { ChatRoomMoreHeader } from "@/features/chat/components/chat-room-more-header"
 import { ChatRoomProfile } from "@/features/chat/components/chat-room-profile"
@@ -43,7 +46,7 @@ import {
   useSetNotify,
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
-import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
+import type { ChatReplyPreview, LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
 import {
   isActiveRoomRemoval,
   removeRoomFromAllLoadedListCaches,
@@ -63,6 +66,16 @@ import {
   type GroupChatMemberListItem,
 } from "@/features/chat/lib/chat-member-management"
 import { buildChatTimeline, dedupeServerMessages } from "@/features/chat/lib/chat-timeline"
+import {
+  canReplyToMessage,
+  findConfirmedReplyPendingFromHistory,
+  findPendingEchoMatch,
+  formatReplyLabel,
+  hasUnconfirmedReplyPendingForEcho,
+  replyTargetFromMessage,
+  shouldClearDraftAfterAcceptedEcho,
+  shouldClearSelectedReplyAfterAcceptedEcho,
+} from "@/features/chat/lib/chat-reply"
 import type { ChatSessionAccess } from "@/features/chat/lib/chat-session"
 import { useKickMember } from "@/features/meetup/hooks/use-meetup-mutations"
 import { meetupKeys, useMeeting, useMeetingParticipants } from "@/features/meetup/hooks/use-meetup-queries"
@@ -101,6 +114,15 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const isMe = message.sender === "me"
+  const replyLabel = message.replyTo
+    ? formatReplyLabel(message, message.replyTo, {
+        mine: messages.chat.replyToLabel,
+        others: messages.chat.replyFromToLabel,
+      })
+    : undefined
+  const replyQuote = message.replyTo
+    ? message.replyTo.content?.trim() || messages.chat.replyImageLabel
+    : undefined
 
   const handleOpenMenu = () => {
     const rect = rowRef.current?.getBoundingClientRect()
@@ -121,6 +143,10 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
         imageUrl={message.imageUrl}
         imageAlt={messages.chat.imageAlt}
         uploading={message.imageUploading}
+        replyLabel={replyLabel}
+        replyQuote={replyQuote}
+        replyImageUrl={message.replyTo?.imageUrl}
+        replyImageAlt={messages.chat.replyImageLabel}
         position={position}
         variant={message.variant}
         className={cn(menuOpen && "relative z-50")}
@@ -155,35 +181,25 @@ interface ChatRoomSessionContentProps extends ChatRoomPageContentProps {
 //    서버가 clientNonce를 주지 않아 (내가 보냄 + 같은 내용 + 시간 창 이내)로 매칭한다. 한 서버 메시지는 최대 한 pending만 흡수.
 function mergeMessages(base: ChatMessageView[], live: ChatMessageView[]): ChatMessageView[] {
   const server = dedupeServerMessages(
-    [...base, ...live].filter((message) => message.messageType !== "user" || !message.pending)
+    // 같은 messageId의 재조회 결과는 WS의 구버전 payload보다 상세한 replyTo를 보존한다.
+    [...live, ...base].filter((message) => message.messageType !== "user" || !message.pending)
   )
 
   const pendings = live
     .filter((message): message is ChatBubbleMessage => message.messageType === "user" && Boolean(message.pending))
     .sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : a.messageId - b.messageId))
-  const claimed = new Set<number>()
-  const survivingPending: ChatBubbleMessage[] = []
-  for (const pending of pendings) {
-    const pendingAt = new Date(pending.createdAt).getTime()
-    const match = server.find(
-      (message) =>
-        !claimed.has(message.messageId) &&
-        message.messageType === "user" &&
-        message.sender === "me" &&
-        // 이미지 낙관 말풍선은 서버가 clientNonce를 주지 않아 내용 비교가 불가하므로,
-        // "내가 보낸 이미지 메시지"끼리 시간 창 이내로 매칭한다. 텍스트는 종전대로 내용 일치.
-        // 이미지 메시지의 texts는 ["사진"]이라, '사진' 텍스트 메시지가 이미지 에코와
-        // 오매칭되지 않도록 텍스트끼리는 imageUrl 없는 서버 메시지로 한정한다.
-        (pending.imageUploading
-          ? Boolean(message.imageUrl)
-          : !message.imageUrl && message.texts[0] === pending.texts[0]) &&
-        Math.abs(new Date(message.createdAt).getTime() - pendingAt) < PENDING_MATCH_WINDOW_MS
+  const remainingPending = new Map(pendings.map((pending) => [pending.messageId, pending]))
+  for (const message of server) {
+    if (message.messageType !== "user" || message.sender !== "me") continue
+    const match = findPendingEchoMatch(
+      [...remainingPending.values()],
+      message,
+      PENDING_MATCH_WINDOW_MS
     )
-    if (match) claimed.add(match.messageId)
-    else survivingPending.push(pending)
+    if (match) remainingPending.delete(match.messageId)
   }
 
-  return [...server, ...survivingPending].sort((a, b) => {
+  return [...server, ...remainingPending.values()].sort((a, b) => {
     if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? -1 : 1
     return a.messageId - b.messageId
   })
@@ -204,16 +220,48 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   } = useChatMessages(roomId, session)
 
   const [liveMessages, setLiveMessages] = React.useState<ChatMessageView[]>([])
+  const liveMessagesRef = React.useRef<ChatMessageView[]>([])
+  const updateLiveMessages = React.useCallback(
+    (updater: (previous: ChatMessageView[]) => ChatMessageView[]) => {
+      const next = updater(liveMessagesRef.current)
+      liveMessagesRef.current = next
+      setLiveMessages(next)
+    },
+    []
+  )
   // 낙관적 말풍선의 임시 messageId. 서버 id(양수)와 겹치지 않게 음수를 감소시켜 부여한다.
   const tempMessageIdRef = React.useRef(-1)
   const [notice, setNotice] = React.useState<string | null>(null)
   const [moreOpen, setMoreOpen] = React.useState(false)
   const [cameraMenuOpen, setCameraMenuOpen] = React.useState(false)
   const [activeMessageId, setActiveMessageId] = React.useState<string | null>(null)
+  const [selectedReply, setSelectedReply] = React.useState<ChatReplyPreview | null>(null)
+  const [messageDraft, setMessageDraft] = React.useState("")
   const [confirmLeaveOpen, setConfirmLeaveOpen] = React.useState(false)
   const [confirmDisbandOpen, setConfirmDisbandOpen] = React.useState(false)
   const [kickTarget, setKickTarget] = React.useState<GroupChatMemberListItem | null>(null)
   const [socketError, setSocketError] = React.useState<string | null>(null)
+
+  // 구 WS 이벤트가 replyTo를 생략하면 REST snapshot의 명시적 링크로만 답장 전송을 확정한다.
+  React.useEffect(() => {
+    const pendingMessages = liveMessagesRef.current.filter(
+      (message): message is ChatBubbleMessage => message.messageType === "user" && Boolean(message.pending)
+    )
+    const matchedPending = findConfirmedReplyPendingFromHistory(
+      pendingMessages,
+      initialMessages,
+      PENDING_MATCH_WINDOW_MS
+    )
+    if (!matchedPending) return
+
+    updateLiveMessages((previous) => previous.filter((message) => message.messageId !== matchedPending.messageId))
+    setSelectedReply((current) =>
+      shouldClearSelectedReplyAfterAcceptedEcho(current, matchedPending) ? null : current
+    )
+    setMessageDraft((current) =>
+      shouldClearDraftAfterAcceptedEcho(current, matchedPending) ? "" : current
+    )
+  }, [initialMessages, updateLiveMessages])
 
   const bottomRef = React.useRef<HTMLDivElement>(null)
   const topRef = React.useRef<HTMLDivElement>(null)
@@ -260,25 +308,36 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     onMessage: (event) => {
       if (myUserId < 0) return
       const incoming = adaptMessage(event, myUserId)
-      setLiveMessages((prev) => {
-        // 내 메시지 에코면, 먼저 그려둔 pending 낙관 말풍선 중 같은 내용 하나를 제거(대체)한다.
-        // 서버가 clientNonce를 주지 않으므로 내용 일치로 가장 오래된 pending 항목을 매칭한다.
-        if (incoming.messageType === "user" && incoming.sender === "me") {
-          const idx = prev.findIndex((message) =>
-            message.messageType === "user" &&
-            message.pending &&
-            // 이미지 에코는 이미지 낙관 말풍선과, 텍스트 에코는 텍스트 낙관 말풍선과만 매칭한다.
-            // ('사진' 텍스트 메시지가 이미지 에코와 오매칭되는 것을 방지)
-            (incoming.imageUrl
-              ? message.imageUploading
-              : !message.imageUploading && message.texts[0] === incoming.texts[0])
-          )
-          if (idx !== -1) {
-            return [...prev.slice(0, idx), ...prev.slice(idx + 1), incoming]
-          }
-        }
-        return [...prev, incoming]
-      })
+      const pendingMessages = liveMessagesRef.current.filter(
+        (message): message is ChatBubbleMessage => message.messageType === "user" && Boolean(message.pending)
+      )
+      const matchedPending =
+        incoming.messageType === "user" && incoming.sender === "me"
+          ? findPendingEchoMatch(pendingMessages, incoming, PENDING_MATCH_WINDOW_MS)
+          : undefined
+      const needsReplyHistoryBackfill =
+        incoming.messageType === "user" &&
+        incoming.sender === "me" &&
+        hasUnconfirmedReplyPendingForEcho(pendingMessages, incoming, PENDING_MATCH_WINDOW_MS)
+
+      updateLiveMessages((previous) =>
+        matchedPending
+          ? [...previous.filter((message) => message.messageId !== matchedPending.messageId), incoming]
+          : [...previous, incoming]
+      )
+
+      if (matchedPending?.replyTo) {
+        setSelectedReply((current) =>
+          shouldClearSelectedReplyAfterAcceptedEcho(current, matchedPending) ? null : current
+        )
+        setMessageDraft((current) =>
+          shouldClearDraftAfterAcceptedEcho(current, matchedPending) ? "" : current
+        )
+      }
+      if (needsReplyHistoryBackfill) {
+        // 구 이벤트 형식에는 replyTo가 없을 수 있다. 확정 링크가 보이는 REST snapshot을 다시 읽는다.
+        queryClient.invalidateQueries({ queryKey: chatKeys.messages(roomId) })
+      }
       // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
       queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })
       if (incoming.messageType === "system" && isGroup && meetingId != null) {
@@ -297,16 +356,20 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       // HTTP mutation의 응답 순서와 무관하게 즉시 열린 방을 정리하고 이동한다.
       queryClient.removeQueries({ queryKey: chatKeys.room(roomId) })
       queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
-      setLiveMessages([])
+      updateLiveMessages(() => [])
       setMoreOpen(false)
       setCameraMenuOpen(false)
       setActiveMessageId(null)
+      setSelectedReply(null)
       setConfirmLeaveOpen(false)
       setConfirmDisbandOpen(false)
       setKickTarget(null)
       router.replace(routes.chats())
     },
-    onError: (error) => setSocketError(error.message),
+    onError: (error) => {
+      // 답장 target과 초안은 서버가 수락한 에코에서만 정리한다. 오류 시에는 재시도할 수 있게 유지한다.
+      setSocketError(error.message)
+    },
     onConnectedChange: (isConnected) => {
       if (!isConnected) return
       setSocketError(null)
@@ -443,36 +506,41 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   const activeDateBadgeText = activeDateKey ? formatKstShortDate(activeDateKey) : undefined
 
-  const handleSend = (value: string) => {
-    if (!session.authenticated) return
+  const handleSend = (value: string): ChatMessageSendResult => {
+    if (!session.authenticated) return "failed"
     const text = value.trim()
-    if (!text) return
-    if (!send({ content: text })) {
-      setSocketError(messages.chat.sendFailed)
-      return
-    }
-    // 내가 보낸 메시지는 위로 스크롤 중이었더라도 항상 맨 아래로 따라 내려간다.
-    isAtBottomRef.current = true
-    // 낙관적 반영: 서버 에코를 기다리지 않고 내 말풍선을 즉시 표시한다.
-    // 에코 도착 시 onMessage가 이 pending 항목을 서버 메시지로 대체한다.
+    if (!text) return "failed"
+    const replyTo = selectedReply
+    // 서버 echo가 publish 직후 도착해도 매칭할 수 있게 pending을 먼저 추가한다.
     const nowIso = new Date().toISOString()
     const tempId = tempMessageIdRef.current
     tempMessageIdRef.current -= 1
-    setLiveMessages((prev) => [
-      ...prev,
-      {
-        messageType: "user",
-        id: `pending-${tempId}`,
-        messageId: tempId,
-        senderId: myUserId,
-        sender: "me",
-        variant: text.length > 30 ? "long" : "short",
-        texts: [text],
-        time: formatKstTime(nowIso),
-        createdAt: nowIso,
-        pending: true,
-      },
+    const pending: ChatBubbleMessage = {
+      messageType: "user",
+      id: `pending-${tempId}`,
+      messageId: tempId,
+      senderId: myUserId,
+      sender: "me",
+      variant: text.length > 30 ? "long" : "short",
+      texts: [text],
+      replyTo,
+      time: formatKstTime(nowIso),
+      createdAt: nowIso,
+      pending: true,
+    }
+    updateLiveMessages((previous) => [
+      ...previous,
+      pending,
     ])
+    if (!send({ content: text, ...(replyTo ? { replyToMessageId: replyTo.messageId } : {}) })) {
+      updateLiveMessages((previous) => previous.filter((message) => message.messageId !== tempId))
+      setSocketError(messages.chat.sendFailed)
+      return "failed"
+    }
+    // 내가 보낸 메시지는 위로 스크롤 중이었더라도 항상 맨 아래로 따라 내려간다.
+    isAtBottomRef.current = true
+    // 일반 메시지는 바로 초안을 비우되, 답장은 수락 echo가 도착할 때까지 target과 초안을 유지한다.
+    return replyTo ? "awaiting-echo" : "published"
   }
 
   // 카메라/앨범에서 고른 이미지를 presign 업로드 → imageFileId로 WS 전송한다.
@@ -484,33 +552,44 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     if (!file || !session.authenticated) return
 
     const previewUrl = URL.createObjectURL(file)
+    const replyTo = selectedReply
     const nowIso = new Date().toISOString()
     const tempId = tempMessageIdRef.current
     tempMessageIdRef.current -= 1
     isAtBottomRef.current = true
-    setLiveMessages((prev) => [
-      ...prev,
-      {
-        messageType: "user",
-        id: `pending-${tempId}`,
-        messageId: tempId,
-        senderId: myUserId,
-        sender: "me",
-        variant: "short",
-        texts: [""],
-        imageUrl: previewUrl,
-        imageUploading: true,
-        time: formatKstTime(nowIso),
-        createdAt: nowIso,
-        pending: true,
-      },
+    const pending: ChatBubbleMessage = {
+      messageType: "user",
+      id: `pending-${tempId}`,
+      messageId: tempId,
+      senderId: myUserId,
+      sender: "me",
+      variant: "short",
+      texts: [""],
+      imageUrl: previewUrl,
+      imageUploading: true,
+      replyTo,
+      time: formatKstTime(nowIso),
+      createdAt: nowIso,
+      pending: true,
+    }
+    updateLiveMessages((previous) => [
+      ...previous,
+      pending,
     ])
 
     try {
       const fileId = await uploadChatImage(file)
-      if (!send({ imageFileId: fileId })) throw new Error("send failed")
+      // 아직 업로드 중인 이미지 pending은 다른 이미지 echo와 대체하지 않는다.
+      updateLiveMessages((previous) =>
+        previous.map((message) =>
+          message.messageId === tempId ? { ...message, imageUploading: false } : message
+        )
+      )
+      if (!send({ imageFileId: fileId, ...(replyTo ? { replyToMessageId: replyTo.messageId } : {}) })) {
+        throw new Error("send failed")
+      }
     } catch {
-      setLiveMessages((prev) => prev.filter((message) => message.messageId !== tempId))
+      updateLiveMessages((previous) => previous.filter((message) => message.messageId !== tempId))
       URL.revokeObjectURL(previewUrl)
       setSocketError(messages.chat.imageUploadFailed)
     }
@@ -564,7 +643,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   const messageMenuItems = (message: ChatBubbleMessage): ChatContextMenuItem[] => {
     const text = message.texts?.[0]
-    return [
+    const items: ChatContextMenuItem[] = []
+    if (canReplyToMessage(message)) {
+      items.push({
+        icon: <Image src="/icons/chat/respond.svg" alt="" width={24} height={24} />,
+        label: messages.chat.replyAction,
+        onClick: () => {
+          setSelectedReply(replyTargetFromMessage(message))
+          setActiveMessageId(null)
+        },
+      })
+    }
+    items.push(
       {
         icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
         label: messages.chat.registerAsNoticeAction,
@@ -582,7 +672,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           router.push(routes.chatReport(roomId, message.messageId, message.name || undefined))
         },
       },
-    ]
+    )
+    return items
   }
 
   const cameraMenuItems: ChatContextMenuItem[] = [
@@ -723,8 +814,21 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           )}
           <ChatMessageInput
             disabled={!session.authenticated}
+            value={messageDraft}
+            onChange={setMessageDraft}
             onSend={handleSend}
             onCameraClick={() => setCameraMenuOpen((prev) => !prev)}
+            replyPreview={
+              selectedReply
+                ? {
+                    messageId: selectedReply.messageId,
+                    label: messages.chat.replyToLabel(selectedReply.senderNickname),
+                    quote: selectedReply.content?.trim() || messages.chat.replyImageLabel,
+                    imageUrl: selectedReply.imageUrl,
+                  }
+                : null
+            }
+            onCancelReply={() => setSelectedReply(null)}
           />
         </div>
       </main>

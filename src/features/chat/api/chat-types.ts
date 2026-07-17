@@ -4,6 +4,14 @@
 type RoomType = "direct" | "group" | "question"
 type ChatMessageType = "user" | "system"
 
+interface ChatReplyPreview {
+  messageId: number
+  senderId: number
+  senderNickname: string
+  content: string | null
+  imageUrl: string | null
+}
+
 // 채팅방 나가기의 정본 도메인을 고르는 데 필요한 최소 식별자.
 // group은 채팅 API가 아닌 모임 API로만 나가야 한다.
 interface LeaveChatRoomTarget {
@@ -23,6 +31,7 @@ interface ChatMessageResponse {
   createdAt: string
   // 롤링 배포 중 구 서버 응답을 허용한다. adapter에서 user로 정규화한다.
   messageType?: ChatMessageType
+  replyTo?: ChatReplyPreview | null
 }
 
 interface ChatRoomSummaryResponse {
@@ -69,7 +78,8 @@ interface ChatRoomResponse {
   questionId: number | null
 }
 
-// WebSocket /topic/rooms/{roomId} 로 브로드캐스트되는 이벤트. ChatMessageResponse와 필드가 동일하다.
+// WebSocket message event. user는 /user/queue/rooms/{roomId}, system은 /topic/rooms/{roomId}로 전달된다.
+// ChatMessageResponse와 필드가 동일하다.
 interface WsMessageEvent {
   messageId: number
   roomId: number
@@ -81,6 +91,7 @@ interface WsMessageEvent {
   createdAt: string
   // ChatMessageResponse와 같은 wire contract. 구 서버 이벤트도 잠시 허용한다.
   messageType?: ChatMessageType
+  replyTo?: ChatReplyPreview | null
 }
 
 // WebSocket /user/queue/rooms 로 내려오는 사용자 단위 방 요약 이벤트 (BE 이슈 #103).
@@ -93,6 +104,7 @@ type WsRoomEvent =
 interface SendChatMessageRequest {
   content?: string
   imageFileId?: string
+  replyToMessageId?: number
 }
 
 // 답변 보기 → 답변자와의 꼬리질문 1:1 방 생성 요청 (BE 이슈 #68).
@@ -111,6 +123,7 @@ interface ChatWebSocketErrorResponse {
 export type {
   RoomType,
   ChatMessageType,
+  ChatReplyPreview,
   LeaveChatRoomTarget,
   ChatMessageResponse,
   ChatRoomSummaryResponse,
