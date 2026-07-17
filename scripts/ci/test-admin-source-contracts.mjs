@@ -1315,13 +1315,37 @@ function assertKnowledgeCandidateContracts({
   )
   assert.match(compactApi, /type KnowledgeCandidateStatus = \| "pending" \| "approved" \| "rejected" \| "invalidated"/)
   assert.match(apiSource, /type KnowledgeRelationPredicate =/)
+  assert.match(apiSource, /evidenceChunkId: number/)
+  assert.match(apiSource, /evidenceExcerpt: string/)
+  assert.match(apiSource, /reviewerUserId: number \| null/)
+  assert.match(apiSource, /reviewedAt: string \| null/)
+  assert.match(apiSource, /reviewNote: string \| null/)
+  assert.match(apiSource, /promotionRelationId: number \| null/)
+  assert.match(apiSource, /questionId: number/)
+  assert.match(apiSource, /answerId: number/)
+  assert.match(apiSource, /displayName: string/)
+  assert.match(apiSource, /validUntil: string \| null/)
+  assert.match(apiSource, /eligible: boolean/)
+  assert.match(apiSource, /questionTitle: string/)
+  assert.match(apiSource, /questionContent: string/)
+  assert.match(apiSource, /answerContent: string/)
+  assert.match(apiSource, /chunkContent: string/)
+  assert.match(apiSource, /sourceId: number/)
+  assert.match(
+    compactApi,
+    /interface AdminKnowledgeCandidateDecisionResponse \{ candidateId: number status: KnowledgeCandidateStatus version: number relation: AdminKnowledgeSameSourceRelation \| null \}/,
+  )
+  assert.doesNotMatch(apiSource, /sourceType: string/)
+  assert.doesNotMatch(apiSource, /canonicalUrl: string/)
+  assert.doesNotMatch(apiSource, /chunkId: number/)
+  assert.doesNotMatch(apiSource, /evidenceText: string/)
   assert.equal(
     predicateSource,
     'const KNOWLEDGE_RELATION_PREDICATES = [ "requires", "applies_to", "located_in", "exception_of", "prevents", "supports", "has_deadline", "depends_on", "reported_to", "used_for", ',
   )
   assert.match(compactApi, /params: compactQuery\(\{ status: params\.status, cursor: params\.cursor, size: params\.size,? \}\)/)
-  assert.match(compactApi, /apiClient\.post\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/approve`, body,? \)/)
-  assert.match(compactApi, /apiClient\.post\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/reject`, body,? \)/)
+  assert.match(compactApi, /apiClient\.post<AdminKnowledgeCandidateDecisionResponse>\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/approve`, body,? \)/)
+  assert.match(compactApi, /apiClient\.post<AdminKnowledgeCandidateDecisionResponse>\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/reject`, body,? \)/)
 
   assert.match(
     compactHook,
@@ -1337,13 +1361,26 @@ function assertKnowledgeCandidateContracts({
   assert.match(pageSource, /KNOWLEDGE_RELATION_PREDICATES\.map/)
   assert.match(pageSource, /const canAct = candidate\??\.status === "pending"/)
   assert.match(pageSource, /\{canAct \? \(/)
-  assert.match(pageSource, /candidate\.evidenceText/)
+  assert.match(pageSource, /candidate\.evidenceExcerpt/)
+  assert.match(pageSource, /candidate\.sourceId/)
+  assert.match(pageSource, /candidate\.source\.displayName/)
+  assert.match(pageSource, /candidate\.source\.questionTitle/)
+  assert.match(pageSource, /candidate\.source\.questionContent/)
+  assert.match(pageSource, /candidate\.source\.answerContent/)
+  assert.match(pageSource, /candidate\.source\.chunkContent/)
+  assert.match(pageSource, /candidate\.evidenceChunkId/)
+  assert.doesNotMatch(pageSource, /candidate\.source\.sourceType/)
+  assert.doesNotMatch(pageSource, /candidate\.source\.canonicalUrl/)
+  assert.doesNotMatch(pageSource, /candidate\.chunkId/)
+  assert.doesNotMatch(pageSource, /candidate\.evidenceText/)
   assert.doesNotMatch(pageSource, /dangerouslySetInnerHTML/)
   assert.match(pageSource, /detailQuery\.isError/)
   assert.match(pageSource, /onRetry=\{\(\) => void detailQuery\.refetch\(\)\}/)
   assert.match(pageSource, /messages\.route\.invalidLink/)
-  assert.match(pageSource, /getApiErrorCode\(error\) === "KNOWLEDGE_CANDIDATE_CONFLICT"/)
   assert.match(pageSource, /getApiErrorStatus\(error\) === 409/)
+  assert.match(pageSource, /code === "KNOWLEDGE_CANDIDATE_CONCURRENTLY_CHANGED"/)
+  assert.match(pageSource, /code === "KNOWLEDGE_CANDIDATE_SOURCE_INELIGIBLE"/)
+  assert.doesNotMatch(pageSource, /getApiErrorCode\(error\) === "KNOWLEDGE_CANDIDATE_CONFLICT"/)
   assert.match(pageSource, /detailQuery\.refetch\(\{ cancelRefetch: true \}\)/)
   assert.match(
     hookSource,

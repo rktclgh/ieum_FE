@@ -37,9 +37,10 @@ function getApiErrorStatus(error: unknown): number | undefined {
 }
 
 function isKnowledgeCandidateConflict(error: unknown) {
-  return (
-    getApiErrorCode(error) === "KNOWLEDGE_CANDIDATE_CONFLICT" ||
-    getApiErrorStatus(error) === 409
+  const code = getApiErrorCode(error)
+  return getApiErrorStatus(error) === 409 && (
+    code === "KNOWLEDGE_CANDIDATE_CONCURRENTLY_CHANGED" ||
+    code === "KNOWLEDGE_CANDIDATE_SOURCE_INELIGIBLE"
   )
 }
 
@@ -294,7 +295,7 @@ function AdminKnowledgeCandidatesList() {
                     <td className="px-4 py-3">{candidate.predicate}</td>
                     <td className="px-4 py-3">{candidate.object}</td>
                     <td className="px-4 py-3">
-                      #{candidate.sourceId} · {candidate.chunkId}
+                      #{candidate.sourceId} · {candidate.source.displayName}
                     </td>
                     <td className="px-4 py-3">{candidate.confidence ?? "—"}</td>
                     <td className="px-4 py-3">
@@ -502,26 +503,58 @@ function AdminKnowledgeCandidateDetailPage({
             value={formatDateTime(candidate.updatedAt, dateFormatter)}
           />
           <DetailField
-            label={messages.admin.knowledge.resolvedAt}
-            value={formatDateTime(candidate.resolvedAt, dateFormatter)}
+            label={messages.admin.knowledge.reviewedAt}
+            value={formatDateTime(candidate.reviewedAt, dateFormatter)}
           />
           <DetailField
             label={messages.admin.knowledge.source}
-            value={`#${candidate.source.sourceId} · ${candidate.source.sourceType}`}
+            value={`#${candidate.sourceId} · ${candidate.source.displayName}`}
           />
           <DetailField
             label={messages.admin.knowledge.sourceStatus}
             value={`${candidate.source.status} · ${candidate.source.active ? "active" : "inactive"}`}
           />
-        </dl>
-        <dl className="grid gap-3 md:grid-cols-2">
           <DetailField
-            label={messages.admin.knowledge.sourceTitle}
-            value={candidate.source.title ?? "—"}
+            label={messages.admin.knowledge.validUntil}
+            value={formatDateTime(candidate.source.validUntil, dateFormatter)}
           />
           <DetailField
-            label={messages.admin.knowledge.sourceUrl}
-            value={candidate.source.canonicalUrl ?? "—"}
+            label={messages.admin.knowledge.sourceEligibility}
+            value={
+              candidate.source.eligible
+                ? messages.admin.knowledge.eligible
+                : messages.admin.knowledge.notEligible
+            }
+          />
+          <DetailField
+            label={messages.admin.knowledge.reviewer}
+            value={candidate.reviewerUserId === null ? "—" : `#${candidate.reviewerUserId}`}
+          />
+          <DetailField
+            label={messages.admin.knowledge.promotionRelation}
+            value={
+              candidate.promotionRelationId === null
+                ? "—"
+                : `#${candidate.promotionRelationId}`
+            }
+          />
+        </dl>
+        <dl className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <DetailField
+            label={messages.admin.knowledge.questionId}
+            value={`#${candidate.source.questionId}`}
+          />
+          <DetailField
+            label={messages.admin.knowledge.answerId}
+            value={`#${candidate.source.answerId}`}
+          />
+          <DetailField
+            label={messages.admin.knowledge.extractionProvider}
+            value={candidate.extractionProvider ?? "—"}
+          />
+          <DetailField
+            label={messages.admin.knowledge.extractionModel}
+            value={candidate.extractionModel ?? "—"}
           />
         </dl>
       </section>
@@ -531,24 +564,38 @@ function AdminKnowledgeCandidateDetailPage({
           {messages.admin.knowledge.evidence}
         </h2>
         <p className="whitespace-pre-wrap break-words rounded-xl bg-gray-50 p-4 text-body-regular-14 text-gray-900">
-          {candidate.evidenceText}
+          {candidate.evidenceExcerpt}
         </p>
         <dl className="grid gap-3 md:grid-cols-3">
           <DetailField
             label={messages.admin.knowledge.chunk}
-            value={candidate.chunkId}
+            value={candidate.evidenceChunkId}
           />
           <DetailField
             label={messages.admin.knowledge.confidence}
             value={candidate.confidence ?? "—"}
           />
           <DetailField
-            label={messages.admin.knowledge.sourceEligibility}
-            value={
-              candidate.sourceEligibility.eligible
-                ? messages.admin.knowledge.eligible
-                : (candidate.sourceEligibility.reason ?? messages.admin.knowledge.notEligible)
-            }
+            label={messages.admin.knowledge.reviewNote}
+            value={candidate.reviewNote ?? "—"}
+          />
+        </dl>
+        <dl className="grid gap-3 md:grid-cols-2">
+          <DetailField
+            label={messages.admin.knowledge.questionTitle}
+            value={candidate.source.questionTitle}
+          />
+          <DetailField
+            label={messages.admin.knowledge.questionContent}
+            value={candidate.source.questionContent}
+          />
+          <DetailField
+            label={messages.admin.knowledge.answerContent}
+            value={candidate.source.answerContent}
+          />
+          <DetailField
+            label={messages.admin.knowledge.chunkContent}
+            value={candidate.source.chunkContent}
           />
         </dl>
       </section>
@@ -571,6 +618,8 @@ function AdminKnowledgeCandidateDetailPage({
                   <th scope="col" className="px-4 py-3">{messages.admin.knowledge.subject}</th>
                   <th scope="col" className="px-4 py-3">{messages.admin.knowledge.predicate}</th>
                   <th scope="col" className="px-4 py-3">{messages.admin.knowledge.object}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.knowledge.source}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.knowledge.confidence}</th>
                   <th scope="col" className="px-4 py-3">{messages.admin.knowledge.chunk}</th>
                 </tr>
               </thead>
@@ -581,6 +630,8 @@ function AdminKnowledgeCandidateDetailPage({
                     <td className="px-4 py-3">{relation.subject}</td>
                     <td className="px-4 py-3">{relation.predicate}</td>
                     <td className="px-4 py-3">{relation.object}</td>
+                    <td className="px-4 py-3">#{relation.sourceId}</td>
+                    <td className="px-4 py-3">{relation.confidence ?? "—"}</td>
                     <td className="px-4 py-3">{relation.evidenceChunkId ?? "—"}</td>
                   </tr>
                 ))}
@@ -625,7 +676,7 @@ function AdminKnowledgeCandidateDetailPage({
           </h2>
           <p className="text-body-regular-14 text-gray-700">
             {candidate.status}
-            {candidate.rejectionReason ? ` · ${candidate.rejectionReason}` : ""}
+            {candidate.reviewNote ? ` · ${candidate.reviewNote}` : ""}
           </p>
         </section>
       )}

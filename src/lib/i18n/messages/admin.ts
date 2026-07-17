@@ -157,14 +157,24 @@ interface AdminMessages {
     confidence: string
     createdAt: string
     updatedAt: string
-    resolvedAt: string
     detail: string
     backToList: string
     context: string
     version: string
     sourceStatus: string
-    sourceTitle: string
-    sourceUrl: string
+    validUntil: string
+    questionId: string
+    answerId: string
+    questionTitle: string
+    questionContent: string
+    answerContent: string
+    chunkContent: string
+    extractionProvider: string
+    extractionModel: string
+    reviewer: string
+    reviewedAt: string
+    reviewNote: string
+    promotionRelation: string
     evidence: string
     chunk: string
     sourceEligibility: string
@@ -340,14 +350,24 @@ const adminKo: AdminMessages = {
     confidence: "신뢰도",
     createdAt: "생성 일시",
     updatedAt: "수정 일시",
-    resolvedAt: "처리 일시",
     detail: "후보 상세",
     backToList: "목록으로",
     context: "후보 맥락",
     version: "버전",
     sourceStatus: "출처 상태",
-    sourceTitle: "출처 제목",
-    sourceUrl: "출처 URL",
+    validUntil: "유효 기한",
+    questionId: "질문 ID",
+    answerId: "답변 ID",
+    questionTitle: "질문 제목",
+    questionContent: "질문 내용",
+    answerContent: "답변 내용",
+    chunkContent: "청크 내용",
+    extractionProvider: "추출 제공자",
+    extractionModel: "추출 모델",
+    reviewer: "검토 운영자",
+    reviewedAt: "검토 일시",
+    reviewNote: "검토 메모",
+    promotionRelation: "승격 관계",
     evidence: "근거 문장",
     chunk: "근거 청크",
     sourceEligibility: "출처 적격성",
@@ -523,14 +543,24 @@ const adminEn: AdminMessages = {
     confidence: "Confidence",
     createdAt: "Created at",
     updatedAt: "Updated at",
-    resolvedAt: "Resolved at",
     detail: "Candidate detail",
     backToList: "Back to list",
     context: "Candidate context",
     version: "Version",
     sourceStatus: "Source status",
-    sourceTitle: "Source title",
-    sourceUrl: "Source URL",
+    validUntil: "Valid until",
+    questionId: "Question ID",
+    answerId: "Answer ID",
+    questionTitle: "Question title",
+    questionContent: "Question content",
+    answerContent: "Answer content",
+    chunkContent: "Chunk content",
+    extractionProvider: "Extraction provider",
+    extractionModel: "Extraction model",
+    reviewer: "Reviewer",
+    reviewedAt: "Reviewed at",
+    reviewNote: "Review note",
+    promotionRelation: "Promotion relation",
     evidence: "Evidence text",
     chunk: "Evidence chunk",
     sourceEligibility: "Source eligibility",

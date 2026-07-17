@@ -303,14 +303,24 @@ type ExpectedAdminMessages = {
     | "confidence"
     | "createdAt"
     | "updatedAt"
-    | "resolvedAt"
     | "detail"
     | "backToList"
     | "context"
     | "version"
     | "sourceStatus"
-    | "sourceTitle"
-    | "sourceUrl"
+    | "validUntil"
+    | "questionId"
+    | "answerId"
+    | "questionTitle"
+    | "questionContent"
+    | "answerContent"
+    | "chunkContent"
+    | "extractionProvider"
+    | "extractionModel"
+    | "reviewer"
+    | "reviewedAt"
+    | "reviewNote"
+    | "promotionRelation"
     | "evidence"
     | "chunk"
     | "sourceEligibility"
@@ -397,7 +407,7 @@ const expectedAdminMessageKeys = {
   auth: [
     "description", "desktopOnly", "email", "forbidden", "loginError", "password", "submit", "switchAccount", "title",
   ],
-  navigation: ["dashboard", "inquiries", "reports", "users"],
+  navigation: ["dashboard", "inquiries", "knowledge", "reports", "users"],
   dashboard: [
     "acceptedRate", "activeUsers", "aiReviewed", "answers", "confirmed", "dismissed", "meetings",
     "messages", "pins", "questions", "range", "reports", "sanctions", "signup", "suspendedUsers", "title",
@@ -420,6 +430,14 @@ const expectedAdminMessageKeys = {
   inquiries: [
     "answer", "answerPlaceholder", "answerSubmit", "answeredAt", "answeredBy", "answeredConflict", "content",
     "convergenceError", "createdAt", "invalidAnswer", "missingUser", "pending", "answered", "status", "subject", "title", "userEmail",
+  ],
+  knowledge: [
+    "answerContent", "answerId", "approve", "backToList", "chunk", "chunkContent", "confidence", "conflictRefreshed",
+    "context", "convergenceError", "createdAt", "detail", "eligible", "evidence", "extractionModel",
+    "extractionProvider", "notEligible", "object", "predicate", "promotionRelation", "questionContent", "questionId",
+    "questionTitle", "reject", "rejectReason", "relation", "review", "reviewedAt", "reviewer", "reviewNote",
+    "sameSourceRelations", "source", "sourceEligibility", "sourceStatus", "status", "subject", "title", "updatedAt",
+    "validUntil", "version",
   ],
 } as const
 
@@ -486,7 +504,7 @@ test("admin literal unions match the backend contract exactly", () => {
 
 test("admin message types and both translations expose the exact agreed keys", () => {
   assert.deepEqual(adminMessageTypeContracts, [
-    true, true, true, true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true,
   ])
 
   for (const [group, expectedKeys] of Object.entries(expectedAdminMessageKeys)) {

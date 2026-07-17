@@ -23,24 +23,29 @@ type KnowledgeCandidateStatus =
 type KnowledgeRelationPredicate = (typeof KNOWLEDGE_RELATION_PREDICATES)[number]
 
 interface AdminKnowledgeSourceSummary {
-  sourceId: number
-  sourceType: string
-  title: string | null
-  canonicalUrl: string | null
-  active: boolean
+  questionId: number
+  answerId: number
+  displayName: string
   status: string
+  active: boolean
+  validUntil: string | null
+  eligible: boolean
 }
 
-interface AdminKnowledgeSourceEligibility {
-  eligible: boolean
-  reason: string | null
+interface AdminKnowledgeSourceDetail extends AdminKnowledgeSourceSummary {
+  questionTitle: string
+  questionContent: string
+  answerContent: string
+  chunkContent: string
 }
 
 interface AdminKnowledgeSameSourceRelation {
   relationId: number
+  sourceId: number
   subject: string
   predicate: KnowledgeRelationPredicate | string
   object: string
+  confidence: number | null
   evidenceChunkId: number | null
 }
 
@@ -49,22 +54,26 @@ interface AdminKnowledgeCandidateItem {
   version: number
   status: KnowledgeCandidateStatus
   sourceId: number
-  chunkId: number
+  evidenceChunkId: number
   subject: string
   predicate: KnowledgeRelationPredicate
   object: string
-  evidenceText: string
   confidence: number | null
+  evidenceExcerpt: string
+  reviewerUserId: number | null
+  reviewedAt: string | null
+  reviewNote: string | null
+  promotionRelationId: number | null
   createdAt: string
   updatedAt: string
+  source: AdminKnowledgeSourceSummary
 }
 
 interface AdminKnowledgeCandidateDetailResponse extends AdminKnowledgeCandidateItem {
-  source: AdminKnowledgeSourceSummary
-  sourceEligibility: AdminKnowledgeSourceEligibility
+  extractionProvider: string | null
+  extractionModel: string | null
+  source: AdminKnowledgeSourceDetail
   sameSourceRelations: AdminKnowledgeSameSourceRelation[]
-  rejectionReason: string | null
-  resolvedAt: string | null
 }
 
 interface AdminKnowledgeCandidatesParams {
@@ -83,6 +92,13 @@ interface ApproveKnowledgeCandidateRequest {
 interface RejectKnowledgeCandidateRequest {
   version: number
   reason?: string
+}
+
+interface AdminKnowledgeCandidateDecisionResponse {
+  candidateId: number
+  status: KnowledgeCandidateStatus
+  version: number
+  relation: AdminKnowledgeSameSourceRelation | null
 }
 
 async function getAdminKnowledgeCandidates(
@@ -113,21 +129,23 @@ async function getAdminKnowledgeCandidate(
 async function approveAdminKnowledgeCandidate(
   candidateId: number,
   body: ApproveKnowledgeCandidateRequest,
-): Promise<void> {
-  await apiClient.post(
+): Promise<AdminKnowledgeCandidateDecisionResponse> {
+  const { data } = await apiClient.post<AdminKnowledgeCandidateDecisionResponse>(
     `/api/v1/admin/knowledge/relation-candidates/${candidateId}/approve`,
     body,
   )
+  return data
 }
 
 async function rejectAdminKnowledgeCandidate(
   candidateId: number,
   body: RejectKnowledgeCandidateRequest,
-): Promise<void> {
-  await apiClient.post(
+): Promise<AdminKnowledgeCandidateDecisionResponse> {
+  const { data } = await apiClient.post<AdminKnowledgeCandidateDecisionResponse>(
     `/api/v1/admin/knowledge/relation-candidates/${candidateId}/reject`,
     body,
   )
+  return data
 }
 
 export {
@@ -139,10 +157,11 @@ export {
 }
 export type {
   AdminKnowledgeCandidateDetailResponse,
+  AdminKnowledgeCandidateDecisionResponse,
   AdminKnowledgeCandidateItem,
   AdminKnowledgeCandidatesParams,
   AdminKnowledgeSameSourceRelation,
-  AdminKnowledgeSourceEligibility,
+  AdminKnowledgeSourceDetail,
   AdminKnowledgeSourceSummary,
   ApproveKnowledgeCandidateRequest,
   KnowledgeCandidateStatus,
