@@ -55,6 +55,13 @@ function ClusteredPins({ pins, onPinClick, topInset = 0, bottomInset = 0 }: Clus
     [index, map, topInset, bottomInset]
   )
 
+  // 지도가 해제되는 중(StrictMode 재마운트·HMR)에는 mapPane이 사라진다. 이 시점에 react-leaflet
+  // Marker를 마운트하면 leaflet Marker._initIcon이 getPane().appendChild에서 터진다.
+  // VectorTileLayer·클러스터 클릭과 동일하게 map이 살아 있을 때만 마커를 렌더한다.
+  if (!isLeafletMapActive(map)) {
+    return null
+  }
+
   return (
     <>
       {items.map((item) =>
