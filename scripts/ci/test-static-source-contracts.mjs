@@ -366,8 +366,7 @@ test("report page validates its parsed target before mounting data content", () 
 
   const invalidGuard = visit(sourceFile, (node) =>
     ts.isIfStatement(node) &&
-    node.expression.getText(sourceFile) === "target === null" &&
-    node.thenStatement.getText(sourceFile).includes('kind="invalid-link"'),
+    node.expression.getText(sourceFile) === "target === null",
   )[0]
   assert.ok(invalidGuard, `${pagePath} must render the invalid-link state for a null target`)
 
@@ -379,10 +378,22 @@ test("report page validates its parsed target before mounting data content", () 
     1,
     `${pagePath} invalid guard must have exactly one blocking return`,
   )
+  const invalidReturn = guardStatements[0]
   assert.ok(
-    ts.isReturnStatement(guardStatements[0]) &&
-      guardStatements[0].expression?.getText(sourceFile).includes('kind="invalid-link"'),
+    ts.isReturnStatement(invalidReturn),
     `${pagePath} invalid guard must return before data content can mount`,
+  )
+  assert.ok(
+    ts.isJsxSelfClosingElement(invalidReturn.expression) &&
+      invalidReturn.expression.tagName.getText(sourceFile) === "RoutePageState" &&
+      invalidReturn.expression.attributes.properties.some(
+        (attribute) =>
+          ts.isJsxAttribute(attribute) &&
+          attribute.name.text === "kind" &&
+          ts.isStringLiteral(attribute.initializer) &&
+          attribute.initializer.text === "invalid-link",
+      ),
+    `${pagePath} invalid guard must return <RoutePageState kind="invalid-link" />`,
   )
 
   assert.ok(
