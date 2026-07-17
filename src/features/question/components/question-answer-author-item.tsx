@@ -8,7 +8,6 @@ import { CountryFlag } from "@/features/chat/components/country-flag"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
-import { shouldShowTranslateButton } from "@/features/translate/lib/translate-lang"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface QuestionAnswerAuthorItemProps {
@@ -19,7 +18,11 @@ interface QuestionAnswerAuthorItemProps {
   canAccept: boolean
   onAccept: () => void
   onStartChat: () => void
-  onLongPress: (rect: DOMRect) => void
+  onLongPress: (
+    rect: DOMRect,
+    translateAction?: { label: string; disabled: boolean; onClick: () => void } | null
+  ) => void
+  isAuthenticated: boolean
 }
 
 function QuestionAnswerAuthorItem({
@@ -30,26 +33,35 @@ function QuestionAnswerAuthorItem({
   onAccept,
   onStartChat,
   onLongPress,
+  isAuthenticated,
 }: QuestionAnswerAuthorItemProps) {
-  const { messages, language } = useTranslation()
+  const { messages } = useTranslation()
   const ref = React.useRef<HTMLDivElement>(null)
+  const translate = useTranslateToggle({
+    text: answer.content,
+    isAuthenticated,
+  })
+  const translateLabel = translate.isShowingTranslation
+    ? messages.translate.viewOriginalLabel
+    : messages.translate.menuLabel
   const longPress = useLongPress({
     onLongPress: () => {
       const rect = ref.current?.getBoundingClientRect()
-      if (rect) onLongPress(rect)
+      if (rect) {
+        onLongPress(
+          rect,
+          translate.canTranslate
+            ? { label: translateLabel, disabled: translate.isLoading, onClick: translate.toggle }
+            : null
+        )
+      }
     },
   })
-
-  // 원문 언어가 이미 현재 UI 언어와 같으면 번역이 무의미하므로 버튼을 숨긴다(이슈 #163).
-  const canTranslate = shouldShowTranslateButton(answer.sourceLang, language)
-  const translate = useTranslateToggle({ contentId: answer.answerId, sourceLang: answer.sourceLang })
-  const displayContent =
-    translate.isShowingTranslation && translate.translatedText ? translate.translatedText : answer.content
 
   return (
     <div
       ref={ref}
-      {...(isMine ? {} : longPress)}
+      {...(!isReported && translate.canTranslate ? longPress : {})}
       className={
         isMine
           ? "flex w-full flex-col gap-2 rounded-2xl bg-white p-4 shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]"
@@ -94,7 +106,7 @@ function QuestionAnswerAuthorItem({
         ) : null}
       </div>
 
-      {answer.content ? (
+      {answer.content.trim() ? (
         <p
           className={
             isReported
@@ -102,11 +114,11 @@ function QuestionAnswerAuthorItem({
               : "whitespace-pre-line text-body-regular-14 text-gray-700"
           }
         >
-          {displayContent}
+          {translate.displayText}
         </p>
       ) : null}
 
-      {!isReported && answer.content && canTranslate ? (
+      {!isReported && translate.canTranslate ? (
         <Button
           variant="ghost"
           size="xs"

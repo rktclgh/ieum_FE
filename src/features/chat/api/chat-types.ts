@@ -32,9 +32,6 @@ interface ChatMessageResponse {
   // 롤링 배포 중 구 서버 응답을 허용한다. adapter에서 user로 정규화한다.
   messageType?: ChatMessageType
   replyTo?: ChatReplyPreview | null
-  // 원문 언어(예: "ko"). 저장해두면 번역 버튼을 같은 언어일 때 숨길 수 있다(이슈 #163).
-  // 백엔드 미구현 - 없으면 번역 버튼은 항상 노출한다(판단 불가 시 안전한 기본값).
-  sourceLang?: string | null
 }
 
 interface ChatRoomSummaryResponse {
@@ -95,7 +92,6 @@ interface WsMessageEvent {
   // ChatMessageResponse와 같은 wire contract. 구 서버 이벤트도 잠시 허용한다.
   messageType?: ChatMessageType
   replyTo?: ChatReplyPreview | null
-  sourceLang?: string | null
 }
 
 // WebSocket /user/queue/rooms 로 내려오는 사용자 단위 방 요약 이벤트 (BE 이슈 #103).

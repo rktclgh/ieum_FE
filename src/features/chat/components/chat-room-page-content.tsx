@@ -83,7 +83,6 @@ import { meetupKeys, useMeeting, useMeetingParticipants } from "@/features/meetu
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
-import { shouldShowTranslateButton } from "@/features/translate/lib/translate-lang"
 import { resolveFileUrl } from "@/lib/api/file-url"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -113,7 +112,7 @@ interface MessageRowProps {
 }
 
 function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onCloseMenu }: MessageRowProps) {
-  const { messages, language } = useTranslation()
+  const { messages } = useTranslation()
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const isMe = message.sender === "me"
@@ -138,11 +137,10 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
 
   const longPress = useLongPress({ onLongPress: handleOpenMenu })
 
-  // 낙관적(pending) 말풍선은 아직 서버 contentId가 없어 번역 대상에서 제외한다.
+  // 낙관적(pending) 말풍선은 아직 서버 메시지 ID가 없어 번역 대상에서 제외한다.
   const text = message.texts[0]
-  const canTranslate = !message.pending && message.hasText && shouldShowTranslateButton(message.sourceLang, language)
-  const translate = useTranslateToggle({ contentId: message.messageId, sourceLang: message.sourceLang })
-  const displayText = translate.isShowingTranslation && translate.translatedText ? translate.translatedText : text ?? ""
+  const translate = useTranslateToggle({ text: text ?? "", isAuthenticated })
+  const canTranslate = isAuthenticated && !message.pending && message.hasText && translate.canTranslate
 
   const fullMenuItems: ChatContextMenuItem[] = canTranslate
     ? [
@@ -166,7 +164,7 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
     <div ref={rowRef} className="relative" {...longPress}>
       <ChatBubbleSegment
         sender={message.sender}
-        text={displayText}
+        text={translate.displayText}
         imageUrl={message.imageUrl}
         imageAlt={messages.chat.imageAlt}
         uploading={message.imageUploading}

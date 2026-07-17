@@ -5,23 +5,23 @@ import { Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
-import { shouldShowTranslateButton } from "@/features/translate/lib/translate-lang"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface QuestionAnswerItemProps {
   answer: QuestionAnswerView
   canAccept: boolean
   onAccept: () => void
+  isAuthenticated: boolean
 }
 
-function QuestionAnswerItem({ answer, canAccept, onAccept }: QuestionAnswerItemProps) {
-  const { messages, language } = useTranslation()
+function QuestionAnswerItem({ answer, canAccept, onAccept, isAuthenticated }: QuestionAnswerItemProps) {
+  const { messages } = useTranslation()
 
-  // 원문 언어가 이미 현재 UI 언어와 같으면 번역이 무의미하므로 버튼을 숨긴다(이슈 #163).
-  const canTranslate = shouldShowTranslateButton(answer.sourceLang, language)
-  const translate = useTranslateToggle({ contentId: answer.answerId, sourceLang: answer.sourceLang })
-  const displayContent =
-    translate.isShowingTranslation && translate.translatedText ? translate.translatedText : answer.content
+  const hasContent = Boolean(answer.content.trim())
+  const translate = useTranslateToggle({
+    text: answer.content,
+    isAuthenticated,
+  })
 
   return (
     <div className="flex w-full flex-col gap-2 border-b border-gray-50 py-3">
@@ -52,11 +52,13 @@ function QuestionAnswerItem({ answer, canAccept, onAccept }: QuestionAnswerItemP
         ) : null}
       </div>
 
-      {answer.content ? (
-        <p className="text-body-regular-14 whitespace-pre-line text-gray-700">{displayContent}</p>
+      {hasContent ? (
+        <p className="text-body-regular-14 whitespace-pre-line text-gray-700">
+          {translate.displayText}
+        </p>
       ) : null}
 
-      {answer.content && canTranslate ? (
+      {translate.canTranslate ? (
         <Button
           variant="ghost"
           size="xs"

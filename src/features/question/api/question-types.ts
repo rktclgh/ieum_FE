@@ -27,9 +27,6 @@ interface AnswerResponse {
   isAccepted: boolean
   createdAt: string
   imageUrls: string[]
-  // 원문 언어(예: "ko", "KO"). 저장해두면 번역 버튼을 같은 언어일 때 숨길 수 있다(이슈 #163).
-  // 백엔드 미구현 — 없으면 번역 버튼은 항상 노출한다(판단 불가 시 안전한 기본값).
-  sourceLang?: string | null
 }
 
 interface QuestionDetailResponse {
