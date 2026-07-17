@@ -14,6 +14,8 @@ import {
   isWebPushSupported,
   registerWebPushServiceWorker,
   resolveWebPushStatus,
+  shouldStartWebPushReconcile,
+  shouldUpsertReconciledSubscription,
   type WebPushStatus,
 } from "@/features/notification/lib/web-push"
 import {
@@ -243,7 +245,17 @@ function useReconcileWebPushSubscription({
   const queryClient = useQueryClient()
 
   React.useEffect(() => {
-    if (!userId || !notifyAll || !isWebPushSupported()) return
+    const supported = isWebPushSupported()
+    if (
+      !shouldStartWebPushReconcile({
+        userId,
+        notifyAll,
+        supported,
+        permission: supported ? browserPermission() : "default",
+      })
+    ) {
+      return
+    }
 
     let cancelled = false
     const generation = getSessionGeneration(queryClient)
@@ -252,17 +264,26 @@ function useReconcileWebPushSubscription({
       !cancelled && isSessionWorkCurrent(queryClient, generation, sessionSignal)
 
     const reconcile = async () => {
-      if (browserPermission() !== "granted") return
-
       try {
         const config = await getWebPushConfig({ signal: sessionSignal })
-        if (!isCurrent() || !config.enabled || config.subscribed) return
+        if (!isCurrent()) return
 
         const registration = await navigator.serviceWorker.getRegistration("/")
         if (!isCurrent() || !registration) return
 
         const subscription = await getExistingWebPushSubscription(registration)
-        if (!isCurrent() || !subscription) return
+        if (!isCurrent()) return
+
+        if (
+          !subscription ||
+          !shouldUpsertReconciledSubscription({
+            serverEnabled: config.enabled,
+            hasBrowserSubscription: Boolean(subscription),
+            backendSubscribed: config.subscribed,
+          })
+        ) {
+          return
+        }
 
         await upsertWebPushSubscription(subscription.toJSON(), { signal: sessionSignal })
       } catch {

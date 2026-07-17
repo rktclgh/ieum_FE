@@ -7,6 +7,8 @@ import {
   isWebPushSupported,
   registerWebPushServiceWorker,
   resolveWebPushStatus,
+  shouldStartWebPushReconcile,
+  shouldUpsertReconciledSubscription,
   toWebPushSubscriptionRequest,
   urlBase64ToUint8Array,
 } from "../../src/features/notification/lib/web-push"
@@ -199,5 +201,66 @@ test("creates a subscription with the decoded VAPID key when none exists", async
   assert.deepEqual(
     [...(subscribeOptions[0].applicationServerKey as Uint8Array)],
     [1, 2, 3, 4],
+  )
+})
+
+test("reconcile starts only for a signed-in user who opted in and granted permission", () => {
+  const base = {
+    userId: 7,
+    notifyAll: true,
+    supported: true,
+    permission: "granted" as NotificationPermission,
+  }
+
+  assert.equal(shouldStartWebPushReconcile(base), true)
+  assert.equal(shouldStartWebPushReconcile({ ...base, userId: undefined }), false)
+  assert.equal(shouldStartWebPushReconcile({ ...base, notifyAll: false }), false)
+  assert.equal(shouldStartWebPushReconcile({ ...base, notifyAll: undefined }), false)
+  assert.equal(shouldStartWebPushReconcile({ ...base, supported: false }), false)
+  assert.equal(shouldStartWebPushReconcile({ ...base, permission: "default" }), false)
+  assert.equal(shouldStartWebPushReconcile({ ...base, permission: "denied" }), false)
+})
+
+test("reconcile re-upserts even while the backend still reports itself subscribed", () => {
+  // The backend answers `subscribed` for the user+session pair, not for the
+  // endpoint the browser currently holds. Trusting it would skip reconcile in
+  // exactly the case reconcile exists for: a rotated endpoint left rotting.
+  assert.equal(
+    shouldUpsertReconciledSubscription({
+      serverEnabled: true,
+      hasBrowserSubscription: true,
+      backendSubscribed: true,
+    }),
+    true,
+  )
+})
+
+test("reconcile upserts when the backend reports no subscription", () => {
+  assert.equal(
+    shouldUpsertReconciledSubscription({
+      serverEnabled: true,
+      hasBrowserSubscription: true,
+      backendSubscribed: false,
+    }),
+    true,
+  )
+})
+
+test("reconcile stays idle when the server disabled push or the browser has nothing to send", () => {
+  assert.equal(
+    shouldUpsertReconciledSubscription({
+      serverEnabled: false,
+      hasBrowserSubscription: true,
+      backendSubscribed: false,
+    }),
+    false,
+  )
+  assert.equal(
+    shouldUpsertReconciledSubscription({
+      serverEnabled: true,
+      hasBrowserSubscription: false,
+      backendSubscribed: false,
+    }),
+    false,
   )
 })
