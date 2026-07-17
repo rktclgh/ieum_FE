@@ -37,7 +37,13 @@ function LoginContent() {
       <LanguageToggle />
 
       <div className="flex h-12 w-full items-center justify-center sm:h-14">
-        <span className="text-title-bold-28 text-black">{messages.login.logoText}</span>
+        <Image
+          src="/icons/common/ieum-logo.png"
+          alt={messages.login.logoText}
+          width={54}
+          height={28}
+          className="h-7 w-auto"
+        />
       </div>
 
       <form onSubmit={handleSubmit} className="flex w-full flex-col items-center gap-3">
