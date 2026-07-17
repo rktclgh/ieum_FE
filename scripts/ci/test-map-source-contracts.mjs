@@ -7,6 +7,16 @@ import { fileURLToPath } from "node:url"
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const read = (relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), "utf8")
 
+test("홈 지도 현재 위치는 정확도 반경 없이 마커 halo만 표시한다", () => {
+  const canvas = read("src/features/map/components/map-canvas.tsx")
+  const home = read("src/features/map/components/home-map-screen.tsx")
+
+  assert.doesNotMatch(canvas, /liveAccuracy/)
+  assert.doesNotMatch(canvas, /<Circle/)
+  assert.match(canvas, /<Marker position=\{\[livePosition\.lat, livePosition\.lng\]\} icon=\{userLocationIcon\}/)
+  assert.doesNotMatch(home, /liveAccuracy=\{accuracy\}/)
+})
+
 test("geolocation은 권한 거부만 최초 fallback으로 확정하고 일시 오류는 계속 대기한다", () => {
   const source = read("src/features/map/hooks/use-geolocation.ts")
 

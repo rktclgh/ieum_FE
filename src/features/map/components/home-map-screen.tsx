@@ -57,7 +57,7 @@ interface SelectedLocation {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
-  const { position, accuracy, status } = useGeolocation()
+  const { position, status } = useGeolocation()
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
   const [selectedLocation, setSelectedLocation] = React.useState<SelectedLocation | null>(null)
@@ -169,7 +169,6 @@ function HomeMapScreen() {
           pins={pins}
           onPinClick={handlePinClick}
           livePosition={position}
-          liveAccuracy={accuracy}
           selectedPosition={selectedLocation}
           onSelectedPositionClick={() => setSelectedLocation(null)}
         />
