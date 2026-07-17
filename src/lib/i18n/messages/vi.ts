@@ -244,6 +244,8 @@ export const vi: Messages = {
       SELF_ACCEPT_NOT_ALLOWED: "Không thể chọn câu trả lời của chính mình.",
       ANSWER_SELECTION_FINALIZED: "Câu hỏi này đã được chọn.",
       VALIDATION_FAILED: "Vui lòng kiểm tra nội dung nhập.",
+      INVALID_IMAGE: "Không thể xác minh hình ảnh. Vui lòng đính kèm lại.",
+      QUESTION_RESOLVED: "Câu hỏi đã được xác nhận nên không thể chỉnh sửa.",
       ROOM_CREATE_FAILED: "Không thể bắt đầu trò chuyện. Vui lòng thử lại sau.",
       REPORT_FAILED: "Gửi báo cáo thất bại. Vui lòng thử lại sau.",
       default: "Vui lòng thử lại sau giây lát.",

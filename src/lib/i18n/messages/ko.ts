@@ -245,6 +245,8 @@ export interface Messages {
       SELF_ACCEPT_NOT_ALLOWED: string
       ANSWER_SELECTION_FINALIZED: string
       VALIDATION_FAILED: string
+      INVALID_IMAGE: string
+      QUESTION_RESOLVED: string
       ROOM_CREATE_FAILED: string
       REPORT_FAILED: string
       default: string
@@ -736,6 +738,8 @@ export const ko: Messages = {
       SELF_ACCEPT_NOT_ALLOWED: "내 답변은 채택할 수 없어요.",
       ANSWER_SELECTION_FINALIZED: "이미 채택된 질문이에요.",
       VALIDATION_FAILED: "입력값을 확인해 주세요.",
+      INVALID_IMAGE: "이미지를 확인할 수 없어요. 다시 첨부해 주세요.",
+      QUESTION_RESOLVED: "이미 확정된 질문은 수정할 수 없어요.",
       ROOM_CREATE_FAILED: "채팅을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.",
       REPORT_FAILED: "신고에 실패했어요. 잠시 후 다시 시도해 주세요.",
       default: "잠시 후 다시 시도해 주세요.",

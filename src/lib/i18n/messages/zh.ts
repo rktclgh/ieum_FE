@@ -243,6 +243,8 @@ export const zh: Messages = {
       SELF_ACCEPT_NOT_ALLOWED: "无法采纳自己的回答。",
       ANSWER_SELECTION_FINALIZED: "该问题已被采纳。",
       VALIDATION_FAILED: "请检查输入内容。",
+      INVALID_IMAGE: "无法验证图片，请重新添加。",
+      QUESTION_RESOLVED: "已确定的问题无法修改。",
       ROOM_CREATE_FAILED: "无法开始聊天，请稍后再试。",
       REPORT_FAILED: "举报失败，请稍后再试。",
       default: "请稍后再试。",
