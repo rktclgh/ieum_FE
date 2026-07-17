@@ -24,6 +24,37 @@ function nonEmptyString(value, fallback) {
   return typeof value === "string" && value.trim() ? value : fallback
 }
 
+// 알림 type/refId 를 앱 내부 경로로 변환한다. 인앱 알림센터
+// (src/features/notification/lib/notification-link.ts)와 동일한 규칙이므로 함께 유지한다.
+// 매핑 불가하면 null 을 돌려 호출부가 알림센터로 폴백하게 한다.
+function resolveNotificationDestination(type, refId) {
+  if (typeof type !== "string") return null
+
+  const normalized = type.toLowerCase()
+  const id = Number.isSafeInteger(refId) && refId > 0 ? refId : null
+
+  // 친구 요청은 "받은 친구요청" 목록으로 고정 이동한다(refId 불필요).
+  // 요청자 userId(refId)가 유효하면 해당 요청 행을 강조하도록 넘긴다.
+  if (normalized.includes("friend")) {
+    return id === null ? "/friends/" : `/friends/?highlightUserId=${id}`
+  }
+
+  if (id === null) return null
+
+  if (normalized.includes("question") || normalized.includes("answer")) {
+    return `/questions/detail/?questionId=${id}`
+  }
+  if (normalized.includes("meet")) return `/meetups/detail/?meetingId=${id}`
+  if (
+    normalized.includes("chat") ||
+    normalized.includes("message") ||
+    normalized.includes("room")
+  ) {
+    return `/chats/room/?chatId=${id}`
+  }
+  return null
+}
+
 function fallbackNotification() {
   return {
     title: FALLBACK_TITLE,
@@ -50,11 +81,13 @@ function notificationFromPayload(payload) {
     const notificationId = Number.isSafeInteger(payload.notificationId) && payload.notificationId > 0
       ? payload.notificationId
       : null
+    // type/refId 로 딥링크를 계산하고, 매핑 불가하면 알림센터로 폴백한다.
+    const destination = resolveNotificationDestination(payload.type, payload.refId)
     return {
       title: payload.answerIsAi === true ? `AI · ${title}` : title,
       body: nonEmptyString(payload.body, FALLBACK_BODY),
       tag: notificationId === null ? FALLBACK_TAG : `notification-${notificationId}`,
-      url: NOTIFICATION_CENTER,
+      url: destination === null ? NOTIFICATION_CENTER : safeDestination(destination),
     }
   }
 

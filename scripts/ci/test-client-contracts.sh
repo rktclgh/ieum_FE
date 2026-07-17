@@ -31,3 +31,4 @@ node --experimental-strip-types --test src/features/schedule/lib/schedule-query-
 node --experimental-strip-types --test src/features/schedule/lib/schedule-query-range.test.ts
 node --experimental-strip-types --test src/features/report/lib/report-target.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/question/lib/question-adapter.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/notification/lib/notification-link.test.ts

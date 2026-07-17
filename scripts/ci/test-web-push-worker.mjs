@@ -248,12 +248,13 @@ test("rejects a chat destination that normalizes to protocol-relative", async ()
   assert.equal(worker.shown[0].options.data.url, "/notifications/")
 })
 
-test("marks an AI durable notification and always opens the notification center", async () => {
+test("marks an AI durable answer notification and deep-links to the question", async () => {
   const worker = loadWorker()
   await dispatchPush(worker, {
     version: 1,
     kind: "notification",
     notificationId: 42,
+    type: "question",
     title: "새 답변",
     body: "답변이 등록됐어요",
     refId: 9,
@@ -262,6 +263,86 @@ test("marks an AI durable notification and always opens the notification center"
 
   assert.equal(worker.shown[0].title, "AI · 새 답변")
   assert.equal(worker.shown[0].options.tag, "notification-42")
+  assert.equal(worker.shown[0].options.data.url, "/questions/detail/?questionId=9")
+})
+
+test("deep-links a friend-request durable notification to the friends page", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 43,
+    type: "friend",
+    title: "친구 요청",
+    body: "민지님이 친구 요청을 보냈어요",
+    refId: 77,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/friends/?highlightUserId=77")
+})
+
+test("opens the friends page without a highlight when a friend notification lacks a refId", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 47,
+    type: "friend",
+    title: "친구 요청",
+    body: "누군가 친구 요청을 보냈어요",
+    refId: null,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/friends/")
+})
+
+test("deep-links a meeting durable notification to the meetup detail", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 44,
+    type: "meeting",
+    title: "주변 새 모임",
+    body: "가까운 곳에 새 모임이 열렸어요",
+    refId: 5,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/meetups/detail/?meetingId=5")
+})
+
+test("falls back to the notification center when the durable type is unmappable", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 45,
+    type: "system",
+    title: "공지",
+    body: "새로운 공지가 있어요",
+    refId: null,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/notifications/")
+})
+
+test("falls back to the notification center when a deep-linkable type lacks a valid refId", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 46,
+    type: "question",
+    title: "새 답변",
+    body: "답변이 등록됐어요",
+    refId: 0,
+    answerIsAi: false,
+  })
+
   assert.equal(worker.shown[0].options.data.url, "/notifications/")
 })
 
