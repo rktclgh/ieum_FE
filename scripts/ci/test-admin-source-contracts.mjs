@@ -782,8 +782,10 @@ function assertAdminInquiryHooks(source) {
   )
   assert.match(
     invalidation,
-    /queryClient\.invalidateQueries\(\{ queryKey: adminInquiryKeys\.all, refetchType: "none", \}\)/,
+    /Promise\.all\(\[ queryClient\.invalidateQueries\(\{ queryKey: adminInquiryKeys\.all, refetchType: "none", \}\), queryClient\.invalidateQueries\(\{ queryKey: adminStatsKeys\.overview, \}\), \]\)/,
   )
+  assert.doesNotMatch(invalidation, /exact: true/)
+  assert.equal((invalidation.match(/adminStatsKeys\./g) ?? []).length, 1)
   assert.match(listOptions, /queryKey: adminInquiryKeys\.list\(\{ status, size \}\)/)
   assert.match(
     listOptions,
@@ -821,6 +823,7 @@ function assertAdminInquiryHooks(source) {
     "retryAdminInquiryAnswerConvergence(",
   ])
   assert.doesNotMatch(answerHook, /mutation\.mutate\([^)]*,\s*\{/)
+  assert.match(source, /import \{ adminStatsKeys \} from "@\/features\/admin\/dashboard\/lib\/admin-stats-keys"/)
 }
 
 function assertAdminInquiryAnswerLifecycle(source) {
@@ -1322,7 +1325,16 @@ function assertAdminStatsOverviewContract({
     assert.match(componentSource, new RegExp(`value=\\{${days}\\}`))
   }
   assert.match(componentSource, /type="date"/)
-  assert.match(componentSource, /validRange/)
+  assert.match(componentSource, /import \{ getKstDateKey \} from "@\/lib\/date\/kst"/)
+  assert.match(componentSource, /const dateKeyPattern = \/\^\\d\{4\}-\\d\{2\}-\\d\{2\}\$\//)
+  assert.match(componentSource, /const to = getKstDateKey\(\)/)
+  assert.match(componentSource, /const from = getKstDateKey\(kstDateKeyToTime\(to\) - \(days - 1\) \* dayMs\)/)
+  assert.match(componentSource, /getKstDateKey\(fromTime\) !== from \|\| getKstDateKey\(toTime\) !== to/)
+  assert.match(componentSource, /const inclusiveDays = \(toTime - fromTime\) \/ dayMs \+ 1/)
+  assert.match(componentSource, /inclusiveDays >= 1 && inclusiveDays <= 366/)
+  assert.match(componentSource, /if \(!validRange\) return/)
+  assert.match(componentSource, /<code className="font-semibold">INVALID_STATS_RANGE<\/code>/)
+  assert.doesNotMatch(componentSource, /getFullYear|getMonth|getDate/)
   assert.match(componentSource, /onRetry=\{\(\) => void refetch\(\)\}/)
   assert.match(componentSource, /retryDisabled=\{isFetching\}/)
   assert.match(componentSource, /isRetrying=\{isFetching\}/)

@@ -6,27 +6,35 @@ import { Button } from "@/components/ui/button"
 import { useAdminStatsOverview } from "@/features/admin/dashboard/hooks/use-admin-stats"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
 import { cn } from "@/lib/utils"
+import { getKstDateKey } from "@/lib/date/kst"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 type MetricPoint = { date: string; values: Record<string, number> }
 type ChartMetric = { key: string; label: string; color: string; kind?: "bar" | "line" }
 
 const dayMs = 24 * 60 * 60 * 1000
-function toDateInputValue(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
+const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/
+
+function kstDateKeyToTime(dateKey: string) {
+  return Date.parse(`${dateKey}T00:00:00+09:00`)
 }
 
 function defaultRange(days: number) {
-  const to = new Date()
-  const from = new Date(to.getTime() - (days - 1) * dayMs)
-  return { from: toDateInputValue(from), to: toDateInputValue(to), bucket: "day" as const }
+  const to = getKstDateKey()
+  const from = getKstDateKey(kstDateKeyToTime(to) - (days - 1) * dayMs)
+  return { from, to, bucket: "day" as const }
 }
 
 function isValidDateRange(from: string, to: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(from) && /^\d{4}-\d{2}-\d{2}$/.test(to) && from <= to
+  if (!dateKeyPattern.test(from) || !dateKeyPattern.test(to)) return false
+
+  const fromTime = kstDateKeyToTime(from)
+  const toTime = kstDateKeyToTime(to)
+  if (!Number.isFinite(fromTime) || !Number.isFinite(toTime)) return false
+  if (getKstDateKey(fromTime) !== from || getKstDateKey(toTime) !== to) return false
+
+  const inclusiveDays = (toTime - fromTime) / dayMs + 1
+  return Number.isInteger(inclusiveDays) && inclusiveDays >= 1 && inclusiveDays <= 366
 }
 
 function formatAcceptedRate(value: number, locale: string) {
@@ -384,6 +392,8 @@ function AdminDashboardPage() {
           </Button>
           {!validRange && (
             <p role="alert" className="basis-full text-body-regular-12 text-red">
+              <code className="font-semibold">INVALID_STATS_RANGE</code>
+              {" "}
               {messages.admin.dashboard.invalidRange}
             </p>
           )}
