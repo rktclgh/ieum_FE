@@ -9,7 +9,7 @@ import {
   KNOWLEDGE_RELATION_PREDICATES,
 } from "@/features/admin/knowledge/api/admin-knowledge-candidates-api"
 import type {
-  AdminKnowledgeCandidateDetailResponse,
+  AdminKnowledgeCandidateItem,
   KnowledgeCandidateStatus,
   KnowledgeRelationPredicate,
 } from "@/features/admin/knowledge/api/admin-knowledge-candidates-api"
@@ -60,6 +60,148 @@ function DetailField({
       <dt className="text-body-medium-14 text-gray-600">{label}</dt>
       <dd className="break-words text-body-regular-14 text-gray-900">{value}</dd>
     </div>
+  )
+}
+
+type KnowledgeCandidateAction = "approve" | "reject"
+
+interface AdminKnowledgeCandidateDecisionFormProps {
+  candidate: AdminKnowledgeCandidateItem
+  refreshBusy: boolean
+  activeMutationAction: KnowledgeCandidateAction | null
+  onApprove: (input: {
+    subject: string
+    predicate: KnowledgeRelationPredicate
+    object: string
+  }) => void
+  onReject: (reason: string | null) => void
+}
+
+function AdminKnowledgeCandidateDecisionForm({
+  candidate,
+  refreshBusy,
+  activeMutationAction,
+  onApprove,
+  onReject,
+}: AdminKnowledgeCandidateDecisionFormProps) {
+  const { messages } = useTranslation()
+  const [subject, setSubject] = React.useState(candidate.subject)
+  const [predicate, setPredicate] =
+    React.useState<KnowledgeRelationPredicate>(candidate.predicate)
+  const [object, setObject] = React.useState(candidate.object)
+  const [rejectReason, setRejectReason] = React.useState("")
+  const normalizedSubject = normalizeDraft(subject)
+  const normalizedObject = normalizeDraft(object)
+  const approveDisabled =
+    refreshBusy ||
+    activeMutationAction === "approve" ||
+    normalizedSubject === null ||
+    normalizedObject === null
+  const rejectDisabled = refreshBusy || activeMutationAction === "reject"
+
+  return (
+    <>
+      <section aria-labelledby="admin-knowledge-relation-title" className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
+        <h2 id="admin-knowledge-relation-title" className="text-title-semibold-18 text-gray-900">
+          {messages.admin.knowledge.relation}
+        </h2>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <label
+            htmlFor="admin-knowledge-subject"
+            className="space-y-2 text-body-medium-14 text-gray-700"
+          >
+            <span className="block">{messages.admin.knowledge.subject}</span>
+            <input
+              id="admin-knowledge-subject"
+              value={subject}
+              onChange={(event) => setSubject(event.target.value)}
+              disabled={refreshBusy}
+              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
+            />
+          </label>
+          <label
+            htmlFor="admin-knowledge-predicate"
+            className="space-y-2 text-body-medium-14 text-gray-700"
+          >
+            <span className="block">{messages.admin.knowledge.predicate}</span>
+            <select
+              id="admin-knowledge-predicate"
+              value={predicate}
+              onChange={(event) =>
+                setPredicate(event.target.value as KnowledgeRelationPredicate)
+              }
+              disabled={refreshBusy}
+              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
+            >
+              {KNOWLEDGE_RELATION_PREDICATES.map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label
+            htmlFor="admin-knowledge-object"
+            className="space-y-2 text-body-medium-14 text-gray-700"
+          >
+            <span className="block">{messages.admin.knowledge.object}</span>
+            <input
+              id="admin-knowledge-object"
+              value={object}
+              onChange={(event) => setObject(event.target.value)}
+              disabled={refreshBusy}
+              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
+            />
+          </label>
+        </div>
+      </section>
+
+      <section aria-labelledby="admin-knowledge-action-title" className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
+        <h2 id="admin-knowledge-action-title" className="text-title-semibold-18 text-gray-900">
+          {messages.admin.knowledge.review}
+        </h2>
+        <label
+          htmlFor="admin-knowledge-reject-reason"
+          className="block space-y-2 text-body-medium-14 text-gray-700"
+        >
+          <span className="block">{messages.admin.knowledge.rejectReason}</span>
+          <textarea
+            id="admin-knowledge-reject-reason"
+            value={rejectReason}
+            onChange={(event) => setRejectReason(event.target.value)}
+            rows={4}
+            maxLength={500}
+            disabled={refreshBusy}
+            className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
+          />
+        </label>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => {
+              if (normalizedSubject === null || normalizedObject === null) return
+              onApprove({
+                subject: normalizedSubject,
+                predicate,
+                object: normalizedObject,
+              })
+            }}
+            disabled={approveDisabled}
+            aria-busy={activeMutationAction === "approve" || undefined}
+          >
+            {messages.admin.knowledge.approve}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onReject(normalizeDraft(rejectReason))}
+            disabled={rejectDisabled}
+            aria-busy={activeMutationAction === "reject" || undefined}
+          >
+            {messages.admin.knowledge.reject}
+          </Button>
+        </div>
+      </section>
+    </>
   )
 }
 
@@ -209,17 +351,12 @@ function AdminKnowledgeCandidateDetailPage({
   const detailQuery = useAdminKnowledgeCandidateDetail(candidateId)
   const approveMutation = useApproveAdminKnowledgeCandidate(candidateId)
   const rejectMutation = useRejectAdminKnowledgeCandidate(candidateId)
-  const [subject, setSubject] = React.useState("")
-  const [predicate, setPredicate] =
-    React.useState<KnowledgeRelationPredicate>("located_in")
-  const [object, setObject] = React.useState("")
-  const [rejectReason, setRejectReason] = React.useState("")
+  const [activeMutationAction, setActiveMutationAction] =
+    React.useState<KnowledgeCandidateAction | null>(null)
   const [refreshingDecision, setRefreshingDecision] = React.useState(false)
   const [conflictRefreshed, setConflictRefreshed] = React.useState(false)
   const [convergenceError, setConvergenceError] = React.useState(false)
   const candidate = detailQuery.data
-  const busy =
-    approveMutation.isPending || rejectMutation.isPending || refreshingDecision
   const mutationError = approveMutation.isError
     ? approveMutation.error
     : rejectMutation.isError
@@ -236,14 +373,6 @@ function AdminKnowledgeCandidateDetailPage({
     timeZone: "Asia/Seoul",
   })
 
-  React.useEffect(() => {
-    if (candidate === undefined) return
-    setSubject(candidate.subject)
-    setPredicate(candidate.predicate)
-    setObject(candidate.object)
-    setRejectReason(candidate.rejectionReason ?? "")
-  }, [candidate])
-
   const refreshCanonicalCandidate = async (error: unknown) => {
     setRefreshingDecision(true)
     setConvergenceError(false)
@@ -259,24 +388,31 @@ function AdminKnowledgeCandidateDetailPage({
       setConvergenceError(true)
     } finally {
       setRefreshingDecision(false)
+      setActiveMutationAction(null)
     }
   }
 
-  const handleApprove = () => {
-    if (!candidate || !canAct || busy) return
-    const normalizedSubject = normalizeDraft(subject)
-    const normalizedObject = normalizeDraft(object)
-    if (normalizedSubject === null || normalizedObject === null) return
+  const handleApprove = ({
+    subject,
+    predicate,
+    object,
+  }: {
+    subject: string
+    predicate: KnowledgeRelationPredicate
+    object: string
+  }) => {
+    if (!candidate || !canAct || refreshingDecision) return
 
     approveMutation.reset()
     rejectMutation.reset()
+    setActiveMutationAction("approve")
     setConflictRefreshed(false)
     approveMutation.mutate(
       {
         version: candidate.version,
-        subject: normalizedSubject,
+        subject,
         predicate,
-        object: normalizedObject,
+        object,
       },
       {
         onSettled: (_data, error) => {
@@ -286,18 +422,17 @@ function AdminKnowledgeCandidateDetailPage({
     )
   }
 
-  const handleReject = () => {
-    if (!candidate || !canAct || busy) return
+  const handleReject = (reason: string | null) => {
+    if (!candidate || !canAct || refreshingDecision) return
 
     approveMutation.reset()
     rejectMutation.reset()
+    setActiveMutationAction("reject")
     setConflictRefreshed(false)
     rejectMutation.mutate(
       {
         version: candidate.version,
-        ...(normalizeDraft(rejectReason) === null
-          ? {}
-          : { reason: normalizeDraft(rejectReason) ?? undefined }),
+        ...(reason === null ? {} : { reason }),
       },
       {
         onSettled: (_data, error) => {
@@ -418,59 +553,6 @@ function AdminKnowledgeCandidateDetailPage({
         </dl>
       </section>
 
-      <section aria-labelledby="admin-knowledge-relation-title" className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
-        <h2 id="admin-knowledge-relation-title" className="text-title-semibold-18 text-gray-900">
-          {messages.admin.knowledge.relation}
-        </h2>
-        <div className="grid gap-4 lg:grid-cols-3">
-          <label
-            htmlFor="admin-knowledge-subject"
-            className="space-y-2 text-body-medium-14 text-gray-700"
-          >
-            <span className="block">{messages.admin.knowledge.subject}</span>
-            <input
-              id="admin-knowledge-subject"
-              value={subject}
-              onChange={(event) => setSubject(event.target.value)}
-              disabled={!canAct || busy}
-              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
-            />
-          </label>
-          <label
-            htmlFor="admin-knowledge-predicate"
-            className="space-y-2 text-body-medium-14 text-gray-700"
-          >
-            <span className="block">{messages.admin.knowledge.predicate}</span>
-            <select
-              id="admin-knowledge-predicate"
-              value={predicate}
-              onChange={(event) =>
-                setPredicate(event.target.value as KnowledgeRelationPredicate)
-              }
-              disabled={!canAct || busy}
-              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
-            >
-              {KNOWLEDGE_RELATION_PREDICATES.map((value) => (
-                <option key={value} value={value}>{value}</option>
-              ))}
-            </select>
-          </label>
-          <label
-            htmlFor="admin-knowledge-object"
-            className="space-y-2 text-body-medium-14 text-gray-700"
-          >
-            <span className="block">{messages.admin.knowledge.object}</span>
-            <input
-              id="admin-knowledge-object"
-              value={object}
-              onChange={(event) => setObject(event.target.value)}
-              disabled={!canAct || busy}
-              className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
-            />
-          </label>
-        </div>
-      </section>
-
       <section aria-labelledby="admin-knowledge-same-source-title" className="space-y-4">
         <h2 id="admin-knowledge-same-source-title" className="text-title-semibold-18 text-gray-900">
           {messages.admin.knowledge.sameSourceRelations}
@@ -528,49 +610,14 @@ function AdminKnowledgeCandidateDetailPage({
       )}
 
       {canAct ? (
-        <section aria-labelledby="admin-knowledge-action-title" className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
-          <h2 id="admin-knowledge-action-title" className="text-title-semibold-18 text-gray-900">
-            {messages.admin.knowledge.review}
-          </h2>
-          <label
-            htmlFor="admin-knowledge-reject-reason"
-            className="block space-y-2 text-body-medium-14 text-gray-700"
-          >
-            <span className="block">{messages.admin.knowledge.rejectReason}</span>
-            <textarea
-              id="admin-knowledge-reject-reason"
-              value={rejectReason}
-              onChange={(event) => setRejectReason(event.target.value)}
-              rows={4}
-              maxLength={500}
-              disabled={busy}
-              className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
-            />
-          </label>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleApprove}
-              disabled={
-                busy ||
-                normalizeDraft(subject) === null ||
-                normalizeDraft(object) === null
-              }
-              aria-busy={busy || undefined}
-            >
-              {messages.admin.knowledge.approve}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleReject}
-              disabled={busy}
-            >
-              {messages.admin.knowledge.reject}
-            </Button>
-          </div>
-        </section>
+        <AdminKnowledgeCandidateDecisionForm
+          key={`${candidate.candidateId}:${candidate.version}`}
+          candidate={candidate}
+          refreshBusy={refreshingDecision}
+          activeMutationAction={activeMutationAction}
+          onApprove={handleApprove}
+          onReject={handleReject}
+        />
       ) : (
         <section aria-labelledby="admin-knowledge-readonly-title" className="space-y-2 rounded-2xl border border-gray-100 bg-gray-50 p-5">
           <h2 id="admin-knowledge-readonly-title" className="text-title-semibold-18 text-gray-900">
