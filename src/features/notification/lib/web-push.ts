@@ -116,6 +116,39 @@ async function createOrReuseWebPushSubscription(
   })
 }
 
+interface ReconcileStartInput {
+  userId: number | undefined
+  notifyAll: boolean | undefined
+  supported: boolean
+  permission: NotificationPermission
+}
+
+interface ReconcileUpsertInput {
+  serverEnabled: boolean
+  hasBrowserSubscription: boolean
+  backendSubscribed: boolean
+}
+
+function shouldStartWebPushReconcile({
+  userId,
+  notifyAll,
+  supported,
+  permission,
+}: ReconcileStartInput) {
+  return Boolean(userId) && notifyAll === true && supported && permission === "granted"
+}
+
+// `backendSubscribed` is deliberately accepted and ignored. The backend answers it
+// for the user+session pair rather than for a specific endpoint, so it stays true
+// while a rotated endpoint rots — precisely the case reconcile has to repair.
+// Re-upserting is safe because the backend upsert is idempotent on endpoint_hash.
+function shouldUpsertReconciledSubscription({
+  serverEnabled,
+  hasBrowserSubscription,
+}: ReconcileUpsertInput) {
+  return serverEnabled && hasBrowserSubscription
+}
+
 function resolveWebPushStatus({
   supported,
   serverEnabled,
@@ -142,10 +175,14 @@ export {
   isWebPushSupported,
   registerWebPushServiceWorker,
   resolveWebPushStatus,
+  shouldStartWebPushReconcile,
+  shouldUpsertReconciledSubscription,
   toWebPushSubscriptionRequest,
   urlBase64ToUint8Array,
 }
 export type {
+  ReconcileStartInput,
+  ReconcileUpsertInput,
   WebPushStatus,
   WebPushStatusInput,
   WebPushSubscriptionRequest,
