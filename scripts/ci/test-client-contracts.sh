@@ -3,6 +3,7 @@ set -euo pipefail
 
 bash scripts/ci/test-route-contracts.sh
 bash scripts/ci/test-session-contracts.sh
+node --experimental-strip-types --test scripts/ci/test-language-sync.ts
 bash scripts/ci/test-transport-contracts.sh
 bash scripts/ci/test-chat-avatar-contracts.sh
 bash scripts/ci/test-web-push-contracts.sh

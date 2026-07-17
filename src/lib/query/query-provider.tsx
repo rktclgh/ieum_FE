@@ -6,6 +6,7 @@ import { useReconcileWebPushSubscription } from "@/features/notification/hooks/u
 import { useMe } from "@/features/session/hooks/use-me";
 import { resetSessionCache } from "@/features/session/lib/session-cache";
 import { subscribeSessionExpired } from "@/features/session/lib/session-events";
+import { useLanguageStore } from "@/lib/i18n/store";
 import { makeQueryClient } from "./query-client";
 
 let browserQueryClient: QueryClient | undefined;
@@ -17,6 +18,19 @@ function WebPushSessionReconciler() {
     userId: user?.userId,
     notifyAll: user?.settings.notifyAll,
   });
+
+  return null;
+}
+
+function LanguageSessionSync() {
+  const { data: user } = useMe();
+  const serverLanguage = user?.settings.language;
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
+
+  useEffect(() => {
+    if (!serverLanguage) return;
+    setLanguage(serverLanguage);
+  }, [serverLanguage, setLanguage]);
 
   return null;
 }
@@ -48,6 +62,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <LanguageSessionSync />
       <WebPushSessionReconciler />
       {children}
     </QueryClientProvider>

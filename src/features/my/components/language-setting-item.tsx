@@ -23,6 +23,7 @@ function LanguageSettingItem({ settings }: { settings: UserSettings }) {
     <SelectInput
       options={languageOptions}
       value={form.settings.language}
+      disabled={form.isPending}
       onValueChange={(value) => form.patch({ language: value as LanguageCode })}
       confirmLabel={messages.languagePicker.confirm}
       renderTrigger={
