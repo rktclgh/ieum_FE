@@ -287,14 +287,6 @@ test("fixed query pages validate IDs before mounting data content", () => {
       content: "<NoticePageContent",
     },
     {
-      path: "src/app/chats/report/page.tsx",
-      params: [
-        { query: "chatId", variable: "roomId" },
-        { query: "messageId", variable: "messageId" },
-      ],
-      content: "<ReportPageContent",
-    },
-    {
       path: "src/app/chats/schedule/page.tsx",
       params: [{ query: "chatId", variable: "roomId" }],
       content: "<SchedulePageContent",
@@ -359,6 +351,44 @@ test("fixed query pages validate IDs before mounting data content", () => {
       `${page.path} must guard before mounting content`,
     )
   }
+})
+
+test("report page validates its parsed target before mounting data content", () => {
+  const pagePath = "src/app/chats/report/page.tsx"
+  const source = read(pagePath)
+  const sourceFile = parse(pagePath)
+
+  assert.match(source, /<React\.Suspense\b/, `${pagePath} must own a Suspense boundary`)
+  assert.ok(
+    compact(source).includes("consttarget=parseReportTarget(searchParams)"),
+    `${pagePath} must parse its target from the search parameters`,
+  )
+
+  const invalidGuard = visit(sourceFile, (node) =>
+    ts.isIfStatement(node) &&
+    node.expression.getText(sourceFile) === "target === null" &&
+    node.thenStatement.getText(sourceFile).includes('kind="invalid-link"'),
+  )[0]
+  assert.ok(invalidGuard, `${pagePath} must render the invalid-link state for a null target`)
+
+  const guardStatements = ts.isBlock(invalidGuard.thenStatement)
+    ? invalidGuard.thenStatement.statements
+    : [invalidGuard.thenStatement]
+  assert.equal(
+    guardStatements.length,
+    1,
+    `${pagePath} invalid guard must have exactly one blocking return`,
+  )
+  assert.ok(
+    ts.isReturnStatement(guardStatements[0]) &&
+      guardStatements[0].expression?.getText(sourceFile).includes('kind="invalid-link"'),
+    `${pagePath} invalid guard must return before data content can mount`,
+  )
+
+  assert.ok(
+    source.indexOf("<ReportPageContent") > invalidGuard.end,
+    `${pagePath} must guard before mounting content`,
+  )
 })
 
 test("source contains no legacy runtime-ID navigation templates", () => {
