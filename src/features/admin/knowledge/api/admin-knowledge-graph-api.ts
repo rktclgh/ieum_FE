@@ -37,7 +37,7 @@ async function getAdminKnowledgeGraph(
   params: AdminKnowledgeGraphParams,
 ): Promise<AdminKnowledgeGraphResponse> {
   const { data } = await apiClient.get<AdminKnowledgeGraphResponse>(
-    "/api/v1/admin/knowledge/graph",
+    "/api/v1/admin/ai/knowledge/graph",
     {
       params: compactQuery({
         query: params.query,

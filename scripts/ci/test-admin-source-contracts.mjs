@@ -1406,8 +1406,9 @@ function assertKnowledgeGraphApiContracts({ apiSource, hookSource }) {
   assert.match(apiSource, /truncated: boolean/)
   assert.match(
     compactApi,
-    /apiClient\.get<AdminKnowledgeGraphResponse>\( "\/api\/v1\/admin\/knowledge\/graph", \{ params: compactQuery\(\{ query: params\.query, focus: params\.focus, predicate: params\.predicate, limit: params\.limit,? \}\), \}, \)/,
+    /apiClient\.get<AdminKnowledgeGraphResponse>\( "\/api\/v1\/admin\/ai\/knowledge\/graph", \{ params: compactQuery\(\{ query: params\.query, focus: params\.focus, predicate: params\.predicate, limit: params\.limit,? \}\), \}, \)/,
   )
+  assert.doesNotMatch(apiSource, /"\/api\/v1\/admin\/knowledge\/graph"/)
   assert.match(compactHook, /all: \["admin", "knowledge", "graph"\] as const/)
   assert.match(
     compactHook,
