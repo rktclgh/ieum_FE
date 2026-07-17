@@ -24,6 +24,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         { href: routes.adminReports(), label: messages.admin.navigation.reports },
         { href: routes.adminInquiries(), label: messages.admin.navigation.inquiries },
         { href: routes.adminKnowledge(), label: messages.admin.navigation.knowledge },
+        { href: routes.adminKnowledgeGraph(), label: messages.admin.navigation.knowledgeGraph },
       ],
     },
   ]
@@ -40,10 +41,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               <h2 className="px-3 text-body-medium-12 text-gray-500">{group.label}</h2>
               <div className="flex flex-col gap-1">
                 {group.items.map((item) => {
-                  const isCurrent =
-                    item.href === routes.adminHome()
-                      ? pathname === item.href
-                      : pathname.startsWith(item.href)
+                  const isCurrent = pathname === item.href
 
                   return (
                     <Link
