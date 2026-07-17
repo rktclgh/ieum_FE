@@ -37,14 +37,6 @@ function isValidDateRange(from: string, to: string) {
   return Number.isInteger(inclusiveDays) && inclusiveDays >= 1 && inclusiveDays <= 366
 }
 
-function formatAcceptedRate(value: number, locale: string) {
-  return new Intl.NumberFormat(locale, {
-    style: "percent",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  }).format(value)
-}
-
 function rangeSummary(
   title: string,
   from: string,
@@ -78,7 +70,8 @@ function makePath(
   return points
     .map((point, index) => {
       const x = index / (points.length - 1) * chartWidth
-      const y = chartHeight - point.values[metricKey] / maxValue * chartHeight
+      const value = point.values[metricKey] ?? 0
+      const y = chartHeight - value / maxValue * chartHeight
       return `${index === 0 ? "M" : "L"} ${x} ${y}`
     })
     .join(" ")
@@ -270,7 +263,7 @@ function AdminDashboardPage() {
     { label: messages.admin.dashboard.questions, value: countFormatter.format(summary.questionCount) },
     { label: messages.admin.dashboard.answers, value: countFormatter.format(summary.humanAnswerCount) },
     { label: messages.admin.dashboard.accepted, value: countFormatter.format(summary.acceptedHumanAnswerCount) },
-    { label: messages.admin.dashboard.acceptedRate, value: formatAcceptedRate(summary.acceptedRate, language) },
+    { label: messages.admin.dashboard.acceptedRate, value: percentFormatter.format(summary.acceptedRate) },
     { label: messages.admin.dashboard.reports, value: countFormatter.format(summary.reportCount) },
     { label: messages.admin.dashboard.aiReviewed, value: countFormatter.format(summary.aiReviewedCount) },
     { label: messages.admin.dashboard.confirmed, value: countFormatter.format(summary.confirmedCount) },
