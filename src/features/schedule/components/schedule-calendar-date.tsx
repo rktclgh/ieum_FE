@@ -30,9 +30,9 @@ function ScheduleCalendarDate({
         className={cn(
           "flex h-7 w-full items-center justify-center rounded-full text-body-medium-14",
           isSelected
-            ? "bg-primary-400 text-white"
+            ? "bg-primary text-white"
             : isToday
-              ? "text-primary-400 ring-1 ring-primary-400 ring-inset"
+              ? "text-primary ring-1 ring-primary ring-inset"
               : isCurrentMonth
                 ? "text-gray-900"
                 : "text-gray-400"
@@ -44,7 +44,7 @@ function ScheduleCalendarDate({
         className={cn(
           "size-1 rounded-full",
           !hasMeeting && "opacity-0",
-          isCurrentMonth ? "bg-primary-400" : "bg-gray-400"
+          isCurrentMonth ? "bg-primary" : "bg-gray-400"
         )}
       />
     </button>

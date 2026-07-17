@@ -13,7 +13,7 @@ function ChatScheduleRoute() {
 
   if (roomId === null) return <RoutePageState kind="invalid-link" />
 
-  return <SchedulePageContent key={roomId} />
+  return <SchedulePageContent key={roomId} roomId={roomId} />
 }
 
 export default function ChatSchedulePage() {

@@ -150,7 +150,7 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
               }
               endAdornment={
                 verificationStatus === "sent" ? (
-                  <span className="shrink-0 text-body-medium-16 text-primary-400">
+                  <span className="shrink-0 text-body-medium-16 text-primary">
                     {formatCountdown(secondsLeft)}
                   </span>
                 ) : undefined

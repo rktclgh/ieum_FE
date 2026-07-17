@@ -21,28 +21,42 @@ interface AdminMessages {
     loginError: string
   }
   navigation: {
+    operations: string
+    review: string
     dashboard: string
     users: string
     reports: string
     inquiries: string
+    knowledge: string
   }
   dashboard: {
     title: string
     range: (from: string, to: string) => string
+    days: (days: number) => string
+    from: string
+    to: string
+    applyRange: string
+    invalidRange: string
+    cachedError: string
+    pendingReports: string
+    retryReports: string
+    deadReports: string
+    pendingInquiries: string
     signup: string
     activeUsers: string
     suspendedUsers: string
-    pins: string
     questions: string
-    meetings: string
     answers: string
+    accepted: string
     acceptedRate: string
-    messages: string
     reports: string
     aiReviewed: string
     confirmed: string
     dismissed: string
     sanctions: string
+    userTrend: string
+    contentTrend: string
+    reportTrend: string
   }
   users: {
     title: string
@@ -146,6 +160,48 @@ interface AdminMessages {
     answeredConflict: string
     convergenceError: string
   }
+  knowledge: {
+    title: string
+    status: string
+    subject: string
+    predicate: string
+    object: string
+    source: string
+    confidence: string
+    createdAt: string
+    updatedAt: string
+    detail: string
+    backToList: string
+    context: string
+    version: string
+    sourceStatus: string
+    validUntil: string
+    questionId: string
+    answerId: string
+    questionTitle: string
+    questionContent: string
+    answerContent: string
+    chunkContent: string
+    extractionProvider: string
+    extractionModel: string
+    reviewer: string
+    reviewedAt: string
+    reviewNote: string
+    promotionRelation: string
+    evidence: string
+    chunk: string
+    sourceEligibility: string
+    eligible: string
+    notEligible: string
+    relation: string
+    sameSourceRelations: string
+    review: string
+    rejectReason: string
+    approve: string
+    reject: string
+    conflictRefreshed: string
+    convergenceError: string
+  }
 }
 
 const adminKo: AdminMessages = {
@@ -171,28 +227,42 @@ const adminKo: AdminMessages = {
     loginError: "로그인에 실패했습니다. 계정 정보를 확인해 주세요.",
   },
   navigation: {
+    operations: "운영",
+    review: "심사",
     dashboard: "대시보드",
     users: "회원",
     reports: "신고",
     inquiries: "문의",
+    knowledge: "지식",
   },
   dashboard: {
     title: "운영 현황",
     range: (from, to) => `${from} ~ ${to}`,
+    days: (days) => `${days}일`,
+    from: "시작일",
+    to: "종료일",
+    applyRange: "적용",
+    invalidRange: "시작일은 종료일보다 늦을 수 없습니다.",
+    cachedError: "최신 지표를 불러오지 못해 이전 데이터를 표시합니다.",
+    pendingReports: "대기 중 신고",
+    retryReports: "재시도 신고",
+    deadReports: "실패 신고",
+    pendingInquiries: "대기 중 문의",
     signup: "신규 가입",
     activeUsers: "활성 회원",
     suspendedUsers: "기간 내 제재 회원",
-    pins: "지도 핀",
     questions: "질문",
-    meetings: "모임",
     answers: "답변",
+    accepted: "채택 답변",
     acceptedRate: "채택률",
-    messages: "메시지",
     reports: "신고",
     aiReviewed: "AI 검토 완료",
     confirmed: "확정",
     dismissed: "기각",
     sanctions: "제재",
+    userTrend: "회원 추이",
+    contentTrend: "콘텐츠 추이",
+    reportTrend: "신고 처리 추이",
   },
   users: {
     title: "회원 관리",
@@ -296,6 +366,48 @@ const adminKo: AdminMessages = {
     answeredConflict: "이미 답변된 문의입니다. 서버의 최신 답변을 불러왔습니다.",
     convergenceError: "서버의 최신 문의 상태를 확인하지 못했습니다.",
   },
+  knowledge: {
+    title: "지식 후보 검토",
+    status: "상태",
+    subject: "주어",
+    predicate: "관계",
+    object: "목적어",
+    source: "출처",
+    confidence: "신뢰도",
+    createdAt: "생성 일시",
+    updatedAt: "수정 일시",
+    detail: "후보 상세",
+    backToList: "목록으로",
+    context: "후보 맥락",
+    version: "버전",
+    sourceStatus: "출처 상태",
+    validUntil: "유효 기한",
+    questionId: "질문 ID",
+    answerId: "답변 ID",
+    questionTitle: "질문 제목",
+    questionContent: "질문 내용",
+    answerContent: "답변 내용",
+    chunkContent: "청크 내용",
+    extractionProvider: "추출 제공자",
+    extractionModel: "추출 모델",
+    reviewer: "검토 운영자",
+    reviewedAt: "검토 일시",
+    reviewNote: "검토 메모",
+    promotionRelation: "승격 관계",
+    evidence: "근거 문장",
+    chunk: "근거 청크",
+    sourceEligibility: "출처 적격성",
+    eligible: "적격",
+    notEligible: "부적격",
+    relation: "관계 편집",
+    sameSourceRelations: "같은 출처 관계",
+    review: "검토",
+    rejectReason: "반려 사유",
+    approve: "승인",
+    reject: "반려",
+    conflictRefreshed: "이미 처리되었거나 상태가 변경된 후보입니다. 최신 정보를 불러왔습니다.",
+    convergenceError: "최신 후보 상태를 확인하지 못했습니다.",
+  },
 }
 
 const adminEn: AdminMessages = {
@@ -321,28 +433,42 @@ const adminEn: AdminMessages = {
     loginError: "Sign-in failed. Check your account details and try again.",
   },
   navigation: {
+    operations: "Operations",
+    review: "Review",
     dashboard: "Dashboard",
     users: "Users",
     reports: "Reports",
     inquiries: "Inquiries",
+    knowledge: "Knowledge",
   },
   dashboard: {
     title: "Operations overview",
     range: (from, to) => `${from} – ${to}`,
+    days: (days) => `${days} days`,
+    from: "From",
+    to: "To",
+    applyRange: "Apply",
+    invalidRange: "The start date cannot be after the end date.",
+    cachedError: "Unable to load fresh metrics. Showing the previous data.",
+    pendingReports: "Pending reports",
+    retryReports: "Retry reports",
+    deadReports: "Failed reports",
+    pendingInquiries: "Pending inquiries",
     signup: "New sign-ups",
     activeUsers: "Active users",
     suspendedUsers: "Users sanctioned in period",
-    pins: "Map pins",
     questions: "Questions",
-    meetings: "Meetings",
     answers: "Answers",
+    accepted: "Accepted answers",
     acceptedRate: "Acceptance rate",
-    messages: "Messages",
     reports: "Reports",
     aiReviewed: "AI reviewed",
     confirmed: "Confirmed",
     dismissed: "Dismissed",
     sanctions: "Sanctions",
+    userTrend: "User trend",
+    contentTrend: "Content trend",
+    reportTrend: "Report handling trend",
   },
   users: {
     title: "User management",
@@ -445,6 +571,48 @@ const adminEn: AdminMessages = {
     invalidAnswer: "Enter an answer between 1 and 2000 characters.",
     answeredConflict: "This inquiry was already answered. The latest server answer is now displayed.",
     convergenceError: "Unable to confirm the latest inquiry state from the server.",
+  },
+  knowledge: {
+    title: "Knowledge candidate review",
+    status: "Status",
+    subject: "Subject",
+    predicate: "Predicate",
+    object: "Object",
+    source: "Source",
+    confidence: "Confidence",
+    createdAt: "Created at",
+    updatedAt: "Updated at",
+    detail: "Candidate detail",
+    backToList: "Back to list",
+    context: "Candidate context",
+    version: "Version",
+    sourceStatus: "Source status",
+    validUntil: "Valid until",
+    questionId: "Question ID",
+    answerId: "Answer ID",
+    questionTitle: "Question title",
+    questionContent: "Question content",
+    answerContent: "Answer content",
+    chunkContent: "Chunk content",
+    extractionProvider: "Extraction provider",
+    extractionModel: "Extraction model",
+    reviewer: "Reviewer",
+    reviewedAt: "Reviewed at",
+    reviewNote: "Review note",
+    promotionRelation: "Promotion relation",
+    evidence: "Evidence text",
+    chunk: "Evidence chunk",
+    sourceEligibility: "Source eligibility",
+    eligible: "Eligible",
+    notEligible: "Not eligible",
+    relation: "Relation edit",
+    sameSourceRelations: "Same-source relations",
+    review: "Review",
+    rejectReason: "Reject reason",
+    approve: "Approve",
+    reject: "Reject",
+    conflictRefreshed: "This candidate was already resolved or changed. The latest data is now displayed.",
+    convergenceError: "Could not verify the latest candidate state.",
   },
 }
 

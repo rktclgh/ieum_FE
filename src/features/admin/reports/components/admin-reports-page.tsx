@@ -45,7 +45,7 @@ function AdminReportsPage() {
             id="admin-report-status"
             value={status}
             onChange={(event) => setStatus(event.target.value as ReportStatus | "")}
-            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100"
+            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="">{messages.admin.common.all}</option>
             <option value="pending">pending</option>
@@ -66,7 +66,7 @@ function AdminReportsPage() {
             onChange={(event) =>
               setAiReviewState(event.target.value as ReportAiReviewState | "")
             }
-            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100"
+            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="">{messages.admin.common.all}</option>
             <option value="pending">pending</option>
@@ -89,7 +89,7 @@ function AdminReportsPage() {
             onChange={(event) =>
               setDecision(event.target.value as AdminReportDecision | "")
             }
-            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100"
+            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="">{messages.admin.common.all}</option>
             <option value="suspend">suspend</option>
@@ -166,7 +166,7 @@ function AdminReportsPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={routes.adminReportDetail(report.reportId)}
-                        className="inline-flex rounded-lg px-2 py-1 text-body-medium-14 text-primary-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+                        className="inline-flex rounded-lg px-2 py-1 text-body-medium-14 text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       >
                         {messages.admin.reports.detail}
                       </Link>

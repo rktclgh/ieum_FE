@@ -32,7 +32,7 @@ function AdminAsyncState(props: AdminAsyncStateProps) {
       {props.kind === "loading" && (
         <span
           aria-hidden="true"
-          className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-400"
+          className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary"
         />
       )}
       <p

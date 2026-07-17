@@ -14,6 +14,8 @@ interface MeetupSelectFieldProps {
   onClick?: () => void
   /** 연결된 바텀시트가 열려 있는 동안 파란 테두리로 강조 */
   active?: boolean
+  /** 선택이 현재 상태에서 허용되지 않을 때 native button을 비활성화한다. */
+  disabled?: boolean
   className?: string
 }
 
@@ -25,6 +27,7 @@ function MeetupSelectField({
   value,
   onClick,
   active,
+  disabled,
   className,
 }: MeetupSelectFieldProps) {
   const icon = value && selectedIconSrc ? selectedIconSrc : iconSrc
@@ -32,14 +35,21 @@ function MeetupSelectField({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
         "flex h-[3.375rem] w-full items-center gap-1 rounded-xl border border-gray-100 p-4 text-left transition-colors",
-        active && "border-primary-400",
+        active && !disabled && "border-primary",
+        disabled && "cursor-not-allowed bg-gray-50 text-gray-300",
         className
       )}
     >
       <Image src={icon} alt="" width={20} height={20} className="size-5 shrink-0" />
-      <span className={cn("truncate text-body-regular-16", value ? "text-gray-900" : "text-gray-400")}>
+      <span
+        className={cn(
+          "truncate text-body-regular-16",
+          disabled ? "text-gray-300" : value ? "text-gray-900" : "text-gray-400"
+        )}
+      >
         {value || placeholder}
       </span>
     </button>

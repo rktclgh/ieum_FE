@@ -6,6 +6,7 @@ interface ChatContextMenuItem {
   icon: React.ReactNode
   label: string
   tone?: "default" | "destructive"
+  disabled?: boolean
   onClick?: () => void
 }
 
@@ -39,8 +40,9 @@ function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, .
           <button
             key={index}
             type="button"
+            disabled={item.disabled}
             onClick={item.onClick}
-            className="flex w-[193px] items-center gap-2 py-2 text-left"
+            className="flex w-[193px] items-center gap-2 py-2 text-left disabled:cursor-not-allowed disabled:opacity-50"
           >
             {item.icon}
             <span

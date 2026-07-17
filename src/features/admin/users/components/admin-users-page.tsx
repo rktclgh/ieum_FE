@@ -46,7 +46,7 @@ function AdminUsersPage() {
             value={q}
             onChange={(event) => setQ(event.target.value)}
             placeholder={messages.admin.users.search}
-            className="h-11 w-full rounded-xl border border-gray-200 px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100"
+            className="h-11 w-full rounded-xl border border-gray-200 px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           />
         </div>
 
@@ -61,7 +61,7 @@ function AdminUsersPage() {
             id="admin-user-status"
             value={status}
             onChange={(event) => setStatus(event.target.value as UserStatus | "")}
-            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100"
+            className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="">{messages.admin.common.all}</option>
             <option value="active">active</option>
@@ -124,7 +124,7 @@ function AdminUsersPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={routes.adminUserDetail(user.userId)}
-                        className="inline-flex rounded-lg px-2 py-1 text-body-medium-14 text-primary-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+                        className="inline-flex rounded-lg px-2 py-1 text-body-medium-14 text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       >
                         {messages.admin.users.detail}
                       </Link>

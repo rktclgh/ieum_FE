@@ -29,7 +29,7 @@ function QuestionPin({ className }: { className?: string }) {
     <div className={cn("relative size-14", className)}>
       <Image src={TEARDROP_SRC} alt="" width={44} height={54} className="absolute top-0 left-1.5 h-[54px] w-11" />
       <div className="absolute top-0.5 left-1/2 flex size-10 -translate-x-1/2 items-center justify-center rounded-full bg-gray-50">
-        <span className="text-[28px] leading-none font-bold text-primary-400">?</span>
+        <span className="text-[28px] leading-none font-bold text-primary">?</span>
       </div>
     </div>
   )

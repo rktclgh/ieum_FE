@@ -6,8 +6,13 @@ import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
 import type { Place } from "@/features/map/api/place-search-api"
-import { DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
-import type { Coordinates } from "@/features/map/hooks/use-geolocation"
+import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton"
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
+import type { Coordinates, GeolocationStatus } from "@/features/map/hooks/use-geolocation"
+import {
+  resolveInitialMapCenter,
+  resolvePlaceSelectionTarget,
+} from "@/features/map/lib/initial-map-center"
 import { usePlaceSearch } from "@/features/map/hooks/use-place-search"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { LocationListItem } from "@/features/meetup/components/location-list-item"
@@ -22,6 +27,8 @@ const MapCanvas = dynamic(
 interface MeetupLocationMapProps {
   /** 내 위치 (상위에서 관리) */
   position: Coordinates | null
+  /** 첫 GPS terminal 결과 — loading 중에는 지도 엔진을 마운트하지 않는다 */
+  initialStatus: GeolocationStatus
   onBack: () => void
   /** 검색바 탭 → 검색 화면 전환 */
   onOpenSearch: () => void
@@ -37,6 +44,7 @@ interface MeetupLocationMapProps {
  */
 function MeetupLocationMap({
   position,
+  initialStatus,
   onBack,
   onOpenSearch,
   onCreateName,
@@ -47,6 +55,9 @@ function MeetupLocationMap({
 
   // clicked: 지도에서 직접 고른 지점(Figma 핀 표시). 없으면 내 위치를 기준으로 역지오코딩한다.
   const [clicked, setClicked] = React.useState<Coordinates | null>(null)
+  // 첫 GPS terminal 결과가 error면 늦게 도착한 좌표가 fallback viewport와 다른 장소를
+  // 자동 선택하지 않게 한다. 사용자가 GPS 버튼을 누를 때만 현재 위치 입력을 다시 허용한다.
+  const [hasExplicitRecenter, setHasExplicitRecenter] = React.useState(false)
   // 지도 뷰 이동은 recenterKey(nonce)로만 구동한다. position은 실시간 갱신되어도 뷰를 움직이지 않는다.
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
@@ -55,24 +66,31 @@ function MeetupLocationMap({
     setRecenterKey((key) => key + 1)
   }, [])
 
-  // 최초 위치 확보 1회: 내 위치로 자동 중심 이동.
-  const hasCenteredRef = React.useRef(false)
-  React.useEffect(() => {
-    if (hasCenteredRef.current || !position) return
-    hasCenteredRef.current = true
-    recenterTo(position)
-  }, [position, recenterTo])
+  const isFallbackLocked = initialStatus === "error" && !hasExplicitRecenter
 
-  // 역지오코딩·주변 검색 기준점: 지도에서 고른 지점 우선, 없으면 내 위치.
-  const target = clicked ?? position
+  // GPS를 받기 전에는 지도 엔진을 만들지 않는다. 정상 경로는 이 GPS 좌표로 최초 마운트되어
+  // 서울 기본 좌표→현재 위치 flyToBounds가 발생하지 않는다.
+  const initialMapCenter = resolveInitialMapCenter({
+    position: isFallbackLocked ? null : position,
+    status: initialStatus,
+    fallbackCenter: DEFAULT_MAP_CENTER,
+  })
+
+  // fallback 뒤 늦게 GPS가 와도 보이지 않는 좌표를 입력 대상으로 쓰지 않는다.
+  const target = resolvePlaceSelectionTarget({ clicked, position, isFallbackLocked })
 
   // GPS 버튼: 내 위치를 drawer/헤더 제외한 보이는 영역 정중앙으로.
   const handleGps = () => {
-    if (position) recenterTo(position)
+    if (!position) return
+    setHasExplicitRecenter(true)
+    recenterTo(position)
   }
 
   const { data: reverseGeocoded } = useReverseGeocode(target)
   const currentAddress = reverseGeocoded?.fullAddress ?? reverseGeocoded?.shortLabel ?? null
+  const isLocationFallback = isFallbackLocked && !clicked
+  const locationSubtitle =
+    currentAddress ?? (isLocationFallback ? t.locationUnavailable : t.loadingAddress)
 
   // 전용 "주변 장소" 엔드포인트가 없어, 역지오코딩된 지역명으로 검색해 근사한다. (백엔드 확정 시 교체 — #47)
   const { data: nearbyPlaces } = usePlaceSearch(reverseGeocoded?.shortLabel ?? "", target)
@@ -98,18 +116,22 @@ function MeetupLocationMap({
 
   return (
     <div className="relative flex size-full flex-col overflow-hidden bg-white">
-      <MapCanvas
-        center={recenterTarget}
-        recenterKey={recenterKey}
-        centerZoom={DEFAULT_MAP_ZOOM}
-        animateCenter
-        topInset={topInset}
-        bottomInset={bottomInset}
-        className="absolute inset-0 z-0 size-full"
-        onMapClick={setClicked}
-        livePosition={position}
-        selectedPosition={clicked}
-      />
+      {initialMapCenter ? (
+        <MapCanvas
+          center={recenterTarget ?? initialMapCenter}
+          recenterKey={recenterKey}
+          centerZoom={DEFAULT_MAP_ZOOM}
+          animateCenter
+          topInset={topInset}
+          bottomInset={bottomInset}
+          className="absolute inset-0 z-0 size-full"
+          onMapClick={setClicked}
+          livePosition={position}
+          selectedPosition={clicked}
+        />
+      ) : (
+        <MapLoadingSkeleton />
+      )}
 
       {/* 전경 레이아웃 — 컨테이너 자체는 클릭 통과(pointer-events-none)로 지도 클릭을 살리고,
           상호작용이 필요한 헤더·GPS·시트에만 pointer-events-auto를 준다. */}
@@ -146,7 +168,8 @@ function MeetupLocationMap({
             type="button"
             aria-label={t.currentLocationLabel}
             onClick={handleGps}
-            className={`pointer-events-auto absolute ${FAB_BOTTOM_FLOOR} right-4 flex size-[46px] items-center justify-center rounded-full bg-white shadow-[0px_2px_2px_0px_rgba(0,0,0,0.1)]`}
+            disabled={!position}
+            className={`pointer-events-auto absolute ${FAB_BOTTOM_FLOOR} right-4 flex size-[46px] items-center justify-center rounded-full bg-white shadow-[0px_2px_2px_0px_rgba(0,0,0,0.1)] disabled:cursor-not-allowed disabled:opacity-40`}
           >
             <Image src="/icons/circle/location.svg" alt="" width={24} height={24} className="size-6" />
           </button>
@@ -162,9 +185,10 @@ function MeetupLocationMap({
             <LocationListItem
               iconSrc="/icons/write/location-plus.svg"
               title={t.createPlaceTitle}
-              subtitle={currentAddress ?? t.loadingAddress}
+              subtitle={locationSubtitle}
               actionLabel={t.createPlaceButton}
               actionVariant="filled"
+              disabled={!currentAddress || !target}
               onAction={() => currentAddress && target && onCreateName(currentAddress, target)}
             />
 

@@ -1,8 +1,10 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
-import { formatKstTime, getKstMinuteKey } from "@/lib/date/kst"
+import { formatKstTime } from "@/lib/date/kst"
 import type { ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
+import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
 import type {
   ChatMessageResponse,
+  ChatReplyPreview,
   ChatRoomDetailResponse,
   ChatRoomMemberResponse,
   ChatRoomSummaryResponse,
@@ -11,11 +13,14 @@ import type {
 } from "@/features/chat/api/chat-types"
 import { flagFromIso2, fromIso2 } from "@/features/join/lib/nationality-map"
 import type { CountryCode } from "@/lib/constants/countries"
+import { normalizeMessageType } from "@/features/chat/lib/chat-timeline"
 
 // 목록/방 UI가 공통으로 쓰는 뷰 모델.
 
 interface ChatListEntry {
   roomId: number
+  roomType: RoomType
+  meetingId: number | null
   title: string
   category: Exclude<ChatFilterCategory, "all">
   avatarSrc?: string
@@ -28,12 +33,14 @@ interface ChatListEntry {
 }
 
 interface ChatBubbleMessage {
+  messageType: "user"
   id: string
   messageId: number
   senderId: number
   sender: "me" | "others"
   variant: "long" | "short"
   name?: string
+  avatarSrc?: string
   texts: string[]
   imageUrl?: string
   time: string
@@ -42,7 +49,22 @@ interface ChatBubbleMessage {
   pending?: boolean
   // 이미지 업로드/전송 진행 중인 낙관적 이미지 말풍선. 흐리게 + 스피너로 표시한다.
   imageUploading?: boolean
+  replyTo?: ChatReplyPreview | null
+  // 실제 텍스트 본문 존재 여부. 이미지 전용 메시지("사진" 플레이스홀더)는 번역 대상에서 제외한다.
+  hasText: boolean
 }
+
+type ChatUserBubbleMessage = ChatBubbleMessage
+
+interface ChatSystemMessage {
+  messageType: "system"
+  id: string
+  messageId: number
+  content: string
+  createdAt: string
+}
+
+type ChatMessageView = ChatUserBubbleMessage | ChatSystemMessage
 
 interface ChatMemberEntry {
   userId: number
@@ -71,9 +93,29 @@ function resolveRoomTitle(members: ChatRoomMemberResponse[], myUserId: number, r
   return others.length > 2 ? `${names} 외 ${others.length - 2}명` : names
 }
 
-function resolveRoomAvatar(members: ChatRoomMemberResponse[], myUserId: number): string | undefined {
-  const other = members.find((member) => member.userId !== myUserId)
-  return resolveFileUrl(other?.profileImageUrl)
+function resolveRoomAvatar(
+  members: ChatRoomMemberResponse[],
+  myUserId: number,
+  roomType: RoomType,
+  meetingImageUrl?: string | null,
+  counterpart?: ChatRoomMemberResponse | null
+): string | undefined {
+  if (roomType === "group") return resolveFileUrl(meetingImageUrl)
+  return resolveChatRoomAvatar(
+    roomType,
+    members.map((member) => ({
+      userId: member.userId,
+      avatarSrc: resolveFileUrl(member.profileImageUrl),
+    })),
+    myUserId,
+    undefined,
+    counterpart
+      ? {
+          userId: counterpart.userId,
+          avatarSrc: resolveFileUrl(counterpart.profileImageUrl),
+        }
+      : undefined
+  )
 }
 
 // summary + detail(제목 파생용)을 목록 항목으로 합친다.
@@ -82,7 +124,8 @@ function adaptRoomSummary(
   summary: ChatRoomSummaryResponse,
   detail: ChatRoomDetailResponse | undefined,
   myUserId: number,
-  domainTitle?: string
+  domainTitle?: string,
+  meetingImageUrl?: string | null
 ): ChatListEntry {
   const members = detail?.members ?? []
   const last = summary.lastMessage
@@ -94,9 +137,17 @@ function adaptRoomSummary(
         : `채팅방 ${summary.roomId}`
   return {
     roomId: summary.roomId,
+    roomType: summary.roomType,
+    meetingId: summary.meetingId,
     title,
     category: roomCategory(summary.roomType),
-    avatarSrc: resolveRoomAvatar(members, myUserId),
+    avatarSrc: resolveRoomAvatar(
+      members,
+      myUserId,
+      summary.roomType,
+      meetingImageUrl,
+      detail?.counterpart
+    ),
     memberCount: summary.roomType === "direct" ? undefined : members.length || undefined,
     lastMessage: last ? messagePreview(last) : undefined,
     time: last ? formatKstTime(last.createdAt) : undefined,
@@ -112,57 +163,48 @@ function messagePreview(message: ChatMessageResponse | WsMessageEvent): string {
   return ""
 }
 
+function adaptReplyPreview(replyTo: ChatReplyPreview | null | undefined): ChatReplyPreview | null | undefined {
+  if (replyTo == null) return replyTo
+  return {
+    ...replyTo,
+    imageUrl: resolveFileUrl(replyTo.imageUrl) ?? null,
+  }
+}
+
 // 서버 메시지/실시간 이벤트를 말풍선 모델로 변환한다.
 function adaptMessage(
   message: ChatMessageResponse | WsMessageEvent,
   myUserId: number
-): ChatBubbleMessage {
+): ChatMessageView {
+  const messageType = normalizeMessageType(message.messageType)
+  if (messageType === "system") {
+    return {
+      messageType,
+      id: String(message.messageId),
+      messageId: message.messageId,
+      content: message.content ?? "",
+      createdAt: message.createdAt,
+    }
+  }
+
   const isMe = message.senderId === myUserId
   const content = message.content ?? ""
   return {
+    messageType,
     id: String(message.messageId),
     messageId: message.messageId,
     senderId: message.senderId,
     sender: isMe ? "me" : "others",
     variant: content.length > 30 ? "long" : "short",
     name: isMe ? undefined : message.senderNickname,
+    avatarSrc: resolveFileUrl(message.senderProfileImageUrl),
     texts: content ? [content] : message.imageUrl ? ["사진"] : [""],
     imageUrl: resolveFileUrl(message.imageUrl),
+    replyTo: adaptReplyPreview(message.replyTo),
     time: formatKstTime(message.createdAt),
     createdAt: message.createdAt,
+    hasText: Boolean(content.trim()),
   }
-}
-
-interface ChatMessageRun {
-  runKey: string
-  sender: "me" | "others"
-  name?: string
-  time: string
-  messages: ChatBubbleMessage[]
-}
-
-// 연속된 같은 발신자(senderId)·같은 분(minute) 메시지를 하나의 run으로 묶는다.
-// 입력은 이미 오래된→최신 정렬 + 같은 날짜 그룹 내 메시지를 가정한다.
-function buildMessageRuns(messages: ChatBubbleMessage[]): ChatMessageRun[] {
-  const runs: ChatMessageRun[] = []
-  let currentKey: string | null = null
-  for (const message of messages) {
-    const minuteKey = `${message.senderId}|${getKstMinuteKey(message.createdAt)}`
-    const lastRun = runs[runs.length - 1]
-    if (lastRun && currentKey === minuteKey) {
-      lastRun.messages.push(message)
-    } else {
-      runs.push({
-        runKey: message.id,
-        sender: message.sender,
-        name: message.name,
-        time: message.time,
-        messages: [message],
-      })
-    }
-    currentKey = minuteKey
-  }
-  return runs
 }
 
 function adaptMember(member: ChatRoomMemberResponse, myUserId: number): ChatMemberEntry {
@@ -184,6 +226,13 @@ export {
   adaptMessage,
   adaptMember,
   messagePreview,
-  buildMessageRuns,
+  adaptReplyPreview,
 }
-export type { ChatListEntry, ChatBubbleMessage, ChatMemberEntry, ChatMessageRun }
+export type {
+  ChatListEntry,
+  ChatBubbleMessage,
+  ChatMemberEntry,
+  ChatMessageView,
+  ChatSystemMessage,
+  ChatUserBubbleMessage,
+}

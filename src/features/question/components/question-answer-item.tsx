@@ -1,17 +1,33 @@
 "use client"
 
+import { Globe } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
+import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface QuestionAnswerItemProps {
   answer: QuestionAnswerView
   canAccept: boolean
+  isAuthenticated: boolean
   onAccept: () => void
 }
 
-function QuestionAnswerItem({ answer, canAccept, onAccept }: QuestionAnswerItemProps) {
+function QuestionAnswerItem({
+  answer,
+  canAccept,
+  isAuthenticated,
+  onAccept,
+}: QuestionAnswerItemProps) {
   const { messages } = useTranslation()
+  const content = answer.content ?? ""
+
+  const translate = useTranslateToggle({
+    text: content,
+    isAuthenticated,
+  })
+  const hasContent = content.trim().length > 0
 
   return (
     <div className="flex w-full flex-col gap-2 border-b border-gray-50 py-3">
@@ -25,12 +41,12 @@ function QuestionAnswerItem({ answer, canAccept, onAccept }: QuestionAnswerItemP
           </div>
           <span className="text-title-semibold-16 text-gray-900">{answer.authorName}</span>
           {answer.isAi ? (
-            <span className="rounded-full bg-primary-50 px-2 py-0.5 text-body-medium-14 text-primary-400">
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-body-medium-14 text-primary">
               {messages.question.aiBadge}
             </span>
           ) : null}
           {answer.isAccepted ? (
-            <span className="rounded-full bg-primary-400 px-2 py-0.5 text-body-medium-14 text-white">
+            <span className="rounded-full bg-primary px-2 py-0.5 text-body-medium-14 text-white">
               {messages.question.acceptedBadge}
             </span>
           ) : null}
@@ -42,8 +58,31 @@ function QuestionAnswerItem({ answer, canAccept, onAccept }: QuestionAnswerItemP
         ) : null}
       </div>
 
-      {answer.content ? (
-        <p className="text-body-regular-14 whitespace-pre-line text-gray-700">{answer.content}</p>
+      {hasContent ? (
+        <p className="text-body-regular-14 whitespace-pre-line text-gray-700">
+          {translate.displayText}
+        </p>
+      ) : null}
+
+      {translate.canTranslate ? (
+        <Button
+          variant="ghost"
+          size="xs"
+          className="w-fit px-1.5 text-gray-400"
+          disabled={translate.isLoading}
+          onClick={translate.toggle}
+        >
+          <Globe className="size-3.5" />
+          {translate.isLoading
+            ? messages.translate.translatingLabel
+            : translate.isShowingTranslation
+              ? messages.translate.viewOriginalLabel
+              : messages.translate.menuLabel}
+        </Button>
+      ) : null}
+
+      {translate.isError ? (
+        <span className="text-body-regular-12 text-red">{messages.translate.translateFailedLabel}</span>
       ) : null}
 
       {answer.imageUrls.length > 0 ? (

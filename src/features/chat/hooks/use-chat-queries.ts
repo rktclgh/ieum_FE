@@ -9,13 +9,20 @@ import type {
   RoomType,
   WsRoomEvent,
 } from "@/features/chat/api/chat-types"
-import { adaptMessage, adaptRoomSummary, type ChatListEntry } from "@/features/chat/lib/chat-adapter"
+import {
+  adaptMessage,
+  adaptRoomSummary,
+  type ChatListEntry,
+  type ChatMessageView,
+} from "@/features/chat/lib/chat-adapter"
 import {
   resolveChatSessionAccess,
   type ChatSessionAccess,
 } from "@/features/chat/lib/chat-session"
+import { removeRoomFromAllLoadedListCaches } from "@/features/chat/lib/chat-room-event"
 import { useChatRoomsSocket } from "@/features/chat/lib/chat-socket"
 import { getMeeting } from "@/features/meetup/api/meetup-api"
+import type { MeetingDetailResponse } from "@/features/meetup/api/meetup-types"
 import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
 import { getQuestion } from "@/features/question/api/question-api"
 import { questionKeys } from "@/features/question/hooks/use-question-queries"
@@ -56,22 +63,6 @@ function upsertRoomInCaches(
   }
 }
 
-// remove: 이미 로드된 요약 캐시에서만 해당 방을 제거한다(위와 동일한 이유로 getQueryData 가드).
-function removeRoomFromCaches(
-  queryClient: ReturnType<typeof useQueryClient>,
-  roomId: number
-) {
-  for (const query of queryClient.getQueryCache().findAll({ queryKey: roomsListKey })) {
-    const oldData = queryClient.getQueryData<ChatRoomSummaryResponse[]>(query.queryKey)
-    if (oldData === undefined) continue
-
-    queryClient.setQueryData<ChatRoomSummaryResponse[]>(
-      query.queryKey,
-      oldData.filter((r) => r.roomId !== roomId)
-    )
-  }
-}
-
 function useChatSessionAccess(requestedRoomId?: number) {
   const { data: me } = useMe()
   return resolveChatSessionAccess(me, requestedRoomId)
@@ -102,7 +93,7 @@ function useChatRoomsView(type?: RoomType) {
       if (event.type === "upsert") {
         upsertRoomInCaches(queryClient, event.room)
       } else {
-        removeRoomFromCaches(queryClient, event.roomId)
+        removeRoomFromAllLoadedListCaches(queryClient, roomsListKey, event.roomId)
       }
     },
     [queryClient]
@@ -150,11 +141,22 @@ function useChatRoomsView(type?: RoomType) {
   })
 
   const entries: ChatListEntry[] = rooms.map((room, index) => {
+    const domainData = domainQueries[index]?.data
     const domainTitle =
       room.roomType === "direct"
         ? undefined
-        : (domainQueries[index]?.data as { title?: string } | null | undefined)?.title
-    return adaptRoomSummary(room, detailQueries[index]?.data, myUserId, domainTitle)
+        : (domainData as { title?: string } | null | undefined)?.title
+    const meetingImageUrl =
+      room.roomType === "group"
+        ? (domainData as MeetingDetailResponse | undefined)?.imageUrl
+        : undefined
+    return adaptRoomSummary(
+      room,
+      detailQueries[index]?.data,
+      myUserId,
+      domainTitle,
+      meetingImageUrl
+    )
   })
 
   return {
@@ -193,7 +195,7 @@ function useChatMessages(roomId: number, session: ChatSessionAccess) {
   })
 
   const userId = session.userId ?? -1
-  const messages = useMemo(() => {
+  const messages: ChatMessageView[] = useMemo(() => {
     if (!enabled || !query.data) return []
     return query.data.pages
       .slice()

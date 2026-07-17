@@ -8,34 +8,60 @@ import { AppBar } from "@/components/ui/app-bar"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { NoticeListItem } from "@/features/chat/components/notice-list-item"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useMe } from "@/features/session/hooks/use-me"
+import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { MOCK_NOTICES } from "@/features/chat/constants/mock-data"
+import { Globe } from "lucide-react"
 
 type Notice = (typeof MOCK_NOTICES)[number]
 
 interface NoticeRowProps {
   notice: Notice
+  isAuthenticated: boolean
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
   onOpenMenu: () => void
   onCloseMenu: () => void
 }
 
-function NoticeRow({ notice, menuOpen, menuItems, onOpenMenu, onCloseMenu }: NoticeRowProps) {
+function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, onCloseMenu }: NoticeRowProps) {
+  const { messages } = useTranslation()
   const longPress = useLongPress({ onLongPress: onOpenMenu })
+  const translate = useTranslateToggle({ text: notice.title, isAuthenticated })
+
+  const translateMenuItem: ChatContextMenuItem = {
+    icon: <Globe className="size-6 text-gray-900" />,
+    label: translate.isLoading
+      ? messages.translate.translatingLabel
+      : translate.isShowingTranslation
+        ? messages.translate.viewOriginalLabel
+        : messages.translate.menuLabel,
+    onClick: () => {
+      translate.toggle()
+      onCloseMenu()
+    },
+  }
+
+  const fullMenuItems = translate.canTranslate ? [translateMenuItem, ...menuItems] : menuItems
 
   return (
     <div className="relative" {...longPress}>
       <NoticeListItem
-        title={notice.title}
+        title={translate.displayText}
         authorName={notice.authorName}
         authorAvatarSrc={notice.authorAvatarSrc}
         time={notice.time}
         pinned={notice.pinned}
       />
+      {translate.isError ? (
+        <p className="ml-[52px] -mt-1 pb-2 text-body-regular-12 text-red">
+          {messages.translate.translateFailedLabel}
+        </p>
+      ) : null}
       {menuOpen && (
         <ChatContextMenu
-          items={menuItems}
+          items={fullMenuItems}
           dimmed
           onDismiss={onCloseMenu}
           // 아바타(40px) + gap(12px)만큼 밀어 제목 좌측 라인에 맞춘다
@@ -49,6 +75,8 @@ function NoticeRow({ notice, menuOpen, menuItems, onOpenMenu, onCloseMenu }: Not
 function NoticePageContent() {
   const router = useRouter()
   const { messages } = useTranslation()
+  const me = useMe()
+  const isAuthenticated = Boolean(me.data?.userId)
 
   const [notices, setNotices] = React.useState<Notice[]>(MOCK_NOTICES)
   const [activeNoticeId, setActiveNoticeId] = React.useState<string | null>(null)
@@ -110,6 +138,7 @@ function NoticePageContent() {
             <NoticeRow
               key={notice.id}
               notice={notice}
+              isAuthenticated={isAuthenticated}
               menuOpen={activeNoticeId === notice.id}
               menuItems={menuItemsFor(notice)}
               onOpenMenu={() => setActiveNoticeId(notice.id)}

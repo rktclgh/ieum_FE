@@ -192,24 +192,6 @@ function assertActivationConfirmationLatch(source) {
   assert.doesNotMatch(source, /confirmDisabled=\{activateMutation\.isPending\}/)
 }
 
-function assertAdminStatsKeyBindings(keysSource, hookSource) {
-  const compactKeys = compactSource(keysSource)
-
-  assert.match(hookSource, /import \{ adminStatsKeys \} from/)
-  for (const key of ["users", "content", "reports"]) {
-    assert.match(
-      compactKeys,
-      new RegExp(
-        `${key}: \\["admin", "stats", "${key}"\\] as const`,
-      ),
-    )
-    assert.match(
-      hookSource,
-      new RegExp(`queryKey:\\s*adminStatsKeys\\.${key}`),
-    )
-  }
-}
-
 function assertAdminSanctionStatsInvalidation(source) {
   const invalidation = compactSource(
     boundedSource(
@@ -230,16 +212,13 @@ function assertAdminSanctionStatsInvalidation(source) {
   )
 
   assert.match(invalidation, /invalidateAdminUserQueries\(queryClient, userId\)/)
-  for (const key of ["users", "reports"]) {
-    assert.match(
-      invalidation,
-      new RegExp(
-        `invalidateQueries\\(\\{ queryKey: adminStatsKeys\\.${key}, exact: true,? \\}\\)`,
-      ),
-    )
-  }
-  assert.equal((invalidation.match(/adminStatsKeys\./g) ?? []).length, 2)
-  assert.doesNotMatch(invalidation, /adminStatsKeys\.content/)
+  assert.match(
+    invalidation,
+    /invalidateQueries\(\{ queryKey: adminStatsKeys\.overview,? \}\)/,
+  )
+  assert.equal((invalidation.match(/adminStatsKeys\./g) ?? []).length, 1)
+  assert.doesNotMatch(invalidation, /adminStatsKeys\.(?:users|content|reports)/)
+  assert.doesNotMatch(invalidation, /exact: true/)
   assert.match(
     sanctionHook,
     /onSuccess: \(\) => invalidateAdminSanctionQueries\(queryClient, userId\)/,
@@ -250,10 +229,11 @@ function assertAdminSanctionStatsInvalidation(source) {
   )
   assert.match(
     activationHook,
-    /invalidateQueries\(\{ queryKey: adminStatsKeys\.users, exact: true,? \}\)/,
+    /invalidateQueries\(\{ queryKey: adminStatsKeys\.overview,? \}\)/,
   )
   assert.doesNotMatch(activationHook, /invalidateAdminSanctionQueries/)
-  assert.doesNotMatch(activationHook, /adminStatsKeys\.(?:content|reports)/)
+  assert.doesNotMatch(activationHook, /adminStatsKeys\.(?:users|content|reports)/)
+  assert.doesNotMatch(activationHook, /exact: true/)
 }
 
 function interfaceFields(source, interfaceName) {
@@ -439,8 +419,10 @@ function assertAdminReportHooks(source) {
   )
   assert.match(
     decisionInvalidation,
-    /invalidateQueries\(\{ queryKey: adminStatsKeys\.reports, exact: true,? \}\)/,
+    /invalidateQueries\(\{ queryKey: adminStatsKeys\.overview,? \}\)/,
   )
+  assert.doesNotMatch(decisionInvalidation, /adminStatsKeys\.(?:users|content|reports)/)
+  assert.doesNotMatch(decisionInvalidation, /exact: true[^}]*adminStatsKeys|adminStatsKeys[^}]*exact: true/)
   assert.doesNotMatch(decisionInvalidation, /adminUserKeys/)
 
   assert.match(
@@ -800,8 +782,10 @@ function assertAdminInquiryHooks(source) {
   )
   assert.match(
     invalidation,
-    /queryClient\.invalidateQueries\(\{ queryKey: adminInquiryKeys\.all, refetchType: "none", \}\)/,
+    /Promise\.all\(\[ queryClient\.invalidateQueries\(\{ queryKey: adminInquiryKeys\.all, refetchType: "none", \}\), queryClient\.invalidateQueries\(\{ queryKey: adminStatsKeys\.overview, \}\), \]\)/,
   )
+  assert.doesNotMatch(invalidation, /exact: true/)
+  assert.equal((invalidation.match(/adminStatsKeys\./g) ?? []).length, 1)
   assert.match(listOptions, /queryKey: adminInquiryKeys\.list\(\{ status, size \}\)/)
   assert.match(
     listOptions,
@@ -839,6 +823,7 @@ function assertAdminInquiryHooks(source) {
     "retryAdminInquiryAnswerConvergence(",
   ])
   assert.doesNotMatch(answerHook, /mutation\.mutate\([^)]*,\s*\{/)
+  assert.match(source, /import \{ adminStatsKeys \} from "@\/features\/admin\/dashboard\/lib\/admin-stats-keys"/)
 }
 
 function assertAdminInquiryAnswerLifecycle(source) {
@@ -1278,55 +1263,211 @@ function assertAdminInquiryAnswerConvergence(source) {
   assert.match(page, /convergenceState=\{rowConvergenceState\}/)
 }
 
-const statsApiBindings = [
-  ["getAdminUserStats", "UserStatsResponse", "/api/v1/admin/stats/users"],
-  ["getAdminContentStats", "ContentStatsResponse", "/api/v1/admin/stats/content"],
-  ["getAdminReportStats", "ReportStatsResponse", "/api/v1/admin/stats/reports"],
-]
+function assertKnowledgeCandidateContracts({
+  apiSource,
+  hookSource,
+  pageSource,
+  routeSource,
+  shellSource,
+}) {
+  const compactApi = compactSource(apiSource)
+  const compactHook = compactSource(hookSource)
+  const compactPage = compactSource(pageSource)
+  const compactRoute = compactSource(routeSource)
+  const predicateSource = compactSource(
+    boundedSource(
+      apiSource,
+      "const KNOWLEDGE_RELATION_PREDICATES = [",
+      "] as const",
+    ),
+  )
 
-function assertStatsApiBindings(source) {
-  for (const [functionName, responseType, endpoint] of statsApiBindings) {
-    const functionSource = compactSource(asyncFunctionSource(source, functionName))
-
-    assert.equal((functionSource.match(/apiClient\.get/g) ?? []).length, 1)
-    assert.match(
-      functionSource,
-      new RegExp(
-        `apiClient\\.get<${responseType}>\\(["']${escapeRegExp(endpoint)}["']\\)`,
-      ),
-    )
+  for (const endpoint of [
+    '"/api/v1/admin/knowledge/relation-candidates"',
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}`",
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}/approve`",
+    "`/api/v1/admin/knowledge/relation-candidates/${candidateId}/reject`",
+  ]) {
+    assert.match(apiSource, new RegExp(escapeRegExp(endpoint)))
   }
+  assert.match(
+    compactApi,
+    /interface ApproveKnowledgeCandidateRequest \{ version: number subject: string predicate: KnowledgeRelationPredicate object: string \}/,
+  )
+  assert.match(
+    compactApi,
+    /interface RejectKnowledgeCandidateRequest \{ version: number reason\?: string \}/,
+  )
+  assert.match(compactApi, /type KnowledgeCandidateStatus = \| "pending" \| "approved" \| "rejected" \| "invalidated"/)
+  assert.match(apiSource, /type KnowledgeRelationPredicate =/)
+  assert.match(apiSource, /evidenceChunkId: number/)
+  assert.match(apiSource, /evidenceExcerpt: string/)
+  assert.match(apiSource, /reviewerUserId: number \| null/)
+  assert.match(apiSource, /reviewedAt: string \| null/)
+  assert.match(apiSource, /reviewNote: string \| null/)
+  assert.match(apiSource, /promotionRelationId: number \| null/)
+  assert.match(apiSource, /questionId: number/)
+  assert.match(apiSource, /answerId: number/)
+  assert.match(apiSource, /displayName: string/)
+  assert.match(apiSource, /validUntil: string \| null/)
+  assert.match(apiSource, /eligible: boolean/)
+  assert.match(apiSource, /questionTitle: string/)
+  assert.match(apiSource, /questionContent: string/)
+  assert.match(apiSource, /answerContent: string/)
+  assert.match(apiSource, /chunkContent: string/)
+  assert.match(apiSource, /sourceId: number/)
+  assert.match(
+    compactApi,
+    /interface AdminKnowledgeCandidateDecisionResponse \{ candidateId: number status: KnowledgeCandidateStatus version: number relation: AdminKnowledgeSameSourceRelation \| null \}/,
+  )
+  assert.doesNotMatch(apiSource, /sourceType: string/)
+  assert.doesNotMatch(apiSource, /canonicalUrl: string/)
+  assert.doesNotMatch(apiSource, /chunkId: number/)
+  assert.doesNotMatch(apiSource, /evidenceText: string/)
+  assert.equal(
+    predicateSource,
+    'const KNOWLEDGE_RELATION_PREDICATES = [ "requires", "applies_to", "located_in", "exception_of", "prevents", "supports", "has_deadline", "depends_on", "reported_to", "used_for", ',
+  )
+  assert.match(compactApi, /params: compactQuery\(\{ status: params\.status, cursor: params\.cursor, size: params\.size,? \}\)/)
+  assert.match(compactApi, /apiClient\.post<AdminKnowledgeCandidateDecisionResponse>\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/approve`, body,? \)/)
+  assert.match(compactApi, /apiClient\.post<AdminKnowledgeCandidateDecisionResponse>\( `\/api\/v1\/admin\/knowledge\/relation-candidates\/\$\{candidateId\}\/reject`, body,? \)/)
+
+  assert.match(
+    compactHook,
+    /list: \(\{ status, size \}: Omit<AdminKnowledgeCandidatesParams, "cursor">\) => \[ \.\.\.adminKnowledgeCandidateKeys\.lists\(\), \{ status, size \}, \] as const/,
+  )
+  assert.match(compactPage, /React\.useState<KnowledgeCandidateStatus>\("pending"\)/)
+  assert.match(compactPage, /useAdminKnowledgeCandidates\(\{ status, size: 20 \}\)/)
+  assert.match(compactRoute, /searchParams\.get\("candidateId"\)/)
+  assert.match(compactRoute, /parsePositiveInteger\(candidateIdValue\)/)
+  assert.match(compactRoute, /<AdminKnowledgeCandidateDetailPage key=\{candidateId\} candidateId=\{candidateId\} \/>/)
+  assert.match(pageSource, /routes\.adminKnowledgeCandidate\(candidate\.candidateId\)/)
+  assert.match(pageSource, /<select[^>]*id="admin-knowledge-predicate"/)
+  assert.match(pageSource, /KNOWLEDGE_RELATION_PREDICATES\.map/)
+  assert.match(pageSource, /const canAct = candidate\??\.status === "pending"/)
+  assert.match(pageSource, /\{canAct \? \(/)
+  assert.match(pageSource, /candidate\.evidenceExcerpt/)
+  assert.match(pageSource, /candidate\.sourceId/)
+  assert.match(pageSource, /candidate\.source\.displayName/)
+  assert.match(pageSource, /candidate\.source\.questionTitle/)
+  assert.match(pageSource, /candidate\.source\.questionContent/)
+  assert.match(pageSource, /candidate\.source\.answerContent/)
+  assert.match(pageSource, /candidate\.source\.chunkContent/)
+  assert.match(pageSource, /candidate\.evidenceChunkId/)
+  assert.doesNotMatch(pageSource, /candidate\.source\.sourceType/)
+  assert.doesNotMatch(pageSource, /candidate\.source\.canonicalUrl/)
+  assert.doesNotMatch(pageSource, /candidate\.chunkId/)
+  assert.doesNotMatch(pageSource, /candidate\.evidenceText/)
+  assert.doesNotMatch(pageSource, /dangerouslySetInnerHTML/)
+  assert.match(pageSource, /detailQuery\.isError/)
+  assert.match(pageSource, /onRetry=\{\(\) => void detailQuery\.refetch\(\)\}/)
+  assert.match(pageSource, /messages\.route\.invalidLink/)
+  assert.match(pageSource, /getApiErrorStatus\(error\) === 409/)
+  assert.match(pageSource, /code === "KNOWLEDGE_CANDIDATE_CONCURRENTLY_CHANGED"/)
+  assert.match(pageSource, /code === "KNOWLEDGE_CANDIDATE_SOURCE_INELIGIBLE"/)
+  assert.doesNotMatch(pageSource, /getApiErrorCode\(error\) === "KNOWLEDGE_CANDIDATE_CONFLICT"/)
+  assert.match(pageSource, /detailQuery\.refetch\(\{ cancelRefetch: true \}\)/)
+  assert.match(
+    hookSource,
+    /queryClient\.invalidateQueries\(\{ queryKey: adminKnowledgeCandidateKeys\.lists\(\) \}\)/,
+  )
+  assert.match(
+    compactHook,
+    /queryClient\.invalidateQueries\(\{ queryKey: adminKnowledgeCandidateKeys\.detail\(candidateId\), exact: true, refetchType: "none",? \}\)/,
+  )
+  assert.match(compactHook, /onSettled: \(\) => invalidateAdminKnowledgeCandidateQueries\(queryClient, candidateId\)/)
+  assert.doesNotMatch(hookSource, /onSuccess:/)
+  assert.match(shellSource, /routes\.adminKnowledge\(\)/)
+  assert.match(shellSource, /messages\.admin\.navigation\.knowledge/)
 }
 
-const dashboardMetricBindings = [
-  ["signup", "countFormatter.format(user.signupCount)"],
-  ["activeUsers", "countFormatter.format(user.activeUserCount)"],
-  ["suspendedUsers", "countFormatter.format(user.suspendedUserCount)"],
-  ["pins", "countFormatter.format(content.pinCount)"],
-  ["questions", "countFormatter.format(content.questionCount)"],
-  ["meetings", "countFormatter.format(content.meetingCount)"],
-  ["answers", "countFormatter.format(content.answerCount)"],
-  ["acceptedRate", "formatAcceptedRate(content.acceptedRate, language)"],
-  ["messages", "countFormatter.format(content.messageCount)"],
-  ["reports", "countFormatter.format(reports.reportCount)"],
-  ["aiReviewed", "countFormatter.format(reports.aiReviewedCount)"],
-  ["confirmed", "countFormatter.format(reports.confirmedCount)"],
-  ["dismissed", "countFormatter.format(reports.dismissedCount)"],
-  ["sanctions", "countFormatter.format(reports.sanctionCount)"],
-]
+function assertAdminStatsOverviewContract({
+  apiSource,
+  hookSource,
+  keysSource,
+  componentSource,
+}) {
+  const compactApi = compactSource(apiSource)
+  const compactHook = compactSource(hookSource)
+  const compactKeys = compactSource(keysSource)
+  const compactComponent = compactSource(componentSource)
 
-function assertDashboardMetricBindings(source) {
-  assert.equal((source.match(/\{\s*label:/g) ?? []).length, 14)
-
-  for (const [messageKey, valueExpression] of dashboardMetricBindings) {
-    assert.match(
-      source,
-      new RegExp(
-        `\\{\\s*label:\\s*messages\\.admin\\.dashboard\\.${messageKey},\\s*` +
-          `value:\\s*${escapeRegExp(valueExpression)}\\s*\\}`,
-      ),
-    )
+  assert.match(apiSource, /interface AdminStatsOverview/)
+  for (const field of [
+    "from: string",
+    "to: string",
+    'bucket: "day"',
+    "summary: {",
+    "series: Array<{",
+    "queues: {",
+    "pendingReportCount: number",
+    "retryReportCount: number",
+    "deadReportCount: number",
+    "pendingInquiryCount: number",
+  ]) {
+    assert.match(apiSource, new RegExp(escapeRegExp(field)))
   }
+
+  assert.equal((apiSource.match(/apiClient\.get/g) ?? []).length, 1)
+  assert.match(
+    compactApi,
+    /apiClient\.get<AdminStatsOverview>\( "\/api\/v1\/admin\/stats\/overview", \{ params: compactQuery\(\{ from: params\.from, to: params\.to, bucket: params\.bucket, \}\), signal, \}, \)/,
+  )
+  assert.doesNotMatch(
+    apiSource,
+    /\/api\/v1\/admin\/stats\/(?:users|content|reports)/,
+  )
+
+  assert.match(
+    compactKeys,
+    /overview: \["admin", "stats", "overview"\] as const/,
+  )
+  assert.match(
+    compactKeys,
+    /overviewRange: \(\{ from, to, bucket \}: AdminStatsOverviewParams\) => \[ \.\.\.adminStatsKeys\.overview, \{ from, to, bucket \}, \] as const/,
+  )
+  assert.match(hookSource, /function useAdminStatsOverview\(range: AdminStatsOverviewParams\)/)
+  assert.equal((hookSource.match(/useQuery\s*\(\s*\{/g) ?? []).length, 1)
+  assert.match(
+    compactHook,
+    /queryKey: adminStatsKeys\.overviewRange\(\{ from: range\.from, to: range\.to, bucket: range\.bucket,? \}\)/,
+  )
+  assert.match(hookSource, /queryFn: \(\{ signal \}\) => getAdminStatsOverview\(range, signal\)/)
+  assert.match(hookSource, /placeholderData: \(previousData\) => previousData/)
+  assert.doesNotMatch(
+    hookSource,
+    /getAdmin(?:User|Content|Report)Stats|adminStatsKeys\.(?:users|content|reports)|Promise\.all/,
+  )
+
+  for (const days of [7, 30, 90]) {
+    assert.match(componentSource, new RegExp(`value=\\{${days}\\}`))
+  }
+  assert.match(componentSource, /type="date"/)
+  assert.match(componentSource, /import \{ getKstDateKey \} from "@\/lib\/date\/kst"/)
+  assert.match(componentSource, /const dateKeyPattern = \/\^\\d\{4\}-\\d\{2\}-\\d\{2\}\$\//)
+  assert.match(componentSource, /const to = getKstDateKey\(\)/)
+  assert.match(componentSource, /const from = getKstDateKey\(kstDateKeyToTime\(to\) - \(days - 1\) \* dayMs\)/)
+  assert.match(componentSource, /getKstDateKey\(fromTime\) !== from \|\| getKstDateKey\(toTime\) !== to/)
+  assert.match(componentSource, /const inclusiveDays = \(toTime - fromTime\) \/ dayMs \+ 1/)
+  assert.match(componentSource, /inclusiveDays >= 1 && inclusiveDays <= 366/)
+  assert.match(componentSource, /if \(!validRange\) return/)
+  assert.match(componentSource, /<code className="font-semibold">INVALID_STATS_RANGE<\/code>/)
+  assert.doesNotMatch(componentSource, /getFullYear|getMonth|getDate/)
+  assert.match(componentSource, /onRetry=\{\(\) => void refetch\(\)\}/)
+  assert.match(componentSource, /retryDisabled=\{isFetching\}/)
+  assert.match(componentSource, /isRetrying=\{isFetching\}/)
+  assert.match(componentSource, /aria-busy=\{isFetching \|\| undefined\}/)
+  assert.match(componentSource, /series\.length === 0/)
+  assert.match(componentSource, /<svg[\s\S]*aria-label=\{ariaLabel\}/)
+  assert.match(componentSource, /<table className="sr-only">/)
+  assert.match(compactComponent, /rangeSummary\( title, from, to, points, latestPoint \)/)
+  assert.match(componentSource, /messages\.admin\.dashboard\.userTrend/)
+  assert.match(componentSource, /messages\.admin\.dashboard\.contentTrend/)
+  assert.match(componentSource, /messages\.admin\.dashboard\.reportTrend/)
+  assert.doesNotMatch(
+    componentSource,
+    /from\s+["'][^"']*(?:chart|recharts)|import\s+["'][^"']*(?:chart|recharts)/i,
+  )
 }
 
 function dynamicDirectories(directory) {
@@ -1451,12 +1592,20 @@ test("disabled credential fields also disable their auxiliary controls", () => {
   )
 })
 
-test("the admin shell has four fixed destinations, current-page semantics, and logout", () => {
+test("the admin shell has five fixed destinations, current-page semantics, and logout", () => {
   const source = readSource("src/features/admin/shared/components/admin-shell.tsx")
 
-  for (const route of ["adminHome", "adminUsers", "adminReports", "adminInquiries"]) {
+  for (const route of [
+    "adminHome",
+    "adminUsers",
+    "adminReports",
+    "adminInquiries",
+    "adminKnowledge",
+  ]) {
     assert.match(source, new RegExp(`routes\\.${route}\\(\\)`))
   }
+  assert.match(source, /messages\.admin\.navigation\.operations/)
+  assert.match(source, /messages\.admin\.navigation\.review/)
   assert.doesNotMatch(source, /routes\.adminLogin\(\)/)
   assert.match(source, /aria-current=\{isCurrent \? "page" : undefined\}/)
   assert.match(source, /<LogoutButton \/>/)
@@ -1496,168 +1645,15 @@ test("ConfirmDialog can disable confirmation without making the prop required", 
   assert.match(source, /disabled=\{confirmDisabled\}/)
 })
 
-test("each admin stats function owns its exact default-range GET endpoint", () => {
-  const source = readSource("src/features/admin/dashboard/api/admin-stats-api.ts")
-  const endpointLiterals = [...source.matchAll(/["'](\/api\/v1\/admin\/stats\/[^"']+)["']/g)]
-    .map((match) => match[1])
-    .sort()
-
-  assert.deepEqual(endpointLiterals, [
-    "/api/v1/admin/stats/content",
-    "/api/v1/admin/stats/reports",
-    "/api/v1/admin/stats/users",
-  ])
-  assert.equal((source.match(/apiClient\.get/g) ?? []).length, 3)
-  assert.doesNotMatch(source, /\bparams\s*:|URLSearchParams|compactQuery/)
-  assertStatsApiBindings(source)
-})
-
-test("admin stats API binding contract rejects a swapped-endpoint mutant", () => {
-  const source = readSource("src/features/admin/dashboard/api/admin-stats-api.ts")
-  const mutant = swapFirst(
-    source,
-    "/api/v1/admin/stats/users",
-    "/api/v1/admin/stats/content",
-  )
-
-  assert.throws(() => assertStatsApiBindings(mutant))
-})
-
-test("admin stats hook owns three parallel keys and one aggregate retry", () => {
-  const source = readSource("src/features/admin/dashboard/hooks/use-admin-stats.ts")
-  const keysSource = readSource(
-    "src/features/admin/dashboard/lib/admin-stats-keys.ts",
-  )
-
-  assert.equal((source.match(/useQuery\s*\(\s*\{/g) ?? []).length, 3)
-  assertAdminStatsKeyBindings(keysSource, source)
-  for (const queryFn of [
-    "getAdminUserStats",
-    "getAdminContentStats",
-    "getAdminReportStats",
-  ]) {
-    assert.match(source, new RegExp(`queryFn:\\s*${queryFn}`))
-  }
-  assert.match(
-    compactSource(source),
-    /isPending = userQuery\.isPending \|\| contentQuery\.isPending \|\| reportsQuery\.isPending/,
-  )
-  assert.match(
-    compactSource(source),
-    /isError = userQuery\.isError \|\| contentQuery\.isError \|\| reportsQuery\.isError/,
-  )
-  assert.match(
-    compactSource(source),
-    /isFetching = userQuery\.isFetching \|\| contentQuery\.isFetching \|\| reportsQuery\.isFetching/,
-  )
-  assert.match(
-    compactSource(source),
-    /hasData = userQuery\.data !== undefined && contentQuery\.data !== undefined && reportsQuery\.data !== undefined/,
-  )
-  assert.match(source, /\bisFetching,/)
-  assert.match(source, /\bhasData,/)
-  assert.match(source, /Promise\.all\s*\(\s*\[/)
-  for (const queryName of ["userQuery", "contentQuery", "reportsQuery"]) {
-    assert.match(source, new RegExp(`${queryName}\\.refetch\\(\\)`))
-  }
-  assert.doesNotMatch(source, /\b(?:from|to)\s*:/)
-})
-
-test("admin dashboard renders every KPI and the default backend range", () => {
-  const source = readSource(
-    "src/features/admin/dashboard/components/admin-dashboard-page.tsx",
-  )
-
-  assertDashboardMetricBindings(source)
-  assert.match(source, /messages\.admin\.dashboard\.range\(user\.from, user\.to\)/)
-  assert.match(
-    compactSource(source),
-    /new Intl\.NumberFormat\(locale, \{ style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1,? \}\)\.format\(value\)/,
-  )
-  assert.doesNotMatch(source, /value\s*\*\s*100|`\$\{[^}]+\}%`/)
-})
-
-test("admin dashboard metric contract rejects a swapped-field mutant", () => {
-  const source = readSource(
-    "src/features/admin/dashboard/components/admin-dashboard-page.tsx",
-  )
-  const mutant = swapFirst(
-    source,
-    "countFormatter.format(user.signupCount)",
-    "countFormatter.format(user.activeUserCount)",
-  )
-
-  assert.throws(() => assertDashboardMetricBindings(mutant))
-})
-
-test("Intl percent formatting owns locale-specific percent sign spacing", () => {
-  const formatter = new Intl.NumberFormat("fr-FR", {
-    style: "percent",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
+test("admin dashboard overview owns one query, accessible charts, and cached retry", () => {
+  assertAdminStatsOverviewContract({
+    apiSource: readSource("src/features/admin/dashboard/api/admin-stats-api.ts"),
+    hookSource: readSource("src/features/admin/dashboard/hooks/use-admin-stats.ts"),
+    keysSource: readSource("src/features/admin/dashboard/lib/admin-stats-keys.ts"),
+    componentSource: readSource(
+      "src/features/admin/dashboard/components/admin-dashboard-page.tsx",
+    ),
   })
-
-  assert.match(formatter.format(0.456), /^45,6\s%$/u)
-})
-
-test("admin dashboard keeps cached cards with one adjacent retry state on refetch errors", () => {
-  const componentSource = readSource(
-    "src/features/admin/dashboard/components/admin-dashboard-page.tsx",
-  )
-  const asyncStateSource = readSource(
-    "src/features/admin/shared/components/admin-async-state.tsx",
-  )
-  const pageSource = readSource("src/app/admin/(protected)/page.tsx")
-  const allDashboardSource = [
-    readSource("src/features/admin/dashboard/api/admin-stats-api.ts"),
-    readSource("src/features/admin/dashboard/hooks/use-admin-stats.ts"),
-    componentSource,
-    pageSource,
-  ].join("\n")
-
-  assert.doesNotMatch(componentSource, /if\s*\(\s*isError\s*\)/)
-  assert.match(
-    compactSource(componentSource),
-    /if \( !hasData \|\| user === undefined \|\| content === undefined \|\| reports === undefined \) \{/,
-  )
-  assert.match(componentSource, /if \(isPending && !isError\)/)
-  assert.match(componentSource, /<AdminAsyncState kind="loading" \/>/)
-  const dataPresentSource = componentSource.slice(
-    componentSource.indexOf("const countFormatter"),
-  )
-  const cachedErrorStart = dataPresentSource.indexOf("{isError &&")
-  const cardsStart = dataPresentSource.indexOf("<dl")
-
-  assert.notEqual(cachedErrorStart, -1, "cached-data render must consume isError")
-  assert.ok(cardsStart > cachedErrorStart, "retry state must render adjacent before KPI cards")
-  assert.equal((componentSource.match(/kind="error"/g) ?? []).length, 2)
-  assert.equal((dataPresentSource.match(/kind="error"/g) ?? []).length, 1)
-
-  const cachedErrorSource = dataPresentSource.slice(cachedErrorStart, cardsStart)
-
-  assert.equal((cachedErrorSource.match(/<AdminAsyncState/g) ?? []).length, 1)
-  assert.match(cachedErrorSource, /kind="error"/)
-  assert.match(cachedErrorSource, /onRetry=\{\(\) => void refetch\(\)\}/)
-  assert.match(cachedErrorSource, /retryDisabled=\{isFetching\}/)
-  assert.match(cachedErrorSource, /isRetrying=\{isFetching\}/)
-  assert.match(componentSource, /retryDisabled=\{isFetching\}/)
-  assert.match(componentSource, /isRetrying=\{isFetching\}/)
-  assert.match(componentSource, /aria-busy=\{isFetching \|\| undefined\}/)
-  assert.match(asyncStateSource, /retryDisabled\?: boolean/)
-  assert.match(asyncStateSource, /isRetrying\?: boolean/)
-  assert.match(
-    compactSource(asyncStateSource),
-    /disabled=\{props\.retryDisabled \|\| props\.isRetrying\}/,
-  )
-  assert.match(
-    compactSource(asyncStateSource),
-    /aria-busy=\{props\.isRetrying \|\| undefined\}/,
-  )
-  assert.match(pageSource, /<AdminDashboardPage \/>/)
-  assert.doesNotMatch(
-    allDashboardSource,
-    /(?:from\s+["'][^"']*(?:chart|recharts)|import\s+["'][^"']*(?:chart|recharts))/i,
-  )
 })
 
 test("each admin user API function owns its exact method, endpoint, and backend DTO", () => {
@@ -1733,31 +1729,31 @@ test("admin user hooks preserve cursor semantics and invalidate lists plus exact
   }
 })
 
-test("sanction success invalidates exact user and report KPI caches only", () => {
+test("sanction success invalidates user records and every overview KPI range", () => {
   const source = readSource("src/features/admin/users/hooks/use-admin-users.ts")
 
   assertAdminSanctionStatsInvalidation(source)
 
   const wrongKeyMutant = source.replace(
-    "adminStatsKeys.reports",
-    "adminStatsKeys.content",
+    "adminStatsKeys.overview",
+    "adminStatsKeys.all",
   )
-  const broadKeyMutant = source.replace(
-    "queryKey: adminStatsKeys.users,\n      exact: true,",
-    "queryKey: adminStatsKeys.users,",
+  const exactOverviewMutant = source.replace(
+    "queryKey: adminStatsKeys.overview,\n    })",
+    "queryKey: adminStatsKeys.overview,\n      exact: true,\n    })",
   )
   const staleStatsMutant = source.replace(
     "onSuccess: () => invalidateAdminSanctionQueries(queryClient, userId)",
     "onSuccess: () => invalidateAdminUserQueries(queryClient, userId)",
   )
   const staleActivationStatsMutant = source.replace(
-    "queryKey: adminStatsKeys.users,\n          exact: true,",
-    "queryKey: adminStatsKeys.content,\n          exact: true,",
+    "queryClient.invalidateQueries({\n          queryKey: adminStatsKeys.overview,\n        }),",
+    "",
   )
 
   for (const mutant of [
     wrongKeyMutant,
-    broadKeyMutant,
+    exactOverviewMutant,
     staleStatsMutant,
     staleActivationStatsMutant,
   ]) {
@@ -1993,8 +1989,12 @@ test("admin report hooks preserve cursor filters and converge every decision cac
   assertAdminReportHooks(source)
 
   const wrongStatsMutant = source.replace(
-    "adminStatsKeys.reports",
-    "adminStatsKeys.users",
+    "adminStatsKeys.overview",
+    "adminStatsKeys.all",
+  )
+  const exactStatsMutant = source.replace(
+    "queryKey: adminStatsKeys.overview,\n    })",
+    "queryKey: adminStatsKeys.overview,\n      exact: true,\n    })",
   )
   const successOnlyMutant = source.replace(
     "onSettled: () => invalidateAdminReportDecisionQueries(queryClient, reportId)",
@@ -2005,7 +2005,7 @@ test("admin report hooks preserve cursor filters and converge every decision cac
     "onSettled: () => invalidateAdminReportDecisionQueries(queryClient, reportId)",
   )
 
-  for (const mutant of [wrongStatsMutant, successOnlyMutant, staleUserMutant]) {
+  for (const mutant of [wrongStatsMutant, exactStatsMutant, successOnlyMutant, staleUserMutant]) {
     assert.notEqual(mutant, source)
     assert.throws(() => assertAdminReportHooks(mutant))
   }
@@ -2365,6 +2365,24 @@ test("admin report decisions use one detail refetch owner and one synchronous la
   }
   assert.notEqual(automaticDetailRefetchMutant, hookSource)
   assert.throws(() => assertAdminReportHooks(automaticDetailRefetchMutant))
+})
+
+test("knowledge candidate admin UI owns API paths, pending defaults, select review, terminal hiding, and 409 convergence", () => {
+  assertKnowledgeCandidateContracts({
+    apiSource: readSource(
+      "src/features/admin/knowledge/api/admin-knowledge-candidates-api.ts",
+    ),
+    hookSource: readSource(
+      "src/features/admin/knowledge/hooks/use-admin-knowledge-candidates.ts",
+    ),
+    pageSource: readSource(
+      "src/features/admin/knowledge/components/admin-knowledge-candidates-page.tsx",
+    ),
+    routeSource: readSource("src/app/admin/(protected)/knowledge/page.tsx"),
+    shellSource: readSource(
+      "src/features/admin/shared/components/admin-shell.tsx",
+    ),
+  })
 })
 
 test("each admin inquiry API owns the exact nullable DTO, filters, body, and endpoints", () => {

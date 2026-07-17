@@ -4,13 +4,13 @@ import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { Explanation } from "@/components/ui/text-field/explanation"
+import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { uploadMeetingImage } from "@/features/meetup/api/meetup-file-api"
 import {
   DEFAULT_MAX_MEMBERS,
   TITLE_MAX_LENGTH,
   formatDateValue,
   formatTimeValue,
-  toKstIso,
   type MeetupPlaceValue,
 } from "@/features/meetup/constants/create-meetup"
 import { MeetupDatePicker } from "@/features/meetup/components/meetup-date-picker"
@@ -20,6 +20,7 @@ import { MeetupSelectField } from "@/features/meetup/components/meetup-select-fi
 import { MeetupTimePicker } from "@/features/meetup/components/meetup-time-picker"
 import { useCreateMeetupForm } from "@/features/meetup/hooks/use-create-meetup-form"
 import { useCreateMeeting } from "@/features/meetup/hooks/use-meetup-mutations"
+import { buildMeetupSchedule } from "@/features/meetup/lib/create-meetup-schedule"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -29,6 +30,8 @@ interface CreateMeetupScreenProps {
   onClose: () => void
   /** 지도 홈 핀에서 넘어온 초기 장소 — 있으면 장소 칸을 프리필한다 */
   initialPlace?: MeetupPlaceValue | null
+  /** 지도 홈이 이미 확보한 최신 GPS 좌표 — 장소 picker의 첫 지도 중심에 사용한다 */
+  currentPosition?: Coordinates | null
 }
 
 /**
@@ -36,7 +39,11 @@ interface CreateMeetupScreenProps {
  * 제목·날짜·시간·장소·내용을 채우면 제출 버튼이 활성화되고, 제출 시 POST /meetings 로 생성한다.
  * 장소는 Figma 지도 기반 MeetupLocationPicker에서 좌표(lat/lng)·주소·라벨까지 확보한다.
  */
-function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreenProps) {
+function CreateMeetupScreen({
+  onClose,
+  initialPlace = null,
+  currentPosition = null,
+}: CreateMeetupScreenProps) {
   const { messages } = useTranslation()
   const t = messages.createMeetup
   const form = useCreateMeetupForm(initialPlace)
@@ -76,8 +83,14 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
 
   const handleSubmit = async () => {
     if (!form.canSubmit || submitting) return
-    if (!form.date || !form.time || !form.place) return
+    if (!form.place) return
     setError(null)
+
+    const schedule = buildMeetupSchedule({
+      date: form.date,
+      time: form.time,
+      isDateUndecided: form.isDateUndecided,
+    })
 
     // 이미지 업로드 실패와 모임 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
     let imageFileId: string | undefined
@@ -101,7 +114,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
           address: form.place.address,
           label: form.place.label,
         },
-        schedule: { startsAt: toKstIso(form.date, form.time) },
+        ...(schedule ? { schedule } : {}),
         maxMembers: DEFAULT_MAX_MEMBERS,
         imageFileId,
       })
@@ -124,7 +137,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3">
         {/* 제목 — 15자(공백 포함)까지만 입력 가능, 포커스 시 카운터 표시 */}
         <div className="shrink-0">
-          <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-400">
+          <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary">
             <input
               value={form.title}
               // maxLength만으로는 한글(IME) 조합 중 16번째 글자가 새어 들어가므로 상태에서 직접 자름
@@ -133,7 +146,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
               onBlur={() => setTitleFocused(false)}
               maxLength={TITLE_MAX_LENGTH}
               placeholder={t.titlePlaceholder}
-              className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
+              className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
             />
             {titleFocused ? (
               <span className="shrink-0 text-body-regular-14 text-gray-400">
@@ -149,7 +162,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
             iconSrc="/icons/write/calendar-200.svg"
             selectedIconSrc="/icons/write/calendar-700.svg"
             placeholder={t.datePlaceholder}
-            value={dateValue}
+            value={form.isDateUndecided ? t.dateUndecidedLabel : dateValue}
             active={datePickerOpen}
             onClick={() => setDatePickerOpen(true)}
           />
@@ -159,6 +172,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
             placeholder={t.timePlaceholder}
             value={timeValue}
             active={timePickerOpen}
+            disabled={form.isDateUndecided}
             onClick={() => setTimePickerOpen(true)}
           />
         </div>
@@ -175,12 +189,12 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
         />
 
         {/* 내용 + 사진 첨부 */}
-        <div className="relative min-h-40 flex-1 rounded-lg border border-gray-100 transition-colors focus-within:border-primary-400">
+        <div className="relative min-h-40 flex-1 rounded-lg border border-gray-100 transition-colors focus-within:border-primary">
           <textarea
             value={form.description}
             onChange={(event) => form.setDescription(event.target.value)}
             placeholder={t.descriptionPlaceholder}
-            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary-400 outline-none placeholder:text-gray-400"
+            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary outline-none placeholder:text-gray-400"
           />
           <MeetupImagePicker
             image={form.image?.preview ?? null}
@@ -201,7 +215,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
           onClick={handleSubmit}
           className={cn(
             "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            form.canSubmit && !submitting ? "bg-primary-400" : "bg-gray-200"
+            form.canSubmit && !submitting ? "bg-primary" : "bg-gray-200"
           )}
         >
           {submitting ? t.submittingButton : t.submitButton}
@@ -229,7 +243,8 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
         open={datePickerOpen}
         onOpenChange={setDatePickerOpen}
         value={form.date}
-        onConfirm={form.setDate}
+        isDateUndecided={form.isDateUndecided}
+        onConfirm={form.setDateSelection}
       />
       <MeetupTimePicker
         open={timePickerOpen}
@@ -240,6 +255,7 @@ function CreateMeetupScreen({ onClose, initialPlace = null }: CreateMeetupScreen
       {locationPickerOpen ? (
         <MeetupLocationPicker
           value={form.place?.label ?? null}
+          currentPosition={currentPosition}
           onConfirm={form.setPlace}
           onClose={() => setLocationPickerOpen(false)}
         />

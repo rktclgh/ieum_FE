@@ -9,8 +9,10 @@ import {
   setNotify,
   setPinned,
 } from "@/features/chat/api/chat-api"
+import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
 import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
-import { deleteMeeting } from "@/features/meetup/api/meetup-api"
+import { executeLeaveChatRoom } from "@/features/chat/lib/chat-leave"
+import { deleteMeeting, leaveMeeting } from "@/features/meetup/api/meetup-api"
 import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
 
 // 방 목록 요약 쿼리는 type별(chatKeys.rooms(type))로 나뉘어 있어 접두사 키로 한 번에 무효화한다.
@@ -53,22 +55,29 @@ function useSetNotify() {
   return useMutation({
     mutationFn: ({ roomId, enabled }: { roomId: number; enabled: boolean }) => setNotify(roomId, enabled),
     // 알림 설정은 목록(뮤트 표시)과 해당 방 상세에 반영 → 메시지는 불필요
-    onSuccess: (_data, { roomId }) => {
-      queryClient.invalidateQueries({ queryKey: roomsListKey })
-      queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
-    },
+    onSuccess: (_data, { roomId }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: roomsListKey }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) }),
+      ]),
   })
 }
 
-function useLeaveRoom() {
+function useLeaveChatRoom() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (roomId: number) => leaveRoom(roomId),
-    // 방이 목록에서 사라짐 → 목록 갱신 + 해당 방의 상세·메시지 캐시 제거
-    onSuccess: (_data, roomId) => {
+    mutationFn: (target: LeaveChatRoomTarget) =>
+      executeLeaveChatRoom(target, { leaveRoom, leaveMeeting }),
+    // 방이 목록에서 사라짐 → 목록 갱신 + 해당 방의 상세·메시지 캐시 제거.
+    // group 이탈 뒤에는 해당 모임 조회 권한이 없으므로 refetch하지 않고 캐시를 제거한다.
+    onSuccess: (_data, target) => {
       queryClient.invalidateQueries({ queryKey: roomsListKey })
-      queryClient.removeQueries({ queryKey: chatKeys.room(roomId) })
-      queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
+      queryClient.removeQueries({ queryKey: chatKeys.room(target.roomId) })
+      queryClient.removeQueries({ queryKey: chatKeys.messages(target.roomId) })
+      if (target.roomType === "group" && target.meetingId != null) {
+        queryClient.removeQueries({ queryKey: meetupKeys.detail(target.meetingId) })
+        queryClient.removeQueries({ queryKey: meetupKeys.participants(target.meetingId) })
+      }
     },
   })
 }
@@ -93,6 +102,6 @@ export {
   useMarkRead,
   useSetPinned,
   useSetNotify,
-  useLeaveRoom,
+  useLeaveChatRoom,
   useDisbandMeeting,
 }

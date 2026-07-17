@@ -55,6 +55,8 @@ route_inventory=$(node scripts/ci/static-export-routes.mjs src/app) || \
 
 assert_file out/404.html
 assert_file out/manifest.webmanifest
+assert_file out/sw.js
+node --check out/sw.js || fail "service worker is not valid JavaScript"
 assert_file out/favicon.ico
 assert_file out/icons/pwa/icon-192.png
 assert_file out/icons/pwa/icon-512.png

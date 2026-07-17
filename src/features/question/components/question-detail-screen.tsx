@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Flag } from "lucide-react"
+import { Flag, Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -20,7 +20,9 @@ import {
 import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
+import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import { useMe } from "@/features/session/hooks/use-me"
+import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
@@ -48,7 +50,15 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
     id: number
     rect: DOMRect
     view: QuestionAnswerView
+    canReport: boolean
+    translateAction: { label: string; disabled: boolean; onClick: () => void } | null
   } | null>(null)
+  const [activeQuestionText, setActiveQuestionText] = React.useState<{
+    kind: "title" | "content"
+    rect: DOMRect
+  } | null>(null)
+  const questionTitleRef = React.useRef<HTMLHeadingElement>(null)
+  const questionContentRef = React.useRef<HTMLParagraphElement>(null)
 
   React.useEffect(() => {
     if (!actionError) return
@@ -61,6 +71,42 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
 
   const question = detailQuery.data
   const isAuthor = question != null && me.data?.userId === question.authorUserId
+  const isAuthenticated = me.data != null && me.data.userId != null
+  // 질문에 이미 채택된 답변이 있는지(question.isResolved 대신 답변 목록의 isAccepted를
+  // 직접 근거로 삼는다). 이미 채택된 답변이 있으면 그 답변 외에는 채택 버튼을 숨긴다.
+  const hasAcceptedAnswer = question != null && question.answers.some((a) => a.isAccepted)
+  const pendingAcceptAnswer =
+    question?.answers.find((a) => a.answerId === pendingAcceptId) ?? null
+  const [lastAcceptedAuthorName, setLastAcceptedAuthorName] = React.useState("")
+
+  const openAcceptConfirm = (answer: QuestionAnswerView) => {
+    setLastAcceptedAuthorName(answer.authorName)
+    setPendingAcceptId(answer.answerId)
+  }
+  const questionTitleTranslate = useTranslateToggle({
+    text: question?.title ?? "",
+    isAuthenticated,
+  })
+  const questionContentTranslate = useTranslateToggle({
+    text: question?.content ?? "",
+    isAuthenticated,
+  })
+  const questionTitleLongPress = useLongPress({
+    onLongPress: () => {
+      const rect = questionTitleRef.current?.getBoundingClientRect()
+      if (rect && questionTitleTranslate.canTranslate) {
+        setActiveQuestionText({ kind: "title", rect })
+      }
+    },
+  })
+  const questionContentLongPress = useLongPress({
+    onLongPress: () => {
+      const rect = questionContentRef.current?.getBoundingClientRect()
+      if (rect && questionContentTranslate.canTranslate) {
+        setActiveQuestionText({ kind: "content", rect })
+      }
+    },
+  })
 
   const handleSend = () => {
     const value = reply.trim()
@@ -75,7 +121,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
   }
 
   const handleConfirmAccept = () => {
-    if (pendingAcceptId == null) return
+    if (pendingAcceptId == null || !isAuthor || !isAuthenticated) return
     acceptAnswer.mutate(pendingAcceptId, { onError: showError })
     setPendingAcceptId(null)
   }
@@ -135,17 +181,32 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   <span className="text-body-regular-14 text-gray-500">{question.address}</span>
                 </div>
                 {question.isResolved ? (
-                  <span className="ml-auto rounded-full bg-primary-400 px-2.5 py-1 text-body-medium-14 text-white">
+                  <span className="ml-auto rounded-full bg-primary px-2.5 py-1 text-body-medium-14 text-white">
                     {messages.question.resolvedBadge}
                   </span>
                 ) : null}
               </div>
 
               <div className="flex w-full flex-col gap-1">
-                <h1 className="text-title-semibold-18 text-gray-900">{question.title}</h1>
-                <p className="text-body-regular-14 whitespace-pre-line text-gray-700">
-                  {question.content}
+                <h1
+                  ref={questionTitleRef}
+                  {...(questionTitleTranslate.canTranslate ? questionTitleLongPress : {})}
+                  className="text-title-semibold-18 text-gray-900"
+                >
+                  {questionTitleTranslate.displayText}
+                </h1>
+                <p
+                  ref={questionContentRef}
+                  {...(questionContentTranslate.canTranslate ? questionContentLongPress : {})}
+                  className="text-body-regular-14 whitespace-pre-line text-gray-700"
+                >
+                  {questionContentTranslate.displayText}
                 </p>
+                {questionTitleTranslate.isError || questionContentTranslate.isError ? (
+                  <span className="text-body-regular-12 text-red">
+                    {messages.translate.translateFailedLabel}
+                  </span>
+                ) : null}
               </div>
 
               {question.imageUrls.length > 0 ? (
@@ -167,7 +228,11 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
               {isAuthor ? (
                 <div className="flex w-full flex-col gap-3">
                   {question.answers.filter((a) => a.isAi).map((a) => (
-                    <QuestionAiAnswerCard key={a.answerId} answer={a} />
+                    <QuestionAiAnswerCard
+                      key={a.answerId}
+                      answer={a}
+                      isAuthenticated={isAuthenticated}
+                    />
                   ))}
                   {question.answers
                     .filter((a) => !a.isAi && !removedIds.has(a.answerId))
@@ -177,10 +242,21 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                         answer={a}
                         isMine={a.authorUserId === me.data?.userId}
                         isReported={false}
-                        canAccept={!question.isResolved}
-                        onAccept={() => setPendingAcceptId(a.answerId)}
-                        onStartChat={() => handleStartChat(a.authorUserId)}
-                        onLongPress={(rect) => setActiveAnswer({ id: a.answerId, rect, view: a })}
+                        isAuthenticated={isAuthenticated}
+                        canAccept={isAuthor && isAuthenticated && !question.isResolved && !hasAcceptedAnswer}
+                        onAccept={() => openAcceptConfirm(a)}
+                        onStartChat={() => {
+                          if (a.authorUserId != null) handleStartChat(a.authorUserId)
+                        }}
+                        onLongPress={(rect, translateAction) =>
+                          setActiveAnswer({
+                            id: a.answerId,
+                            rect,
+                            view: a,
+                            canReport: a.authorUserId !== me.data?.userId,
+                            translateAction,
+                          })
+                        }
                       />
                     ))}
                   {question.answers.length === 0 ? (
@@ -195,12 +271,21 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                 </p>
               ) : (
                 question.answers.map((answer) => (
-                  <QuestionAnswerItem
-                    key={answer.answerId}
-                    answer={answer}
-                    canAccept={!question.isResolved && !answer.isAccepted}
-                    onAccept={() => setPendingAcceptId(answer.answerId)}
-                  />
+                  answer.isAi ? (
+                    <QuestionAiAnswerCard
+                      key={answer.answerId}
+                      answer={answer}
+                      isAuthenticated={isAuthenticated}
+                    />
+                  ) : (
+                    <QuestionAnswerItem
+                      key={answer.answerId}
+                      answer={answer}
+                      canAccept={false}
+                      isAuthenticated={isAuthenticated}
+                      onAccept={() => openAcceptConfirm(answer)}
+                    />
+                  )
                 ))
               )}
             </div>
@@ -249,18 +334,33 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
           anchorRect={activeAnswer.rect}
           onDismiss={() => setActiveAnswer(null)}
           actions={[
-            {
-              icon: <Flag className="size-5 text-red" />,
-              label: messages.question.reportAction,
-              tone: "destructive",
-              onClick: () => setPendingReportId(activeAnswer.id),
-            },
+            ...(activeAnswer.translateAction
+              ? [
+                  {
+                    icon: <Globe className="size-5 text-gray-900" />,
+                    label: activeAnswer.translateAction.label,
+                    disabled: activeAnswer.translateAction.disabled,
+                    onClick: activeAnswer.translateAction.onClick,
+                  },
+                ]
+              : []),
+            ...(activeAnswer.canReport
+              ? [
+                  {
+                    icon: <Flag className="size-5 text-red" />,
+                    label: messages.question.reportAction,
+                    tone: "destructive" as const,
+                    onClick: () => setPendingReportId(activeAnswer.id),
+                  },
+                ]
+              : []),
           ]}
         >
           <QuestionAnswerAuthorItem
             answer={activeAnswer.view}
             isMine={false}
             isReported={false}
+            isAuthenticated={isAuthenticated}
             canAccept={false}
             onStartChat={() => {}}
             onAccept={() => {}}
@@ -269,11 +369,63 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
         </LongPressActionOverlay>
       )}
 
+      {activeQuestionText?.kind === "title" && (
+        <LongPressActionOverlay
+          anchorRect={activeQuestionText.rect}
+          onDismiss={() => setActiveQuestionText(null)}
+          actions={[
+            {
+              icon: <Globe className="size-5 text-gray-900" />,
+              label: questionTitleTranslate.isLoading
+                ? messages.translate.translatingLabel
+                : questionTitleTranslate.isShowingTranslation
+                  ? messages.translate.viewOriginalLabel
+                  : messages.translate.menuLabel,
+              disabled: questionTitleTranslate.isLoading,
+              onClick: questionTitleTranslate.toggle,
+            },
+          ]}
+        >
+          <div className="px-4 py-2">
+            <h1 className="text-title-semibold-18 text-gray-900">
+              {questionTitleTranslate.displayText}
+            </h1>
+          </div>
+        </LongPressActionOverlay>
+      )}
+
+      {activeQuestionText?.kind === "content" && (
+        <LongPressActionOverlay
+          anchorRect={activeQuestionText.rect}
+          onDismiss={() => setActiveQuestionText(null)}
+          actions={[
+            {
+              icon: <Globe className="size-5 text-gray-900" />,
+              label: questionContentTranslate.isLoading
+                ? messages.translate.translatingLabel
+                : questionContentTranslate.isShowingTranslation
+                  ? messages.translate.viewOriginalLabel
+                  : messages.translate.menuLabel,
+              disabled: questionContentTranslate.isLoading,
+              onClick: questionContentTranslate.toggle,
+            },
+          ]}
+        >
+          <div className="px-4 py-2">
+            <p className="text-body-regular-14 whitespace-pre-line text-gray-700">
+              {questionContentTranslate.displayText}
+            </p>
+          </div>
+        </LongPressActionOverlay>
+      )}
+
       <ConfirmDialog
         open={pendingAcceptId != null}
         onOpenChange={(open) => !open && setPendingAcceptId(null)}
         title={messages.question.acceptConfirmTitle}
-        description={messages.question.acceptConfirmDescription}
+        description={messages.question.acceptConfirmDescription(
+          pendingAcceptAnswer?.authorName ?? lastAcceptedAuthorName
+        )}
         cancelLabel={messages.question.acceptConfirmCancel}
         confirmLabel={messages.question.acceptButton}
         onConfirm={handleConfirmAccept}

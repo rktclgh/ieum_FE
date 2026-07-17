@@ -5,24 +5,22 @@ import * as React from "react"
 
 import { RoutePageState } from "@/components/ui/route-page-state"
 import { ReportPageContent } from "@/features/report/components/report-page-content"
-import { parsePositiveInteger } from "@/lib/navigation/routes"
+import { parseReportTarget } from "@/features/report/lib/report-target"
 
 function ChatReportRoute() {
   const searchParams = useSearchParams()
-  const roomId = parsePositiveInteger(searchParams.get("chatId"))
-  const messageId = parsePositiveInteger(searchParams.get("messageId"))
+  const target = parseReportTarget(searchParams)
 
-  if (roomId === null || messageId === null) {
+  if (target === null) {
     return <RoutePageState kind="invalid-link" />
   }
 
-  return (
-    <ReportPageContent
-      key={`${roomId}:${messageId}`}
-      messageId={messageId}
-      targetName={searchParams.get("target") ?? undefined}
-    />
-  )
+  const targetKey =
+    target.kind === "message"
+      ? `${target.kind}:${target.chatId}:${target.messageId}`
+      : `${target.kind}:${target.meetingId}:${target.scheduleId}`
+
+  return <ReportPageContent key={targetKey} target={target} />
 }
 
 export default function ChatReportPage() {

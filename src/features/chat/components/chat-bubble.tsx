@@ -93,7 +93,7 @@ function ChatBubble({
           <div
             className={cn(
               "px-4 py-3",
-              isMe ? "rounded-3xl bg-primary-400" : "rounded-tr-3xl rounded-bl-3xl rounded-br-3xl bg-gray-50"
+              isMe ? "rounded-3xl bg-primary" : "rounded-tr-3xl rounded-bl-3xl rounded-br-3xl bg-gray-50"
             )}
           >
             <p className={cn("text-body-regular-14", isMe ? "text-white" : "text-gray-900")}>{replyText}</p>
@@ -118,7 +118,7 @@ function ChatBubble({
             onAnimationEnd={index === highlightedIndex ? onHighlightAnimationEnd : undefined}
             className={cn(
               "px-4 py-3",
-              isMe ? "bg-primary-400" : "bg-gray-50",
+              isMe ? "bg-primary" : "bg-gray-50",
               radiusMap[bubblePosition(index, texts.length)],
               isLong && "w-[253px] max-w-full",
               index === highlightedIndex && "relative z-10 animate-message-jump-highlight"

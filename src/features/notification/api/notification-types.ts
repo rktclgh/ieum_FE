@@ -8,8 +8,8 @@ interface NotificationItem {
   body: string
   // 딥링크 대상 식별자(질문/모임/채팅). 대상이 없으면 null.
   refId: number | null
-  // 답변 알림이 AI 답변인지 여부.
-  answerIsAi: boolean
+  // 답변 알림의 출처. 답변과 무관한 알림이면 null.
+  answerIsAi: boolean | null
   isRead: boolean
   createdAt: string
 }

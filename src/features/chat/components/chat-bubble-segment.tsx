@@ -35,6 +35,10 @@ interface ChatBubbleSegmentProps extends React.ComponentProps<"div"> {
   imageAlt?: string
   /** 업로드 중인 낙관적 이미지 말풍선. 흐리게 표시한다. */
   uploading?: boolean
+  replyLabel?: string
+  replyQuote?: string
+  replyImageUrl?: string | null
+  replyImageAlt?: string
 }
 
 /** 그룹 내 단일 메시지 말풍선. 이름/아바타/시각은 상위 ChatMessageGroup이 담당한다. */
@@ -47,10 +51,15 @@ function ChatBubbleSegment({
   imageUrl,
   imageAlt,
   uploading = false,
+  replyLabel,
+  replyQuote,
+  replyImageUrl,
+  replyImageAlt,
   ...props
 }: ChatBubbleSegmentProps) {
   const isMe = sender === "me"
   const radiusMap = isMe ? ME_RADIUS : OTHERS_RADIUS
+  const hasReply = Boolean(replyLabel && replyQuote)
 
   // 낙관적 이미지 말풍선의 blob: 미리보기 URL은 서버 에코로 대체되며 언마운트될 때
   // 해제해야 메모리 누수를 막는다. (전송 성공/실패/페이지 이탈 모든 경로를 커버)
@@ -60,17 +69,16 @@ function ChatBubbleSegment({
     }
   }, [imageUrl])
 
-  if (imageUrl) {
-    return (
+  const bubble = imageUrl ? (
       <div
         data-slot="chat-bubble-segment"
         className={cn(
           "relative w-[200px] max-w-full overflow-hidden bg-gray-50",
           radiusMap[position],
           uploading && "opacity-60",
-          className
+          !hasReply && className
         )}
-        {...props}
+        {...(!hasReply ? props : {})}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={imageUrl} alt={imageAlt} className="block w-full object-cover" />
@@ -78,22 +86,43 @@ function ChatBubbleSegment({
           <span className="absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 animate-spin rounded-full border-2 border-white border-t-transparent" />
         )}
       </div>
-    )
-  }
-
-  return (
+    ) : (
     <div
       data-slot="chat-bubble-segment"
       className={cn(
         "px-4 py-3",
-        isMe ? "bg-primary-400" : "bg-gray-50",
+        isMe ? "bg-primary" : "bg-gray-50",
         radiusMap[position],
         variant === "long" && "w-[253px] max-w-full",
-        className
+        !hasReply && className
       )}
-      {...props}
+      {...(!hasReply ? props : {})}
     >
       <p className={cn("text-body-regular-14", isMe ? "text-white" : "text-gray-900")}>{text}</p>
+    </div>
+  )
+
+  if (!hasReply) return bubble
+
+  return (
+    <div
+      className={cn("flex max-w-full flex-col gap-1", isMe ? "items-end" : "items-start", className)}
+      {...props}
+    >
+      <p className="max-w-full text-body-regular-12 text-gray-400">{replyLabel}</p>
+      <div
+        className={cn(
+          "flex max-w-full items-center gap-2 bg-gray-200 px-4 py-3",
+          isMe ? "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl" : "rounded-tl-3xl rounded-tr-3xl rounded-br-3xl"
+        )}
+      >
+        {replyImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={replyImageUrl} alt={replyImageAlt ?? ""} className="size-8 shrink-0 rounded object-cover opacity-70" />
+        )}
+        <p className="truncate text-body-regular-14 text-gray-700">{replyQuote}</p>
+      </div>
+      {bubble}
     </div>
   )
 }

@@ -22,7 +22,7 @@ export interface Messages {
     backendUnavailable: string
   }
   login: {
-    logoAlt: string
+    logoText: string
     emailPlaceholder: string
     passwordPlaceholder: string
     submit: string
@@ -148,6 +148,7 @@ export interface Messages {
     titleCounter: (current: number, max: number) => string
     titleTooLongExplanation: (max: number) => string
     datePlaceholder: string
+    dateUndecidedLabel: string
     timePlaceholder: string
     addressPlaceholder: string
     descriptionPlaceholder: string
@@ -181,6 +182,7 @@ export interface Messages {
     doneButton: string
     currentLocationLabel: string
     loadingAddress: string
+    locationUnavailable: string
     searchEmpty: string
     clearLabel: string
   }
@@ -201,7 +203,7 @@ export interface Messages {
     acceptedBadge: string
     acceptButton: string
     acceptConfirmTitle: string
-    acceptConfirmDescription: string
+    acceptConfirmDescription: (name: string) => string
     acceptConfirmCancel: string
     createTitle: string
     editTitle: string
@@ -257,6 +259,13 @@ export interface Messages {
     notifications: {
       title: string
       notifyAllLabel: string
+      pushDeviceConnected: string
+      pushDeviceConnect: string
+      pushDeviceUnsupported: string
+      pushDeviceIosInstall: string
+      pushDevicePermissionDenied: string
+      pushDeviceUnavailable: string
+      pushDeviceError: string
       notifyRadiusLabel: string
       radiusOption: (km: number) => string
       saveError: string
@@ -347,10 +356,14 @@ export interface Messages {
     addFriendButton: string
     requestedButton: string
     pinAction: string
-    muteAction: string
-    notificationLabel: string
+    enableNotificationAction: string
+    disableNotificationAction: string
     deleteAction: string
     replyAction: string
+    replyToLabel: (targetName: string) => string
+    replyFromToLabel: (senderName: string, targetName: string) => string
+    replyImageLabel: string
+    cancelReplyAction: string
     reportAction: string
     registerAsNoticeAction: string
     setChatNoticeAction: string
@@ -381,6 +394,21 @@ export interface Messages {
   }
   schedule: {
     addButtonLabel: string
+    editorCreateTitle: string
+    editorEditTitle: string
+    titlePlaceholder: string
+    dateLabel: string
+    timePlaceholder: string
+    locationPlaceholder: string
+    createAction: string
+    updateAction: string
+    editAction: string
+    deleteAction: string
+    deleteConfirmTitle: string
+    deleteConfirmDescription: string
+    editorRequired: string
+    pastDateError: string
+    saveError: string
     previousMonthLabel: string
     nextMonthLabel: string
     selectMonthLabel: string
@@ -414,6 +442,8 @@ export interface Messages {
     submitButton: string
     confirmTitle: (name: string) => string
     confirmTitleGeneric: string
+    confirmScheduleTitle: (name: string) => string
+    confirmScheduleTitleGeneric: string
     confirmDescription: string
     errors: {
       REPORT_MESSAGE_NOT_FOUND: string
@@ -451,6 +481,14 @@ export interface Messages {
     deleteConfirmConfirm: string
     bellLabel: string
     unreadBadgeLabel: (count: number) => string
+    aiAnswerSourceLabel: string
+    humanAnswerSourceLabel: string
+  }
+  translate: {
+    menuLabel: string
+    viewOriginalLabel: string
+    translatingLabel: string
+    translateFailedLabel: string
   }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
@@ -474,7 +512,7 @@ export const ko: Messages = {
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   login: {
-    logoAlt: "로고",
+    logoText: "이음",
     emailPlaceholder: "이메일 입력",
     passwordPlaceholder: "비밀번호 입력",
     submit: "로그인",
@@ -600,6 +638,7 @@ export const ko: Messages = {
     titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `모임 제목을 ${max}글자 이내로 적어주세요.`,
     datePlaceholder: "날짜 선택",
+    dateUndecidedLabel: "날짜 미정",
     timePlaceholder: "시간 선택",
     addressPlaceholder: "주소 선택",
     descriptionPlaceholder: "모임 내용을 입력해주세요.",
@@ -633,6 +672,7 @@ export const ko: Messages = {
     doneButton: "완료",
     currentLocationLabel: "내 위치",
     loadingAddress: "주소를 불러오는 중…",
+    locationUnavailable: "현재 위치를 찾지 못해 서울 시청 주변을 표시합니다.",
     searchEmpty: "검색 결과가 없어요.",
     clearLabel: "지우기",
   },
@@ -652,8 +692,9 @@ export const ko: Messages = {
     aiBadge: "AI",
     acceptedBadge: "채택됨",
     acceptButton: "채택",
-    acceptConfirmTitle: "이 답변을 채택할까요?",
-    acceptConfirmDescription: "채택하면 이 답변 작성자와 채팅을 시작할 수 있어요.",
+    acceptConfirmTitle: "답변을 채택했습니다",
+    acceptConfirmDescription: (name) =>
+      `${name}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,
     acceptConfirmCancel: "취소",
     createTitle: "질문하기",
     editTitle: "질문 수정",
@@ -709,6 +750,13 @@ export const ko: Messages = {
     notifications: {
       title: "알림 설정",
       notifyAllLabel: "전체 알림",
+      pushDeviceConnected: "이 기기에서 푸시 알림을 받고 있어요.",
+      pushDeviceConnect: "이 기기 연결",
+      pushDeviceUnsupported: "이 브라우저는 푸시 알림을 지원하지 않아요.",
+      pushDeviceIosInstall: "홈 화면에 추가하면 푸시 알림을 받을 수 있어요.",
+      pushDevicePermissionDenied: "브라우저 설정에서 알림 권한을 허용해 주세요.",
+      pushDeviceUnavailable: "푸시 알림을 지금 사용할 수 없어요.",
+      pushDeviceError: "푸시 알림을 연결하지 못했어요. 다시 시도해 주세요.",
       notifyRadiusLabel: "알림 반경",
       radiusOption: (km) => `${km}km`,
       saveError: "설정을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
@@ -799,10 +847,14 @@ export const ko: Messages = {
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
     pinAction: "고정",
-    muteAction: "알림 해제",
-    notificationLabel: "알림",
+    enableNotificationAction: "알림 켜기",
+    disableNotificationAction: "알림 끄기",
     deleteAction: "삭제",
     replyAction: "답글 달기",
+    replyToLabel: (targetName) => `${targetName}님에게 답장`,
+    replyFromToLabel: (senderName, targetName) => `${senderName}님이 ${targetName}님에게 답장`,
+    replyImageLabel: "사진",
+    cancelReplyAction: "답장 취소",
     reportAction: "신고",
     registerAsNoticeAction: "공지로 등록",
     setChatNoticeAction: "채팅방 공지 등록하기",
@@ -833,6 +885,21 @@ export const ko: Messages = {
   },
   schedule: {
     addButtonLabel: "일정 추가",
+    editorCreateTitle: "일정 등록",
+    editorEditTitle: "일정 수정",
+    titlePlaceholder: "일정 제목",
+    dateLabel: "날짜",
+    timePlaceholder: "시간 선택",
+    locationPlaceholder: "위치 선택",
+    createAction: "등록",
+    updateAction: "저장",
+    editAction: "수정",
+    deleteAction: "삭제",
+    deleteConfirmTitle: "일정을 삭제할까요?",
+    deleteConfirmDescription: "삭제한 일정은 되돌릴 수 없어요.",
+    editorRequired: "제목, 시간, 위치를 모두 입력해 주세요.",
+    pastDateError: "오늘 이전 날짜에는 일정을 등록할 수 없어요.",
+    saveError: "일정 저장에 실패했어요.",
     previousMonthLabel: "이전 달",
     nextMonthLabel: "다음 달",
     selectMonthLabel: "연도 및 월 선택",
@@ -866,6 +933,8 @@ export const ko: Messages = {
     submitButton: "신고",
     confirmTitle: (name) => `${name}님의 메시지를 신고합니다`,
     confirmTitleGeneric: "메시지를 신고합니다",
+    confirmScheduleTitle: (name) => `${name} 일정을 신고합니다`,
+    confirmScheduleTitleGeneric: "일정을 신고합니다",
     confirmDescription: "정말로 신고하시겠습니까?",
     errors: {
       REPORT_MESSAGE_NOT_FOUND: "삭제되었거나 존재하지 않는 메시지예요.",
@@ -903,6 +972,14 @@ export const ko: Messages = {
     deleteConfirmConfirm: "삭제",
     bellLabel: "알림",
     unreadBadgeLabel: (count) => `읽지 않은 알림 ${count}건`,
+    aiAnswerSourceLabel: "AI 답변",
+    humanAnswerSourceLabel: "사용자 답변",
+  },
+  translate: {
+    menuLabel: "번역",
+    viewOriginalLabel: "원문 보기",
+    translatingLabel: "번역 중...",
+    translateFailedLabel: "번역에 실패했어요. 잠시 후 다시 시도해 주세요.",
   },
   languages: {
     ko: "한국어",

@@ -2,7 +2,7 @@
 
 import L from "leaflet"
 import * as React from "react"
-import { Circle, MapContainer, Marker, useMap, useMapEvents } from "react-leaflet"
+import { MapContainer, Marker, useMap, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
@@ -10,6 +10,7 @@ import { ClusteredPins } from "@/features/map/components/clustered-pins"
 import { VectorTileLayer } from "@/features/map/components/vector-tile-layer"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
+import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 
 interface MapCanvasProps {
   /** 재중심 시 이동할 좌표. 실시간 위치 갱신은 여기에 반영되어도 뷰를 움직이지 않는다(recenterKey로만 이동). */
@@ -30,16 +31,15 @@ interface MapCanvasProps {
   pins?: MapPin[]
   onPinClick?: (pin: MapPin) => void
   livePosition?: Coordinates | null
-  liveAccuracy?: number | null
   /** 사용자가 지도에서 고른 지점 — Figma Location/XL 핀으로 표시 */
   selectedPosition?: Coordinates | null
   /** 선택 핀 마커를 클릭했을 때 (핀 토글 제거용). 미지정이면 마커 클릭 무반응 */
   onSelectedPositionClick?: () => void
 }
 
-const LIVE_ACCENT = "#316CED"
+const LIVE_ACCENT = "#FC7045"
 
-// Figma Location/XL (node 1716:12220): 파란 물방울 핀 + 흰 구멍 + 회색 그림자 타원. 팁이 좌표를 가리킨다.
+// Figma Location/XL (node 1716:12220): primary 색 물방울 핀 + 흰 구멍 + 회색 그림자 타원. 팁이 좌표를 가리킨다.
 const selectedLocationIcon = L.divIcon({
   html: `<svg width="40" height="47" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
     <ellipse cx="12" cy="24.3" rx="4.5" ry="1.5" fill="#9AA5A8" fill-opacity="0.5"/>
@@ -57,7 +57,7 @@ const userLocationIcon = L.divIcon({
       <g filter="url(#user_loc_halo_blur)"><circle cx="24" cy="24" r="22" fill="${LIVE_ACCENT}" fill-opacity="0.2"/></g>
       <defs><filter id="user_loc_halo_blur" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/></filter></defs>
     </svg>
-    <div style="position:absolute;left:18px;top:18px;width:12px;height:12px;border-radius:9999px;background:${LIVE_ACCENT};outline:3px solid #ffffff;box-shadow:0 0 8px 0 rgba(49,108,237,0.6),0 0 4px 0 rgba(0,0,0,0.25)"></div>
+    <div style="position:absolute;left:18px;top:18px;width:12px;height:12px;border-radius:9999px;background:${LIVE_ACCENT};outline:3px solid #ffffff;box-shadow:0 0 8px 0 rgba(252,112,69,0.6),0 0 4px 0 rgba(0,0,0,0.25)"></div>
   </div>`,
   className: "",
   iconSize: [48, 48],
@@ -88,10 +88,10 @@ function MapCenterUpdater({
     if (appliedKeyRef.current === recenterKey) return
     // center가 아직 없으면 key를 소비하지 않는다. center는 deps에 있어 값이 채워지면 이 effect가
     // 다시 실행되고, 그때 비로소 재중심 후 key를 소비한다(요청 유실 방지).
-    if (!center) return
-    appliedKeyRef.current = recenterKey
+    if (!center || !isLeafletMapActive(map)) return
 
     const targetZoom = zoom ?? map.getZoom()
+    appliedKeyRef.current = recenterKey
 
     // 헤더·하단 시트가 지도를 가리면 그만큼 패딩을 줘, 보이는 영역의 정중앙에 오도록 flyToBounds로 이동.
     if (topInset > 0 || bottomInset > 0) {
@@ -125,32 +125,45 @@ function MapClickListener({ onMapClick }: { onMapClick: (position: Coordinates) 
 function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) {
   const map = useMap()
   const onBoundsChangeRef = React.useRef(onBoundsChange)
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   React.useEffect(() => {
     onBoundsChangeRef.current = onBoundsChange
-  })
-
-  const emit = React.useCallback(() => {
-    const bounds = map.getBounds()
-    const sw = bounds.getSouthWest()
-    const ne = bounds.getNorthEast()
-    onBoundsChangeRef.current({ swLat: sw.lat, swLng: sw.lng, neLat: ne.lat, neLng: ne.lng })
-  }, [map])
-
-  const scheduleEmit = React.useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(emit, 250)
-  }, [emit])
+  }, [onBoundsChange])
 
   React.useEffect(() => {
-    emit() // 최초 1회 즉시 방출
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [emit])
+    let disposed = false
+    let timer: ReturnType<typeof setTimeout> | null = null
 
-  useMapEvents({ moveend: scheduleEmit, zoomend: scheduleEmit })
+    const emit = () => {
+      if (disposed || !isLeafletMapActive(map)) return
+
+      const bounds = map.getBounds()
+      const sw = bounds.getSouthWest()
+      const ne = bounds.getNorthEast()
+      onBoundsChangeRef.current({ swLat: sw.lat, swLng: sw.lng, neLat: ne.lat, neLng: ne.lng })
+    }
+
+    const scheduleEmit = () => {
+      if (disposed) return
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => {
+        timer = null
+        emit()
+      }, 250)
+    }
+
+    // Leaflet이 준비된 뒤에만 최초 bounds를 읽고, 해제 시 listener와 지연 작업을 함께 제거한다.
+    map.whenReady(emit)
+    map.on("moveend", scheduleEmit)
+    map.on("zoomend", scheduleEmit)
+
+    return () => {
+      disposed = true
+      if (timer) clearTimeout(timer)
+      map.off("moveend", scheduleEmit)
+      map.off("zoomend", scheduleEmit)
+    }
+  }, [map])
 
   return null
 }
@@ -168,14 +181,16 @@ function MapCanvas({
   pins,
   onPinClick,
   livePosition,
-  liveAccuracy,
   selectedPosition,
   onSelectedPositionClick,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
+  // React refresh/조건부 재마운트에서 이전 Leaflet map의 remove가 늦더라도 새 map은 다른 DOM 컨테이너를 쓴다.
+  const [mapContainerKey] = React.useState(() => crypto.randomUUID())
 
   return (
     <MapContainer
+      key={mapContainerKey}
       center={[initialCenter.lat, initialCenter.lng]}
       zoom={DEFAULT_MAP_ZOOM}
       zoomControl={false}
@@ -209,16 +224,7 @@ function MapCanvas({
         />
       )}
       {livePosition && (
-        <>
-          {liveAccuracy ? (
-            <Circle
-              center={[livePosition.lat, livePosition.lng]}
-              radius={liveAccuracy}
-              pathOptions={{ stroke: false, fillColor: LIVE_ACCENT, fillOpacity: 0.1 }}
-            />
-          ) : null}
-          <Marker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
-        </>
+        <Marker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
       )}
     </MapContainer>
   )

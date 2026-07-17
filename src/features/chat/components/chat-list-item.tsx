@@ -115,17 +115,10 @@ function ChatListItem({
       </div>
       <div className="flex h-11 shrink-0 flex-col items-end gap-0.5 py-px">
         {time && (
-          <span
-            className={cn(
-              "whitespace-nowrap text-body-regular-12",
-              hasUnread ? "text-primary-400" : "text-gray-200"
-            )}
-          >
-            {time}
-          </span>
+          <span className="whitespace-nowrap text-body-regular-12 text-gray-200">{time}</span>
         )}
         {hasUnread && (
-          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-400 text-body-regular-12 text-white">
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-body-regular-12 text-white">
             {unreadCount}
           </span>
         )}

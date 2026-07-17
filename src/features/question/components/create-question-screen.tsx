@@ -4,6 +4,7 @@ import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { Explanation } from "@/components/ui/text-field/explanation"
+import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { uploadImage } from "@/features/question/api/question-file-api"
 import { SimilarQuestionsSection } from "@/features/question/components/similar-questions-section"
 import { useCreateQuestion, useUpdateQuestion } from "@/features/question/hooks/use-question-mutations"
@@ -33,6 +34,8 @@ interface CreateQuestionScreenProps {
   questionId?: number
   /** 지도 홈 핀에서 넘어온 초기 장소 — create 모드에서 장소 칸을 프리필한다 */
   initialPlace?: MeetupPlaceValue | null
+  /** 지도 홈이 이미 확보한 최신 GPS 좌표 — 장소 picker의 첫 지도 중심에 사용한다 */
+  currentPosition?: Coordinates | null
 }
 
 /**
@@ -46,7 +49,13 @@ interface CreateQuestionScreenProps {
  * 컨테이너: edit 모드에서는 상세가 로드된 뒤에만 폼을 마운트해, 프리필용 렌더 중
  * setState 없이 초기값을 확정한다(edit-profile-content.tsx와 동일한 패턴).
  */
-function CreateQuestionScreen({ onClose, mode = "create", questionId, initialPlace = null }: CreateQuestionScreenProps) {
+function CreateQuestionScreen({
+  onClose,
+  mode = "create",
+  questionId,
+  initialPlace = null,
+  currentPosition = null,
+}: CreateQuestionScreenProps) {
   const { messages } = useTranslation()
   const detail = useQuestionDetail(questionId ?? 0, mode === "edit")
 
@@ -82,6 +91,7 @@ function CreateQuestionScreen({ onClose, mode = "create", questionId, initialPla
       questionId={questionId}
       initial={editDetail}
       initialPlace={initialPlace}
+      currentPosition={currentPosition}
     />
   )
 }
@@ -92,9 +102,17 @@ interface CreateQuestionFormProps {
   questionId?: number
   initial: QuestionDetailView | null
   initialPlace: MeetupPlaceValue | null
+  currentPosition: Coordinates | null
 }
 
-function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }: CreateQuestionFormProps) {
+function CreateQuestionForm({
+  onClose,
+  mode,
+  questionId,
+  initial,
+  initialPlace,
+  currentPosition,
+}: CreateQuestionFormProps) {
   const { messages } = useTranslation()
   const t = messages.question
   const createQuestion = useCreateQuestion()
@@ -215,13 +233,13 @@ function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pt-3 pb-4">
         {/* 제목 */}
-        <div className="flex h-[3.375rem] w-full shrink-0 items-center rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary-400">
+        <div className="flex h-[3.375rem] w-full shrink-0 items-center rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary">
           <input
             value={title}
             onChange={(event) => setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
             maxLength={TITLE_MAX_LENGTH}
             placeholder={t.titlePlaceholder}
-            className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
+            className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
           />
         </div>
 
@@ -237,13 +255,13 @@ function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }
         />
 
         {/* 내용 + 사진 첨부 */}
-        <div className="relative h-[18.75rem] shrink-0 rounded-lg border border-gray-100 transition-colors focus-within:border-primary-400">
+        <div className="relative h-[18.75rem] shrink-0 rounded-lg border border-gray-100 transition-colors focus-within:border-primary">
           <textarea
             value={content}
             onChange={(event) => setContent(event.target.value.slice(0, CONTENT_MAX_LENGTH))}
             maxLength={CONTENT_MAX_LENGTH}
             placeholder={t.contentPlaceholder}
-            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary-400 outline-none placeholder:text-gray-400"
+            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary outline-none placeholder:text-gray-400"
           />
           <MeetupImagePicker
             image={image?.preview ?? existingImageUrl}
@@ -271,7 +289,7 @@ function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }
           onClick={handleSubmit}
           className={cn(
             "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            canSubmit ? "bg-primary-400" : "bg-gray-200"
+            canSubmit ? "bg-primary" : "bg-gray-200"
           )}
         >
           {submitting ? t.submittingButton : mode === "edit" ? t.updateButton : t.submitButton}
@@ -298,6 +316,7 @@ function CreateQuestionForm({ onClose, mode, questionId, initial, initialPlace }
       {locationPickerOpen ? (
         <MeetupLocationPicker
           value={place?.label ?? null}
+          currentPosition={currentPosition}
           onConfirm={setPlace}
           onClose={() => setLocationPickerOpen(false)}
         />

@@ -35,27 +35,43 @@ function NotificationItem({ entry, onOpen, onLongPress }: NotificationItemProps)
       {...longPress}
       className={cn(
         "flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]",
-        entry.isRead ? "bg-white" : "bg-primary-50"
+        entry.isRead ? "bg-white" : "bg-primary/10"
       )}
     >
       <span
         aria-hidden
         className={cn(
           "mt-1.5 size-2 shrink-0 rounded-full",
-          entry.isRead ? "bg-transparent" : "bg-primary-400"
+          entry.isRead ? "bg-transparent" : "bg-primary"
         )}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span
-          className={cn(
-            "truncate",
-            entry.isRead
-              ? "text-body-medium-15 text-gray-700"
-              : "text-title-semibold-16 text-gray-900"
-          )}
-        >
-          {entry.title}
-        </span>
+        <div className="flex min-w-0 items-center gap-2">
+          {entry.isAiAnswer !== null ? (
+            <span
+              className={cn(
+                "shrink-0 rounded-full px-2 py-0.5 text-body-medium-12",
+                entry.isAiAnswer
+                  ? "bg-primary-50 text-primary-700"
+                  : "bg-gray-100 text-gray-600"
+              )}
+            >
+              {entry.isAiAnswer
+                ? messages.notification.aiAnswerSourceLabel
+                : messages.notification.humanAnswerSourceLabel}
+            </span>
+          ) : null}
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate",
+              entry.isRead
+                ? "text-body-medium-15 text-gray-700"
+                : "text-title-semibold-16 text-gray-900"
+            )}
+          >
+            {entry.title}
+          </span>
+        </div>
         {entry.body ? (
           <span className="line-clamp-2 text-body-regular-14 text-gray-500">{entry.body}</span>
         ) : null}

@@ -287,14 +287,6 @@ test("fixed query pages validate IDs before mounting data content", () => {
       content: "<NoticePageContent",
     },
     {
-      path: "src/app/chats/report/page.tsx",
-      params: [
-        { query: "chatId", variable: "roomId" },
-        { query: "messageId", variable: "messageId" },
-      ],
-      content: "<ReportPageContent",
-    },
-    {
       path: "src/app/chats/schedule/page.tsx",
       params: [{ query: "chatId", variable: "roomId" }],
       content: "<SchedulePageContent",
@@ -359,6 +351,55 @@ test("fixed query pages validate IDs before mounting data content", () => {
       `${page.path} must guard before mounting content`,
     )
   }
+})
+
+test("report page validates its parsed target before mounting data content", () => {
+  const pagePath = "src/app/chats/report/page.tsx"
+  const source = read(pagePath)
+  const sourceFile = parse(pagePath)
+
+  assert.match(source, /<React\.Suspense\b/, `${pagePath} must own a Suspense boundary`)
+  assert.ok(
+    compact(source).includes("consttarget=parseReportTarget(searchParams)"),
+    `${pagePath} must parse its target from the search parameters`,
+  )
+
+  const invalidGuard = visit(sourceFile, (node) =>
+    ts.isIfStatement(node) &&
+    compact(node.expression.getText(sourceFile)) === "target===null",
+  )[0]
+  assert.ok(invalidGuard, `${pagePath} must render the invalid-link state for a null target`)
+
+  const guardStatements = ts.isBlock(invalidGuard.thenStatement)
+    ? invalidGuard.thenStatement.statements
+    : [invalidGuard.thenStatement]
+  assert.equal(
+    guardStatements.length,
+    1,
+    `${pagePath} invalid guard must have exactly one blocking return`,
+  )
+  const invalidReturn = guardStatements[0]
+  assert.ok(
+    ts.isReturnStatement(invalidReturn),
+    `${pagePath} invalid guard must return before data content can mount`,
+  )
+  assert.ok(
+    ts.isJsxSelfClosingElement(invalidReturn.expression) &&
+      invalidReturn.expression.tagName.getText(sourceFile) === "RoutePageState" &&
+      invalidReturn.expression.attributes.properties.some(
+        (attribute) =>
+          ts.isJsxAttribute(attribute) &&
+          attribute.name.text === "kind" &&
+          ts.isStringLiteral(attribute.initializer) &&
+          attribute.initializer.text === "invalid-link",
+      ),
+    `${pagePath} invalid guard must return <RoutePageState kind="invalid-link" />`,
+  )
+
+  assert.ok(
+    source.indexOf("<ReportPageContent") > invalidGuard.end,
+    `${pagePath} must guard before mounting content`,
+  )
 })
 
 test("source contains no legacy runtime-ID navigation templates", () => {
@@ -641,4 +682,108 @@ test("REST, map, and WebSocket consumers keep the same-origin transport contract
       `${apiFile} must not bypass the shared transport with fetch`,
     )
   }
+})
+
+test("Web Push async work is fenced to the originating session", () => {
+  const hook = compact(
+    read("src/features/notification/hooks/use-web-push-subscription.ts"),
+  )
+  const api = compact(read("src/features/notification/api/web-push-api.ts"))
+
+  assert.ok(hook.includes("useQueryClient()"))
+  assert.ok(hook.includes("getSessionGeneration(queryClient)"))
+  assert.ok(hook.includes("getSessionAbortSignal(queryClient)"))
+  assert.ok(hook.includes("isSessionGenerationCurrent(queryClient,generation)"))
+  assert.ok(hook.includes("getWebPushConfig({signal:sessionSignal})"))
+  assert.ok(hook.includes("upsertWebPushSubscription(subscription.toJSON(),{signal:sessionSignal})"))
+  assert.ok(api.includes("signal?:AbortSignal"))
+})
+
+test("Web Push device status follows the account switch and does not log subscription data", () => {
+  const notifications = compact(
+    read("src/features/my/components/notifications-content.tsx"),
+  )
+  const hook = read("src/features/notification/hooks/use-web-push-subscription.ts")
+
+  assert.ok(
+    notifications.includes("constshowPushDeviceStatus=settings.notifyAll&&!isWebPushLoading"),
+  )
+  assert.ok(notifications.includes("{showPushDeviceStatus&&("))
+  assert.doesNotMatch(hook, /console\.warn\([^\n]*,\s*error\)/)
+})
+
+test("chat room controls wait for canonical state and never act before room type is known", () => {
+  const roomPage = compact(read("src/features/chat/components/chat-room-page-content.tsx"))
+  const listPage = compact(read("src/features/chat/components/chat-list-page-content.tsx"))
+  const moreHeader = compact(read("src/features/chat/components/chat-room-more-header.tsx"))
+  const mutations = compact(read("src/features/chat/hooks/use-chat-mutations.ts"))
+
+  assert.ok(roomPage.includes('constcanPinRoom=room!==undefined&&room.roomType!=="question"'))
+  assert.ok(roomPage.includes("constcanConfigureRoomNotification=room!==undefined"))
+  assert.ok(roomPage.includes("showPinAction={canPinRoom}"))
+  assert.ok(roomPage.includes("showNotificationAction={canConfigureRoomNotification}"))
+  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending}"))
+  assert.ok(roomPage.includes("if(!session.authenticated||!canConfigureRoomNotification||setNotifyMutation.isPending)return"))
+  assert.ok(roomPage.includes("if(!session.authenticated||!canPinRoom||setPinnedMutation.isPending)return"))
+  assert.ok(moreHeader.includes("pinPending?:boolean"))
+  assert.ok(moreHeader.includes("aria-busy={pinPending}"))
+  assert.ok(moreHeader.includes("disabled={pinPending}"))
+  assert.ok(listPage.includes('constcanPinRoom=chat.category!=="question"'))
+  assert.ok(listPage.includes("...(canPinRoom?[{") )
+  assert.ok(listPage.includes("disabled:setPinnedMutation.isPending"))
+  assert.ok(listPage.includes("disabled:leaveChatRoomMutation.isPending"))
+  assert.match(
+    mutations,
+    /functionuseSetNotify\(\).*?onSuccess:\(_data,\{roomId\}\)=>Promise\.all\(/s,
+  )
+})
+
+test("답변 채택 확인창은 사용자 이벤트에서 작성자 이름을 보존한다", () => {
+  const detail = compact(read("src/features/question/components/question-detail-screen.tsx"))
+
+  assert.ok(
+    detail.includes(
+      "constopenAcceptConfirm=(answer:QuestionAnswerView)=>{setLastAcceptedAuthorName(answer.authorName)setPendingAcceptId(answer.answerId)}"
+    )
+  )
+  assert.doesNotMatch(detail, /React\.useEffect\(\(\)=>\{if\(pendingAcceptAnswer\?\.authorName\)/)
+})
+
+test("profile upload failure is visible and does not change the meeting failure contract", () => {
+  const profile = read("src/features/my/components/edit-profile-content.tsx")
+
+  assert.match(
+    profile,
+    /const \[profileImageUploadError, setProfileImageUploadError\] = React\.useState<string \| null>\(null\)/,
+  )
+  assert.match(
+    profile,
+    /const handleFileSelected = \(file: File\) => \{\s*setProfileImageUploadError\(null\)/,
+  )
+  assert.match(
+    profile,
+    /const handleCropped = async \(blob: Blob\) => \{\s*setProfileImageUploadError\(null\)[\s\S]*?catch \{\s*setProfileImageUploadError\(messages\.profileImage\.uploadFailed\)/,
+  )
+  assert.match(
+    profile,
+    /profileImageUploadError && \(\s*<Explanation\s+variant="error"\s+role="alert"\s+text=\{profileImageUploadError\}/,
+  )
+
+  const meetup = read("src/features/meetup/components/create-meetup-screen.tsx")
+  assert.match(meetup, /catch \{\s*setError\(t\.imageUploadFailed\)\s*return/)
+})
+
+test("profile image success enables confirmation without an empty profile patch", () => {
+  const profile = read("src/features/my/components/edit-profile-content.tsx")
+
+  assert.match(
+    profile,
+    /const \[hasProfileImageChange, setHasProfileImageChange\] = React\.useState\(false\)/,
+  )
+  assert.match(profile, /await upload\(blob\)\s*setHasProfileImageChange\(true\)/)
+  assert.match(profile, /await remove\(\)\s*setHasProfileImageChange\(true\)/)
+  assert.match(profile, /const hasTextChanges = Object\.keys\(payload\)\.length > 0/)
+  assert.match(profile, /const hasChanges = hasTextChanges \|\| hasProfileImageChange/)
+  assert.match(profile, /if \(!hasTextChanges\) \{\s*router\.back\(\)\s*return\s*\}/)
+  assert.match(profile, /updateMe\.mutate\(payload, \{ onSuccess: \(\) => router\.back\(\) \}\)/)
 })

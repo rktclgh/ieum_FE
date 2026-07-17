@@ -192,7 +192,7 @@ function AdminInquiryExpandedRow({
           rows={6}
           disabled={answerBusy}
           placeholder={messages.admin.inquiries.answerPlaceholder}
-          className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+          className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
         />
         <Button
           type="submit"
@@ -310,7 +310,7 @@ function AdminInquiriesPage() {
           value={status}
           onChange={handleStatusChange}
           disabled={answerBusy}
-          className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary-400 focus-visible:ring-2 focus-visible:ring-primary-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+          className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-gray-100"
         >
           <option value="">{messages.admin.common.all}</option>
           <option value="pending">{messages.admin.inquiries.pending}</option>
@@ -416,7 +416,7 @@ function AdminInquiriesPage() {
                             disabled={answerBusy}
                             aria-expanded={isExpanded}
                             aria-controls={`admin-inquiry-detail-${inquiry.inquiryId}`}
-                            className="rounded-lg text-left text-body-medium-14 text-primary-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-not-allowed disabled:text-gray-400"
+                            className="rounded-lg text-left text-body-medium-14 text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:text-gray-400"
                           >
                             {inquiry.title}
                           </button>

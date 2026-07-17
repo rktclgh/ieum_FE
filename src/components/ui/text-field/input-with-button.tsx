@@ -37,8 +37,8 @@ function InputWithButton({
     <div
       data-slot="input-with-button-wrapper"
       className={cn(
-        "flex h-[3.375rem] w-full items-center justify-between gap-2 rounded-2xl border border-gray-100 py-4 pr-2 pl-4 transition-colors focus-within:border-primary-400 has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50",
-        error && "border-red focus-within:border-red",
+        "flex h-[3.375rem] w-full items-center justify-between gap-2 rounded-2xl border border-gray-100 py-4 pr-2 pl-4 transition focus-within:border-gray-900 focus-within:ring-1 focus-within:ring-gray-900 has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50",
+        error && "border-red focus-within:border-red focus-within:ring-red",
         className
       )}
     >
@@ -53,7 +53,7 @@ function InputWithButton({
         }}
         onFocus={onFocus}
         onBlur={onBlur}
-        className="w-full min-w-0 bg-transparent text-body-medium-16 text-gray-900 caret-primary-400 outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
+        className="w-full min-w-0 bg-transparent text-body-medium-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
         {...props}
       />
       <div className="flex shrink-0 items-center gap-2">
@@ -65,7 +65,7 @@ function InputWithButton({
           onClick={onButtonClick}
           className={cn(
             "rounded-lg px-3 py-2.5 text-body-regular-13 text-white transition-colors",
-            isButtonActive ? "bg-primary-400" : "bg-gray-400"
+            isButtonActive ? "bg-primary" : "bg-gray-400"
           )}
         >
           {buttonLabel}

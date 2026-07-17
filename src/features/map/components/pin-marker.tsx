@@ -5,9 +5,10 @@ import * as React from "react"
 import { Marker } from "react-leaflet"
 
 import type { MapPin } from "@/features/map/api/pin-types"
+import { resolveFileUrl } from "@/lib/api/file-url"
 
 const TEARDROP_SRC = "/icons/map/pin-teardrop.svg"
-const PRIMARY_400 = "#316ced" // --color-primary-400
+const PRIMARY = "#fc7045" // --color-primary
 
 // divIcon HTML 문자열에 URL을 넣기 전, 속성값 이스케이프만 한다.
 // (백엔드가 이미 인코딩한 URL에 encodeURI를 다시 걸면 %가 이중 인코딩되어 이미지가 깨진다.)
@@ -24,15 +25,16 @@ function escapeAttr(value: string): string {
 // 여기서 동일 비주얼을 plain HTML로 조립한다. className:""로 leaflet 기본 테두리를 제거.
 function buildPinIcon(pin: MapPin): L.DivIcon {
   const teardrop = `<img src="${TEARDROP_SRC}" alt="" style="position:absolute;top:0;left:6px;width:44px;height:54px" />`
+  const thumbnailUrl = resolveFileUrl(pin.thumbnailUrl)
 
   const inner =
     pin.pinType === "meeting"
       ? `<div style="position:absolute;top:2px;left:50%;transform:translateX(-50%);width:40px;height:40px;border-radius:9999px;overflow:hidden;background:#f3f4f6">${
-          pin.thumbnailUrl
-            ? `<img src="${escapeAttr(pin.thumbnailUrl)}" alt="" style="width:100%;height:100%;object-fit:cover" />`
+          thumbnailUrl
+            ? `<img src="${escapeAttr(thumbnailUrl)}" alt="" style="width:100%;height:100%;object-fit:cover" />`
             : ""
         }</div>`
-      : `<div style="position:absolute;top:2px;left:50%;transform:translateX(-50%);display:flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:9999px;background:#f9fafb"><span style="font-size:28px;line-height:1;font-weight:700;color:${PRIMARY_400}">?</span></div>`
+      : `<div style="position:absolute;top:2px;left:50%;transform:translateX(-50%);display:flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:9999px;background:#f9fafb"><span style="font-size:28px;line-height:1;font-weight:700;color:${PRIMARY}">?</span></div>`
 
   return L.divIcon({
     html: `<div style="position:relative;width:56px;height:56px">${teardrop}${inner}</div>`,
