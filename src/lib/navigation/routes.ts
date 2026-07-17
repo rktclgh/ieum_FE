@@ -27,7 +27,13 @@ const routes = {
   kakaoCallback: () => "/oauth/kakao/callback/",
   chats: () => "/chats/",
   questions: () => "/questions/",
-  friends: () => "/friends/",
+  // highlightUserId 를 주면 친구 페이지에서 해당 "받은 친구요청" 행을 잠깐 강조한다(알림 딥링크용).
+  friends: (highlightUserId?: number) =>
+    highlightUserId === undefined
+      ? "/friends/"
+      : queryRoute("/friends/", {
+          highlightUserId: requirePositiveInteger(highlightUserId, "highlightUserId"),
+        }),
   notifications: () => "/notifications/",
   my: () => "/my/",
   myEdit: () => "/my/edit/",
