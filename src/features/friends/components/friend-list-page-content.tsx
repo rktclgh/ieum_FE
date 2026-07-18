@@ -403,6 +403,7 @@ function FriendRequestItemWithLongPress({
         flagSrc={friend.flagSrc}
         nation={nation}
         variant="friend"
+        online={friend.active ? true : undefined}
         active={menuOpen}
         onStartChat={onStartChat}
         {...longPress}

@@ -21,6 +21,8 @@ interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   variant: FriendRequestVariant
   /** 롱프레스 메뉴가 열려 있는 동안 딤 오버레이 위로 떠 보이도록 강조 */
   active?: boolean
+  /** 온라인 상태(최근 5분 이내 활동) — 아바타 우하단 상태 점. undefined면 점을 숨긴다. */
+  online?: boolean
   onAccept?: () => void
   onReject?: () => void
   onAdd?: () => void
@@ -58,6 +60,7 @@ function FriendRequestItem({
   nation,
   variant,
   active,
+  online,
   onAccept,
   onReject,
   onAdd,
@@ -103,7 +106,7 @@ function FriendRequestItem({
       {...restProps}
     >
       <div className="flex items-center gap-3">
-        <ChatProfile src={avatarSrc} size={active ? 40 : 44} className="transition-all duration-200 ease-out" />
+        <ChatProfile src={avatarSrc} size={active ? 40 : 44} online={online} className="transition-all duration-200 ease-out" />
         <div className="flex flex-col items-start gap-0.5">
           <p
             className={cn(
