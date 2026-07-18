@@ -67,7 +67,7 @@ function QuestionRow({
           items={menuItems}
           dimmed
           onDismiss={onCloseMenu}
-          className={placement === "top" ? "bottom-full left-4 mb-3" : "top-full left-4 mt-2"}
+          className={placement === "top" ? "bottom-full left-0 mb-3" : "top-full left-0 mt-2"}
         />
       )}
     </div>
