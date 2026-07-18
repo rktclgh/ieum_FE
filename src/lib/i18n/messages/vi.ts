@@ -18,6 +18,14 @@ export const vi: Messages = {
     checking: "Đang kiểm tra trạng thái đăng nhập.",
     backendUnavailable: "Không thể kết nối với máy chủ. Vui lòng thử lại sau.",
   },
+  pwa: {
+    title: "Cài đặt Ieum",
+    description: "Thêm vào màn hình chính để dùng tiện hơn.",
+    later: "Để sau",
+    install: "Cài đặt",
+    iosDescription: "Nhấn nút Chia sẻ, rồi chọn 'Thêm vào MH chính'.",
+    confirm: "OK",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "Nhập email",

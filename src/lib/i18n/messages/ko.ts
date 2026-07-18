@@ -21,6 +21,14 @@ export interface Messages {
     checking: string
     backendUnavailable: string
   }
+  pwa: {
+    title: string
+    description: string
+    later: string
+    install: string
+    iosDescription: string
+    confirm: string
+  }
   login: {
     logoText: string
     emailPlaceholder: string
@@ -513,6 +521,14 @@ export const ko: Messages = {
   session: {
     checking: "로그인 상태를 확인하고 있어요.",
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  pwa: {
+    title: "이음 앱 설치",
+    description: "홈 화면에 추가하고 더 편하게 이용하세요.",
+    later: "나중에",
+    install: "설치",
+    iosDescription: "공유 버튼을 누르고 '홈 화면에 추가'를 선택하세요.",
+    confirm: "확인",
   },
   login: {
     logoText: "이음",
