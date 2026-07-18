@@ -4,6 +4,7 @@ import * as React from "react"
 import { Globe } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { NoImageProfile } from "@/components/ui/no-image"
 import { CountryFlag } from "@/features/chat/components/country-flag"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
@@ -78,7 +79,9 @@ function QuestionAnswerAuthorItem({
             {answer.authorAvatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={answer.authorAvatarUrl} alt="" className="size-full object-cover" />
-            ) : null}
+            ) : (
+              <NoImageProfile />
+            )}
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-title-semibold-16 text-gray-900">{answer.authorName}</span>

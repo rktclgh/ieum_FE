@@ -3,6 +3,7 @@
 import Image from "next/image"
 
 import { HighlightedText } from "@/components/ui/highlighted-text"
+import { NoImage } from "@/components/ui/no-image"
 import type { MapPin } from "@/features/map/api/pin-types"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { resolveFileUrl } from "@/lib/api/file-url"
@@ -22,7 +23,7 @@ function QuestionResultCard({ pin, query, onClick }: QuestionResultCardProps) {
   return (
     <button type="button" onClick={onClick} className="flex w-full items-center gap-3 py-2 text-left">
       <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-        {thumbnail ? <Image src={thumbnail} alt="" fill sizes="64px" className="object-cover" /> : null}
+        {thumbnail ? <Image src={thumbnail} alt="" fill sizes="64px" className="object-cover" /> : <NoImage />}
       </div>
       <div className="flex min-w-0 flex-col gap-0.5">
         <p className="truncate text-body-semibold-15 text-gray-900">

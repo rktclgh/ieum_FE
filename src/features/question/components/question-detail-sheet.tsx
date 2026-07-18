@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 
 import { BottomSheet, BottomSheetClose } from "@/components/ui/bottom-sheet"
+import { NoImageProfile } from "@/components/ui/no-image"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
 import type { QuestionSummary } from "@/features/question/types"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -100,7 +101,9 @@ function QuestionDetailSheet({
               {display.authorAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={display.authorAvatarUrl} alt="" className="size-full object-cover" />
-              ) : null}
+              ) : (
+                <NoImageProfile />
+              )}
             </div>
             <div className="flex min-w-0 flex-col gap-0.5">
               <div className="flex items-center gap-2">
