@@ -22,7 +22,6 @@ function SessionAlarmButton() {
   useNotificationSse(isLoggedIn)
 
   const hasUnread = isLoggedIn && unreadCount > 0
-  const badgeText = unreadCount > 99 ? "99+" : String(unreadCount)
 
   return (
     <div className="relative shrink-0">
@@ -32,12 +31,11 @@ function SessionAlarmButton() {
         onClick={() => router.push(isLoggedIn ? routes.notifications() : routes.login())}
       />
       {hasUnread && (
+        // 미읽음 표시는 개수(숫자)가 아니라 점(dot) 하나. 스크린리더에는 개수를 라벨로 남긴다.
         <span
           aria-label={messages.notification.unreadBadgeLabel(unreadCount)}
-          className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red px-1 text-[11px] font-semibold leading-none text-white"
-        >
-          {badgeText}
-        </span>
+          className="pointer-events-none absolute right-2 top-2 size-2.5 rounded-full border-2 border-white bg-primary"
+        />
       )}
     </div>
   )
