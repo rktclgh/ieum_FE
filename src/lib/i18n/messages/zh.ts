@@ -23,7 +23,7 @@ export const zh: Messages = {
     description: "添加到主屏幕，使用更方便。",
     later: "以后",
     install: "安装",
-    iosDescription: '点击分享按钮，然后选择"添加到主屏幕"。',
+    iosDescription: "点击分享按钮，然后选择“添加到主屏幕”。",
     confirm: "确定",
   },
   login: {
