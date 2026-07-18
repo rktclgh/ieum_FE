@@ -63,9 +63,9 @@ function QuestionHistoryItem({ item, onOpen, onLongPress, active }: QuestionHist
       onClick={onOpen}
       {...longPress}
       className={cn(
-        "flex w-full items-center gap-3 px-4 py-3 text-left transition-all duration-200 ease-out",
+        "flex w-full items-center gap-3 py-3 text-left transition-all duration-200 ease-out",
         active
-          ? "relative z-50 -translate-y-1 scale-[1.02] rounded-2xl bg-white shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
+          ? "relative z-50 -translate-y-1 scale-[1.02] gap-2 rounded-2xl bg-white px-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
           : "translate-y-0 scale-100"
       )}
     >

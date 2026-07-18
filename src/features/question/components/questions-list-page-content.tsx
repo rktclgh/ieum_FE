@@ -137,7 +137,7 @@ function QuestionsListPageContent() {
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-white">
         <AppBar title={messages.question.historyTitle} leadingIcon={null} trailingIcon={null} />
 
-        <div className="flex flex-1 flex-col px-0 pt-2 pb-24">
+        <div className="flex flex-1 flex-col px-4 pt-2 pb-24">
           {items.length === 0 && !query.isLoading ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.question.historyEmpty}
