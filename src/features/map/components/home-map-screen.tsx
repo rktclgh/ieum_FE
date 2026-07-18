@@ -24,6 +24,7 @@ import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
+import { InstallPrompt } from "@/features/pwa/components/install-prompt"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { TabBar } from "@/features/navigation/components/tab-bar"
@@ -279,6 +280,8 @@ function HomeMapScreen() {
           onClose={() => setSelectedQuestionId(null)}
         />
       ) : null}
+
+      <InstallPrompt />
     </div>
   )
 }
