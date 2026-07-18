@@ -31,11 +31,11 @@ function SessionAlarmButton() {
         onClick={() => router.push(isLoggedIn ? routes.notifications() : routes.login())}
       />
       {hasUnread && (
-        // 미읽음 표시는 개수(숫자)가 아니라 점(dot) 하나. 스크린리더에는 개수를 라벨로 남긴다.
-        <span
-          aria-label={messages.notification.unreadBadgeLabel(unreadCount)}
-          className="pointer-events-none absolute right-2 top-2 size-2.5 rounded-full border-2 border-white bg-primary"
-        />
+        // 미읽음 표시는 개수(숫자)가 아니라 점(dot) 하나. 개수는 sr-only 자식으로 스크린리더에 전달한다
+        // (generic span의 aria-label은 일부 스크린리더가 무시할 수 있어 텍스트 노드로 노출).
+        <span className="pointer-events-none absolute right-2 top-2 size-2.5 rounded-full border-2 border-white bg-primary">
+          <span className="sr-only">{messages.notification.unreadBadgeLabel(unreadCount)}</span>
+        </span>
       )}
     </div>
   )
