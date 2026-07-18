@@ -8,6 +8,7 @@ import { CheckCircle2, Flag, Globe } from "lucide-react"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { NoImageProfile } from "@/components/ui/no-image"
+import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
 import { LongPressActionOverlay } from "@/features/question/components/long-press-action-overlay"
 import { QuestionAiAnswerCard } from "@/features/question/components/question-ai-answer-card"
 import { QuestionAnswerAuthorItem } from "@/features/question/components/question-answer-author-item"
@@ -115,7 +116,8 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
     postAnswer.mutate(
       { content: value },
       {
-        onSuccess: () => setReply(""),
+        // 전송 중에 이어서 타이핑한 내용까지 지우지 않도록, 보낸 그대로일 때만 비운다.
+        onSuccess: () => setReply((current) => (current.trim() === value ? "" : current)),
         onError: showError,
       }
     )
@@ -300,16 +302,14 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
 
         {question && !isAuthor && !question.isResolved ? (
           <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm bg-white px-4 pt-2 pb-6">
-            <div className="flex w-full items-center justify-between gap-2 rounded-full border border-gray-50 bg-gray-50/95 py-2 pr-2 pl-4">
-              <input
+            <div className="flex w-full items-end justify-between gap-2 rounded-3xl border border-gray-50 bg-gray-50/95 py-2 pr-2 pl-4">
+              <MessageTextarea
                 aria-label={messages.question.answerPlaceholder}
                 value={reply}
                 onChange={(event) => setReply(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.nativeEvent.isComposing) handleSend()
-                }}
+                onSubmit={handleSend}
                 placeholder={messages.question.answerPlaceholder}
-                className="min-w-0 flex-1 bg-transparent text-body-regular-14 text-gray-900 outline-none placeholder:text-gray-400"
+                className="py-1.5"
               />
               <button
                 type="button"

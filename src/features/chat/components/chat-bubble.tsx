@@ -96,7 +96,7 @@ function ChatBubble({
               isMe ? "rounded-3xl bg-primary" : "rounded-tr-3xl rounded-bl-3xl rounded-br-3xl bg-gray-50"
             )}
           >
-            <p className={cn("text-body-regular-14", isMe ? "text-white" : "text-gray-900")}>{replyText}</p>
+            <p className={cn("text-body-regular-14 whitespace-pre-line break-words", isMe ? "text-white" : "text-gray-900")}>{replyText}</p>
           </div>
           {time && <p className="text-body-regular-12 text-gray-400">{time}</p>}
         </div>
@@ -124,7 +124,7 @@ function ChatBubble({
               index === highlightedIndex && "relative z-10 animate-message-jump-highlight"
             )}
           >
-            <p className={cn("text-body-regular-14", isMe ? "text-white" : "text-gray-900")}>{text}</p>
+            <p className={cn("text-body-regular-14 whitespace-pre-line break-words", isMe ? "text-white" : "text-gray-900")}>{text}</p>
           </div>
         ))}
         {time && <p className="text-body-regular-12 text-gray-400">{time}</p>}

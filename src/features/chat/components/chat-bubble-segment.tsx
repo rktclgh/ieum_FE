@@ -98,7 +98,7 @@ function ChatBubbleSegment({
       )}
       {...(!hasReply ? props : {})}
     >
-      <p className={cn("text-body-regular-14", isMe ? "text-white" : "text-gray-900")}>{text}</p>
+      <p className={cn("text-body-regular-14 whitespace-pre-line break-words", isMe ? "text-white" : "text-gray-900")}>{text}</p>
     </div>
   )
 
