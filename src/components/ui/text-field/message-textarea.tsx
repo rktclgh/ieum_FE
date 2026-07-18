@@ -40,18 +40,18 @@ function MessageTextarea({
 
     const style = window.getComputedStyle(element)
     const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.4
-    // box-sizing이 border-box라 scrollHeight(= 콘텐츠 + 패딩)에 테두리를 더해야 실제 높이가 된다.
-    const vertical =
-      parseFloat(style.paddingTop) +
-      parseFloat(style.paddingBottom) +
-      parseFloat(style.borderTopWidth) +
-      parseFloat(style.borderBottomWidth)
-    const maxHeight = lineHeight * maxRows + vertical
+    // box-sizing이 border-box라 height는 테두리를 포함하는데 scrollHeight는 콘텐츠 + 패딩까지만
+    // 센다. 그래서 재는 쪽(scrollHeight)과 정하는 쪽(maxHeight) 모두에 테두리를 더해야 한다.
+    // 지금 consumer들은 테두리가 없어 0이지만, 공용 프리미티브라 테두리가 붙는 순간 어긋난다.
+    const borderHeight = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
+    const maxHeight =
+      lineHeight * maxRows + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + borderHeight
 
     // 줄어드는 경우까지 재려면 먼저 높이를 풀어 scrollHeight를 다시 측정해야 한다.
     element.style.height = "auto"
-    element.style.height = `${Math.min(element.scrollHeight, maxHeight)}px`
-    element.style.overflowY = element.scrollHeight > maxHeight ? "auto" : "hidden"
+    const contentHeight = element.scrollHeight + borderHeight
+    element.style.height = `${Math.min(contentHeight, maxHeight)}px`
+    element.style.overflowY = contentHeight > maxHeight ? "auto" : "hidden"
   }, [value, maxRows])
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {

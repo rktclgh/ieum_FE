@@ -116,7 +116,8 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
     postAnswer.mutate(
       { content: value },
       {
-        onSuccess: () => setReply(""),
+        // 전송 중에 이어서 타이핑한 내용까지 지우지 않도록, 보낸 그대로일 때만 비운다.
+        onSuccess: () => setReply((current) => (current.trim() === value ? "" : current)),
         onError: showError,
       }
     )
