@@ -22,7 +22,7 @@ function TabBar({ className, activeHref, ...props }: TabBarProps) {
     <div
       data-slot="tab-bar"
       className={cn(
-        "flex w-full min-w-80 flex-col items-center justify-end gap-2 px-4 py-2",
+        "flex w-full min-w-80 flex-col items-center justify-end gap-2 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]",
         className
       )}
       {...props}
