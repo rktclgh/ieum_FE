@@ -25,15 +25,23 @@ function SessionAlarmButton() {
 
   return (
     <div className="relative shrink-0">
+      {/* 미읽음 개수는 버튼의 접근가능한 이름에 포함시킨다. 배지는 버튼의 형제라 포커스를 받지 못해,
+          배지 안에 sr-only 텍스트를 두면 탭으로 버튼에 온 스크린리더 사용자에게 전달되지 않는다. */}
       <Circle
         iconSrc="/icons/circle/alarm.svg"
-        aria-label={isLoggedIn ? messages.notification.bellLabel : messages.home.loginLabel}
+        aria-label={
+          isLoggedIn
+            ? hasUnread
+              ? `${messages.notification.bellLabel} ${messages.notification.unreadBadgeLabel(unreadCount)}`
+              : messages.notification.bellLabel
+            : messages.home.loginLabel
+        }
         onClick={() => router.push(isLoggedIn ? routes.notifications() : routes.login())}
       />
       {hasUnread && (
-        // 미읽음 표시는 개수(숫자)가 아니라 점(dot) 하나. 스크린리더에는 개수를 라벨로 남긴다.
+        // 시각적 점 배지는 장식 — 개수는 위 버튼 라벨이 전달하므로 스크린리더에서는 숨긴다.
         <span
-          aria-label={messages.notification.unreadBadgeLabel(unreadCount)}
+          aria-hidden="true"
           className="pointer-events-none absolute right-2 top-2 size-2.5 rounded-full border-2 border-white bg-primary"
         />
       )}
