@@ -24,11 +24,11 @@ function SessionAlarmButton() {
   const hasUnread = isLoggedIn && unreadCount > 0
 
   return (
-    <div className="relative shrink-0">
-      {/* 미읽음 개수는 버튼의 접근가능한 이름에 포함시킨다. 배지는 버튼의 형제라 포커스를 받지 못해,
-          배지 안에 sr-only 텍스트를 두면 탭으로 버튼에 온 스크린리더 사용자에게 전달되지 않는다. */}
+    <div className="shrink-0">
+      {/* 미읽음 점 배지는 CSS가 아니라 아이콘 자체(alarm-on.svg)로 그린다 — 종 모양과 점의 상대 위치를
+          디자인 원본 그대로 유지하기 위함. 개수는 버튼의 접근가능한 이름으로 전달한다. */}
       <Circle
-        iconSrc="/icons/circle/alarm.svg"
+        iconSrc={hasUnread ? "/icons/circle/alarm-on.svg" : "/icons/circle/alarm.svg"}
         aria-label={
           isLoggedIn
             ? hasUnread
@@ -38,13 +38,6 @@ function SessionAlarmButton() {
         }
         onClick={() => router.push(isLoggedIn ? routes.notifications() : routes.login())}
       />
-      {hasUnread && (
-        // 시각적 점 배지는 장식 — 개수는 위 버튼 라벨이 전달하므로 스크린리더에서는 숨긴다.
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute right-2 top-2 size-2.5 rounded-full border-2 border-white bg-primary"
-        />
-      )}
     </div>
   )
 }
