@@ -28,6 +28,7 @@ import { CreateQuestionScreen } from "@/features/question/components/create-ques
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
+import { useRequireAuth } from "@/features/session/hooks/use-require-auth"
 import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -57,6 +58,9 @@ interface SelectedLocation {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
+  const requireAuth = useRequireAuth()
+  const handleCreateMeetup = () => requireAuth(() => setCreateMeetupOpen(true))
+  const handleCreateQuestion = () => requireAuth(() => setCreateQuestionOpen(true))
   const { position, status } = useGeolocation()
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
@@ -207,8 +211,8 @@ function HomeMapScreen() {
         {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
         <MapControls
           onRecenter={handleRecenter}
-          onCreateMeetup={() => setCreateMeetupOpen(true)}
-          onCreateQuestion={() => setCreateQuestionOpen(true)}
+          onCreateMeetup={handleCreateMeetup}
+          onCreateQuestion={handleCreateQuestion}
           onListView={() => setListOpen(true)}
           className={`pointer-events-auto absolute right-4 ${FAB_BOTTOM_WITH_TABBAR} flex flex-col gap-2`}
         />
@@ -245,8 +249,8 @@ function HomeMapScreen() {
           onClose={() => setListOpen(false)}
           onOpenMeetup={(id) => setSelectedMeetingId(id)}
           onOpenQuestion={(id) => setSelectedQuestionId(id)}
-          onCreateMeetup={() => setCreateMeetupOpen(true)}
-          onCreateQuestion={() => setCreateQuestionOpen(true)}
+          onCreateMeetup={handleCreateMeetup}
+          onCreateQuestion={handleCreateQuestion}
         />
       ) : null}
 
