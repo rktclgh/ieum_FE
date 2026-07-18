@@ -63,7 +63,7 @@ function CreateQuestionScreen({
     // 상세 fetch 실패 시 null을 반환하면 AppBar도 없는 먹통 화면이 되므로,
     // question-detail-screen.tsx와 동일하게 닫기 가능한 에러 상태를 보여준다.
     return (
-      <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-sm flex-col bg-white">
+      <div className="fixed inset-0 z-50 app-column flex flex-col bg-white">
         <AppBar
           title={messages.question.editTitle}
           leadingIcon={null}
@@ -217,7 +217,7 @@ function CreateQuestionForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-sm flex-col bg-white">
+    <div className="fixed inset-0 z-50 app-column flex flex-col bg-white">
       <AppBar
         title={mode === "edit" ? t.editTitle : t.createTitle}
         leadingIcon={null}

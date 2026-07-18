@@ -38,7 +38,7 @@ function SidePanelPopup({ className, children, ...props }: DrawerPrimitive.Popup
     <DrawerPrimitive.Popup
       data-slot="side-panel-popup"
       className={cn(
-        "flex h-dvh w-full max-w-sm flex-col bg-white outline-none [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:translate-x-full data-starting-style:translate-x-full",
+        "flex h-dvh w-full flex-col bg-white outline-none sm:max-w-(--app-column) [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:translate-x-full data-starting-style:translate-x-full",
         className
       )}
       {...props}

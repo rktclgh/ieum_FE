@@ -738,7 +738,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   return (
     <>
-      <main className="mx-auto flex h-dvh w-full max-w-sm flex-col">
+      <main className="app-column flex h-dvh flex-col">
         <AppBar
           title={roomTitle}
           onLeadingClick={() => router.back()}

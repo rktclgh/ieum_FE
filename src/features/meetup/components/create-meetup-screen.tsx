@@ -125,7 +125,7 @@ function CreateMeetupScreen({
   }
 
   return (
-    <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-sm flex-col bg-white">
+    <div className="fixed inset-0 z-50 app-column flex flex-col bg-white">
       <AppBar
         title={t.appBarTitle}
         leadingIcon={null}

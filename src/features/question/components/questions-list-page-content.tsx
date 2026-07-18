@@ -59,7 +59,7 @@ function QuestionsListPageContent() {
 
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-gray-50">
+      <main className="app-column flex min-h-dvh flex-col bg-gray-50">
         <AppBar title={messages.question.historyTitle} leadingIcon={null} trailingIcon={null} />
 
         <div className="flex flex-1 flex-col gap-3 px-4 pt-2 pb-24">
@@ -84,7 +84,7 @@ function QuestionsListPageContent() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm">
+      <div className="fixed inset-x-0 bottom-0 app-column">
         <TabBar />
       </div>
 

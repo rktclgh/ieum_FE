@@ -12,7 +12,7 @@ function RoutePageState({ kind }: RoutePageStateProps) {
   return (
     <main
       aria-busy={kind === "loading"}
-      className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center px-4"
+      className="app-column flex min-h-dvh items-center justify-center px-4"
     >
       {kind === "loading" ? (
         <span

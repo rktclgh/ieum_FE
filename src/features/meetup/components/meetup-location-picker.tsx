@@ -54,7 +54,7 @@ function MeetupLocationPicker({
     confirm({ lat: place.lat, lng: place.lng, address: place.address, label: place.name })
 
   return (
-    <div className="fixed inset-0 z-50 mx-auto w-full max-w-sm bg-white">
+    <div className="fixed inset-0 z-50 app-column bg-white">
       {step.name === "map" && (
         <MeetupLocationMap
           position={position}

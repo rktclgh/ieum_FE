@@ -74,7 +74,7 @@ function NotificationsPageContent() {
 
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-gray-50">
+      <main className="app-column flex min-h-dvh flex-col bg-gray-50">
         <NotificationListAppBar
           onBack={() => router.back()}
           onReadAll={() => readAll.mutate()}

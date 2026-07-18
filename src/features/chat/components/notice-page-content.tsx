@@ -121,7 +121,7 @@ function NoticePageContent() {
         ]
 
   return (
-    <div className="fixed inset-0 mx-auto flex w-full max-w-sm flex-col overflow-hidden bg-white">
+    <div className="fixed inset-0 app-column flex flex-col overflow-hidden bg-white">
       <AppBar
         title={messages.chat.noticeLabel}
         trailingVariant="close"

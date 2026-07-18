@@ -21,7 +21,7 @@ function PermissionsForm({ settings: serverSettings }: { settings: UserSettings 
   const { settings, patch, error } = useSettingsForm(serverSettings)
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col">
+    <main className="app-column flex min-h-dvh flex-col">
       <AppBar
         title={messages.my.permissions.title}
         trailingIcon={null}
@@ -41,7 +41,7 @@ function PermissionsForm({ settings: serverSettings }: { settings: UserSettings 
       </div>
 
       {error && (
-        <div className="fixed inset-x-0 bottom-6 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-6 z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {messages.my.permissions.saveError}
           </div>

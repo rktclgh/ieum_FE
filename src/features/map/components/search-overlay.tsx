@@ -61,7 +61,7 @@ function SearchOverlay({
     (!showPlaces || places.length === 0)
 
   return (
-    <div className="fixed inset-0 z-40 mx-auto flex w-full max-w-sm flex-col bg-white">
+    <div className="fixed inset-0 z-40 app-column flex flex-col bg-white">
       <div className="flex items-center gap-2 p-4">
         <button
           type="button"
