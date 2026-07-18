@@ -251,6 +251,26 @@ test("registers the root service worker with root scope", async () => {
   }
 })
 
+test("rejects instead of hanging when service worker registration fails", async () => {
+  const restoreNavigator = replaceGlobal("navigator", {
+    serviceWorker: {
+      ready: new Promise(() => {
+        // Never resolves: with no active worker, `.ready` would hang forever
+        // if the util below swallowed the registration failure.
+      }),
+      register: async () => {
+        throw new Error("registration failed")
+      },
+    },
+  })
+
+  try {
+    await assert.rejects(registerWebPushServiceWorker(), /registration failed/)
+  } finally {
+    restoreNavigator()
+  }
+})
+
 test("reads the existing subscription from a registration", async () => {
   const subscription = { endpoint: "https://push.example/subscription" } as PushSubscription
   const registration = {
