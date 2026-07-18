@@ -8,14 +8,22 @@ interface AnswerAcceptButtonProps {
 }
 
 /**
- * 답변 채택 버튼 (Figma 1744-10029).
- * 채택할 수 없는 경우는 렌더하지 않는다 — 채택은 되돌릴 수 없어서 누를 수 없는 버튼을
- * 남길 이유가 없다. 누르는 즉시 확정되므로 사전 확인 단계도 없다.
+ * 답변 채택 버튼 (Figma 1744-10029 / 1916-21884).
+ * 누르는 즉시 채택이 확정되므로 사전 확인 단계가 없다. 확정 뒤에는 채택된 답변에만
+ * 흰색 "채택 완료" 표식이 남고, 채택되지 않은 답변에서는 버튼이 사라진다.
  */
 function AnswerAcceptButton({ state, onClick }: AnswerAcceptButtonProps) {
   const { messages } = useTranslation()
 
   if (state === "hidden") return null
+
+  if (state === "accepted") {
+    return (
+      <span className="flex h-8 shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-white px-3 py-2 text-body-regular-13 text-gray-900">
+        {messages.question.acceptedLabel}
+      </span>
+    )
+  }
 
   return (
     <button

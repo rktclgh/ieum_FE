@@ -55,9 +55,19 @@ test("채택이 끝나면 채택되지 않은 답변의 버튼이 사라진다",
   assert.equal(state, "hidden")
 })
 
-test("채택이 끝나면 채택된 답변의 버튼도 사라진다", () => {
+test("채택된 답변에는 '채택 완료' 표식이 남는다", () => {
   const state = resolveAcceptButtonState({
     ...base,
+    hasAcceptedAnswer: true,
+    answer: makeAnswer({ isAccepted: true }),
+  })
+  assert.equal(state, "accepted")
+})
+
+test("비작성자에게는 채택된 답변의 '채택 완료' 표식도 보이지 않는다", () => {
+  const state = resolveAcceptButtonState({
+    ...base,
+    isAuthor: false,
     hasAcceptedAnswer: true,
     answer: makeAnswer({ isAccepted: true }),
   })

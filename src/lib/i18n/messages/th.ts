@@ -203,6 +203,7 @@ export const th: Messages = {
     acceptedBadge: "เลือกแล้ว",
     acceptButton: "เลือก",
     acceptAction: "เลือกคำตอบ",
+    acceptedLabel: "เลือกแล้ว",
     acceptedDialogTitle: "เลือกคำตอบแล้ว",
     acceptedDialogDescription: (nickname: string) =>
       `หากมีข้อสงสัยเพิ่มเติมกับ ${nickname} สามารถถามต่อในแชทส่วนตัวได้`,

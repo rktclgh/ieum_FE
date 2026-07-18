@@ -203,6 +203,7 @@ export const zh: Messages = {
     acceptedBadge: "已采纳",
     acceptButton: "采纳",
     acceptAction: "采纳回答",
+    acceptedLabel: "已采纳",
     acceptedDialogTitle: "已采纳回答",
     acceptedDialogDescription: (nickname: string) =>
       `如果还想问${nickname}更多问题，可以通过私聊继续询问。`,

@@ -204,6 +204,7 @@ export const ru: Messages = {
     acceptedBadge: "Принят",
     acceptButton: "Принять",
     acceptAction: "Выбрать ответ",
+    acceptedLabel: "Выбран",
     acceptedDialogTitle: "Ответ выбран",
     acceptedDialogDescription: (nickname: string) =>
       `Если у вас есть ещё вопросы к ${nickname}, продолжите в личном чате.`,

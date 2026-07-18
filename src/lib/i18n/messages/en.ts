@@ -204,6 +204,7 @@ export const en: Messages = {
     acceptedBadge: "Accepted",
     acceptButton: "Accept",
     acceptAction: "Accept",
+    acceptedLabel: "Accepted",
     acceptedDialogTitle: "Answer accepted",
     acceptedDialogDescription: (nickname: string) =>
       `If you have more questions for ${nickname}, you can keep asking in a private chat.`,

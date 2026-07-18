@@ -203,6 +203,7 @@ export const ja: Messages = {
     acceptedBadge: "採用済み",
     acceptButton: "採用",
     acceptAction: "回答を採用",
+    acceptedLabel: "採用済み",
     acceptedDialogTitle: "回答を採用しました",
     acceptedDialogDescription: (nickname: string) =>
       `${nickname}さんにもっと聞きたいことがあれば、個人チャットで続けて質問できます。`,

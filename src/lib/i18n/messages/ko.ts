@@ -206,6 +206,7 @@ export interface Messages {
     acceptedBadge: string
     acceptButton: string
     acceptAction: string
+    acceptedLabel: string
     acceptedDialogTitle: string
     acceptedDialogDescription: (nickname: string) => string
     acceptedDialogClose: string
@@ -704,6 +705,7 @@ export const ko: Messages = {
     acceptedBadge: "채택됨",
     acceptButton: "채택",
     acceptAction: "답변 채택",
+    acceptedLabel: "채택 완료",
     acceptedDialogTitle: "답변을 채택했습니다",
     acceptedDialogDescription: (nickname: string) =>
       `${nickname}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,

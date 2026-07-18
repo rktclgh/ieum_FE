@@ -204,6 +204,7 @@ export const vi: Messages = {
     acceptedBadge: "Đã chọn",
     acceptButton: "Chọn",
     acceptAction: "Chọn câu trả lời",
+    acceptedLabel: "Đã chọn",
     acceptedDialogTitle: "Đã chọn câu trả lời",
     acceptedDialogDescription: (nickname: string) =>
       `Nếu bạn còn thắc mắc với ${nickname}, hãy tiếp tục hỏi trong trò chuyện riêng.`,
