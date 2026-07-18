@@ -75,6 +75,8 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
   }, [question, me.data, isAuthor, router])
 
   const handleAccept = (answer: QuestionAnswerView) => {
+    // 채택은 되돌릴 수 없다 — 연타로 두 번 요청이 나가지 않게 막는다(두 번째는 BE가 409).
+    if (acceptAnswer.isPending) return
     acceptAnswer.mutate(answer.answerId, {
       onSuccess: () =>
         setAcceptedAuthor({ name: answer.authorName, userId: answer.authorUserId }),
