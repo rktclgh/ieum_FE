@@ -1,7 +1,7 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
 import { formatKstTime } from "@/lib/date/kst"
 import type { ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
-import { resolveChatRoomAvatars } from "@/features/chat/lib/chat-avatar"
+import { resolveChatRoomAvatars, type ChatRoomAvatars } from "@/features/chat/lib/chat-avatar"
 import type {
   ChatMessageResponse,
   ChatReplyPreview,
@@ -26,7 +26,7 @@ interface ChatListEntry {
   avatarSrc?: string
   // 3명 이상 방에서 겹쳐 그릴 두 번째 프로필과 겹침 표시 여부.
   secondaryAvatarSrc?: string
-  groupAvatar?: boolean
+  grouped?: boolean
   memberCount?: number
   lastMessage?: string
   time?: string
@@ -102,7 +102,7 @@ function resolveRoomAvatar(
   roomType: RoomType,
   meetingImageUrl?: string | null,
   counterpart?: ChatRoomMemberResponse | null
-): ReturnType<typeof resolveChatRoomAvatars> {
+): ChatRoomAvatars {
   return resolveChatRoomAvatars(
     roomType,
     members.map((member) => ({
@@ -146,7 +146,7 @@ function adaptRoomSummary(
     category: roomCategory(summary.roomType),
     avatarSrc: avatars.avatarSrc,
     secondaryAvatarSrc: avatars.secondaryAvatarSrc,
-    groupAvatar: avatars.grouped,
+    grouped: avatars.grouped,
     memberCount: summary.roomType === "direct" ? undefined : members.length || undefined,
     lastMessage: last ? messagePreview(last) : undefined,
     time: last ? formatKstTime(last.createdAt) : undefined,
