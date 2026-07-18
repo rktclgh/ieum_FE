@@ -81,7 +81,9 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
 
   const handleAccept = (answer: QuestionAnswerView) => {
     // 채택은 되돌릴 수 없다 — 연타로 두 번 요청이 나가지 않게 막는다(두 번째는 BE가 409).
-    if (acceptAnswer.isPending) return
+    // 성공 직후 ~ 리페치가 끝나 hasAcceptedAnswer가 반영되기 전 사이에도 버튼이 다시
+    // 눌릴 수 있어 isSuccess까지 함께 막는다.
+    if (acceptAnswer.isPending || acceptAnswer.isSuccess) return
     acceptAnswer.mutate(answer.answerId, {
       onSuccess: () =>
         setAcceptedAuthor({ name: answer.authorName, userId: answer.authorUserId }),
@@ -124,7 +126,11 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-white">
         <AppBar
-          title={question?.title ?? ""}
+          center={
+            <span className="min-w-0 flex-1 truncate text-center text-title-semibold-18 text-gray-900">
+              {question?.title ?? ""}
+            </span>
+          }
           trailingIcon={null}
           onLeadingClick={() => router.back()}
         />
@@ -155,7 +161,9 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
                       answer,
                       isAuthor,
                       isAuthenticated,
-                      hasAcceptedAnswer,
+                      // 성공 직후 아직 리페치가 끝나지 않아도 낙관적으로 버튼을 접어
+                      // 두 번째 채택 요청(BE ANSWER_SELECTION_FINALIZED)을 막는다.
+                      hasAcceptedAnswer: hasAcceptedAnswer || acceptAnswer.isSuccess,
                       viewerUserId,
                     })}
                     isAuthenticated={isAuthenticated}
@@ -193,6 +201,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
         description={messages.question.acceptedDialogDescription(acceptedAuthor?.name ?? "")}
         cancelLabel={messages.question.acceptedDialogClose}
         confirmLabel={messages.question.acceptedDialogStartChat}
+        confirmDisabled={acceptedAuthor?.userId == null}
         onConfirm={handleStartChat}
       />
 
@@ -281,12 +290,19 @@ function AnswerRow({
       : []),
   ]
 
+  // 항목이 없는 메뉴는 딤도 닫을 방법도 없이 카드만 떠 있게 된다(현재는 도달 불가 —
+  // canReport/canTranslate 중 하나는 항상 있음) — active/렌더 조건을 하나로 묶어 이 불변식을
+  // 명시한다.
+  const hasMenu = menuOpen && menuItems.length > 0
+
   return (
     <div ref={rowRef} className="relative">
       <AnswerCard
         answer={{ ...answer, content: translate.displayText }}
-        acceptState={acceptState}
-        active={menuOpen}
+        // 메뉴가 열려 카드가 떠 있는 동안엔 딤 위로 버튼이 튀어나오지 않도록 숨긴다 —
+        // 메뉴를 닫으려는 탭이 채택(되돌릴 수 없음)으로 오인되면 안 된다.
+        acceptState={menuOpen ? "hidden" : acceptState}
+        active={hasMenu}
         onAccept={onAccept}
         onLongPress={handleOpenMenu}
       />
@@ -295,7 +311,7 @@ function AnswerRow({
           {messages.translate.translateFailedLabel}
         </p>
       ) : null}
-      {menuOpen && menuItems.length > 0 && (
+      {hasMenu && (
         <ChatContextMenu
           items={menuItems}
           dimmed
