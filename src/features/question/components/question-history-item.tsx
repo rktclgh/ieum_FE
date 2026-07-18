@@ -16,20 +16,15 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 interface QuestionHistoryItemProps {
   item: MyQuestionListItemView
   onOpen: () => void
-  onLongPress: (rect: DOMRect) => void
-  /** 롱프레스 오버레이 안에서만 true — 눌린 항목이 흰 카드로 떠오른다(Figma 1722-13490). */
-  elevated?: boolean
+  onLongPress: () => void
+  /** 컨텍스트 메뉴가 열린 행 — 채팅 목록과 동일하게 부상시킨다(Figma 1722-13490). */
+  active?: boolean
 }
 
-function QuestionHistoryItem({ item, onOpen, onLongPress, elevated }: QuestionHistoryItemProps) {
+function QuestionHistoryItem({ item, onOpen, onLongPress, active }: QuestionHistoryItemProps) {
   const { messages } = useTranslation()
   const ref = React.useRef<HTMLButtonElement>(null)
-  const longPress = useLongPress({
-    onLongPress: () => {
-      const rect = ref.current?.getBoundingClientRect()
-      if (rect) onLongPress(rect)
-    },
-  })
+  const longPress = useLongPress({ onLongPress })
 
   // N+1 완화: 뷰포트에 들어온 아이템만 상세를 지연 로드한다. 한 번 보이면 계속 유지(React Query 캐시).
   const [hasEntered, setHasEntered] = React.useState(false)
@@ -68,8 +63,10 @@ function QuestionHistoryItem({ item, onOpen, onLongPress, elevated }: QuestionHi
       onClick={onOpen}
       {...longPress}
       className={cn(
-        "flex w-full items-center gap-3 px-4 py-3 text-left",
-        elevated && "rounded-2xl bg-white shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]"
+        "flex w-full items-center gap-3 px-4 py-3 text-left transition-all duration-200 ease-out",
+        active
+          ? "relative z-50 -translate-y-1 scale-[1.02] rounded-2xl bg-white shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
+          : "translate-y-0 scale-100"
       )}
     >
       <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-gray-100">

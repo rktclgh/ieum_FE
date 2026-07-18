@@ -8,25 +8,22 @@ import { AnswerAcceptButton } from "@/features/question/components/answer-accept
 import type { AcceptButtonState } from "@/features/question/lib/answer-acceptance"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface AnswerCardProps {
   answer: QuestionAnswerView
   acceptState: AcceptButtonState
   onAccept: () => void
-  onLongPress: (rect: DOMRect) => void
+  onLongPress: () => void
+  /** 컨텍스트 메뉴가 열린 카드 — 채팅 목록과 동일하게 제자리에서 부상시킨다. */
+  active?: boolean
 }
 
 /** 사람이 쓴 답변 카드 (Figma 1744-10029). 롱프레스로 번역·신고 액션을 연다. */
-function AnswerCard({ answer, acceptState, onAccept, onLongPress }: AnswerCardProps) {
+function AnswerCard({ answer, acceptState, onAccept, onLongPress, active }: AnswerCardProps) {
   const { messages } = useTranslation()
-  const ref = React.useRef<HTMLDivElement>(null)
-  const longPress = useLongPress({
-    onLongPress: () => {
-      const rect = ref.current?.getBoundingClientRect()
-      if (rect) onLongPress(rect)
-    },
-  })
+  const longPress = useLongPress({ onLongPress })
 
   const countryName = answer.nationalityCode
     ? messages.countries[answer.nationalityCode]
@@ -34,9 +31,13 @@ function AnswerCard({ answer, acceptState, onAccept, onLongPress }: AnswerCardPr
 
   return (
     <div
-      ref={ref}
       {...longPress}
-      className="flex w-full flex-col gap-3 rounded-xl bg-gray-50 px-3 py-4"
+      className={cn(
+        "flex w-full flex-col gap-3 rounded-xl px-3 py-4 transition-all duration-200 ease-out",
+        active
+          ? "relative z-50 -translate-y-1 scale-[1.02] bg-white shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
+          : "translate-y-0 scale-100 bg-gray-50"
+      )}
     >
       <div className="flex w-full items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">

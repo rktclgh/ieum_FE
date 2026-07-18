@@ -6,8 +6,11 @@ import { Flag, Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import {
+  ChatContextMenu,
+  type ChatContextMenuItem,
+} from "@/features/chat/components/chat-context-menu"
 import { AnswerCard } from "@/features/question/components/answer-card"
-import { LongPressActionOverlay } from "@/features/question/components/long-press-action-overlay"
 import { QuestionAiAnswerCard } from "@/features/question/components/question-ai-answer-card"
 import {
   useAcceptAnswer,
@@ -15,13 +18,20 @@ import {
   useReportAnswer,
 } from "@/features/question/hooks/use-question-mutations"
 import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
-import { resolveAcceptButtonState } from "@/features/question/lib/answer-acceptance"
+import {
+  resolveAcceptButtonState,
+  type AcceptButtonState,
+} from "@/features/question/lib/answer-acceptance"
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
+
+// 컨텍스트 메뉴 대략 높이 + 하단 여유. 아래 공간이 부족하면 메뉴를 카드 위로 띄운다.
+const CONTEXT_MENU_HEIGHT_ESTIMATE = 140
+const BOTTOM_SAFE_AREA = 96
 
 interface AnswerViewScreenProps {
   questionId: number
@@ -49,12 +59,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
     name: string
     userId: number | null
   } | null>(null)
-  const [activeAnswer, setActiveAnswer] = React.useState<{
-    id: number
-    rect: DOMRect
-    view: QuestionAnswerView
-    canReport: boolean
-  } | null>(null)
+  const [openMenuAnswerId, setOpenMenuAnswerId] = React.useState<number | null>(null)
 
   React.useEffect(() => {
     if (!actionError) return
@@ -143,7 +148,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
                     isAuthenticated={isAuthenticated}
                   />
                 ) : (
-                  <AnswerCard
+                  <AnswerRow
                     key={answer.answerId}
                     answer={answer}
                     acceptState={resolveAcceptButtonState({
@@ -153,15 +158,16 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
                       hasAcceptedAnswer,
                       viewerUserId,
                     })}
+                    isAuthenticated={isAuthenticated}
+                    canReport={answer.authorUserId !== viewerUserId}
+                    menuOpen={openMenuAnswerId === answer.answerId}
                     onAccept={() => handleAccept(answer)}
-                    onLongPress={(rect) =>
-                      setActiveAnswer({
-                        id: answer.answerId,
-                        rect,
-                        view: answer,
-                        canReport: answer.authorUserId !== viewerUserId,
-                      })
-                    }
+                    onOpenMenu={() => setOpenMenuAnswerId(answer.answerId)}
+                    onCloseMenu={() => setOpenMenuAnswerId(null)}
+                    onReport={() => {
+                      setOpenMenuAnswerId(null)
+                      setPendingReportId(answer.answerId)
+                    }}
                   />
                 )
               )
@@ -178,15 +184,6 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
             {actionError}
           </div>
         </div>
-      )}
-
-      {activeAnswer && (
-        <AnswerLongPressMenu
-          active={activeAnswer}
-          isAuthenticated={isAuthenticated}
-          onDismiss={() => setActiveAnswer(null)}
-          onReport={() => setPendingReportId(activeAnswer.id)}
-        />
       )}
 
       <ConfirmDialog
@@ -212,64 +209,101 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
   )
 }
 
-interface AnswerLongPressMenuProps {
-  active: { id: number; rect: DOMRect; view: QuestionAnswerView; canReport: boolean }
+interface AnswerRowProps {
+  answer: QuestionAnswerView
+  acceptState: AcceptButtonState
   isAuthenticated: boolean
-  onDismiss: () => void
+  canReport: boolean
+  menuOpen: boolean
+  onAccept: () => void
+  onOpenMenu: () => void
+  onCloseMenu: () => void
   onReport: () => void
 }
 
 /**
- * 답변 롱프레스 메뉴 (Figma 1951-27518) — 번역 / 신고.
- * 훅은 조건부·반복 호출이 불가능해, 활성 답변 하나에 대해서만 마운트되는 컴포넌트로 분리했다.
+ * 답변 한 건 (Figma 1744-10029) + 롱프레스 컨텍스트 메뉴 (Figma 1951-27518) — 번역 / 신고.
+ * 채팅 목록·말풍선과 동일하게 카드를 제자리에서 부상시키고 메뉴를 카드에 앵커한다.
+ * 번역 훅은 반복 호출이 불가능해 답변마다 이 컴포넌트가 하나씩 맡는다.
  */
-function AnswerLongPressMenu({
-  active,
+function AnswerRow({
+  answer,
+  acceptState,
   isAuthenticated,
-  onDismiss,
+  canReport,
+  menuOpen,
+  onAccept,
+  onOpenMenu,
+  onCloseMenu,
   onReport,
-}: AnswerLongPressMenuProps) {
+}: AnswerRowProps) {
   const { messages } = useTranslation()
-  const translate = useTranslateToggle({ text: active.view.content, isAuthenticated })
+  const rowRef = React.useRef<HTMLDivElement>(null)
+  const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
+  const translate = useTranslateToggle({ text: answer.content, isAuthenticated })
+
+  const handleOpenMenu = () => {
+    const rect = rowRef.current?.getBoundingClientRect()
+    if (rect) {
+      const spaceBelow = window.innerHeight - rect.bottom
+      setPlacement(spaceBelow < CONTEXT_MENU_HEIGHT_ESTIMATE + BOTTOM_SAFE_AREA ? "top" : "bottom")
+    }
+    onOpenMenu()
+  }
+
+  const menuItems: ChatContextMenuItem[] = [
+    ...(translate.canTranslate
+      ? [
+          {
+            icon: <Globe className="size-6 text-gray-900" />,
+            label: translate.isLoading
+              ? messages.translate.translatingLabel
+              : translate.isShowingTranslation
+                ? messages.translate.viewOriginalLabel
+                : messages.translate.menuLabel,
+            disabled: translate.isLoading,
+            onClick: () => {
+              translate.toggle()
+              onCloseMenu()
+            },
+          },
+        ]
+      : []),
+    ...(canReport
+      ? [
+          {
+            icon: <Flag className="size-6 text-red" />,
+            label: messages.question.reportAction,
+            tone: "destructive" as const,
+            onClick: onReport,
+          },
+        ]
+      : []),
+  ]
 
   return (
-    <LongPressActionOverlay
-      anchorRect={active.rect}
-      onDismiss={onDismiss}
-      actions={[
-        ...(translate.canTranslate
-          ? [
-              {
-                icon: <Globe className="size-5 text-gray-900" />,
-                label: translate.isLoading
-                  ? messages.translate.translatingLabel
-                  : translate.isShowingTranslation
-                    ? messages.translate.viewOriginalLabel
-                    : messages.translate.menuLabel,
-                disabled: translate.isLoading,
-                onClick: translate.toggle,
-              },
-            ]
-          : []),
-        ...(active.canReport
-          ? [
-              {
-                icon: <Flag className="size-5 text-red" />,
-                label: messages.question.reportAction,
-                tone: "destructive" as const,
-                onClick: onReport,
-              },
-            ]
-          : []),
-      ]}
-    >
+    <div ref={rowRef} className="relative">
       <AnswerCard
-        answer={{ ...active.view, content: translate.displayText }}
-        acceptState="hidden"
-        onAccept={() => {}}
-        onLongPress={() => {}}
+        answer={{ ...answer, content: translate.displayText }}
+        acceptState={acceptState}
+        active={menuOpen}
+        onAccept={onAccept}
+        onLongPress={handleOpenMenu}
       />
-    </LongPressActionOverlay>
+      {translate.isError ? (
+        <p className="mt-1 text-body-regular-12 text-red">
+          {messages.translate.translateFailedLabel}
+        </p>
+      ) : null}
+      {menuOpen && menuItems.length > 0 && (
+        <ChatContextMenu
+          items={menuItems}
+          dimmed
+          onDismiss={onCloseMenu}
+          className={placement === "top" ? "bottom-full left-0 mb-3" : "top-full left-0 mt-2"}
+        />
+      )}
+    </div>
   )
 }
 

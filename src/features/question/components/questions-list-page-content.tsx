@@ -6,12 +6,12 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import {
+  ChatContextMenu,
+  type ChatContextMenuItem,
+} from "@/features/chat/components/chat-context-menu"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
-import {
-  LongPressActionOverlay,
-  type LongPressAction,
-} from "@/features/question/components/long-press-action-overlay"
 import { QuestionHistoryItem } from "@/features/question/components/question-history-item"
 import { useDeleteQuestion } from "@/features/question/hooks/use-question-mutations"
 import { useMyQuestions } from "@/features/question/hooks/use-question-queries"
@@ -19,6 +19,60 @@ import { useMe } from "@/features/session/hooks/use-me"
 import { adaptMyQuestionItem, type MyQuestionListItemView } from "@/features/question/lib/question-adapter"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
+
+// 컨텍스트 메뉴 대략 높이 + 하단 탭바 여유. 아래 공간이 부족하면 메뉴를 행 위로 띄운다.
+const CONTEXT_MENU_HEIGHT_ESTIMATE = 140
+const BOTTOM_SAFE_AREA = 96
+
+interface QuestionRowProps {
+  item: MyQuestionListItemView
+  menuOpen: boolean
+  menuItems: ChatContextMenuItem[]
+  onOpenMenu: () => void
+  onCloseMenu: () => void
+  onNavigate: () => void
+}
+
+/** 채팅 목록(ChatRow)과 동일한 롱프레스 동작 — 행을 부상시키고 아래에 컨텍스트 메뉴를 앵커한다. */
+function QuestionRow({
+  item,
+  menuOpen,
+  menuItems,
+  onOpenMenu,
+  onCloseMenu,
+  onNavigate,
+}: QuestionRowProps) {
+  const rowRef = React.useRef<HTMLDivElement>(null)
+  const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
+
+  const handleOpenMenu = () => {
+    const rect = rowRef.current?.getBoundingClientRect()
+    if (rect) {
+      const spaceBelow = window.innerHeight - rect.bottom
+      setPlacement(spaceBelow < CONTEXT_MENU_HEIGHT_ESTIMATE + BOTTOM_SAFE_AREA ? "top" : "bottom")
+    }
+    onOpenMenu()
+  }
+
+  return (
+    <div ref={rowRef} className="relative">
+      <QuestionHistoryItem
+        item={item}
+        active={menuOpen}
+        onOpen={onNavigate}
+        onLongPress={handleOpenMenu}
+      />
+      {menuOpen && (
+        <ChatContextMenu
+          items={menuItems}
+          dimmed
+          onDismiss={onCloseMenu}
+          className={placement === "top" ? "bottom-full left-4 mb-3" : "top-full left-4 mt-2"}
+        />
+      )}
+    </div>
+  )
+}
 
 // 질문 내역 화면 — 목록 + 무한스크롤 + 롱프레스 수정/삭제. 탭바가 있는 (main) 화면.
 function QuestionsListPageContent() {
@@ -30,11 +84,7 @@ function QuestionsListPageContent() {
   // 로그인 사용자로 방어한다(로그아웃 후 캐시 잔존 등 엣지 케이스 차단).
   const { data: me } = useMe()
 
-  const [active, setActive] = React.useState<{
-    id: number
-    rect: DOMRect
-    view: MyQuestionListItemView
-  } | null>(null)
+  const [openMenuId, setOpenMenuId] = React.useState<number | null>(null)
   const [editId, setEditId] = React.useState<number | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = React.useState<number | null>(null)
 
@@ -42,6 +92,31 @@ function QuestionsListPageContent() {
     () => (query.data?.pages.flatMap((page) => page.items) ?? []).map(adaptMyQuestionItem),
     [query.data]
   )
+
+  // resolved(확정) 질문은 삭제만 허용 — 수정 진입점을 숨긴다(BE 409 QUESTION_RESOLVED).
+  const menuItemsFor = (item: MyQuestionListItemView): ChatContextMenuItem[] => [
+    ...(item.isResolved
+      ? []
+      : [
+          {
+            icon: <Pencil className="size-6 text-gray-900" />,
+            label: messages.question.editAction,
+            onClick: () => {
+              setOpenMenuId(null)
+              setEditId(item.questionId)
+            },
+          },
+        ]),
+    {
+      icon: <Trash2 className="size-6 text-red" />,
+      label: messages.question.deleteAction,
+      tone: "destructive" as const,
+      onClick: () => {
+        setOpenMenuId(null)
+        setPendingDeleteId(item.questionId)
+      },
+    },
+  ]
 
   // 무한스크롤 센티널 — 화면 하단에 노출되면 다음 페이지를 가져온다.
   const sentinelRef = React.useRef<HTMLDivElement | null>(null)
@@ -69,14 +144,16 @@ function QuestionsListPageContent() {
             </p>
           ) : (
             items.map((item) => (
-              <QuestionHistoryItem
+              <QuestionRow
                 key={item.questionId}
                 item={item}
-                onOpen={() => router.push(routes.questionDetail(item.questionId))}
-                onLongPress={(rect) => {
-                  if (!me) return
-                  setActive({ id: item.questionId, rect, view: item })
+                menuOpen={openMenuId === item.questionId}
+                menuItems={menuItemsFor(item)}
+                onOpenMenu={() => {
+                  if (me) setOpenMenuId(item.questionId)
                 }}
+                onCloseMenu={() => setOpenMenuId(null)}
+                onNavigate={() => router.push(routes.questionDetail(item.questionId))}
               />
             ))
           )}
@@ -87,35 +164,6 @@ function QuestionsListPageContent() {
       <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm">
         <TabBar />
       </div>
-
-      {active && (
-        <LongPressActionOverlay
-          anchorRect={active.rect}
-          onDismiss={() => setActive(null)}
-          actions={
-            [
-              // resolved(확정) 질문은 삭제만 허용 — 수정 진입점을 숨긴다(BE 409 QUESTION_RESOLVED).
-              ...(active.view.isResolved
-                ? []
-                : [
-                    {
-                      icon: <Pencil className="size-5 text-gray-900" />,
-                      label: messages.question.editAction,
-                      onClick: () => setEditId(active.id),
-                    },
-                  ]),
-              {
-                icon: <Trash2 className="size-5 text-red" />,
-                label: messages.question.deleteAction,
-                tone: "destructive",
-                onClick: () => setPendingDeleteId(active.id),
-              },
-            ] satisfies LongPressAction[]
-          }
-        >
-          <QuestionHistoryItem item={active.view} onOpen={() => {}} onLongPress={() => {}} elevated />
-        </LongPressActionOverlay>
-      )}
 
       {editId != null && (
         <CreateQuestionScreen mode="edit" questionId={editId} onClose={() => setEditId(null)} />
