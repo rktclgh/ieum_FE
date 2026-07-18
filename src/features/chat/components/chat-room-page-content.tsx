@@ -975,9 +975,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                 <ChatRoomDangerActions
                   className="w-full"
                   leaveLabel={isGroup ? messages.meetup.leaveButton : undefined}
-                  onLeave={() => {
-                    if (session.authenticated) setConfirmLeaveOpen(true)
-                  }}
+                  // 방장은 '나가기' 숨김(해체만) — 주인 없는 방 방지. 그 외(멤버·1:1)만 나가기 노출.
+                  onLeave={
+                    isMeetingHost
+                      ? undefined
+                      : () => {
+                          if (session.authenticated) setConfirmLeaveOpen(true)
+                        }
+                  }
                   onDisband={
                     isMeetingHost && session.authenticated
                       ? () => setConfirmDisbandOpen(true)
