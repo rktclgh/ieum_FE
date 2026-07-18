@@ -2,6 +2,8 @@
 
 import * as React from "react"
 
+import { triggerHaptic } from "@/lib/haptics"
+
 interface UseLongPressOptions {
   onLongPress: () => void
   delay?: number
@@ -17,6 +19,7 @@ function useLongPress({ onLongPress, delay = 500 }: UseLongPressOptions) {
     triggeredRef.current = false
     timerRef.current = setTimeout(() => {
       triggeredRef.current = true
+      triggerHaptic()
       onLongPress()
     }, delay)
   }, [onLongPress, delay])
