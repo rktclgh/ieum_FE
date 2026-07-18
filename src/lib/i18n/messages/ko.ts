@@ -206,10 +206,11 @@ export interface Messages {
     acceptedBadge: string
     acceptButton: string
     acceptAction: string
-    acceptConfirmTitle: (name: string) => string
-    acceptConfirmDescription: string
-    acceptConfirmCancel: string
-    acceptConfirmConfirm: string
+    acceptedDialogTitle: string
+    acceptedDialogDescription: (nickname: string) => string
+    acceptedDialogClose: string
+    acceptedDialogStartChat: string
+    reportConfirmCancel: string
     createTitle: string
     editTitle: string
     titlePlaceholder: string
@@ -703,10 +704,12 @@ export const ko: Messages = {
     acceptedBadge: "채택됨",
     acceptButton: "채택",
     acceptAction: "답변 채택",
-    acceptConfirmTitle: (name) => `${name}님의 답변을 채택할까요?`,
-    acceptConfirmDescription: "채택 후에는 변경할 수 없습니다",
-    acceptConfirmCancel: "취소",
-    acceptConfirmConfirm: "확정",
+    acceptedDialogTitle: "답변을 채택했습니다",
+    acceptedDialogDescription: (nickname: string) =>
+      `${nickname}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,
+    acceptedDialogClose: "닫기",
+    acceptedDialogStartChat: "개인 채팅",
+    reportConfirmCancel: "취소",
     createTitle: "질문하기",
     editTitle: "질문 수정",
     titlePlaceholder: "질문 제목",
