@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { QueryProvider } from "@/lib/query/query-provider";
 import { I18nProvider } from "@/lib/i18n/i18n-provider";
+import { RequireAuthProvider } from "@/features/session/components/require-auth-provider";
 import "./globals.css";
 
 
@@ -49,7 +50,9 @@ export default function RootLayout({
     <html lang="ko" className={`${pretendard.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <I18nProvider>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            <RequireAuthProvider>{children}</RequireAuthProvider>
+          </QueryProvider>
         </I18nProvider>
       </body>
     </html>
