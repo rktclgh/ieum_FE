@@ -9,6 +9,7 @@ import { usePostAnswer } from "@/features/question/hooks/use-question-mutations"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
 import { useMe } from "@/features/session/hooks/use-me"
+import { useRequireAuth } from "@/features/session/hooks/use-require-auth"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
@@ -25,6 +26,7 @@ interface QuestionDetailContainerProps {
 function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContainerProps) {
   const router = useRouter()
   const { messages } = useTranslation()
+  const requireAuth = useRequireAuth()
 
   const summaryQuery = useQuestionSummary(questionId)
   const postAnswer = usePostAnswer(questionId)
@@ -54,7 +56,7 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
 
   const close = () => (onClose ? onClose() : router.back())
 
-  const handleSend = async (value: string, imageFile?: File | null) => {
+  const submitAnswer = async (value: string, imageFile?: File | null) => {
     if (postAnswer.isPending) return
     // 사진 첨부 실패와 답변 등록 실패를 구분해 원인에 맞는 메시지를 노출한다.
     let imageFileIds: string[] | undefined
@@ -71,6 +73,11 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
       { onError: (error) => setActionError(getQuestionErrorMessage(error, messages)) }
     )
   }
+
+  const handleSend = (value: string, imageFile?: File | null) =>
+    requireAuth(() => {
+      void submitAnswer(value, imageFile)
+    })
 
   return (
     <>
