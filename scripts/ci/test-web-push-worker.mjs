@@ -108,7 +108,7 @@ test("registers push, notification click, and subscription change listeners", ()
   const worker = loadWorker()
   assert.deepEqual(
     [...worker.listeners.keys()].sort(),
-    ["notificationclick", "push", "pushsubscriptionchange"],
+    ["fetch", "notificationclick", "push", "pushsubscriptionchange"],
   )
 })
 
