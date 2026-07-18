@@ -202,6 +202,7 @@ export const ja: Messages = {
     aiBadge: "AI",
     acceptedBadge: "採用済み",
     acceptButton: "採用",
+    acceptAction: "回答を採用",
     acceptConfirmTitle: (name) => `${name}さんの回答を採用しますか？`,
     acceptConfirmDescription: "採用後は変更できません。",
     acceptConfirmCancel: "キャンセル",

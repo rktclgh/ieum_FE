@@ -203,6 +203,7 @@ export const vi: Messages = {
     aiBadge: "AI",
     acceptedBadge: "Đã chọn",
     acceptButton: "Chọn",
+    acceptAction: "Chọn câu trả lời",
     acceptConfirmTitle: (name) => `Chọn câu trả lời của ${name}?`,
     acceptConfirmDescription: "Không thể thay đổi sau khi chọn.",
     acceptConfirmCancel: "Hủy",

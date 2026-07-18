@@ -205,6 +205,7 @@ export interface Messages {
     aiBadge: string
     acceptedBadge: string
     acceptButton: string
+    acceptAction: string
     acceptConfirmTitle: (name: string) => string
     acceptConfirmDescription: string
     acceptConfirmCancel: string
@@ -701,6 +702,7 @@ export const ko: Messages = {
     aiBadge: "AI",
     acceptedBadge: "채택됨",
     acceptButton: "채택",
+    acceptAction: "답변 채택",
     acceptConfirmTitle: (name) => `${name}님의 답변을 채택할까요?`,
     acceptConfirmDescription: "채택 후에는 변경할 수 없습니다",
     acceptConfirmCancel: "취소",

@@ -203,6 +203,7 @@ export const en: Messages = {
     aiBadge: "AI",
     acceptedBadge: "Accepted",
     acceptButton: "Accept",
+    acceptAction: "Accept",
     acceptConfirmTitle: (name) => `Accept ${name}'s answer?`,
     acceptConfirmDescription: "You can't change this after accepting.",
     acceptConfirmCancel: "Cancel",

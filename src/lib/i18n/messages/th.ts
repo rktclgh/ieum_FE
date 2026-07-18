@@ -202,6 +202,7 @@ export const th: Messages = {
     aiBadge: "AI",
     acceptedBadge: "เลือกแล้ว",
     acceptButton: "เลือก",
+    acceptAction: "เลือกคำตอบ",
     acceptConfirmTitle: (name) => `ยอมรับคำตอบของ ${name} ใช่ไหม`,
     acceptConfirmDescription: "หลังจากเลือกแล้วจะไม่สามารถเปลี่ยนแปลงได้",
     acceptConfirmCancel: "ยกเลิก",

@@ -202,6 +202,7 @@ export const zh: Messages = {
     aiBadge: "AI",
     acceptedBadge: "已采纳",
     acceptButton: "采纳",
+    acceptAction: "采纳回答",
     acceptConfirmTitle: (name) => `要采纳${name}的回答吗？`,
     acceptConfirmDescription: "采纳后将无法更改。",
     acceptConfirmCancel: "取消",

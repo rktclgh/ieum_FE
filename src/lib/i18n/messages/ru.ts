@@ -203,6 +203,7 @@ export const ru: Messages = {
     aiBadge: "AI",
     acceptedBadge: "Принят",
     acceptButton: "Принять",
+    acceptAction: "Выбрать ответ",
     acceptConfirmTitle: (name) => `Принять ответ пользователя ${name}?`,
     acceptConfirmDescription: "После принятия изменить нельзя.",
     acceptConfirmCancel: "Отмена",
