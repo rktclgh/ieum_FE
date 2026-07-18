@@ -453,6 +453,13 @@ test("auth gates, session reset subscription, and login invalidation stay wired"
   assert.doesNotMatch(read("src/app/join/page.tsx"), /\bAuthGate\b/)
   assert.doesNotMatch(read("src/app/join/social/page.tsx"), /\bAuthGate\b/)
 
+  // 회원 전용: 조회 API도 로그인 필수(BE /api/** authenticated)이므로 회원 라우트는 모두 protected.
+  assert.match(read("src/app/page.tsx"), /<AuthGate policy="protected">/)
+  assert.match(read("src/app/questions/layout.tsx"), /<AuthGate policy="protected">/)
+  assert.match(read("src/app/meetups/layout.tsx"), /<AuthGate policy="protected">/)
+  assert.match(read("src/app/friends/layout.tsx"), /<AuthGate policy="protected">/)
+  assert.match(read("src/app/chats/layout.tsx"), /<AuthGate policy="protected">/)
+
   const authGateFile = parse("src/features/session/components/auth-gate.tsx")
   const authGate = findFunction(authGateFile, "AuthGate")
   assert.ok(authGate?.body, "AuthGate implementation is missing")
