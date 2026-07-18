@@ -194,17 +194,6 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
 
   const scheduleMenuItems = (event: MeetingScheduleEntry): ChatContextMenuItem[] =>
     buildScheduleActions(event).map((action) => {
-      if (action === "edit") {
-        return {
-          icon: <Image src="/icons/schedule/edit.svg" alt="" width={24} height={24} />,
-          label: messages.schedule.editAction,
-          onClick: () => {
-            setActiveMenuId(null)
-            setEditor({ mode: "edit", schedule: event })
-          },
-        }
-      }
-
       if (action === "report") {
         return {
           icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,

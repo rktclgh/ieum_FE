@@ -15,6 +15,7 @@ import {
 import { QuestionHistoryItem } from "@/features/question/components/question-history-item"
 import { useDeleteQuestion } from "@/features/question/hooks/use-question-mutations"
 import { useMyQuestions } from "@/features/question/hooks/use-question-queries"
+import { useMe } from "@/features/session/hooks/use-me"
 import { adaptMyQuestionItem, type MyQuestionListItemView } from "@/features/question/lib/question-adapter"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
@@ -25,6 +26,9 @@ function QuestionsListPageContent() {
   const { messages } = useTranslation()
   const query = useMyQuestions()
   const deleteQuestion = useDeleteQuestion()
+  // 목록은 my-questions(서버 my-scoped)라 항상 본인 질문이지만, 수정/삭제 진입은
+  // 로그인 사용자로 방어한다(로그아웃 후 캐시 잔존 등 엣지 케이스 차단).
+  const { data: me } = useMe()
 
   const [active, setActive] = React.useState<{
     id: number
@@ -69,7 +73,10 @@ function QuestionsListPageContent() {
                 key={item.questionId}
                 item={item}
                 onOpen={() => router.push(routes.questionDetail(item.questionId))}
-                onLongPress={(rect) => setActive({ id: item.questionId, rect, view: item })}
+                onLongPress={(rect) => {
+                  if (!me) return
+                  setActive({ id: item.questionId, rect, view: item })
+                }}
               />
             ))
           )}

@@ -58,7 +58,7 @@ function ScheduleListItem({
           aria-label={moreAriaLabel}
           className="-my-2 -mr-2 flex size-11 shrink-0 items-center justify-center"
         >
-          <Image src="/icons/schedule/edit.svg" alt="" width={20} height={20} className="size-5" />
+          <Image src="/icons/schedule/more.svg" alt="" width={20} height={20} className="size-5" />
         </button>
       )}
     </div>

@@ -93,6 +93,9 @@ export interface Messages {
     locateMeLabel: string
     listViewLabel: string
     loginLabel: string
+    loginRequiredTitle: string
+    loginRequiredDescription: string
+    loginRequiredCancel: string
     selectedLocationPrefix: string
     clearSelectedLocationLabel: string
     createMeetupAction: string
@@ -586,6 +589,9 @@ export const ko: Messages = {
     locateMeLabel: "내 위치로 이동",
     listViewLabel: "목록 보기",
     loginLabel: "로그인",
+    loginRequiredTitle: "로그인이 필요해요",
+    loginRequiredDescription: "모임 만들기와 질문하기는 로그인 후 이용할 수 있어요.",
+    loginRequiredCancel: "닫기",
     selectedLocationPrefix: "선택한 위치",
     clearSelectedLocationLabel: "선택 해제",
     createMeetupAction: "모임 만들기",
