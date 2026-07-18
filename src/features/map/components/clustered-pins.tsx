@@ -9,6 +9,7 @@ import { ClusterMarker } from "@/features/map/components/cluster-marker"
 import { PinMarker } from "@/features/map/components/pin-marker"
 import { usePinClusters } from "@/features/map/hooks/use-pin-clusters"
 import { getClusterExpansionZoom, getClusterLeaves } from "@/features/map/lib/cluster-index"
+import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 // flyToBounds 시 클러스터 핀이 화면 가장자리에 붙지 않도록 주는 여백(px).
@@ -33,6 +34,8 @@ function ClusteredPins({ pins, onPinClick, topInset = 0, bottomInset = 0 }: Clus
 
   const handleClusterClick = React.useCallback(
     (clusterId: number) => {
+      if (!isLeafletMapActive(map)) return
+
       const leaves = getClusterLeaves(index, clusterId)
       if (leaves.length === 0) return
 
@@ -51,6 +54,13 @@ function ClusteredPins({ pins, onPinClick, topInset = 0, bottomInset = 0 }: Clus
     },
     [index, map, topInset, bottomInset]
   )
+
+  // 지도가 해제되는 중(StrictMode 재마운트·HMR)에는 mapPane이 사라진다. 이 시점에 react-leaflet
+  // Marker를 마운트하면 leaflet Marker._initIcon이 getPane().appendChild에서 터진다.
+  // VectorTileLayer·클러스터 클릭과 동일하게 map이 살아 있을 때만 마커를 렌더한다.
+  if (!isLeafletMapActive(map)) {
+    return null
+  }
 
   return (
     <>

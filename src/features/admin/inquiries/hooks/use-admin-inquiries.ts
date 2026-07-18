@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query"
 import type { QueryClient } from "@tanstack/react-query"
 
+import { adminStatsKeys } from "@/features/admin/dashboard/lib/admin-stats-keys"
 import {
   answerAdminInquiry,
   getAdminInquiries,
@@ -60,10 +61,15 @@ function adminInquiriesInfiniteQueryOptions({
 }
 
 function invalidateAdminInquiryQueries(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({
-    queryKey: adminInquiryKeys.all,
-    refetchType: "none",
-  })
+  return Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: adminInquiryKeys.all,
+      refetchType: "none",
+    }),
+    queryClient.invalidateQueries({
+      queryKey: adminStatsKeys.overview,
+    }),
+  ])
 }
 
 function createAdminInquiryAnswerDependencies(

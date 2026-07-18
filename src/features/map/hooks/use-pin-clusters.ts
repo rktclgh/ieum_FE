@@ -4,6 +4,7 @@ import * as React from "react"
 import { useMap, useMapEvents } from "react-leaflet"
 
 import type { MapPin } from "@/features/map/api/pin-types"
+import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import {
   createPinClusterIndex,
   getPinClusters,
@@ -28,12 +29,18 @@ function usePinClusters(pins: MapPin[]): {
   const [viewVersion, setViewVersion] = React.useState(0)
 
   useMapEvents({
-    moveend: () => setViewVersion((version) => version + 1),
-    zoomend: () => setViewVersion((version) => version + 1),
+    moveend: () => {
+      if (isLeafletMapActive(map)) setViewVersion((version) => version + 1)
+    },
+    zoomend: () => {
+      if (isLeafletMapActive(map)) setViewVersion((version) => version + 1)
+    },
   })
 
   const items = React.useMemo(() => {
     void viewVersion // 지도 이동/줌 시 재계산을 강제하는 트리거
+    if (!isLeafletMapActive(map)) return []
+
     const bounds = map.getBounds()
     const south = bounds.getSouth()
     const west = bounds.getWest()

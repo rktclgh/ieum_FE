@@ -50,6 +50,8 @@ interface ChatBubbleMessage {
   // 이미지 업로드/전송 진행 중인 낙관적 이미지 말풍선. 흐리게 + 스피너로 표시한다.
   imageUploading?: boolean
   replyTo?: ChatReplyPreview | null
+  // 실제 텍스트 본문 존재 여부. 이미지 전용 메시지("사진" 플레이스홀더)는 번역 대상에서 제외한다.
+  hasText: boolean
 }
 
 type ChatUserBubbleMessage = ChatBubbleMessage
@@ -201,6 +203,7 @@ function adaptMessage(
     replyTo: adaptReplyPreview(message.replyTo),
     time: formatKstTime(message.createdAt),
     createdAt: message.createdAt,
+    hasText: Boolean(content.trim()),
   }
 }
 

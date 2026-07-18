@@ -75,7 +75,7 @@ function adaptCalendarItem(item: CalendarItem, locale: string): ScheduleEntry {
     status: item.status,
     date: getKstDateKey(item.startsAt),
     relativeLabel: formatRelative(locale, item.startsAt),
-    title: item.title,
+    title: item.title ?? "",
     timeLabel: formatKstTime(locale, item.startsAt),
     locationLabel: item.location.label ?? item.location.address,
   }
@@ -98,9 +98,9 @@ function adaptMeetingScheduleItem(
     status: item.status,
     date: getKstDateKey(item.startsAt),
     relativeLabel: formatRelative(locale, item.startsAt),
-    title: item.title,
+    title: item.title ?? "",
     timeLabel: formatKstTime(locale, item.startsAt),
-    locationLabel: item.locationName,
+    locationLabel: item.locationName ?? "",
   }
 }
 

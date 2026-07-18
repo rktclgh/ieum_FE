@@ -19,6 +19,7 @@ import {
 } from "../../src/features/admin/inquiries/lib/admin-inquiry.js"
 import { compactQuery } from "../../src/features/admin/shared/lib/admin-query.js"
 import { validateSanctionDraft } from "../../src/features/admin/users/lib/admin-sanction.js"
+import { routes } from "../../src/lib/navigation/routes.js"
 import type {
   AdminInquiriesParams,
   AdminInquiryItem,
@@ -173,24 +174,46 @@ type ExpectedAdminMessages = {
     | "submit"
     | "loginError"
   >
-  navigation: StringMessages<"dashboard" | "users" | "reports" | "inquiries">
+  navigation: StringMessages<
+    | "operations"
+    | "review"
+    | "dashboard"
+    | "users"
+    | "reports"
+    | "inquiries"
+    | "knowledge"
+    | "knowledgeGraph"
+  >
   dashboard: StringMessages<
     | "title"
+    | "from"
+    | "to"
+    | "applyRange"
+    | "invalidRange"
+    | "cachedError"
+    | "pendingReports"
+    | "retryReports"
+    | "deadReports"
+    | "pendingInquiries"
     | "signup"
     | "activeUsers"
     | "suspendedUsers"
-    | "pins"
     | "questions"
-    | "meetings"
     | "answers"
+    | "accepted"
     | "acceptedRate"
-    | "messages"
     | "reports"
     | "aiReviewed"
     | "confirmed"
     | "dismissed"
     | "sanctions"
-  > & { range: (from: string, to: string) => string }
+    | "userTrend"
+    | "contentTrend"
+    | "reportTrend"
+  > & {
+    range: (from: string, to: string) => string
+    days: (days: number) => string
+  }
   users: StringMessages<
     | "title"
     | "search"
@@ -293,6 +316,65 @@ type ExpectedAdminMessages = {
     | "answeredConflict"
     | "convergenceError"
   >
+  knowledge: StringMessages<
+    | "title"
+    | "status"
+    | "subject"
+    | "predicate"
+    | "object"
+    | "source"
+    | "confidence"
+    | "createdAt"
+    | "updatedAt"
+    | "detail"
+    | "backToList"
+    | "context"
+    | "version"
+    | "sourceStatus"
+    | "validUntil"
+    | "questionId"
+    | "answerId"
+    | "questionTitle"
+    | "questionContent"
+    | "answerContent"
+    | "chunkContent"
+    | "extractionProvider"
+    | "extractionModel"
+    | "reviewer"
+    | "reviewedAt"
+    | "reviewNote"
+    | "promotionRelation"
+    | "evidence"
+    | "chunk"
+    | "sourceEligibility"
+    | "eligible"
+    | "notEligible"
+    | "relation"
+    | "sameSourceRelations"
+    | "review"
+    | "rejectReason"
+    | "approve"
+    | "reject"
+    | "conflictRefreshed"
+    | "convergenceError"
+    | "graphTitle"
+    | "graphDescription"
+    | "graphSearch"
+    | "graphQuery"
+    | "graphQueryPlaceholder"
+    | "resetFilters"
+    | "showWholeGraph"
+    | "graphContext"
+    | "focusNode"
+    | "nodes"
+    | "edges"
+    | "zoom"
+    | "graphCanvas"
+    | "truncatedGraph"
+    | "emptyGraph"
+    | "inspector"
+    | "selectEdgeHint"
+  >
 }
 
 const adminMessageTypeContracts: [
@@ -305,9 +387,10 @@ const adminMessageTypeContracts: [
   Expect<Exact<keyof AdminMessages["users"], keyof ExpectedAdminMessages["users"]>>,
   Expect<Exact<keyof AdminMessages["reports"], keyof ExpectedAdminMessages["reports"]>>,
   Expect<Exact<keyof AdminMessages["inquiries"], keyof ExpectedAdminMessages["inquiries"]>>,
+  Expect<Exact<keyof AdminMessages["knowledge"], keyof ExpectedAdminMessages["knowledge"]>>,
   Expect<Exact<typeof adminKo, AdminMessages>>,
   Expect<Exact<typeof adminEn, AdminMessages>>,
-] = [true, true, true, true, true, true, true, true, true, true, true]
+] = [true, true, true, true, true, true, true, true, true, true, true, true]
 
 const responseRoleTypeContracts: [
   Expect<Exact<UserMeResponse["role"], UserRole>>,
@@ -364,10 +447,14 @@ const expectedAdminMessageKeys = {
   auth: [
     "description", "desktopOnly", "email", "forbidden", "loginError", "password", "submit", "switchAccount", "title",
   ],
-  navigation: ["dashboard", "inquiries", "reports", "users"],
+  navigation: [
+    "dashboard", "inquiries", "knowledge", "knowledgeGraph", "operations", "reports", "review", "users",
+  ],
   dashboard: [
-    "acceptedRate", "activeUsers", "aiReviewed", "answers", "confirmed", "dismissed", "meetings",
-    "messages", "pins", "questions", "range", "reports", "sanctions", "signup", "suspendedUsers", "title",
+    "accepted", "acceptedRate", "activeUsers", "aiReviewed", "answers", "applyRange", "cachedError",
+    "confirmed", "contentTrend", "days", "deadReports", "dismissed", "from", "invalidRange",
+    "pendingInquiries", "pendingReports", "questions", "range", "reportTrend", "reports", "retryReports",
+    "sanctions", "signup", "suspendedUsers", "title", "to", "userTrend",
   ],
   users: [
     "accepted", "activate", "activationConfirm", "activationScopeNotice", "activity", "answers", "birthDate",
@@ -387,6 +474,16 @@ const expectedAdminMessageKeys = {
   inquiries: [
     "answer", "answerPlaceholder", "answerSubmit", "answeredAt", "answeredBy", "answeredConflict", "content",
     "convergenceError", "createdAt", "invalidAnswer", "missingUser", "pending", "answered", "status", "subject", "title", "userEmail",
+  ],
+  knowledge: [
+    "answerContent", "answerId", "approve", "backToList", "chunk", "chunkContent", "confidence", "conflictRefreshed",
+    "context", "convergenceError", "createdAt", "detail", "eligible", "evidence", "extractionModel",
+    "extractionProvider", "focusNode", "graphCanvas", "graphContext", "graphDescription", "graphQuery",
+    "graphQueryPlaceholder", "graphSearch", "graphTitle", "edges", "emptyGraph", "inspector", "nodes",
+    "notEligible", "object", "predicate", "promotionRelation", "questionContent", "questionId",
+    "questionTitle", "reject", "rejectReason", "relation", "review", "reviewedAt", "reviewer", "reviewNote",
+    "resetFilters", "sameSourceRelations", "selectEdgeHint", "showWholeGraph", "source", "sourceEligibility",
+    "sourceStatus", "status", "subject", "title", "truncatedGraph", "updatedAt", "validUntil", "version", "zoom",
   ],
 } as const
 
@@ -453,7 +550,7 @@ test("admin literal unions match the backend contract exactly", () => {
 
 test("admin message types and both translations expose the exact agreed keys", () => {
   assert.deepEqual(adminMessageTypeContracts, [
-    true, true, true, true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true,
   ])
 
   for (const [group, expectedKeys] of Object.entries(expectedAdminMessageKeys)) {
@@ -461,6 +558,11 @@ test("admin message types and both translations expose the exact agreed keys", (
     assert.deepEqual(Object.keys(adminKo[group as keyof AdminMessages]).sort(), sortedExpectedKeys)
     assert.deepEqual(Object.keys(adminEn[group as keyof AdminMessages]).sort(), sortedExpectedKeys)
   }
+})
+
+test("admin knowledge graph keeps a separate route from candidate review", () => {
+  assert.equal(routes.adminKnowledge(), "/admin/knowledge/")
+  assert.equal(routes.adminKnowledgeGraph(), "/admin/knowledge/graph/")
 })
 
 test("admin report resolution and sanction labels preserve their exact semantics", () => {

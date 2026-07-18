@@ -7,10 +7,20 @@ import { fileURLToPath } from "node:url"
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 
-function loadWorker(windowClients = []) {
+function loadWorker(windowClients = [], options = {}) {
+  const {
+    csrfToken = "csrf-value",
+    cookieStoreAvailable = true,
+    existingSubscription = null,
+    resubscribeResult = null,
+  } = options
+
   const listeners = new Map()
   const shown = []
   const opened = []
+  const requests = []
+  const subscribeOptions = []
+
   const self = {
     addEventListener(type, listener) {
       listeners.set(type, listener)
@@ -27,7 +37,25 @@ function loadWorker(windowClients = []) {
       showNotification: async (title, options) => {
         shown.push({ title, options })
       },
+      pushManager: {
+        getSubscription: async () => existingSubscription,
+        subscribe: async (subscribeInit) => {
+          subscribeOptions.push(subscribeInit)
+          return resubscribeResult
+        },
+      },
     },
+    fetch: async (url, init) => {
+      requests.push({ url, init })
+      return { ok: true, status: 204 }
+    },
+  }
+
+  if (cookieStoreAvailable) {
+    self.cookieStore = {
+      get: async (name) =>
+        name === "csrf_token" && csrfToken ? { name, value: csrfToken } : null,
+    }
   }
 
   vm.runInNewContext(
@@ -36,7 +64,28 @@ function loadWorker(windowClients = []) {
     { filename: "public/sw.js" },
   )
 
-  return { listeners, opened, shown }
+  return { listeners, opened, shown, requests, subscribeOptions }
+}
+
+async function dispatchSubscriptionChange(worker, event = {}) {
+  let completion
+  worker.listeners.get("pushsubscriptionchange")({
+    ...event,
+    waitUntil(promise) {
+      completion = promise
+    },
+  })
+  await completion
+}
+
+function fakeSubscription(endpoint) {
+  return {
+    toJSON: () => ({
+      endpoint,
+      expirationTime: null,
+      keys: { p256dh: "p256dh-value", auth: "auth-value" },
+    }),
+  }
 }
 
 async function dispatchPush(worker, payload, parseFailure = false) {
@@ -55,9 +104,100 @@ async function dispatchPush(worker, payload, parseFailure = false) {
   await completion
 }
 
-test("registers only push and notification click listeners", () => {
+test("registers push, notification click, and subscription change listeners", () => {
   const worker = loadWorker()
-  assert.deepEqual([...worker.listeners.keys()].sort(), ["notificationclick", "push"])
+  assert.deepEqual(
+    [...worker.listeners.keys()].sort(),
+    ["notificationclick", "push", "pushsubscriptionchange"],
+  )
+})
+
+test("syncs the browser-supplied replacement subscription to the backend", async () => {
+  const worker = loadWorker()
+  await dispatchSubscriptionChange(worker, {
+    newSubscription: fakeSubscription("https://fcm.googleapis.com/push/new"),
+  })
+
+  assert.equal(worker.requests.length, 1)
+  const [request] = worker.requests
+  assert.equal(request.url, "/api/v1/notifications/push/subscription")
+  assert.equal(request.init.method, "PUT")
+  assert.equal(request.init.credentials, "include")
+  assert.equal(request.init.headers["X-CSRF-Token"], "csrf-value")
+  assert.deepEqual(JSON.parse(request.init.body), {
+    endpoint: "https://fcm.googleapis.com/push/new",
+    expirationTime: null,
+    keys: { p256dh: "p256dh-value", auth: "auth-value" },
+  })
+})
+
+test("resubscribes with the old application server key when newSubscription is absent", async () => {
+  // Chrome fires the event without newSubscription; the key must come from oldSubscription.
+  const applicationServerKey = new Uint8Array([1, 2, 3, 4])
+  const worker = loadWorker([], {
+    resubscribeResult: fakeSubscription("https://fcm.googleapis.com/push/rotated"),
+  })
+
+  await dispatchSubscriptionChange(worker, {
+    oldSubscription: { options: { userVisibleOnly: true, applicationServerKey } },
+  })
+
+  // The worker builds this object inside the vm realm, so compare fields rather
+  // than the object identity that a deep-equal would demand.
+  assert.equal(worker.subscribeOptions.length, 1)
+  assert.equal(worker.subscribeOptions[0].userVisibleOnly, true)
+  assert.equal(worker.subscribeOptions[0].applicationServerKey, applicationServerKey)
+  assert.equal(worker.requests.length, 1)
+  assert.equal(
+    JSON.parse(worker.requests[0].init.body).endpoint,
+    "https://fcm.googleapis.com/push/rotated",
+  )
+})
+
+test("reuses an already-active subscription instead of forcing a new one", async () => {
+  const worker = loadWorker([], {
+    existingSubscription: fakeSubscription("https://fcm.googleapis.com/push/active"),
+  })
+
+  await dispatchSubscriptionChange(worker, {})
+
+  assert.deepEqual(worker.subscribeOptions, [])
+  assert.equal(
+    JSON.parse(worker.requests[0].init.body).endpoint,
+    "https://fcm.googleapis.com/push/active",
+  )
+})
+
+test("stays silent when no CSRF token is reachable from the worker", async () => {
+  // Safari and Firefox expose no CookieStore in workers; the app reconciles instead.
+  const worker = loadWorker([], {
+    cookieStoreAvailable: false,
+    existingSubscription: fakeSubscription("https://fcm.googleapis.com/push/active"),
+  })
+
+  await dispatchSubscriptionChange(worker, {})
+
+  assert.deepEqual(worker.requests, [])
+})
+
+test("stays silent when the subscription cannot be recovered", async () => {
+  const worker = loadWorker()
+
+  await dispatchSubscriptionChange(worker, {})
+
+  assert.deepEqual(worker.requests, [])
+})
+
+test("never sends a subscription that lost its encryption keys", async () => {
+  const worker = loadWorker([], {
+    existingSubscription: {
+      toJSON: () => ({ endpoint: "https://fcm.googleapis.com/push/broken", keys: {} }),
+    },
+  })
+
+  await dispatchSubscriptionChange(worker, {})
+
+  assert.deepEqual(worker.requests, [])
 })
 
 test("shows a privacy-safe fallback when payload parsing fails", async () => {
@@ -108,12 +248,13 @@ test("rejects a chat destination that normalizes to protocol-relative", async ()
   assert.equal(worker.shown[0].options.data.url, "/notifications/")
 })
 
-test("marks an AI durable notification and always opens the notification center", async () => {
+test("marks an AI durable answer notification and deep-links to the question", async () => {
   const worker = loadWorker()
   await dispatchPush(worker, {
     version: 1,
     kind: "notification",
     notificationId: 42,
+    type: "question",
     title: "새 답변",
     body: "답변이 등록됐어요",
     refId: 9,
@@ -122,6 +263,86 @@ test("marks an AI durable notification and always opens the notification center"
 
   assert.equal(worker.shown[0].title, "AI · 새 답변")
   assert.equal(worker.shown[0].options.tag, "notification-42")
+  assert.equal(worker.shown[0].options.data.url, "/questions/detail/?questionId=9")
+})
+
+test("deep-links a friend-request durable notification to the friends page", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 43,
+    type: "friend",
+    title: "친구 요청",
+    body: "민지님이 친구 요청을 보냈어요",
+    refId: 77,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/friends/?highlightUserId=77")
+})
+
+test("opens the friends page without a highlight when a friend notification lacks a refId", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 47,
+    type: "friend",
+    title: "친구 요청",
+    body: "누군가 친구 요청을 보냈어요",
+    refId: null,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/friends/")
+})
+
+test("deep-links a meeting durable notification to the meetup detail", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 44,
+    type: "meeting",
+    title: "주변 새 모임",
+    body: "가까운 곳에 새 모임이 열렸어요",
+    refId: 5,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/meetups/detail/?meetingId=5")
+})
+
+test("falls back to the notification center when the durable type is unmappable", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 45,
+    type: "system",
+    title: "공지",
+    body: "새로운 공지가 있어요",
+    refId: null,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/notifications/")
+})
+
+test("falls back to the notification center when a deep-linkable type lacks a valid refId", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 46,
+    type: "question",
+    title: "새 답변",
+    body: "답변이 등록됐어요",
+    refId: 0,
+    answerIsAi: false,
+  })
+
   assert.equal(worker.shown[0].options.data.url, "/notifications/")
 })
 

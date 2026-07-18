@@ -27,7 +27,13 @@ const routes = {
   kakaoCallback: () => "/oauth/kakao/callback/",
   chats: () => "/chats/",
   questions: () => "/questions/",
-  friends: () => "/friends/",
+  // highlightUserId 를 주면 친구 페이지에서 해당 "받은 친구요청" 행을 잠깐 강조한다(알림 딥링크용).
+  friends: (highlightUserId?: number) =>
+    highlightUserId === undefined
+      ? "/friends/"
+      : queryRoute("/friends/", {
+          highlightUserId: requirePositiveInteger(highlightUserId, "highlightUserId"),
+        }),
   notifications: () => "/notifications/",
   my: () => "/my/",
   myEdit: () => "/my/edit/",
@@ -39,6 +45,8 @@ const routes = {
   adminUsers: () => "/admin/users/",
   adminReports: () => "/admin/reports/",
   adminInquiries: () => "/admin/inquiries/",
+  adminKnowledge: () => "/admin/knowledge/",
+  adminKnowledgeGraph: () => "/admin/knowledge/graph/",
   chatRoom: (chatId: number) =>
     queryRoute("/chats/room/", { chatId: requirePositiveInteger(chatId, "chatId") }),
   chatNotices: (chatId: number) =>
@@ -73,6 +81,10 @@ const routes = {
   adminReportDetail: (reportId: number) =>
     queryRoute("/admin/reports/detail/", {
       reportId: requirePositiveInteger(reportId, "reportId"),
+    }),
+  adminKnowledgeCandidate: (candidateId: number) =>
+    queryRoute("/admin/knowledge/", {
+      candidateId: requirePositiveInteger(candidateId, "candidateId"),
     }),
 } as const
 

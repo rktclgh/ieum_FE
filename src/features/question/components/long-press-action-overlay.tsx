@@ -8,6 +8,7 @@ interface LongPressAction {
   icon: React.ReactNode
   label: string
   tone?: "default" | "destructive"
+  disabled?: boolean
   onClick: () => void
 }
 
@@ -76,11 +77,13 @@ function LongPressActionOverlay({
               key={i}
               type="button"
               role="menuitem"
+              disabled={action.disabled}
               onClick={() => {
+                if (action.disabled) return
                 action.onClick()
                 onDismiss()
               }}
-              className="flex w-full items-center gap-2 py-2.5 text-left"
+              className="flex w-full items-center gap-2 py-2.5 text-left disabled:opacity-50"
             >
               {action.icon}
               <span

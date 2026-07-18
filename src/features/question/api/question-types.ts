@@ -22,7 +22,7 @@ interface QuestionAuthor {
 interface AnswerResponse {
   answerId: number
   isAi: boolean
-  author: QuestionAuthor
+  author: QuestionAuthor | null
   content: string | null
   isAccepted: boolean
   createdAt: string
@@ -74,12 +74,14 @@ interface SimilarQuestion {
   acceptedAnswer?: string | null
 }
 
+// 질문 수정 요청 — PATCH /api/v1/questions/{questionId}. 미확정(isResolved=false) 질문만
+// 허용되며, 확정된 질문은 409 QUESTION_RESOLVED로 거부된다. title/content는 필수이고
+// imageFileIds는 있으면 전체 교체(유지할 fileId를 모두 포함, 빈 배열이면 이미지 제거)다.
+// 위치(pin)는 계약에 없어 수정 대상이 아니다.
 interface UpdateQuestionRequest {
-  title?: string
-  content?: string
+  title: string
+  content: string
   imageFileIds?: string[]
-  // 장소 수정. BE UpdateQuestionRequest에 필드 없음(계약우선). #92
-  location?: LocationSnapshot
 }
 
 // 답변 채택 확정. 다중채택 계약이지만 본 서비스는 단일 채택(answerIds 길이 1)만 사용한다.

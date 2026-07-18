@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
+import { Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -81,6 +82,7 @@ import { useKickMember } from "@/features/meetup/hooks/use-meetup-mutations"
 import { meetupKeys, useMeeting, useMeetingParticipants } from "@/features/meetup/hooks/use-meetup-queries"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
+import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { resolveFileUrl } from "@/lib/api/file-url"
 import { useFadeScrollbar, FADE_SCROLLBAR_CLASSNAME } from "@/lib/hooks/use-fade-scrollbar"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -103,13 +105,22 @@ const PENDING_MATCH_WINDOW_MS = 60_000
 interface MessageRowProps {
   message: ChatBubbleMessage
   position: "solo" | "first" | "middle" | "last"
+  isAuthenticated: boolean
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
   onOpenMenu: () => void
   onCloseMenu: () => void
 }
 
-function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onCloseMenu }: MessageRowProps) {
+function MessageRow({
+  message,
+  position,
+  isAuthenticated,
+  menuOpen,
+  menuItems,
+  onOpenMenu,
+  onCloseMenu,
+}: MessageRowProps) {
   const { messages } = useTranslation()
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
@@ -135,11 +146,34 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
 
   const longPress = useLongPress({ onLongPress: handleOpenMenu })
 
+  // 낙관적(pending) 말풍선은 아직 서버 메시지 ID가 없어 번역 대상에서 제외한다.
+  const text = message.texts[0]
+  const translate = useTranslateToggle({ text: text ?? "", isAuthenticated })
+  const canTranslate = isAuthenticated && !message.pending && message.hasText && translate.canTranslate
+
+  const fullMenuItems: ChatContextMenuItem[] = canTranslate
+    ? [
+        {
+          icon: <Globe className="size-6 text-gray-900" />,
+          label: translate.isLoading
+            ? messages.translate.translatingLabel
+            : translate.isShowingTranslation
+              ? messages.translate.viewOriginalLabel
+              : messages.translate.menuLabel,
+          onClick: () => {
+            translate.toggle()
+            onCloseMenu()
+          },
+        },
+        ...menuItems,
+      ]
+    : menuItems
+
   return (
     <div ref={rowRef} className="relative" {...longPress}>
       <ChatBubbleSegment
         sender={message.sender}
-        text={message.texts[0] ?? ""}
+        text={translate.displayText}
         imageUrl={message.imageUrl}
         imageAlt={messages.chat.imageAlt}
         uploading={message.imageUploading}
@@ -151,9 +185,14 @@ function MessageRow({ message, position, menuOpen, menuItems, onOpenMenu, onClos
         variant={message.variant}
         className={cn(menuOpen && "relative z-50")}
       />
+      {translate.isError ? (
+        <p className={cn("mt-1 text-body-regular-12 text-red", isMe ? "text-right" : "text-left")}>
+          {messages.translate.translateFailedLabel}
+        </p>
+      ) : null}
       {menuOpen && (
         <ChatContextMenu
-          items={menuItems}
+          items={fullMenuItems}
           dimmed
           onDismiss={onCloseMenu}
           className={cn(
@@ -527,6 +566,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       time: formatKstTime(nowIso),
       createdAt: nowIso,
       pending: true,
+      hasText: true,
     }
     updateLiveMessages((previous) => [
       ...previous,
@@ -571,6 +611,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       time: formatKstTime(nowIso),
       createdAt: nowIso,
       pending: true,
+      hasText: false,
     }
     updateLiveMessages((previous) => [
       ...previous,
@@ -723,8 +764,12 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             className={cn("absolute inset-0 flex flex-col gap-3 overflow-y-auto px-4", FADE_SCROLLBAR_CLASSNAME)}
           >
             {notice && (
-              <div className="sticky top-0 z-10 -mx-4 bg-white px-4 pt-2 pb-1">
-                <NoticeBanner text={notice} onClose={() => setNotice(null)} />
+              <div className="sticky top-0 z-50 -mx-4 bg-white px-4 pt-2 pb-1">
+                <NoticeBanner
+                  text={notice}
+                  isAuthenticated={session.authenticated}
+                  onClose={() => setNotice(null)}
+                />
               </div>
             )}
             <div className="flex flex-col">
@@ -762,6 +807,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                             key={message.id}
                             message={message}
                             position={bubblePosition(index, item.messages.length)}
+                            isAuthenticated={session.authenticated}
                             menuOpen={activeMessageId === message.id}
                             menuItems={messageMenuItems(message)}
                             onOpenMenu={() => setActiveMessageId(message.id)}

@@ -202,9 +202,10 @@ export interface Messages {
     aiBadge: string
     acceptedBadge: string
     acceptButton: string
-    acceptConfirmTitle: string
-    acceptConfirmDescription: (name: string) => string
+    acceptConfirmTitle: (name: string) => string
+    acceptConfirmDescription: string
     acceptConfirmCancel: string
+    acceptConfirmConfirm: string
     createTitle: string
     editTitle: string
     titlePlaceholder: string
@@ -245,6 +246,8 @@ export interface Messages {
       SELF_ACCEPT_NOT_ALLOWED: string
       ANSWER_SELECTION_FINALIZED: string
       VALIDATION_FAILED: string
+      INVALID_IMAGE: string
+      QUESTION_RESOLVED: string
       ROOM_CREATE_FAILED: string
       REPORT_FAILED: string
       default: string
@@ -262,6 +265,7 @@ export interface Messages {
       pushDeviceConnected: string
       pushDeviceConnect: string
       pushDeviceUnsupported: string
+      pushDeviceIosInstall: string
       pushDevicePermissionDenied: string
       pushDeviceUnavailable: string
       pushDeviceError: string
@@ -483,6 +487,12 @@ export interface Messages {
     aiAnswerSourceLabel: string
     humanAnswerSourceLabel: string
   }
+  translate: {
+    menuLabel: string
+    viewOriginalLabel: string
+    translatingLabel: string
+    translateFailedLabel: string
+  }
   languages: Record<LanguageCode, string>
   countries: Record<CountryCode, string>
 }
@@ -685,10 +695,10 @@ export const ko: Messages = {
     aiBadge: "AI",
     acceptedBadge: "채택됨",
     acceptButton: "채택",
-    acceptConfirmTitle: "답변을 채택했습니다",
-    acceptConfirmDescription: (name) =>
-      `${name}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,
+    acceptConfirmTitle: (name) => `${name}님의 답변을 채택할까요?`,
+    acceptConfirmDescription: "채택 후에는 변경할 수 없습니다",
     acceptConfirmCancel: "취소",
+    acceptConfirmConfirm: "확정",
     createTitle: "질문하기",
     editTitle: "질문 수정",
     titlePlaceholder: "질문 제목",
@@ -729,6 +739,8 @@ export const ko: Messages = {
       SELF_ACCEPT_NOT_ALLOWED: "내 답변은 채택할 수 없어요.",
       ANSWER_SELECTION_FINALIZED: "이미 채택된 질문이에요.",
       VALIDATION_FAILED: "입력값을 확인해 주세요.",
+      INVALID_IMAGE: "이미지를 확인할 수 없어요. 다시 첨부해 주세요.",
+      QUESTION_RESOLVED: "이미 확정된 질문은 수정할 수 없어요.",
       ROOM_CREATE_FAILED: "채팅을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.",
       REPORT_FAILED: "신고에 실패했어요. 잠시 후 다시 시도해 주세요.",
       default: "잠시 후 다시 시도해 주세요.",
@@ -746,6 +758,7 @@ export const ko: Messages = {
       pushDeviceConnected: "이 기기에서 푸시 알림을 받고 있어요.",
       pushDeviceConnect: "이 기기 연결",
       pushDeviceUnsupported: "이 브라우저는 푸시 알림을 지원하지 않아요.",
+      pushDeviceIosInstall: "홈 화면에 추가하면 푸시 알림을 받을 수 있어요.",
       pushDevicePermissionDenied: "브라우저 설정에서 알림 권한을 허용해 주세요.",
       pushDeviceUnavailable: "푸시 알림을 지금 사용할 수 없어요.",
       pushDeviceError: "푸시 알림을 연결하지 못했어요. 다시 시도해 주세요.",
@@ -966,6 +979,12 @@ export const ko: Messages = {
     unreadBadgeLabel: (count) => `읽지 않은 알림 ${count}건`,
     aiAnswerSourceLabel: "AI 답변",
     humanAnswerSourceLabel: "사용자 답변",
+  },
+  translate: {
+    menuLabel: "번역",
+    viewOriginalLabel: "원문 보기",
+    translatingLabel: "번역 중...",
+    translateFailedLabel: "번역에 실패했어요. 잠시 후 다시 시도해 주세요.",
   },
   languages: {
     ko: "한국어",

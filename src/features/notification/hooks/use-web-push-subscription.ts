@@ -12,8 +12,12 @@ import {
   createOrReuseWebPushSubscription,
   getExistingWebPushSubscription,
   isWebPushSupported,
+  readIosInstallGate,
   registerWebPushServiceWorker,
   resolveWebPushStatus,
+  shouldStartWebPushReconcile,
+  shouldUpsertReconciledSubscription,
+  unsupportedWebPushStatus,
   type WebPushStatus,
 } from "@/features/notification/lib/web-push"
 import {
@@ -49,7 +53,7 @@ function isSessionWorkCurrent(
 async function inspectWebPushDevice(config: WebPushConfig | null) {
   if (!isWebPushSupported()) {
     return {
-      status: "unsupported" as const,
+      status: unsupportedWebPushStatus(),
     }
   }
 
@@ -70,6 +74,7 @@ async function inspectWebPushDevice(config: WebPushConfig | null) {
       permission,
       backendSubscribed: config.subscribed,
       browserSubscribed,
+      iosInstallRequired: readIosInstallGate(),
     }),
   }
 }
@@ -77,6 +82,8 @@ async function inspectWebPushDevice(config: WebPushConfig | null) {
 function useWebPushSubscription() {
   const queryClient = useQueryClient()
   const [state, setState] = React.useState<WebPushConnectionState>(() => ({
+    // The iOS gate reads matchMedia and the user agent, which prerender cannot
+    // answer. The mount effect resolves the real status while isLoading hides it.
     status: isWebPushSupported() ? "unsubscribed" : "unsupported",
     error: null,
     isLoading: true,
@@ -152,7 +159,7 @@ function useWebPushSubscription() {
       if (!isWebPushSupported()) {
         setState((current) => ({
           ...current,
-          status: "unsupported",
+          status: unsupportedWebPushStatus(),
           error: null,
           isConnecting: false,
           isLoading: false,
@@ -243,7 +250,17 @@ function useReconcileWebPushSubscription({
   const queryClient = useQueryClient()
 
   React.useEffect(() => {
-    if (!userId || !notifyAll || !isWebPushSupported()) return
+    const supported = isWebPushSupported()
+    if (
+      !shouldStartWebPushReconcile({
+        userId,
+        notifyAll,
+        supported,
+        permission: supported ? browserPermission() : "default",
+      })
+    ) {
+      return
+    }
 
     let cancelled = false
     const generation = getSessionGeneration(queryClient)
@@ -252,17 +269,26 @@ function useReconcileWebPushSubscription({
       !cancelled && isSessionWorkCurrent(queryClient, generation, sessionSignal)
 
     const reconcile = async () => {
-      if (browserPermission() !== "granted") return
-
       try {
         const config = await getWebPushConfig({ signal: sessionSignal })
-        if (!isCurrent() || !config.enabled || config.subscribed) return
+        if (!isCurrent()) return
 
         const registration = await navigator.serviceWorker.getRegistration("/")
         if (!isCurrent() || !registration) return
 
         const subscription = await getExistingWebPushSubscription(registration)
-        if (!isCurrent() || !subscription) return
+        if (!isCurrent()) return
+
+        if (
+          !subscription ||
+          !shouldUpsertReconciledSubscription({
+            serverEnabled: config.enabled,
+            hasBrowserSubscription: Boolean(subscription),
+            backendSubscribed: config.subscribed,
+          })
+        ) {
+          return
+        }
 
         await upsertWebPushSubscription(subscription.toJSON(), { signal: sessionSignal })
       } catch {

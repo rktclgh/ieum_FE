@@ -2,19 +2,21 @@
 
 import * as React from "react"
 
+import { LANGUAGE_STORAGE_KEY, resolveGuestLanguageBootstrap } from "@/lib/i18n/language-sync"
 import { getDeviceLanguage } from "@/lib/i18n/languages"
 import { useLanguageStore } from "@/lib/i18n/store"
 
-const STORAGE_KEY = "ieum-language"
-
 function I18nProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
-    const hasStoredLanguage = window.localStorage.getItem(STORAGE_KEY) !== null
+    const bootstrap = resolveGuestLanguageBootstrap(
+      window.localStorage.getItem(LANGUAGE_STORAGE_KEY),
+      getDeviceLanguage()
+    )
 
-    if (hasStoredLanguage) {
+    if (bootstrap.kind === "persisted") {
       useLanguageStore.persist.rehydrate()
     } else {
-      useLanguageStore.getState().setLanguage(getDeviceLanguage())
+      useLanguageStore.getState().setLanguage(bootstrap.language)
     }
   }, [])
 

@@ -28,6 +28,7 @@ import { useCreateDirectRoom } from "@/features/chat/hooks/use-chat-mutations"
 import { getFriendErrorMessage } from "@/features/friends/lib/friend-error"
 import type { FriendEntry, SearchEntry } from "@/features/friends/lib/friend-adapter"
 import { routes } from "@/lib/navigation/routes"
+import { cn } from "@/lib/utils"
 
 type ConfirmAction =
   | { type: "reject"; target: FriendEntry }
@@ -42,7 +43,12 @@ const EMPTY_FRIENDS: FriendEntry[] = []
 const EMPTY_RECEIVED_REQUESTS: FriendEntry[] = []
 const EMPTY_SENT_REQUESTS: FriendEntry[] = []
 
-function FriendListPageContent() {
+interface FriendListPageContentProps {
+  // 알림 딥링크로 강조할 "받은 친구요청"의 요청자 userId (없으면 강조 없음).
+  highlightUserId?: number | null
+}
+
+function FriendListPageContent({ highlightUserId = null }: FriendListPageContentProps = {}) {
   const router = useRouter()
   const { messages } = useTranslation()
 
@@ -96,6 +102,21 @@ function FriendListPageContent() {
     () => new Set(friends.map((friend) => friend.userId)),
     [friends]
   )
+
+  // 알림 딥링크 강조 — 대상 요청이 목록에 있으면 스크롤해 보여주고, 잠깐 뒤 배경 강조를 페이드아웃한다.
+  // 페이드가 끝난 userId 를 기록해 두면, 다른 요청으로 강조가 바뀌어도 그 요청은 새로 강조된다.
+  const highlightRowRef = React.useRef<HTMLDivElement>(null)
+  const [fadedUserId, setFadedUserId] = React.useState<number | null>(null)
+  const highlightPresent =
+    highlightUserId !== null && requests.some((request) => request.userId === highlightUserId)
+
+  React.useEffect(() => {
+    if (!highlightPresent || highlightUserId === null) return
+    highlightRowRef.current?.scrollIntoView({ block: "center", behavior: "smooth" })
+    const targetId = highlightUserId
+    const timeoutId = window.setTimeout(() => setFadedUserId(targetId), 1000)
+    return () => window.clearTimeout(timeoutId)
+  }, [highlightUserId, highlightPresent])
 
   React.useEffect(() => {
     if (!actionError) return
@@ -185,18 +206,31 @@ function FriendListPageContent() {
               {requests.length > 0 && (
                 <div className="flex flex-col items-start pt-3">
                   <SectionTitle title={messages.chat.receivedRequestsTitle} count={requests.length} />
-                  {requests.map((request) => (
-                    <FriendRequestItem
-                      key={request.userId}
-                      name={request.nickname}
-                      avatarSrc={request.avatarSrc}
-                      flagSrc={request.flagSrc}
-                      nation={nationOf(request)}
-                      variant="request"
-                      onAccept={() => handleAccept(request)}
-                      onReject={() => setConfirmAction({ type: "reject", target: request })}
-                    />
-                  ))}
+                  {requests.map((request) => {
+                    const isHighlighted = request.userId === highlightUserId
+                    return (
+                      <div
+                        key={request.userId}
+                        ref={isHighlighted ? highlightRowRef : undefined}
+                        className={cn(
+                          "w-full rounded-2xl transition-colors duration-700 ease-out",
+                          isHighlighted && fadedUserId !== highlightUserId
+                            ? "bg-primary/10"
+                            : "bg-transparent"
+                        )}
+                      >
+                        <FriendRequestItem
+                          name={request.nickname}
+                          avatarSrc={request.avatarSrc}
+                          flagSrc={request.flagSrc}
+                          nation={nationOf(request)}
+                          variant="request"
+                          onAccept={() => handleAccept(request)}
+                          onReject={() => setConfirmAction({ type: "reject", target: request })}
+                        />
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 

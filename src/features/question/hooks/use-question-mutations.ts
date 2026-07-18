@@ -26,6 +26,7 @@ import {
   getSessionGeneration,
   isSessionGenerationCurrent,
 } from "@/features/session/lib/session-cache"
+import { getApiErrorCode } from "@/lib/api/errors"
 
 function useCreateQuestion() {
   const queryClient = useQueryClient()
@@ -39,11 +40,18 @@ function useCreateQuestion() {
   })
 }
 
+// 수정 도중 질문이 채택 확정되면(경합) BE가 409 QUESTION_RESOLVED로 거부한다 — 상세를 다시
+// 불러와 화면이 최신 확정 상태를 반영하게 한다(수정 진입점도 재조회 후 숨겨진다).
 function useUpdateQuestion(questionId: number) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (body: UpdateQuestionRequest) => updateQuestion(questionId, body),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: questionKeys.detail(questionId) })
+      queryClient.invalidateQueries({ queryKey: questionKeys.myList() })
+    },
+    onError: (error) => {
+      if (getApiErrorCode(error) !== "QUESTION_RESOLVED") return
       queryClient.invalidateQueries({ queryKey: questionKeys.detail(questionId) })
       queryClient.invalidateQueries({ queryKey: questionKeys.myList() })
     },

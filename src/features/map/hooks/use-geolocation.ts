@@ -26,7 +26,6 @@ const GEOLOCATION_OPTIONS: PositionOptions = {
 // position은 갱신마다 새 객체가 되므로 지도 뷰 재중심에 직접 쓰면 안 된다 — MapCanvas recenterKey로만 이동한다.
 function useGeolocation({ enabled = true }: UseGeolocationOptions = {}) {
   const [position, setPosition] = React.useState<Coordinates | null>(null)
-  const [accuracy, setAccuracy] = React.useState<number | null>(null)
   const [status, setStatus] = React.useState<GeolocationStatus>("loading")
   const [initialStatus, setInitialStatus] = React.useState<GeolocationStatus>("loading")
 
@@ -38,7 +37,6 @@ function useGeolocation({ enabled = true }: UseGeolocationOptions = {}) {
     const watchId = navigator.geolocation.watchPosition(
       (result) => {
         setPosition({ lat: result.coords.latitude, lng: result.coords.longitude })
-        setAccuracy(result.coords.accuracy)
         setStatus("success")
         setInitialStatus((currentStatus) =>
           resolveInitialGeolocationStatus(currentStatus, { type: "success" })
@@ -61,7 +59,6 @@ function useGeolocation({ enabled = true }: UseGeolocationOptions = {}) {
 
   return {
     position,
-    accuracy,
     status: isSupported ? status : "error",
     initialStatus: isSupported ? initialStatus : "error",
     isSupported,

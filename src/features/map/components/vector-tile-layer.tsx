@@ -8,6 +8,7 @@ import "maplibre-gl/dist/maplibre-gl.css"
 import "@maplibre/maplibre-gl-leaflet"
 
 import { MAP_CATEGORY_COLORS } from "@/features/map/constants/map"
+import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import { applyLabelLanguage, loadMapStyle } from "@/features/map/lib/map-style"
 import { useLanguageStore } from "@/lib/i18n/store"
 
@@ -49,13 +50,18 @@ function VectorTileLayer() {
     let layer: L.Layer | null = null
     let cancelled = false
 
+    // MapContainer가 해제되는 중이면 Leaflet의 pane도 함께 사라진다. 이 시점에 레이어를 붙이면
+    // maplibre-gl-leaflet 내부에서 제거된 mapPane을 읽어 예외가 나므로, 현재 map이 살아 있을 때만 시작한다.
+    if (!isLeafletMapActive(map)) return
+
     // 스타일은 언어가 바뀔 때마다 다시 받지 않는다(타일까지 새로 그려진다). 최초 1회만 쓰므로
     // 구독 대신 getState로 읽는다 — 이후 언어 변경은 아래 effect가 text-field만 갱신한다.
     // glyphs URL을 자체 호스팅으로 갈아끼우려면 스타일 객체를 미리 받아 손봐야 해서 비동기다.
-    // 그 사이 언마운트되면 이미 사라진 지도에 레이어를 붙이게 되므로 cancelled로 막는다.
+    // 그 사이 언마운트되면 이미 사라진 지도에 레이어를 붙이게 되므로 cancelled/활성 여부로 막는다.
     void loadMapStyle(useLanguageStore.getState().language)
       .then((style) => {
-        if (cancelled) return
+        // 스타일을 받는 사이 언마운트됐거나 map이 해제 중이면 죽은 pane에 붙이지 않는다.
+        if (cancelled || !isLeafletMapActive(map)) return
 
         const glLayer = L.maplibreGL({ style })
         layer = glLayer
@@ -73,7 +79,11 @@ function VectorTileLayer() {
     return () => {
       cancelled = true
       setGlMap(null)
-      if (layer) map.removeLayer(layer)
+      // 부모 MapContainer가 먼저 제거한 경우에는 이미 layer가 빠져 있다. 해제 중인 map에
+      // removeLayer를 호출하면 예외가 나므로 살아 있고 실제로 붙어 있을 때만 제거한다.
+      if (layer && isLeafletMapActive(map) && map.hasLayer(layer)) {
+        map.removeLayer(layer)
+      }
     }
   }, [map])
 

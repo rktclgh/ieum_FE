@@ -2,6 +2,9 @@ const NOTIFICATION_CENTER = "/notifications/"
 const FALLBACK_TITLE = "새 알림"
 const FALLBACK_BODY = "새 알림이 도착했어요"
 const FALLBACK_TAG = "notification-fallback"
+const SUBSCRIPTION_ENDPOINT = "/api/v1/notifications/push/subscription"
+const CSRF_COOKIE_NAME = "csrf_token"
+const CSRF_HEADER_NAME = "X-CSRF-Token"
 
 function safeDestination(value) {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
@@ -19,6 +22,37 @@ function safeDestination(value) {
 
 function nonEmptyString(value, fallback) {
   return typeof value === "string" && value.trim() ? value : fallback
+}
+
+// 알림 type/refId 를 앱 내부 경로로 변환한다. 인앱 알림센터
+// (src/features/notification/lib/notification-link.ts)와 동일한 규칙이므로 함께 유지한다.
+// 매핑 불가하면 null 을 돌려 호출부가 알림센터로 폴백하게 한다.
+function resolveNotificationDestination(type, refId) {
+  if (typeof type !== "string") return null
+
+  const normalized = type.toLowerCase()
+  const id = Number.isSafeInteger(refId) && refId > 0 ? refId : null
+
+  // 친구 요청은 "받은 친구요청" 목록으로 고정 이동한다(refId 불필요).
+  // 요청자 userId(refId)가 유효하면 해당 요청 행을 강조하도록 넘긴다.
+  if (normalized.includes("friend")) {
+    return id === null ? "/friends/" : `/friends/?highlightUserId=${id}`
+  }
+
+  if (id === null) return null
+
+  if (normalized.includes("question") || normalized.includes("answer")) {
+    return `/questions/detail/?questionId=${id}`
+  }
+  if (normalized.includes("meet")) return `/meetups/detail/?meetingId=${id}`
+  if (
+    normalized.includes("chat") ||
+    normalized.includes("message") ||
+    normalized.includes("room")
+  ) {
+    return `/chats/room/?chatId=${id}`
+  }
+  return null
 }
 
 function fallbackNotification() {
@@ -47,11 +81,13 @@ function notificationFromPayload(payload) {
     const notificationId = Number.isSafeInteger(payload.notificationId) && payload.notificationId > 0
       ? payload.notificationId
       : null
+    // type/refId 로 딥링크를 계산하고, 매핑 불가하면 알림센터로 폴백한다.
+    const destination = resolveNotificationDestination(payload.type, payload.refId)
     return {
       title: payload.answerIsAi === true ? `AI · ${title}` : title,
       body: nonEmptyString(payload.body, FALLBACK_BODY),
       tag: notificationId === null ? FALLBACK_TAG : `notification-${notificationId}`,
-      url: NOTIFICATION_CENTER,
+      url: destination === null ? NOTIFICATION_CENTER : safeDestination(destination),
     }
   }
 
@@ -101,8 +137,87 @@ async function openNotificationDestination(value) {
   return self.clients.openWindow(targetUrl)
 }
 
+// The worker has no document, so the double-submit CSRF token can only come from
+// the CookieStore API. Chromium exposes it to workers; Safari and Firefox do not,
+// and there the app-side reconcile on next launch remains the only recovery path.
+async function readCsrfToken() {
+  if (!self.cookieStore) return null
+
+  try {
+    const cookie = await self.cookieStore.get(CSRF_COOKIE_NAME)
+    return cookie && cookie.value ? cookie.value : null
+  } catch {
+    return null
+  }
+}
+
+// Chrome fires pushsubscriptionchange without newSubscription, so the replacement
+// has to be rebuilt from whatever the event or the registration still knows.
+async function resolveReplacementSubscription(event) {
+  if (event.newSubscription) return event.newSubscription
+
+  const active = await self.registration.pushManager.getSubscription()
+  if (active) return active
+
+  const options = event.oldSubscription && event.oldSubscription.options
+  if (!options || !options.applicationServerKey) return null
+
+  try {
+    return await self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: options.applicationServerKey,
+    })
+  } catch {
+    return null
+  }
+}
+
+function toSubscriptionRequest(subscription) {
+  const json = subscription.toJSON()
+  const endpoint = typeof json.endpoint === "string" ? json.endpoint.trim() : ""
+  const p256dh = json.keys && typeof json.keys.p256dh === "string" ? json.keys.p256dh.trim() : ""
+  const auth = json.keys && typeof json.keys.auth === "string" ? json.keys.auth.trim() : ""
+  if (!endpoint || !p256dh || !auth) return null
+
+  const expirationTime =
+    Number.isSafeInteger(json.expirationTime) && json.expirationTime >= 0
+      ? json.expirationTime
+      : null
+
+  return { endpoint, expirationTime, keys: { p256dh, auth } }
+}
+
+async function syncSubscriptionChange(event) {
+  const subscription = await resolveReplacementSubscription(event)
+  if (!subscription) return
+
+  const body = toSubscriptionRequest(subscription)
+  if (!body) return
+
+  const csrfToken = await readCsrfToken()
+  if (!csrfToken) return
+
+  try {
+    await self.fetch(SUBSCRIPTION_ENDPOINT, {
+      method: "PUT",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        [CSRF_HEADER_NAME]: csrfToken,
+      },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    // The app reconciles on next launch; a failed background sync must stay quiet.
+  }
+}
+
 self.addEventListener("push", (event) => {
   event.waitUntil(showPushNotification(event))
+})
+
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(syncSubscriptionChange(event))
 })
 
 self.addEventListener("notificationclick", (event) => {

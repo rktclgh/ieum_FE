@@ -48,3 +48,7 @@ next-env.d.ts
 # Agent local specs and memory
 **/spec.md
 **/memory.md
+
+# Local design and implementation plans
+/docs/superpowers/specs/
+/docs/superpowers/plans/

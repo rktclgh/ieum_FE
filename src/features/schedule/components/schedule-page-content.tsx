@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { Globe } from "lucide-react"
 
 import { RoutePageState } from "@/components/ui/route-page-state"
 import { AppBar } from "@/components/ui/app-bar"
@@ -33,6 +34,7 @@ import { isMeetingAccessErrorCode } from "@/features/schedule/lib/schedule-query
 import { buildKstMonthScheduleRange } from "@/features/schedule/lib/schedule-query-range"
 import { formatYearMonth, toDateKey } from "@/features/schedule/lib/calendar"
 import { getApiErrorCode } from "@/lib/api/errors"
+import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { getKstDateKey } from "@/lib/date/kst"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
@@ -45,10 +47,87 @@ type ScheduleEditorState =
   | { mode: "create" }
   | { mode: "edit"; schedule: MeetingScheduleEntry }
 
+interface ScheduleRowProps {
+  event: MeetingScheduleEntry
+  isAuthenticated: boolean
+  menuOpen: boolean
+  menuItems: ChatContextMenuItem[]
+  onOpenMenu: () => void
+  onCloseMenu: () => void
+}
+
+function ScheduleRow({
+  event,
+  isAuthenticated,
+  menuOpen,
+  menuItems,
+  onOpenMenu,
+  onCloseMenu,
+}: ScheduleRowProps) {
+  const { messages } = useTranslation()
+  const titleTranslate = useTranslateToggle({ text: event.title, isAuthenticated })
+  const locationTranslate = useTranslateToggle({ text: event.locationLabel, isAuthenticated })
+  const canTranslate = titleTranslate.canTranslate || locationTranslate.canTranslate
+  const isLoading = titleTranslate.isLoading || locationTranslate.isLoading
+  const isShowingTranslation = titleTranslate.isShowingTranslation || locationTranslate.isShowingTranslation
+  const isError = titleTranslate.isError || locationTranslate.isError
+
+  const toggleTranslation = () => {
+    if (isShowingTranslation) {
+      titleTranslate.showOriginal()
+      locationTranslate.showOriginal()
+      return
+    }
+    titleTranslate.toggle()
+    locationTranslate.toggle()
+  }
+
+  const translateMenuItem: ChatContextMenuItem = {
+    icon: <Globe className="size-6 text-gray-900" />,
+    label: isLoading
+      ? messages.translate.translatingLabel
+      : isShowingTranslation
+        ? messages.translate.viewOriginalLabel
+        : messages.translate.menuLabel,
+    onClick: () => {
+      toggleTranslation()
+      onCloseMenu()
+    },
+  }
+
+  const fullMenuItems = canTranslate ? [translateMenuItem, ...menuItems] : menuItems
+
+  return (
+    <div className="relative w-full">
+      <ScheduleListItem
+        event={{
+          ...event,
+          translatedTitle: titleTranslate.displayText,
+          translatedLocationLabel: locationTranslate.displayText,
+        }}
+        onMoreClick={canTranslate || menuItems.length > 0 ? onOpenMenu : undefined}
+        moreAriaLabel={messages.common.more}
+      />
+      {isError ? (
+        <p className="mt-1 px-3 text-body-regular-12 text-red">{messages.translate.translateFailedLabel}</p>
+      ) : null}
+      {menuOpen && (
+        <ChatContextMenu
+          items={fullMenuItems}
+          dimmed
+          onDismiss={onCloseMenu}
+          className="top-full right-0 mt-2"
+        />
+      )}
+    </div>
+  )
+}
+
 function SchedulePageContent({ roomId }: SchedulePageContentProps) {
   const router = useRouter()
   const { language, messages } = useTranslation()
   const session = useChatSessionAccess(roomId)
+  const isAuthenticated = session.authenticated
   const roomQuery = useChatRoom(roomId, session)
   const room = roomQuery.data
   const meetingId = room?.roomType === "group" ? room.meetingId : null
@@ -198,26 +277,17 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
     if (eventsForSelectedDate.length === 0) {
       return <p className="py-6 text-center text-body-regular-14 text-gray-400">{messages.schedule.emptyStateLabel}</p>
     }
-    return eventsForSelectedDate.map((event) => {
-      const menuItems = scheduleMenuItems(event)
-      return (
-        <div key={event.scheduleId} className="relative w-full">
-          <ScheduleListItem
-            event={event}
-            onMoreClick={menuItems.length > 0 ? () => openMenu(event.scheduleId) : undefined}
-            moreAriaLabel={messages.common.more}
-          />
-          {activeMenuId === event.scheduleId ? (
-            <ChatContextMenu
-              items={menuItems}
-              dimmed
-              onDismiss={() => setActiveMenuId(null)}
-              className="top-full right-0 mt-2"
-            />
-          ) : null}
-        </div>
-      )
-    })
+    return eventsForSelectedDate.map((event) => (
+      <ScheduleRow
+        key={event.scheduleId}
+        event={event}
+        isAuthenticated={isAuthenticated}
+        menuOpen={activeMenuId === event.scheduleId}
+        menuItems={scheduleMenuItems(event)}
+        onOpenMenu={() => openMenu(event.scheduleId)}
+        onCloseMenu={() => setActiveMenuId(null)}
+      />
+    ))
   }
 
   return (
