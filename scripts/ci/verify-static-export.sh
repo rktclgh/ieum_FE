@@ -62,7 +62,8 @@ assert_file out/icons/pwa/icon-192.png
 assert_file out/icons/pwa/icon-512.png
 assert_file out/icons/pwa/icon-maskable-192.png
 assert_file out/icons/pwa/icon-maskable-512.png
-assert_file out/icons/pwa/apple-touch-icon.png
+assert_file out/icon.svg
+assert_file out/apple-icon.png
 
 while IFS= read -r route; do
   route_directory=out
