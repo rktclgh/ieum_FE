@@ -277,3 +277,9 @@
     max-width: var(--app-column);
   }
 }
+
+/* 키보드가 열리면 셸 높이를 그만큼 줄인다. flex-1 스크롤 영역이 압축되면서
+   하단 입력창이 키보드 바로 위에 붙고, Safari가 페이지를 밀어 올릴 이유가 사라진다. */
+@utility app-viewport-height {
+  height: calc(100dvh - var(--keyboard-inset, 0px));
+}
