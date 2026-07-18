@@ -2,8 +2,6 @@
 
 import * as React from "react"
 
-import { ChevronRight } from "lucide-react"
-
 import { NoImage } from "@/components/ui/no-image"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
@@ -12,15 +10,18 @@ import {
   type MyQuestionListItemView,
 } from "@/features/question/lib/question-adapter"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
+import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface QuestionHistoryItemProps {
   item: MyQuestionListItemView
   onOpen: () => void
   onLongPress: (rect: DOMRect) => void
+  /** 롱프레스 오버레이 안에서만 true — 눌린 항목이 흰 카드로 떠오른다(Figma 1722-13490). */
+  elevated?: boolean
 }
 
-function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemProps) {
+function QuestionHistoryItem({ item, onOpen, onLongPress, elevated }: QuestionHistoryItemProps) {
   const { messages } = useTranslation()
   const ref = React.useRef<HTMLButtonElement>(null)
   const longPress = useLongPress({
@@ -66,12 +67,19 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
       type="button"
       onClick={onOpen}
       {...longPress}
-      className="flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3 text-left shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]"
+      className={cn(
+        "flex w-full items-center gap-3 px-4 py-3 text-left",
+        elevated && "rounded-2xl bg-white shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]"
+      )}
     >
-      <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+      <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-gray-100">
         {item.thumbnailSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.thumbnailSrc} alt={messages.question.imageAlt} className="size-full object-cover" />
+          <img
+            src={item.thumbnailSrc}
+            alt={messages.question.imageAlt}
+            className="size-full object-cover"
+          />
         ) : (
           <NoImage />
         )}
@@ -85,7 +93,6 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
         ) : null}
         {timeLabel ? <span className="text-body-regular-13 text-gray-400">{timeLabel}</span> : null}
       </div>
-      <ChevronRight className="size-5 shrink-0 text-gray-300" />
     </button>
   )
 }
