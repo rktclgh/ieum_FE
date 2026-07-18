@@ -57,6 +57,8 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
       <ChatListItem
         title={chat.title}
         avatarSrc={chat.avatarSrc}
+        secondaryAvatarSrc={chat.secondaryAvatarSrc}
+        grouped={chat.groupAvatar}
         memberCount={chat.memberCount}
         lastMessage={chat.lastMessage}
         time={chat.time}

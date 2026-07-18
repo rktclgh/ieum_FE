@@ -61,7 +61,7 @@ import {
   type ChatBubbleMessage,
   type ChatMessageView,
 } from "@/features/chat/lib/chat-adapter"
-import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
+import { resolveChatRoomAvatars } from "@/features/chat/lib/chat-avatar"
 import {
   buildGroupChatMemberList,
   type GroupChatMemberListItem,
@@ -448,7 +448,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   )
   const notificationOn = room?.notifyEnabled ?? true
   const roomPinned = room?.pinned ?? false
-  const roomAvatarSrc = resolveChatRoomAvatar(
+  const roomAvatars = resolveChatRoomAvatars(
     room?.roomType ?? "direct",
     roomMembers,
     myUserId,
@@ -909,7 +909,9 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
               <SidePanelContent className="items-center gap-3 px-4 pb-6">
                 <ChatRoomProfile
                   title={roomTitle}
-                  avatarSrc={roomAvatarSrc}
+                  avatarSrc={roomAvatars.avatarSrc}
+                  secondaryAvatarSrc={roomAvatars.secondaryAvatarSrc}
+                  grouped={roomAvatars.grouped}
                 />
                 {!isQuestionRoom && (
                   <ChatRoomInfoSection
