@@ -10,6 +10,7 @@ import { ChatProfile } from "@/features/chat/components/chat-profile"
 interface ChatListItemProps extends React.ComponentProps<"button"> {
   avatarSrc?: string
   secondaryAvatarSrc?: string
+  grouped?: boolean
   online?: boolean
   title: string
   /** 검색어와 일치하는 부분을 강조 표시 (채팅목록 검색) */
@@ -27,6 +28,7 @@ function ChatListItem({
   className,
   avatarSrc,
   secondaryAvatarSrc,
+  grouped,
   online,
   title,
   highlightQuery,
@@ -70,6 +72,7 @@ function ChatListItem({
       <ChatProfile
         src={avatarSrc}
         secondarySrc={secondaryAvatarSrc}
+        grouped={grouped}
         online={online}
         size={active ? 40 : 44}
         className="transition-all duration-200 ease-out"
