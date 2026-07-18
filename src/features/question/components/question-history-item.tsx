@@ -4,6 +4,7 @@ import * as React from "react"
 
 import { ChevronRight } from "lucide-react"
 
+import { NoImage } from "@/components/ui/no-image"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
 import {
@@ -71,7 +72,9 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
         {item.thumbnailSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.thumbnailSrc} alt={messages.question.imageAlt} className="size-full object-cover" />
-        ) : null}
+        ) : (
+          <NoImage />
+        )}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-title-semibold-16 text-gray-900">{item.title}</span>

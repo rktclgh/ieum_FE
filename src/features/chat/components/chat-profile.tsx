@@ -1,6 +1,7 @@
 import * as React from "react"
 import Image from "next/image"
 
+import { NoImageProfile } from "@/components/ui/no-image"
 import { cn } from "@/lib/utils"
 
 // Figma "Friend" 배지 위치/크기 (44px 아바타 기준 실측): 20.3px 배지가 아바타 우하단 모서리를
@@ -52,9 +53,11 @@ function ChatProfile({
           className="absolute top-0 right-0 overflow-hidden rounded-full bg-gray-100"
           style={{ width: size * 0.63, height: size * 0.63 }}
         >
-          {secondarySrc && (
+          {secondarySrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={secondarySrc} alt="" className="size-full object-cover" />
+          ) : (
+            <NoImageProfile />
           )}
         </div>
       )}
@@ -69,9 +72,11 @@ function ChatProfile({
             : { inset: 0 }
         }
       >
-        {src && (
+        {src ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={src} alt={alt} className="size-full object-cover" />
+        ) : (
+          <NoImageProfile />
         )}
       </div>
       {!isGroup && online !== undefined && (

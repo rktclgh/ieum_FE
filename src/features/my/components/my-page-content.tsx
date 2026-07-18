@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { NoImageProfile } from "@/components/ui/no-image"
 import { CountryFlag } from "@/features/chat/components/country-flag"
 import { LanguageSettingItem } from "@/features/my/components/language-setting-item"
 import { MyMenuRow } from "@/features/my/components/my-menu-row"
@@ -69,7 +70,7 @@ function MyPageContent() {
         {/* 프로필 */}
         <div className="flex flex-col items-center gap-3 pt-8 pb-6">
           <div className="size-24 overflow-hidden rounded-full border-4 border-gray-100 bg-gray-100">
-            {user.profileImageUrl && (
+            {user.profileImageUrl ? (
               // 백엔드 프로필 이미지 호스트가 next.config remotePatterns에 없어 일반 img로 렌더한다.
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -77,6 +78,8 @@ function MyPageContent() {
                 alt=""
                 className="size-full object-cover"
               />
+            ) : (
+              <NoImageProfile />
             )}
           </div>
 

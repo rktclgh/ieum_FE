@@ -7,6 +7,7 @@ import { CheckCircle2, Flag, Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { NoImageProfile } from "@/components/ui/no-image"
 import { LongPressActionOverlay } from "@/features/question/components/long-press-action-overlay"
 import { QuestionAiAnswerCard } from "@/features/question/components/question-ai-answer-card"
 import { QuestionAnswerAuthorItem } from "@/features/question/components/question-answer-author-item"
@@ -174,7 +175,9 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
                   {question.authorAvatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={question.authorAvatarUrl} alt="" className="size-full object-cover" />
-                  ) : null}
+                  ) : (
+                    <NoImageProfile />
+                  )}
                 </div>
                 <div className="flex flex-col gap-0.5">
                   <span className="text-title-semibold-16 text-gray-900">{question.authorName}</span>

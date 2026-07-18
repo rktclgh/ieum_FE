@@ -3,6 +3,7 @@
 import { Globe } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { NoImageProfile } from "@/components/ui/no-image"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -37,7 +38,9 @@ function QuestionAnswerItem({
             {answer.authorAvatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={answer.authorAvatarUrl} alt="" className="size-full object-cover" />
-            ) : null}
+            ) : (
+              <NoImageProfile />
+            )}
           </div>
           <span className="text-title-semibold-16 text-gray-900">{answer.authorName}</span>
           {answer.isAi ? (
