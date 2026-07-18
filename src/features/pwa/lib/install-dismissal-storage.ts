@@ -14,7 +14,12 @@ function isInstallPromptDismissed(): boolean {
 }
 
 function markInstallPromptDismissed(): void {
-  getStorage()?.setItem(KEY, "1")
+  try {
+    getStorage()?.setItem(KEY, "1")
+  } catch {
+    // 사파리 프라이빗 모드 등에서 QuotaExceededError가 날 수 있다.
+    // 저장 실패는 배너가 다시 뜨는 정도라 무해하므로 무시한다.
+  }
 }
 
 export { isInstallPromptDismissed, markInstallPromptDismissed }
