@@ -101,14 +101,21 @@ async function loadMapStyle(language: LanguageCode): Promise<StyleSpecification>
 
 // 언어 전환 시 이름 라벨만 갱신한다. 스타일을 다시 받아 setStyle하면 타일까지 새로 그려지므로
 // text-field만 바꾼다.
+//
+// 이 함수는 styledata 리스너 안에서 호출된다. getLabelTextField는 매번 새 배열을 반환하므로
+// 무조건 setLayoutProperty를 부르면 styledata → set → styledata 무한 루프에 빠진다
+// (applyCategoryColors가 색상에 대해 두는 것과 같은 가드). 값이 실제로 달라졌을 때만 쓴다.
 function applyLabelLanguage(map: MaplibreMap, language: LanguageCode) {
   const layers = map.getStyle()?.layers
   if (!layers) return
 
   const textField = getLabelTextField(language)
+  const textFieldString = JSON.stringify(textField)
 
   for (const layer of layers) {
     if (!isNameLabel(layer)) continue
+
+    if (JSON.stringify(map.getLayoutProperty(layer.id, "text-field")) === textFieldString) continue
 
     map.setLayoutProperty(layer.id, "text-field", textField as never)
   }

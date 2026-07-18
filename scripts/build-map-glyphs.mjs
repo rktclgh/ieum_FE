@@ -37,8 +37,10 @@ const RANGE_SIZE = 256
 const UNICODE_MAX = 65536
 
 // fontnik은 글리프가 하나도 없는 range에도 빈 pbf를 돌려준다. 그대로 쓰면 8MB짜리가 20MB가 되므로
-// 글리프가 실제로 든 range만 남긴다. 빈 pbf는 헤더뿐이라 이 크기를 넘지 못한다.
-const EMPTY_PBF_MAX_BYTES = 1024
+// 글리프가 실제로 든 range만 남긴다. Pretendard 실측 결과 빈 pbf는 최대 35바이트, 글리프가 1개라도
+// 든 range는 최소 153바이트라, 그 사이인 50바이트를 경계로 잡으면 빈 것만 안전하게 걸러진다.
+// (1024처럼 크게 잡으면 글리프 1~2개짜리 희소 range가 통째로 누락된다.)
+const EMPTY_PBF_MAX_BYTES = 50
 
 function range(font, start) {
   return new Promise((resolve, reject) => {
