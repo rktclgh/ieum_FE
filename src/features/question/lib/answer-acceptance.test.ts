@@ -3,7 +3,6 @@ import test from "node:test"
 
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
 import { resolveAcceptButtonState } from "./answer-acceptance.ts"
-// @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
 import type { QuestionAnswerView } from "./question-adapter.ts"
 
 function makeAnswer(overrides: Partial<QuestionAnswerView> = {}): QuestionAnswerView {
