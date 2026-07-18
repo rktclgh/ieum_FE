@@ -12,6 +12,7 @@ import {
 } from "@/features/meetup/hooks/use-meetup-mutations"
 import { adaptMeetingDetail } from "@/features/meetup/lib/meetup-adapter"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
+import { useRequireAuth } from "@/features/session/hooks/use-require-auth"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
@@ -28,6 +29,7 @@ interface MeetupDetailContainerProps {
 function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProps) {
   const router = useRouter()
   const { messages, language } = useTranslation()
+  const requireAuth = useRequireAuth()
 
   const meetingQuery = useMeeting(meetingId)
   const detail = meetingQuery.data ? adaptMeetingDetail(meetingQuery.data, language) : null
@@ -59,10 +61,12 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
   const close = () => (onClose ? onClose() : router.back())
 
   const handleJoin = () =>
-    run(async () => {
-      const { roomId } = await join.mutateAsync()
-      router.replace(routes.chatRoom(roomId))
-    })
+    requireAuth(() =>
+      run(async () => {
+        const { roomId } = await join.mutateAsync()
+        router.replace(routes.chatRoom(roomId))
+      }),
+    )
   const handleLeave = () =>
     setConfirm({
       title: m.leaveConfirmTitle,
