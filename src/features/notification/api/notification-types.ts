@@ -22,8 +22,5 @@ interface NotificationsPage {
   unreadCount: number
 }
 
-interface ReadAllResponse {
-  updated: number
-}
 
-export type { NotificationItem, NotificationsPage, ReadAllResponse }
+export type { NotificationItem, NotificationsPage }

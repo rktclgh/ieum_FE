@@ -476,7 +476,7 @@ export const en: Messages = {
     loadError: "Couldn't load notifications.",
     settingsLabel: "Notification settings",
     deleteModeLabel: "Delete notifications",
-    deleteItemLabel: "Delete notification",
+    deleteItemLabel: "Delete this notification",
     deleteAll: "Delete all",
     deleteModeClose: "Close",
     deleteAllConfirmTitle: "Delete all notifications?",

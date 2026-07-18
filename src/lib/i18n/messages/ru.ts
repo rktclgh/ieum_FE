@@ -476,7 +476,7 @@ export const ru: Messages = {
     loadError: "Не удалось загрузить уведомления.",
     settingsLabel: "Настройки уведомлений",
     deleteModeLabel: "Удалить уведомления",
-    deleteItemLabel: "Удалить уведомление",
+    deleteItemLabel: "Удалить это уведомление",
     deleteAll: "Удалить все",
     deleteModeClose: "Закрыть",
     deleteAllConfirmTitle: "Удалить все уведомления?",

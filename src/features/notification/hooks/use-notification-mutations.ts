@@ -9,7 +9,6 @@ import {
 
 import {
   deleteNotification,
-  readAllNotifications,
   readNotification,
 } from "@/features/notification/api/notification-api"
 import type { NotificationsPage } from "@/features/notification/api/notification-types"
@@ -83,38 +82,6 @@ function useReadNotification() {
     // 낙관적 업데이트가 목록을 결정적으로 갱신하므로 목록 전체(모든 페이지) 재조회는
     // 불필요. 서버 권위값인 미읽음 배지만 무효화한다.
     onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.unreadCount() }),
-  })
-}
-
-// 전체 읽음 — 모든 항목을 읽음으로, 배지를 0 으로.
-function useReadAllNotifications() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: readAllNotifications,
-    onMutate: async () => {
-      await qc.cancelQueries({ queryKey: notificationKeys.all })
-      const ctx = snapshot(qc)
-
-      qc.setQueryData<ListData>(notificationKeys.list(), (old) =>
-        old
-          ? {
-              ...old,
-              pages: old.pages.map((page) => ({
-                ...page,
-                unreadCount: 0,
-                items: page.items.map((item) => ({ ...item, isRead: true })),
-              })),
-            }
-          : old
-      )
-      qc.setQueryData<NotificationsPage>(notificationKeys.unreadCount(), (old) =>
-        old ? { ...old, unreadCount: 0 } : old
-      )
-
-      return ctx
-    },
-    onError: (_error, _vars, ctx) => restore(qc, ctx),
-    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.all }),
   })
 }
 
@@ -197,9 +164,4 @@ function useDeleteAllNotifications() {
   })
 }
 
-export {
-  useReadNotification,
-  useReadAllNotifications,
-  useDeleteNotification,
-  useDeleteAllNotifications,
-}
+export { useReadNotification, useDeleteNotification, useDeleteAllNotifications }

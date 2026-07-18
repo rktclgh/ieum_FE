@@ -25,9 +25,12 @@ function NotificationItem({ entry, onOpen, deleteMode, onDelete }: NotificationI
 
   return (
     <div className="relative w-full">
+      {/* 삭제 모드에서는 본문 탭으로 딥링크 이동하지 않는다. X(20px)를 빗맞히면
+          삭제하려던 사용자가 질문/모임 상세로 튕겨나가기 때문. */}
       <button
         type="button"
-        onClick={onOpen}
+        onClick={deleteMode ? undefined : onOpen}
+        aria-disabled={deleteMode || undefined}
         className="flex w-full flex-col items-start gap-1.5 p-4 text-left"
       >
         <span className="flex min-w-0 max-w-full items-center gap-2">
@@ -35,7 +38,8 @@ function NotificationItem({ entry, onOpen, deleteMode, onDelete }: NotificationI
             <span
               className={cn(
                 "shrink-0 rounded-full px-2 py-0.5 text-body-medium-12",
-                entry.isAiAnswer ? "bg-primary-50 text-primary-700" : "bg-gray-100 text-gray-600"
+                // primary-50/700 은 정의된 토큰이 아니라 배지가 배경 없이 렌더됐다. 정의된 primary 로 대체.
+                entry.isAiAnswer ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-600"
               )}
             >
               {entry.isAiAnswer
