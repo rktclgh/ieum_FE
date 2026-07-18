@@ -262,3 +262,18 @@
 @theme {
   --animate-map-skeleton-shimmer: map-skeleton-shimmer 1.8s ease-in-out infinite;
 }
+
+/* 앱 셸 폭 정책 단일 정의.
+   640px 미만(폰)에서는 화면을 꽉 채우고, 그 이상에서만 중앙 컬럼으로 제한한다.
+   기존에는 max-w-sm(384px)이 49곳에 복붙돼 있어 402pt/430pt 기기에서 좌우가 벌어졌다. */
+@theme {
+  --app-column: 420px;
+}
+
+@utility app-column {
+  width: 100%;
+  margin-inline: auto;
+  @media (width >= 40rem) {
+    max-width: var(--app-column);
+  }
+}
