@@ -27,7 +27,7 @@ function TabBar({ className, activeHref, ...props }: TabBarProps) {
       )}
       {...props}
     >
-      <div className="flex w-full items-center justify-between rounded-full bg-white/20 p-1 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.10)] backdrop-blur-[6px]">
+      <div className="relative flex w-full items-center justify-between overflow-hidden rounded-full p-1 shadow-[0px_2px_16px_0px_rgba(0,0,0,0.12)] backdrop-blur-[3px]">
         {TAB_ITEMS.map((item) => {
           const active = (activeHref ?? pathname) === item.href
           return (
