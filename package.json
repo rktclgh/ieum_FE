@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "lint": "eslint",
+    "gen:map-glyphs": "node scripts/build-map-glyphs.mjs",
     "typecheck": "next typegen && tsc --noEmit --incremental false",
     "test:contracts": "bash scripts/ci/test-client-contracts.sh",
     "verify:out": "bash scripts/ci/verify-static-export.sh",
@@ -45,6 +46,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "fontnik": "^0.7.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

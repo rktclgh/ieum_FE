@@ -7,8 +7,10 @@ import { useMap } from "react-leaflet"
 import "maplibre-gl/dist/maplibre-gl.css"
 import "@maplibre/maplibre-gl-leaflet"
 
-import { MAP_CATEGORY_COLORS, MAP_STYLE_URL } from "@/features/map/constants/map"
+import { MAP_CATEGORY_COLORS } from "@/features/map/constants/map"
 import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
+import { applyLabelLanguage, loadMapStyle } from "@/features/map/lib/map-style"
+import { useLanguageStore } from "@/lib/i18n/store"
 
 // 스타일의 각 레이어를 source-layer 기준으로 매칭해 지정 색으로 덮어쓴다.
 // (레이어 id가 아니라 source-layer 기준이라, 여러 개로 쪼개진 도로 레이어 등도 한 번에 처리된다.)
@@ -40,35 +42,80 @@ function applyCategoryColors(map: MaplibreMap) {
 // 렌더 출력은 없다. 마커·실시간 위치·재중심 등 다른 Leaflet 로직과 독립적으로 동작한다.
 function VectorTileLayer() {
   const map = useMap()
+  const language = useLanguageStore((state) => state.language)
+
+  const [glMap, setGlMap] = React.useState<MaplibreMap | null>(null)
 
   React.useEffect(() => {
+    let layer: L.Layer | null = null
+    let cancelled = false
+
     // MapContainer가 해제되는 중이면 Leaflet의 pane도 함께 사라진다. 이 시점에 레이어를 붙이면
     // maplibre-gl-leaflet 내부에서 제거된 mapPane을 읽어 예외가 나므로, 현재 map이 살아 있을 때만 시작한다.
     if (!isLeafletMapActive(map)) return
 
-    const layer = L.maplibreGL({ style: MAP_STYLE_URL })
-    layer.addTo(map)
+    // 스타일은 언어가 바뀔 때마다 다시 받지 않는다(타일까지 새로 그려진다). 최초 1회만 쓰므로
+    // 구독 대신 getState로 읽는다 — 이후 언어 변경은 아래 effect가 text-field만 갱신한다.
+    // glyphs URL을 자체 호스팅으로 갈아끼우려면 스타일 객체를 미리 받아 손봐야 해서 비동기다.
+    // 그 사이 언마운트되면 이미 사라진 지도에 레이어를 붙이게 되므로 cancelled/활성 여부로 막는다.
+    void loadMapStyle(useLanguageStore.getState().language)
+      .then((style) => {
+        // 스타일을 받는 사이 언마운트됐거나 map이 해제 중이면 죽은 pane에 붙이지 않는다.
+        if (cancelled || !isLeafletMapActive(map)) return
 
-    // 초기화 지연 등으로 내부 MapLibre 인스턴스가 아직 없을 수 있어 존재를 확인하고 바인딩한다.
-    const glMap = layer.getMaplibreMap()
-    const recolor = glMap ? () => applyCategoryColors(glMap) : null
-    if (glMap && recolor) {
-      // load: 최초 스타일 로드 완료. styledata: 스타일이 늦게/재로딩될 때 재적용(idempotent).
-      glMap.on("load", recolor)
-      glMap.on("styledata", recolor)
-    }
+        const glLayer = L.maplibreGL({ style })
+        layer = glLayer
+        glLayer.addTo(map)
+
+        // 초기화 지연 등으로 내부 MapLibre 인스턴스가 아직 없을 수 있어 존재를 확인하고 바인딩한다.
+        const instance = glLayer.getMaplibreMap()
+        if (instance) setGlMap(instance)
+      })
+      .catch((error: unknown) => {
+        // 스타일을 못 받으면 지도는 마커만 뜬 빈 배경이 된다. 조용히 죽지 않도록 남긴다.
+        console.error("지도 스타일 로드 실패", error)
+      })
 
     return () => {
-      if (glMap && recolor) {
-        glMap.off("load", recolor)
-        glMap.off("styledata", recolor)
-      }
-      // 부모 MapContainer가 먼저 제거한 경우에는 이미 layer가 빠져 있다.
-      if (isLeafletMapActive(map) && map.hasLayer(layer)) {
+      cancelled = true
+      setGlMap(null)
+      // 부모 MapContainer가 먼저 제거한 경우에는 이미 layer가 빠져 있다. 해제 중인 map에
+      // removeLayer를 호출하면 예외가 나므로 살아 있고 실제로 붙어 있을 때만 제거한다.
+      if (layer && isLeafletMapActive(map) && map.hasLayer(layer)) {
         map.removeLayer(layer)
       }
     }
   }, [map])
+
+  React.useEffect(() => {
+    if (!glMap) return
+
+    const recolor = () => applyCategoryColors(glMap)
+
+    // load: 최초 스타일 로드 완료. styledata: 스타일이 늦게/재로딩될 때 재적용(idempotent).
+    glMap.on("load", recolor)
+    glMap.on("styledata", recolor)
+    recolor()
+
+    return () => {
+      glMap.off("load", recolor)
+      glMap.off("styledata", recolor)
+    }
+  }, [glMap])
+
+  React.useEffect(() => {
+    if (!glMap) return
+
+    const relabel = () => applyLabelLanguage(glMap, language)
+
+    // 스타일 로드 전에는 레이어가 없어 setLayoutProperty가 무시된다. styledata로 다시 시도한다.
+    glMap.on("styledata", relabel)
+    relabel()
+
+    return () => {
+      glMap.off("styledata", relabel)
+    }
+  }, [glMap, language])
 
   return null
 }
