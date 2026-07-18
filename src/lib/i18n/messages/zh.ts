@@ -18,6 +18,12 @@ export const zh: Messages = {
     checking: "正在检查登录状态。",
     backendUnavailable: "无法连接到服务器，请稍后重试。",
   },
+  authGate: {
+    title: "需要登录",
+    description: "参与前请先登录。",
+    confirm: "登录",
+    cancel: "取消",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "请输入邮箱",

@@ -18,6 +18,12 @@ export const en: Messages = {
     checking: "Checking your sign-in status.",
     backendUnavailable: "We couldn't connect to the server. Please try again shortly.",
   },
+  authGate: {
+    title: "Sign in required",
+    description: "Please sign in to join.",
+    confirm: "Sign in",
+    cancel: "Cancel",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "Enter your email",

@@ -18,6 +18,12 @@ export const ja: Messages = {
     checking: "ログイン状態を確認しています。",
     backendUnavailable: "サーバーに接続できません。しばらくしてからもう一度お試しください。",
   },
+  authGate: {
+    title: "ログインが必要です",
+    description: "参加するにはログインが必要です。",
+    confirm: "ログイン",
+    cancel: "キャンセル",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "メールアドレスを入力",

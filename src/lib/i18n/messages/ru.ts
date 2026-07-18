@@ -18,6 +18,12 @@ export const ru: Messages = {
     checking: "Проверяем статус входа.",
     backendUnavailable: "Не удалось подключиться к серверу. Попробуйте ещё раз чуть позже.",
   },
+  authGate: {
+    title: "Требуется вход",
+    description: "Войдите, чтобы участвовать.",
+    confirm: "Войти",
+    cancel: "Отмена",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "Введите email",

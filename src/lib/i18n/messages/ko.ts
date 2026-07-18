@@ -21,6 +21,12 @@ export interface Messages {
     checking: string
     backendUnavailable: string
   }
+  authGate: {
+    title: string
+    description: string
+    confirm: string
+    cancel: string
+  }
   login: {
     logoText: string
     emailPlaceholder: string
@@ -513,6 +519,12 @@ export const ko: Messages = {
   session: {
     checking: "로그인 상태를 확인하고 있어요.",
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  authGate: {
+    title: "로그인이 필요해요",
+    description: "참여하시려면 로그인이 필요합니다.",
+    confirm: "로그인",
+    cancel: "취소",
   },
   login: {
     logoText: "이음",

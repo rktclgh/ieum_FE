@@ -18,6 +18,12 @@ export const th: Messages = {
     checking: "กำลังตรวจสอบสถานะการเข้าสู่ระบบ",
     backendUnavailable: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ โปรดลองอีกครั้งในภายหลัง",
   },
+  authGate: {
+    title: "ต้องเข้าสู่ระบบ",
+    description: "กรุณาเข้าสู่ระบบเพื่อเข้าร่วม",
+    confirm: "เข้าสู่ระบบ",
+    cancel: "ยกเลิก",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "กรอกอีเมล",

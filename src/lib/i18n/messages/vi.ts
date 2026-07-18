@@ -18,6 +18,12 @@ export const vi: Messages = {
     checking: "Đang kiểm tra trạng thái đăng nhập.",
     backendUnavailable: "Không thể kết nối với máy chủ. Vui lòng thử lại sau.",
   },
+  authGate: {
+    title: "Cần đăng nhập",
+    description: "Vui lòng đăng nhập để tham gia.",
+    confirm: "Đăng nhập",
+    cancel: "Hủy",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "Nhập email",
