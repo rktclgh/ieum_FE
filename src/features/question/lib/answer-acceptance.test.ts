@@ -1,8 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { resolveAcceptButtonState } from "./answer-acceptance"
-import type { QuestionAnswerView } from "./question-adapter"
+// @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
+import { resolveAcceptButtonState } from "./answer-acceptance.ts"
+// @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
+import type { QuestionAnswerView } from "./question-adapter.ts"
 
 function makeAnswer(overrides: Partial<QuestionAnswerView> = {}): QuestionAnswerView {
   return {
@@ -40,31 +42,30 @@ test("로그인하지 않았으면 채택 버튼을 노출하지 않는다", () 
   assert.equal(state, "hidden")
 })
 
-test("본인이 쓴 답변은 채택할 수 없어 비활성이다", () => {
+test("본인이 쓴 답변은 채택할 수 없어 버튼이 사라진다", () => {
   const state = resolveAcceptButtonState({
     ...base,
     viewerUserId: 10,
     answer: makeAnswer({ authorUserId: 10 }),
   })
-  assert.equal(state, "disabled")
+  assert.equal(state, "hidden")
 })
 
-test("이미 채택된 답변이 있으면 나머지는 비활성이다", () => {
+test("채택이 끝나면 채택되지 않은 답변의 버튼이 사라진다", () => {
   const state = resolveAcceptButtonState({ ...base, hasAcceptedAnswer: true, answer: makeAnswer() })
-  assert.equal(state, "disabled")
+  assert.equal(state, "hidden")
+})
+
+test("채택이 끝나면 채택된 답변의 버튼도 사라진다", () => {
+  const state = resolveAcceptButtonState({
+    ...base,
+    hasAcceptedAnswer: true,
+    answer: makeAnswer({ isAccepted: true }),
+  })
+  assert.equal(state, "hidden")
 })
 
 test("작성자가 남의 답변을 처음 채택할 때는 활성이다", () => {
   const state = resolveAcceptButtonState({ ...base, answer: makeAnswer() })
   assert.equal(state, "acceptable")
-})
-
-test("hidden 조건이 disabled 조건보다 우선한다", () => {
-  const state = resolveAcceptButtonState({
-    ...base,
-    isAuthor: false,
-    viewerUserId: 10,
-    answer: makeAnswer({ authorUserId: 10 }),
-  })
-  assert.equal(state, "hidden")
 })

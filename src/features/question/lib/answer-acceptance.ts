@@ -1,10 +1,12 @@
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 
 // 채택 버튼 표시 상태.
-// - hidden: 버튼 자체를 렌더하지 않는다(AI답변·비작성자).
-// - disabled: 자리는 지키되 누를 수 없다(본인 답변·이미 채택 확정). Figma 1916-21884.
-// - acceptable: 누를 수 있다.
-type AcceptButtonState = "acceptable" | "disabled" | "hidden"
+// - hidden: 버튼을 렌더하지 않는다.
+// - acceptable: 누를 수 있다. 누르는 즉시 채택이 확정된다.
+//
+// 채택은 되돌릴 수 없어서(BE가 재확정을 ANSWER_SELECTION_FINALIZED로 거부) "누를 수 없는
+// 버튼"을 남길 이유가 없다. 채택이 끝나면 모든 답변에서 버튼이 사라진다.
+type AcceptButtonState = "acceptable" | "hidden"
 
 interface ResolveAcceptButtonStateParams {
   answer: QuestionAnswerView
@@ -16,8 +18,8 @@ interface ResolveAcceptButtonStateParams {
 
 /**
  * 답변 채택 버튼의 표시 상태를 결정한다.
- * disabled 두 케이스는 BE가 각각 SELF_ACCEPT_NOT_ALLOWED / ANSWER_SELECTION_FINALIZED로
- * 거부하는 요청이라, FE에서 미리 막아 헛된 왕복을 없앤다.
+ * 채택할 수 없는 경우는 전부 버튼을 숨긴다 — AI답변, 비작성자, 본인이 쓴 답변
+ * (BE SELF_ACCEPT_NOT_ALLOWED), 이미 채택이 끝난 질문(BE ANSWER_SELECTION_FINALIZED).
  */
 function resolveAcceptButtonState({
   answer,
@@ -28,8 +30,9 @@ function resolveAcceptButtonState({
 }: ResolveAcceptButtonStateParams): AcceptButtonState {
   if (answer.isAi) return "hidden"
   if (!isAuthor || !isAuthenticated) return "hidden"
-  if (answer.authorUserId != null && answer.authorUserId === viewerUserId) return "disabled"
-  if (hasAcceptedAnswer) return "disabled"
+  // 채택이 확정되면 채택된 답변을 포함해 모든 버튼이 사라진다.
+  if (hasAcceptedAnswer) return "hidden"
+  if (answer.authorUserId != null && answer.authorUserId === viewerUserId) return "hidden"
   return "acceptable"
 }
 
