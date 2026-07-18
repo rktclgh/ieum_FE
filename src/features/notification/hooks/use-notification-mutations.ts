@@ -152,4 +152,54 @@ function useDeleteNotification() {
   })
 }
 
-export { useReadNotification, useReadAllNotifications, useDeleteNotification }
+// 전체 삭제 — BE 에 벌크 삭제 엔드포인트가 없어(단건 DELETE 만 존재) 단건 삭제를 팬아웃한다.
+// 그래서 "전체"의 범위는 지금까지 로드된 페이지의 항목들이다. BE 벌크 API 가 생기면 교체할 것.
+// 일부만 실패해도 목록은 서버 기준으로 다시 맞춰야 하므로 onSettled 에서 전체를 무효화한다.
+function useDeleteAllNotifications() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: number[]) => {
+      const results = await Promise.allSettled(ids.map((id) => deleteNotification(id)))
+      const failed = results.filter((result) => result.status === "rejected").length
+      if (failed > 0 && failed === ids.length) throw new Error("failed to delete notifications")
+      return { deleted: ids.length - failed, failed }
+    },
+    onMutate: async (ids: number[]) => {
+      await qc.cancelQueries({ queryKey: notificationKeys.all })
+      const ctx = snapshot(qc)
+      const targets = new Set(ids)
+
+      const removedUnread =
+        ctx.list?.pages.reduce(
+          (total, page) =>
+            total +
+            page.items.filter((item) => targets.has(item.notificationId) && !item.isRead).length,
+          0
+        ) ?? 0
+
+      qc.setQueryData<ListData>(notificationKeys.list(), (old) =>
+        old
+          ? {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                items: page.items.filter((item) => !targets.has(item.notificationId)),
+              })),
+            }
+          : old
+      )
+      if (removedUnread > 0) setUnreadCount(qc, (count) => count - removedUnread)
+
+      return ctx
+    },
+    onError: (_error, _ids, ctx) => restore(qc, ctx),
+    onSettled: () => qc.invalidateQueries({ queryKey: notificationKeys.all }),
+  })
+}
+
+export {
+  useReadNotification,
+  useReadAllNotifications,
+  useDeleteNotification,
+  useDeleteAllNotifications,
+}

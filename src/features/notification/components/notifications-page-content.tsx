@@ -2,19 +2,15 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import {
-  LongPressActionOverlay,
-  type LongPressAction,
-} from "@/features/question/components/long-press-action-overlay"
+import { NotificationDeleteBar } from "@/features/notification/components/notification-delete-bar"
 import { NotificationItem } from "@/features/notification/components/notification-item"
 import { NotificationListAppBar } from "@/features/notification/components/notification-list-app-bar"
 import { useNotifications } from "@/features/notification/hooks/use-notification-queries"
 import {
+  useDeleteAllNotifications,
   useDeleteNotification,
-  useReadAllNotifications,
   useReadNotification,
 } from "@/features/notification/hooks/use-notification-mutations"
 import { useNotificationSse } from "@/features/notification/hooks/use-notification-sse"
@@ -25,8 +21,9 @@ import {
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
-// 알림센터 — 목록 + 무한스크롤 + 롱프레스 삭제 + 전체읽음 + SSE 실시간 수신.
+// 알림센터 — 목록 + 무한스크롤 + 삭제 모드 + SSE 실시간 수신.
 // 항목 탭: 읽음 처리 후 refId/type 딥링크로 이동(대상이 없으면 읽음만).
+// 상단 쓰레기통은 삭제 모드를, 톱니는 마이페이지 알림 설정을 연다.
 function NotificationsPageContent() {
   const router = useRouter()
   const { messages } = useTranslation()
@@ -34,24 +31,19 @@ function NotificationsPageContent() {
 
   const query = useNotifications()
   const readNotification = useReadNotification()
-  const readAll = useReadAllNotifications()
   const deleteNotification = useDeleteNotification()
+  const deleteAll = useDeleteAllNotifications()
 
   // 이 화면에 있는 동안 실시간으로 새 알림을 받아 목록/미읽음을 최신화한다.
   useNotificationSse(Boolean(me))
 
-  const [active, setActive] = React.useState<{
-    id: number
-    rect: DOMRect
-    entry: NotificationEntry
-  } | null>(null)
-  const [pendingDeleteId, setPendingDeleteId] = React.useState<number | null>(null)
+  const [deleteMode, setDeleteMode] = React.useState(false)
+  const [confirmDeleteAll, setConfirmDeleteAll] = React.useState(false)
 
   const entries = React.useMemo(
     () => (query.data?.pages.flatMap((page) => page.items) ?? []).map(adaptNotification),
     [query.data]
   )
-  const unreadCount = query.data?.pages[0]?.unreadCount ?? 0
 
   // 무한스크롤 센티널 — 화면 하단에 노출되면 다음 페이지를 가져온다.
   const sentinelRef = React.useRef<HTMLDivElement | null>(null)
@@ -67,6 +59,9 @@ function NotificationsPageContent() {
     return () => observer.disconnect()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
+  // 마지막 한 건까지 지우고 나면 삭제 모드를 보여줄 이유가 없다(지울 대상이 없음).
+  const showDeleteMode = deleteMode && entries.length > 0
+
   const handleOpen = (entry: NotificationEntry) => {
     if (!entry.isRead) readNotification.mutate(entry.notificationId)
     if (entry.href) router.push(entry.href)
@@ -74,14 +69,23 @@ function NotificationsPageContent() {
 
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-gray-50">
+      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-white">
         <NotificationListAppBar
-          onBack={() => router.back()}
-          onReadAll={() => readAll.mutate()}
-          readAllDisabled={unreadCount === 0 || readAll.isPending}
+          deleteMode={showDeleteMode}
+          onBack={() => (showDeleteMode ? setDeleteMode(false) : router.back())}
+          onEnterDeleteMode={() => setDeleteMode(true)}
+          onOpenSettings={() => router.push("/my/notifications")}
         />
 
-        <div className="flex flex-1 flex-col gap-2 px-4 pt-2 pb-16">
+        {showDeleteMode && (
+          <NotificationDeleteBar
+            deleteAllDisabled={entries.length === 0 || deleteAll.isPending}
+            onDeleteAll={() => setConfirmDeleteAll(true)}
+            onClose={() => setDeleteMode(false)}
+          />
+        )}
+
+        <div className="flex flex-1 flex-col pb-16">
           {query.isError ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.notification.loadError}
@@ -95,10 +99,9 @@ function NotificationsPageContent() {
               <NotificationItem
                 key={entry.notificationId}
                 entry={entry}
+                deleteMode={showDeleteMode}
                 onOpen={() => handleOpen(entry)}
-                onLongPress={(rect) =>
-                  setActive({ id: entry.notificationId, rect, entry })
-                }
+                onDelete={() => deleteNotification.mutate(entry.notificationId)}
               />
             ))
           )}
@@ -106,35 +109,16 @@ function NotificationsPageContent() {
         </div>
       </main>
 
-      {active && (
-        <LongPressActionOverlay
-          anchorRect={active.rect}
-          onDismiss={() => setActive(null)}
-          actions={
-            [
-              {
-                icon: <Trash2 className="size-5 text-red" />,
-                label: messages.notification.deleteAction,
-                tone: "destructive",
-                onClick: () => setPendingDeleteId(active.id),
-              },
-            ] satisfies LongPressAction[]
-          }
-        >
-          <NotificationItem entry={active.entry} onOpen={() => {}} onLongPress={() => {}} />
-        </LongPressActionOverlay>
-      )}
-
       <ConfirmDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => !open && setPendingDeleteId(null)}
-        title={messages.notification.deleteConfirmTitle}
-        description={messages.notification.deleteConfirmDescription}
+        open={confirmDeleteAll}
+        onOpenChange={setConfirmDeleteAll}
+        title={messages.notification.deleteAllConfirmTitle}
+        description={messages.notification.deleteAllConfirmDescription}
         cancelLabel={messages.notification.deleteConfirmCancel}
         confirmLabel={messages.notification.deleteConfirmConfirm}
         onConfirm={() => {
-          if (pendingDeleteId != null) deleteNotification.mutate(pendingDeleteId)
-          setPendingDeleteId(null)
+          deleteAll.mutate(entries.map((entry) => entry.notificationId))
+          setConfirmDeleteAll(false)
         }}
       />
     </>

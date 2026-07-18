@@ -476,10 +476,13 @@ export interface Messages {
     appBarTitle: string
     empty: string
     loadError: string
-    readAllButton: string
-    deleteAction: string
-    deleteConfirmTitle: string
-    deleteConfirmDescription: string
+    settingsLabel: string
+    deleteModeLabel: string
+    deleteItemLabel: string
+    deleteAll: string
+    deleteModeClose: string
+    deleteAllConfirmTitle: string
+    deleteAllConfirmDescription: string
     deleteConfirmCancel: string
     deleteConfirmConfirm: string
     bellLabel: string
@@ -969,10 +972,13 @@ export const ko: Messages = {
     appBarTitle: "알림",
     empty: "받은 알림이 없어요.",
     loadError: "알림을 불러오지 못했어요.",
-    readAllButton: "전체 읽음",
-    deleteAction: "삭제",
-    deleteConfirmTitle: "알림을 삭제할까요?",
-    deleteConfirmDescription: "삭제한 알림은 복구할 수 없어요.",
+    settingsLabel: "알림 설정",
+    deleteModeLabel: "알림 삭제",
+    deleteItemLabel: "알림 삭제",
+    deleteAll: "전체 삭제",
+    deleteModeClose: "닫기",
+    deleteAllConfirmTitle: "알림을 전체 삭제할까요?",
+    deleteAllConfirmDescription: "삭제한 알림은 복구할 수 없어요.",
     deleteConfirmCancel: "취소",
     deleteConfirmConfirm: "삭제",
     bellLabel: "알림",
