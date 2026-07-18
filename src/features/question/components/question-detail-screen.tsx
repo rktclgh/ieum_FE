@@ -22,6 +22,7 @@ import { getQuestionErrorMessage } from "@/features/question/lib/question-error"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
 import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import { useMe } from "@/features/session/hooks/use-me"
+import { useRequireAuth } from "@/features/session/hooks/use-require-auth"
 import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
@@ -38,6 +39,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
   const postAnswer = usePostAnswer(questionId)
   const acceptAnswer = useAcceptAnswer(questionId)
   const me = useMe()
+  const requireAuth = useRequireAuth()
   const createRoom = useCreateQuestionRoom()
   const reportAnswer = useReportAnswer()
 
@@ -108,17 +110,18 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
     },
   })
 
-  const handleSend = () => {
-    const value = reply.trim()
-    if (!value || postAnswer.isPending) return
-    postAnswer.mutate(
-      { content: value },
-      {
-        onSuccess: () => setReply(""),
-        onError: showError,
-      }
-    )
-  }
+  const handleSend = () =>
+    requireAuth(() => {
+      const value = reply.trim()
+      if (!value || postAnswer.isPending) return
+      postAnswer.mutate(
+        { content: value },
+        {
+          onSuccess: () => setReply(""),
+          onError: showError,
+        }
+      )
+    })
 
   const handleConfirmAccept = () => {
     if (pendingAcceptId == null || !isAuthor || !isAuthenticated) return
