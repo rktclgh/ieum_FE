@@ -920,7 +920,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                     onScheduleClick={() => router.push(routes.chatSchedule(roomId))}
                   />
                 )}
-                <div className="flex w-full flex-col rounded-2xl bg-gray-50">
+                <div className="flex w-full flex-col rounded-2xl bg-gray-50 py-3">
                   <SectionTitle
                     title={messages.chat.membersTitle}
                     count={isGroup ? groupMembers.length : roomMembers.length}
