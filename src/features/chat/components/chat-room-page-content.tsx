@@ -27,13 +27,19 @@ import {
   type ChatMessageSendResult,
 } from "@/features/chat/components/chat-message-input"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
+import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { ChatRoomMoreHeader } from "@/features/chat/components/chat-room-more-header"
 import { ChatRoomProfile } from "@/features/chat/components/chat-room-profile"
 import { ChatRoomInfoSection } from "@/features/chat/components/chat-room-info-section"
 import { ChatRoomMemberItem } from "@/features/chat/components/chat-room-member-item"
 import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-danger-actions"
 import { SectionTitle } from "@/features/chat/components/section-title"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useLongPress } from "@/lib/hooks/use-long-press"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_LIFT_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
 import {
   chatKeys,
   useChatMessages,
@@ -96,9 +102,9 @@ import {
 import { routes } from "@/lib/navigation/routes"
 import { cn } from "@/lib/utils"
 
-// 롱프레스 메뉴(최대 3개 항목) 높이 추정치 + 하단 입력창과 겹치지 않기 위한 여유 공간
-const MESSAGE_MENU_HEIGHT_ESTIMATE = 180
-const MESSAGE_BOTTOM_SAFE_AREA = 96
+// spaceBelow 를 window.innerHeight 기준으로 재는데 하단 입력창이 그 위를 덮으므로,
+// 입력창(약 81px)에 여유를 더한 값을 빼줘야 메뉴가 입력창에 가려지지 않는다. (Figma 1406:6346)
+const MESSAGE_BOTTOM_SAFE_AREA = 112
 // 낙관적 말풍선을 서버 메시지와 같은 것으로 볼 시간 창(에코를 놓쳐 백필로 들어온 경우 매칭용).
 const PENDING_MATCH_WINDOW_MS = 60_000
 // 자동 하단 스크롤이 만든 scroll 이벤트를 사용자 스크롤과 구분하기 위한 시간 창.
@@ -137,17 +143,6 @@ function MessageRow({
     ? message.replyTo.content?.trim() || messages.chat.replyImageLabel
     : undefined
 
-  const handleOpenMenu = () => {
-    const rect = rowRef.current?.getBoundingClientRect()
-    if (rect) {
-      const spaceBelow = window.innerHeight - rect.bottom
-      setPlacement(spaceBelow < MESSAGE_MENU_HEIGHT_ESTIMATE + MESSAGE_BOTTOM_SAFE_AREA ? "top" : "bottom")
-    }
-    onOpenMenu()
-  }
-
-  const longPress = useLongPress({ onLongPress: handleOpenMenu })
-
   // 낙관적(pending) 말풍선은 아직 서버 메시지 ID가 없어 번역 대상에서 제외한다.
   const text = message.texts[0]
   const translate = useTranslateToggle({ text: text ?? "", isAuthenticated })
@@ -171,6 +166,20 @@ function MessageRow({
       ]
     : menuItems
 
+  // 번역 항목이 조건부라 메뉴 높이가 152↔196 으로 변하므로 실제 항목 수로 계산한다.
+  const handleOpenMenu = () => {
+    const rect = rowRef.current?.getBoundingClientRect()
+    if (rect) {
+      const spaceBelow = window.innerHeight - rect.bottom
+      setPlacement(
+        spaceBelow < contextMenuHeight(fullMenuItems.length) + MESSAGE_BOTTOM_SAFE_AREA ? "top" : "bottom"
+      )
+    }
+    onOpenMenu()
+  }
+
+  const longPress = useLongPress({ onLongPress: handleOpenMenu })
+
   return (
     <div ref={rowRef} className="relative" {...longPress}>
       <ChatBubbleSegment
@@ -185,7 +194,11 @@ function MessageRow({
         replyImageAlt={messages.chat.replyImageLabel}
         position={position}
         variant={message.variant}
-        className={cn(menuOpen && "relative z-50")}
+        className={cn(
+          LONG_PRESS_TRANSITION,
+          // 말풍선은 배경색·라운드가 고유하므로 기준의 흰 카드 표면은 빼고 리프트만 맞춘다.
+          menuOpen ? LONG_PRESS_LIFT_ACTIVE : LONG_PRESS_INACTIVE
+        )}
       />
       {translate.isError ? (
         <p className={cn("mt-1 text-body-regular-12 text-red", isMe ? "text-right" : "text-left")}>
@@ -199,7 +212,7 @@ function MessageRow({
           onDismiss={onCloseMenu}
           className={cn(
             isMe ? "right-0" : "left-0",
-            placement === "top" ? "bottom-full mb-3" : "top-full mt-2"
+            placement === "top" ? "bottom-full mb-5" : "top-full mt-3"
           )}
         />
       )}

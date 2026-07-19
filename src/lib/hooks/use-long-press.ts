@@ -41,6 +41,10 @@ function useLongPress({ onLongPress, delay = 500 }: UseLongPressOptions) {
       if (triggeredRef.current) {
         event.preventDefault()
         event.stopPropagation()
+        // 딱 한 번만 흡수한다. 롱프레스 후 포인터를 요소 밖에서 떼면 click 이 오지 않아
+        // 플래그가 남는데, 그 상태로 키보드(Enter/Space)로 활성화하면 pointerdown 없이
+        // click 만 와서 정상 입력까지 삼켜버린다.
+        triggeredRef.current = false
       }
     },
   }
