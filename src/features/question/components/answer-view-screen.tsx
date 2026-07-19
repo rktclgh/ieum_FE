@@ -91,10 +91,10 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
     })
   }
 
-  const handleStartChat = () => {
-    const targetUserId = acceptedAuthor?.userId
-    setAcceptedAuthor(null)
-    if (!question || targetUserId == null) return
+  // 꼬리질문 채팅방 진입. BE는 getOrCreateQuestionRoom이라 같은 (질문, 상대) 조합이면
+  // 매번 같은 방을 돌려준다 — 채택 완료 다이얼로그와 채택된 답변 카드 탭이 같이 쓴다.
+  const startChatWith = (targetUserId: number | null) => {
+    if (!question || targetUserId == null || createRoom.isPending) return
     createRoom.mutate(
       { questionId: question.questionId, targetUserId },
       {
@@ -102,6 +102,12 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
         onError: () => setActionError(messages.question.chatStartFailed),
       }
     )
+  }
+
+  const handleStartChatFromDialog = () => {
+    const targetUserId = acceptedAuthor?.userId ?? null
+    setAcceptedAuthor(null)
+    startChatWith(targetUserId)
   }
 
   const handleConfirmReport = () => {
@@ -176,6 +182,12 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
                       setOpenMenuAnswerId(null)
                       setPendingReportId(answer.answerId)
                     }}
+                    // 채택된 답변은 카드를 탭해 꼬리질문 채팅방으로 다시 들어갈 수 있다.
+                    onOpenChat={
+                      answer.isAccepted && answer.authorUserId != null
+                        ? () => startChatWith(answer.authorUserId)
+                        : undefined
+                    }
                   />
                 )
               )
@@ -202,7 +214,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
         cancelLabel={messages.question.acceptedDialogClose}
         confirmLabel={messages.question.acceptedDialogStartChat}
         confirmDisabled={acceptedAuthor?.userId == null}
-        onConfirm={handleStartChat}
+        onConfirm={handleStartChatFromDialog}
       />
 
       <ConfirmDialog
@@ -228,6 +240,8 @@ interface AnswerRowProps {
   onOpenMenu: () => void
   onCloseMenu: () => void
   onReport: () => void
+  /** 채택된 답변에만 주어진다 — 카드를 탭하면 꼬리질문 채팅방으로 들어간다. */
+  onOpenChat?: () => void
 }
 
 /**
@@ -245,6 +259,7 @@ function AnswerRow({
   onOpenMenu,
   onCloseMenu,
   onReport,
+  onOpenChat,
 }: AnswerRowProps) {
   const { messages } = useTranslation()
   const rowRef = React.useRef<HTMLDivElement>(null)
@@ -305,6 +320,8 @@ function AnswerRow({
         active={hasMenu}
         onAccept={onAccept}
         onLongPress={handleOpenMenu}
+        // 메뉴가 열려 있는 동안에는 카드 탭을 막는다 — 딤을 닫으려다 채팅방으로 들어가지 않도록.
+        onOpenChat={menuOpen ? undefined : onOpenChat}
       />
       {translate.isError ? (
         <p className="mt-1 text-body-regular-12 text-red">

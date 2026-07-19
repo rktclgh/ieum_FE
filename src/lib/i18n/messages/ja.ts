@@ -198,6 +198,7 @@ export const ja: Messages = {
     loadError: "質問を読み込めませんでした。",
     acceptAction: "回答を採用",
     acceptedLabel: "採用済み",
+    openChatWithAuthor: (nickname: string) => `${nickname}さんと個人チャットを開く`,
     acceptedDialogTitle: "回答を採用しました",
     acceptedDialogDescription: (nickname: string) =>
       `${nickname}さんにもっと聞きたいことがあれば、個人チャットで続けて質問できます。`,

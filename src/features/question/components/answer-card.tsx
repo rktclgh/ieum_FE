@@ -18,10 +18,22 @@ interface AnswerCardProps {
   onLongPress: () => void
   /** 컨텍스트 메뉴가 열린 카드 — 채팅 목록과 동일하게 제자리에서 부상시킨다. */
   active?: boolean
+  /**
+   * 주어지면 카드 전체가 탭 가능해진다. 채택된 답변에서 꼬리질문 채팅방으로 다시 들어가는
+   * 경로로 쓴다(채택 완료 다이얼로그를 닫은 뒤에도 재진입할 수 있도록).
+   */
+  onOpenChat?: () => void
 }
 
 /** 사람이 쓴 답변 카드 (Figma 1744-10029). 롱프레스로 번역·신고 액션을 연다. */
-function AnswerCard({ answer, acceptState, onAccept, onLongPress, active }: AnswerCardProps) {
+function AnswerCard({
+  answer,
+  acceptState,
+  onAccept,
+  onLongPress,
+  active,
+  onOpenChat,
+}: AnswerCardProps) {
   const { messages } = useTranslation()
   const longPress = useLongPress({ onLongPress })
 
@@ -32,8 +44,23 @@ function AnswerCard({ answer, acceptState, onAccept, onLongPress, active }: Answ
   return (
     <div
       {...longPress}
+      {...(onOpenChat
+        ? {
+            role: "button" as const,
+            tabIndex: 0,
+            "aria-label": messages.question.openChatWithAuthor(answer.authorName),
+            onClick: onOpenChat,
+            onKeyDown: (event: React.KeyboardEvent) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault()
+                onOpenChat()
+              }
+            },
+          }
+        : {})}
       className={cn(
         "flex w-full flex-col gap-3 rounded-xl px-3 py-4 transition-all duration-200 ease-out",
+        onOpenChat && "cursor-pointer",
         active
           ? "relative z-50 -translate-y-1 scale-[1.02] bg-white shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
           : "translate-y-0 scale-100 bg-gray-50"

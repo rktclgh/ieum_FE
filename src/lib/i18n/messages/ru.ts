@@ -199,6 +199,7 @@ export const ru: Messages = {
     loadError: "Не удалось загрузить вопрос.",
     acceptAction: "Выбрать ответ",
     acceptedLabel: "Выбран",
+    openChatWithAuthor: (nickname: string) => `Открыть личный чат с ${nickname}`,
     acceptedDialogTitle: "Ответ выбран",
     acceptedDialogDescription: (nickname: string) =>
       `Если у вас есть ещё вопросы к ${nickname}, продолжите в личном чате.`,

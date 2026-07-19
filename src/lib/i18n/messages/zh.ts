@@ -198,6 +198,7 @@ export const zh: Messages = {
     loadError: "无法加载问题。",
     acceptAction: "采纳回答",
     acceptedLabel: "已采纳",
+    openChatWithAuthor: (nickname: string) => `与${nickname}开始私聊`,
     acceptedDialogTitle: "已采纳回答",
     acceptedDialogDescription: (nickname: string) =>
       `如果还想问${nickname}更多问题，可以通过私聊继续询问。`,

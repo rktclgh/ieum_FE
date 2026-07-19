@@ -199,6 +199,7 @@ export const en: Messages = {
     loadError: "Couldn't load the question.",
     acceptAction: "Accept",
     acceptedLabel: "Accepted",
+    openChatWithAuthor: (nickname: string) => `Open private chat with ${nickname}`,
     acceptedDialogTitle: "Answer accepted",
     acceptedDialogDescription: (nickname: string) =>
       `If you have more questions for ${nickname}, you can keep asking in a private chat.`,

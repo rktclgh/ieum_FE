@@ -201,6 +201,7 @@ export interface Messages {
     loadError: string
     acceptAction: string
     acceptedLabel: string
+    openChatWithAuthor: (nickname: string) => string
     acceptedDialogTitle: string
     acceptedDialogDescription: (nickname: string) => string
     acceptedDialogClose: string
@@ -692,6 +693,7 @@ export const ko: Messages = {
     loadError: "질문을 불러오지 못했어요.",
     acceptAction: "답변 채택",
     acceptedLabel: "채택 완료",
+    openChatWithAuthor: (nickname: string) => `${nickname}님과 개인 채팅 열기`,
     acceptedDialogTitle: "답변을 채택했습니다",
     acceptedDialogDescription: (nickname: string) =>
       `${nickname}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,

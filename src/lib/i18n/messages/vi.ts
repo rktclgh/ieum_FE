@@ -199,6 +199,7 @@ export const vi: Messages = {
     loadError: "Không thể tải câu hỏi.",
     acceptAction: "Chọn câu trả lời",
     acceptedLabel: "Đã chọn",
+    openChatWithAuthor: (nickname: string) => `Mở trò chuyện riêng với ${nickname}`,
     acceptedDialogTitle: "Đã chọn câu trả lời",
     acceptedDialogDescription: (nickname: string) =>
       `Nếu bạn còn thắc mắc với ${nickname}, hãy tiếp tục hỏi trong trò chuyện riêng.`,

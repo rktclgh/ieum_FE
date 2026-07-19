@@ -198,6 +198,7 @@ export const th: Messages = {
     loadError: "ไม่สามารถโหลดคำถามได้",
     acceptAction: "เลือกคำตอบ",
     acceptedLabel: "เลือกแล้ว",
+    openChatWithAuthor: (nickname: string) => `เปิดแชทส่วนตัวกับ ${nickname}`,
     acceptedDialogTitle: "เลือกคำตอบแล้ว",
     acceptedDialogDescription: (nickname: string) =>
       `หากมีข้อสงสัยเพิ่มเติมกับ ${nickname} สามารถถามต่อในแชทส่วนตัวได้`,
