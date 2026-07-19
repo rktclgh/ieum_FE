@@ -11,7 +11,6 @@ import {
   type ChatContextMenuItem,
 } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
-import { TabBar } from "@/features/navigation/components/tab-bar"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionHistoryItem } from "@/features/question/components/question-history-item"
 import { useDeleteQuestion } from "@/features/question/hooks/use-question-mutations"
@@ -165,10 +164,6 @@ function QuestionsListPageContent() {
           <div ref={sentinelRef} className="h-4" />
         </div>
       </main>
-
-      <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm">
-        <TabBar />
-      </div>
 
       {editId != null && (
         <CreateQuestionScreen mode="edit" questionId={editId} onClose={() => setEditId(null)} />

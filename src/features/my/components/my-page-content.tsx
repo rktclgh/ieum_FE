@@ -14,7 +14,6 @@ import { useWithdrawMe } from "@/features/my/hooks/use-my-mutations"
 import { fromIso2, flagFromIso2 } from "@/features/join/lib/nationality-map"
 import { useLogoutMutation } from "@/features/session/hooks/use-logout-mutation"
 import { useMe } from "@/features/session/hooks/use-me"
-import { TabBar } from "@/features/navigation/components/tab-bar"
 import { resolveFileUrl } from "@/lib/api/file-url"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
@@ -149,10 +148,6 @@ function MyPageContent() {
           </div>
         </div>
       </main>
-
-      <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm">
-        <TabBar />
-      </div>
 
       <ConfirmDialog
         open={logoutOpen}

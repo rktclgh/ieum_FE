@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 
 import { SearchBox } from "@/components/ui/search-box"
 import { Circle } from "@/components/ui/circle"
-import { TabBar } from "@/features/navigation/components/tab-bar"
 import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
@@ -202,10 +201,6 @@ function ChatListPageContent() {
           )}
         </div>
       </main>
-
-      <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm">
-        <TabBar />
-      </div>
     </>
   )
 }
