@@ -40,10 +40,7 @@ function AppBar({
   return (
     <div
       data-slot="app-bar"
-      className={cn(
-        "flex w-full items-center justify-between px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top,0px))]",
-        className
-      )}
+      className={cn("flex w-full items-center justify-between p-4", className)}
       {...props}
     >
       {leadingIcon === null ? (
