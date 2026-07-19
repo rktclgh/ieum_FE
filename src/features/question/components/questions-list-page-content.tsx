@@ -10,6 +10,7 @@ import {
   ChatContextMenu,
   type ChatContextMenuItem,
 } from "@/features/chat/components/chat-context-menu"
+import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionHistoryItem } from "@/features/question/components/question-history-item"
@@ -21,7 +22,6 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
 // 컨텍스트 메뉴 대략 높이 + 하단 탭바 여유. 아래 공간이 부족하면 메뉴를 행 위로 띄운다.
-const CONTEXT_MENU_HEIGHT_ESTIMATE = 140
 const BOTTOM_SAFE_AREA = 96
 
 interface QuestionRowProps {
@@ -49,7 +49,7 @@ function QuestionRow({
     const rect = rowRef.current?.getBoundingClientRect()
     if (rect) {
       const spaceBelow = window.innerHeight - rect.bottom
-      setPlacement(spaceBelow < CONTEXT_MENU_HEIGHT_ESTIMATE + BOTTOM_SAFE_AREA ? "top" : "bottom")
+      setPlacement(spaceBelow < contextMenuHeight(menuItems.length) + BOTTOM_SAFE_AREA ? "top" : "bottom")
     }
     onOpenMenu()
   }
@@ -67,7 +67,7 @@ function QuestionRow({
           items={menuItems}
           dimmed
           onDismiss={onCloseMenu}
-          className={placement === "top" ? "bottom-full left-0 mb-3" : "top-full left-0 mt-2"}
+          className={placement === "top" ? "bottom-full left-0 mb-5" : "top-full left-0 mt-3"}
         />
       )}
     </div>

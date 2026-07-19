@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
+import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { NoticeListItem } from "@/features/chat/components/notice-list-item"
 import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useMe } from "@/features/session/hooks/use-me"
@@ -17,8 +18,6 @@ import { Globe } from "lucide-react"
 
 type Notice = (typeof MOCK_NOTICES)[number]
 
-// 번역 항목이 붙을 수 있어 최대 2줄 기준으로 잡는다.
-const NOTICE_MENU_HEIGHT_ESTIMATE = 140
 const NOTICE_BOTTOM_SAFE_AREA = 96
 
 interface NoticeRowProps {
@@ -34,18 +33,6 @@ function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, o
   const { messages } = useTranslation()
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
-
-  // 목록 하단 행에서 메뉴가 화면 밖으로 잘리지 않도록 여유 공간을 보고 위/아래를 고른다.
-  const handleOpenMenu = () => {
-    const rect = rowRef.current?.getBoundingClientRect()
-    if (rect) {
-      const spaceBelow = window.innerHeight - rect.bottom
-      setPlacement(spaceBelow < NOTICE_MENU_HEIGHT_ESTIMATE + NOTICE_BOTTOM_SAFE_AREA ? "top" : "bottom")
-    }
-    onOpenMenu()
-  }
-
-  const longPress = useLongPress({ onLongPress: handleOpenMenu })
   const translate = useTranslateToggle({ text: notice.title, isAuthenticated })
 
   const translateMenuItem: ChatContextMenuItem = {
@@ -62,6 +49,21 @@ function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, o
   }
 
   const fullMenuItems = translate.canTranslate ? [translateMenuItem, ...menuItems] : menuItems
+
+  // 목록 하단 행에서 메뉴가 화면 밖으로 잘리지 않도록 여유 공간을 보고 위/아래를 고른다.
+  // 번역 항목이 조건부라 높이가 변하므로 실제 항목 수로 계산한다.
+  const handleOpenMenu = () => {
+    const rect = rowRef.current?.getBoundingClientRect()
+    if (rect) {
+      const spaceBelow = window.innerHeight - rect.bottom
+      setPlacement(
+        spaceBelow < contextMenuHeight(fullMenuItems.length) + NOTICE_BOTTOM_SAFE_AREA ? "top" : "bottom"
+      )
+    }
+    onOpenMenu()
+  }
+
+  const longPress = useLongPress({ onLongPress: handleOpenMenu })
 
   return (
     <div ref={rowRef} className="relative" {...longPress}>
@@ -83,10 +85,10 @@ function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, o
           items={fullMenuItems}
           dimmed
           onDismiss={onCloseMenu}
-          // 아바타(40px) + gap(12px)만큼 밀어 제목 좌측 라인에 맞춘다
           className={cn(
-            "left-[52px]",
-            placement === "top" ? "bottom-full mb-3" : "top-full mt-2"
+            // Figma 1951:27443 — 제목이 아니라 카드 좌측(컨테이너 px-4 = 16px)에 맞춘다.
+            "left-0",
+            placement === "top" ? "bottom-full mb-5" : "top-full mt-3"
           )}
         />
       )}

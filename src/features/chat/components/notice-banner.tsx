@@ -78,7 +78,7 @@ function NoticeBanner({ className, text, isAuthenticated = false, onClose, ...pr
           items={[translateMenuItem]}
           dimmed
           onDismiss={() => setMenuOpen(false)}
-          className="top-full left-0 mt-2"
+          className="top-full left-0 mt-3"
         />
       ) : null}
     </div>
