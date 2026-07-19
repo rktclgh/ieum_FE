@@ -2,19 +2,15 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import {
-  ChatContextMenu,
-  type ChatContextMenuItem,
-} from "@/features/chat/components/chat-context-menu"
+import { NotificationDeleteBar } from "@/features/notification/components/notification-delete-bar"
 import { NotificationItem } from "@/features/notification/components/notification-item"
 import { NotificationListAppBar } from "@/features/notification/components/notification-list-app-bar"
 import { useNotifications } from "@/features/notification/hooks/use-notification-queries"
 import {
+  useDeleteAllNotifications,
   useDeleteNotification,
-  useReadAllNotifications,
   useReadNotification,
 } from "@/features/notification/hooks/use-notification-mutations"
 import { useNotificationSse } from "@/features/notification/hooks/use-notification-sse"
@@ -25,62 +21,9 @@ import {
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
-// 컨텍스트 메뉴 대략 높이 + 하단 여유. 아래 공간이 부족하면 메뉴를 행 위로 띄운다.
-const CONTEXT_MENU_HEIGHT_ESTIMATE = 100
-const BOTTOM_SAFE_AREA = 96
-
-interface NotificationRowProps {
-  entry: NotificationEntry
-  menuOpen: boolean
-  menuItems: ChatContextMenuItem[]
-  onOpenMenu: () => void
-  onCloseMenu: () => void
-  onNavigate: () => void
-}
-
-/** 채팅 목록(ChatRow)과 동일한 롱프레스 동작 — 행을 부상시키고 아래에 컨텍스트 메뉴를 앵커한다. */
-function NotificationRow({
-  entry,
-  menuOpen,
-  menuItems,
-  onOpenMenu,
-  onCloseMenu,
-  onNavigate,
-}: NotificationRowProps) {
-  const rowRef = React.useRef<HTMLDivElement>(null)
-  const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
-
-  const handleOpenMenu = () => {
-    const rect = rowRef.current?.getBoundingClientRect()
-    if (rect) {
-      const spaceBelow = window.innerHeight - rect.bottom
-      setPlacement(spaceBelow < CONTEXT_MENU_HEIGHT_ESTIMATE + BOTTOM_SAFE_AREA ? "top" : "bottom")
-    }
-    onOpenMenu()
-  }
-
-  return (
-    <div ref={rowRef} className="relative">
-      <NotificationItem
-        entry={entry}
-        active={menuOpen}
-        onOpen={onNavigate}
-        onLongPress={handleOpenMenu}
-      />
-      {menuOpen && (
-        <ChatContextMenu
-          items={menuItems}
-          dimmed
-          onDismiss={onCloseMenu}
-          className={placement === "top" ? "bottom-full left-0 mb-3" : "top-full left-0 mt-2"}
-        />
-      )}
-    </div>
-  )
-}
-
-// 알림센터 — 목록 + 무한스크롤 + 롱프레스 삭제 + 전체읽음 + SSE 실시간 수신.
+// 알림센터 — 목록 + 무한스크롤 + 삭제 모드 + SSE 실시간 수신.
 // 항목 탭: 읽음 처리 후 refId/type 딥링크로 이동(대상이 없으면 읽음만).
+// 상단 쓰레기통은 삭제 모드를, 톱니는 마이페이지 알림 설정을 연다.
 function NotificationsPageContent() {
   const router = useRouter()
   const { messages } = useTranslation()
@@ -88,20 +31,19 @@ function NotificationsPageContent() {
 
   const query = useNotifications()
   const readNotification = useReadNotification()
-  const readAll = useReadAllNotifications()
   const deleteNotification = useDeleteNotification()
+  const deleteAll = useDeleteAllNotifications()
 
   // 이 화면에 있는 동안 실시간으로 새 알림을 받아 목록/미읽음을 최신화한다.
   useNotificationSse(Boolean(me))
 
-  const [openMenuId, setOpenMenuId] = React.useState<number | null>(null)
-  const [pendingDeleteId, setPendingDeleteId] = React.useState<number | null>(null)
+  const [deleteMode, setDeleteMode] = React.useState(false)
+  const [confirmDeleteAll, setConfirmDeleteAll] = React.useState(false)
 
   const entries = React.useMemo(
     () => (query.data?.pages.flatMap((page) => page.items) ?? []).map(adaptNotification),
     [query.data]
   )
-  const unreadCount = query.data?.pages[0]?.unreadCount ?? 0
 
   // 무한스크롤 센티널 — 화면 하단에 노출되면 다음 페이지를 가져온다.
   const sentinelRef = React.useRef<HTMLDivElement | null>(null)
@@ -117,21 +59,46 @@ function NotificationsPageContent() {
     return () => observer.disconnect()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
+  // 마지막 한 건까지 지우고 나면 삭제 모드를 보여줄 이유가 없다(지울 대상이 없음).
+  const showDeleteMode = deleteMode && entries.length > 0
+
   const handleOpen = (entry: NotificationEntry) => {
     if (!entry.isRead) readNotification.mutate(entry.notificationId)
     if (entry.href) router.push(entry.href)
   }
 
+  // 목록을 비우는 삭제는 삭제 모드 상태 자체를 내린다. 파생값(showDeleteMode)만으로 숨기면
+  // 이후 SSE 로 새 알림이 들어왔을 때 사용자가 켠 적 없는 삭제 모드가 되살아난다.
+  const handleDelete = (notificationId: number) => {
+    deleteNotification.mutate(notificationId)
+    if (entries.length <= 1) setDeleteMode(false)
+  }
+
+  const handleDeleteAll = () => {
+    deleteAll.mutate(entries.map((entry) => entry.notificationId))
+    setDeleteMode(false)
+    setConfirmDeleteAll(false)
+  }
+
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-gray-50">
+      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-white">
         <NotificationListAppBar
-          onBack={() => router.back()}
-          onReadAll={() => readAll.mutate()}
-          readAllDisabled={unreadCount === 0 || readAll.isPending}
+          deleteMode={showDeleteMode}
+          onBack={() => (showDeleteMode ? setDeleteMode(false) : router.back())}
+          onEnterDeleteMode={() => setDeleteMode(true)}
+          onOpenSettings={() => router.push("/my/notifications")}
         />
 
-        <div className="flex flex-1 flex-col gap-2 px-4 pt-2 pb-16">
+        {showDeleteMode && (
+          <NotificationDeleteBar
+            deleteAllDisabled={entries.length === 0 || deleteAll.isPending}
+            onDeleteAll={() => setConfirmDeleteAll(true)}
+            onClose={() => setDeleteMode(false)}
+          />
+        )}
+
+        <div className="flex flex-1 flex-col pb-16">
           {query.isError ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.notification.loadError}
@@ -142,24 +109,12 @@ function NotificationsPageContent() {
             </p>
           ) : (
             entries.map((entry) => (
-              <NotificationRow
+              <NotificationItem
                 key={entry.notificationId}
                 entry={entry}
-                menuOpen={openMenuId === entry.notificationId}
-                menuItems={[
-                  {
-                    icon: <Trash2 className="size-6 text-red" />,
-                    label: messages.notification.deleteAction,
-                    tone: "destructive" as const,
-                    onClick: () => {
-                      setOpenMenuId(null)
-                      setPendingDeleteId(entry.notificationId)
-                    },
-                  },
-                ]}
-                onOpenMenu={() => setOpenMenuId(entry.notificationId)}
-                onCloseMenu={() => setOpenMenuId(null)}
-                onNavigate={() => handleOpen(entry)}
+                deleteMode={showDeleteMode}
+                onOpen={() => handleOpen(entry)}
+                onDelete={() => handleDelete(entry.notificationId)}
               />
             ))
           )}
@@ -168,16 +123,13 @@ function NotificationsPageContent() {
       </main>
 
       <ConfirmDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => !open && setPendingDeleteId(null)}
-        title={messages.notification.deleteConfirmTitle}
-        description={messages.notification.deleteConfirmDescription}
+        open={confirmDeleteAll}
+        onOpenChange={setConfirmDeleteAll}
+        title={messages.notification.deleteAllConfirmTitle}
+        description={messages.notification.deleteAllConfirmDescription}
         cancelLabel={messages.notification.deleteConfirmCancel}
         confirmLabel={messages.notification.deleteConfirmConfirm}
-        onConfirm={() => {
-          if (pendingDeleteId != null) deleteNotification.mutate(pendingDeleteId)
-          setPendingDeleteId(null)
-        }}
+        onConfirm={handleDeleteAll}
       />
     </>
   )
