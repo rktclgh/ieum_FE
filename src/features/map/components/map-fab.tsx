@@ -23,6 +23,16 @@ function MapFab({ onCreateMeetup, onCreateQuestion, className }: MapFabProps) {
 
   const close = () => setOpen(false)
 
+  // 열려 있을 때만 리스너를 걸어 Escape로 닫는다 — ChatContextMenu와 같은 패턴.
+  React.useEffect(() => {
+    if (!open) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false)
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [open])
+
   return (
     <>
       {/*

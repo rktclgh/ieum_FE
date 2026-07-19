@@ -17,6 +17,19 @@ const ICON_VARIANTS = [
 ] as const
 
 /**
+ * 탭바 컨테이너의 안쪽 여백. pill의 폭·위치가 이 값에서 파생되므로 상수 하나로 묶어
+ * 여백만 바꿨을 때 pill이 조용히 어긋나는 일을 막는다.
+ */
+const CONTAINER_PADDING = "0.25rem"
+
+/**
+ * trailing slash 유무로 일치가 깨지면 하이라이트만 빠지는 게 아니라 탭바가 통째로
+ * 사라지므로 양쪽을 정규화해 비교한다. 여전히 완전 일치라 `/my/edit`은 `/my`와
+ * 매칭되지 않는다 — 하위 경로에 탭바가 새로 생기면 안 된다.
+ */
+const normalizePath = (path: string) => path.replace(/\/$/, "") || "/"
+
+/**
  * 하단 고정 탭바. 루트 layout에서 한 번만 렌더하며(issue #280), 라우트 전환 중에도
  * 인스턴스가 유지되어야 활성 pill 슬라이딩 애니메이션이 성립한다.
  *
@@ -29,7 +42,9 @@ const ICON_VARIANTS = [
 function TabBar(props: React.ComponentProps<"div">) {
   const pathname = usePathname()
 
-  const activeIndex = TAB_ITEMS.findIndex((item) => item.href === pathname)
+  const activeIndex = TAB_ITEMS.findIndex(
+    (item) => normalizePath(item.href) === normalizePath(pathname)
+  )
   if (activeIndex === -1) return null
 
   return <TabBarNav activeIndex={activeIndex} {...props} />
@@ -59,16 +74,26 @@ function TabBarNav({
       )}
       {...props}
     >
-      <div className="relative flex w-full items-center justify-between overflow-hidden rounded-full p-1 shadow-[0px_2px_16px_0px_rgba(0,0,0,0.12)] backdrop-blur-[3px]">
+      <div
+        className="relative flex w-full items-center justify-between overflow-hidden rounded-full shadow-[0px_2px_16px_0px_rgba(0,0,0,0.12)] backdrop-blur-[3px]"
+        style={{ padding: CONTAINER_PADDING }}
+      >
         {/*
-         * 활성 pill. 탭 4개가 flex-1 균등폭이므로 컨테이너 p-1(0.25rem×2)을 뺀
-         * 안쪽 폭의 1/4이 pill 폭이고, translateX(100%)가 정확히 한 칸이다.
+         * 활성 pill. 탭들이 flex-1 균등폭이므로 컨테이너 좌우 여백을 뺀 안쪽 폭을
+         * 탭 개수로 나눈 값이 pill 폭이다. translateX(100%)는 자기 폭 기준이라
+         * 폭만 탭 개수에서 파생되면 탭이 늘어도 한 칸 이동이 그대로 성립한다.
          * Link들보다 먼저 렌더해 DOM 순서상 뒤에 깔린다.
          */}
         <div
           aria-hidden
-          className="absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-gray-100 transition-transform duration-base ease-base"
-          style={{ transform: `translateX(${activeIndex * 100}%)` }}
+          className="absolute rounded-full bg-gray-100 transition-transform duration-base ease-base"
+          style={{
+            top: CONTAINER_PADDING,
+            bottom: CONTAINER_PADDING,
+            left: CONTAINER_PADDING,
+            width: `calc((100% - ${CONTAINER_PADDING} * 2) / ${TAB_ITEMS.length})`,
+            transform: `translateX(${activeIndex * 100}%)`,
+          }}
         />
 
         {TAB_ITEMS.map((item, index) => {
