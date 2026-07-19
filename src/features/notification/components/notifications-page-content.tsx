@@ -67,6 +67,19 @@ function NotificationsPageContent() {
     if (entry.href) router.push(entry.href)
   }
 
+  // 목록을 비우는 삭제는 삭제 모드 상태 자체를 내린다. 파생값(showDeleteMode)만으로 숨기면
+  // 이후 SSE 로 새 알림이 들어왔을 때 사용자가 켠 적 없는 삭제 모드가 되살아난다.
+  const handleDelete = (notificationId: number) => {
+    deleteNotification.mutate(notificationId)
+    if (entries.length <= 1) setDeleteMode(false)
+  }
+
+  const handleDeleteAll = () => {
+    deleteAll.mutate(entries.map((entry) => entry.notificationId))
+    setDeleteMode(false)
+    setConfirmDeleteAll(false)
+  }
+
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-white">
@@ -101,7 +114,7 @@ function NotificationsPageContent() {
                 entry={entry}
                 deleteMode={showDeleteMode}
                 onOpen={() => handleOpen(entry)}
-                onDelete={() => deleteNotification.mutate(entry.notificationId)}
+                onDelete={() => handleDelete(entry.notificationId)}
               />
             ))
           )}
@@ -116,10 +129,7 @@ function NotificationsPageContent() {
         description={messages.notification.deleteAllConfirmDescription}
         cancelLabel={messages.notification.deleteConfirmCancel}
         confirmLabel={messages.notification.deleteConfirmConfirm}
-        onConfirm={() => {
-          deleteAll.mutate(entries.map((entry) => entry.notificationId))
-          setConfirmDeleteAll(false)
-        }}
+        onConfirm={handleDeleteAll}
       />
     </>
   )

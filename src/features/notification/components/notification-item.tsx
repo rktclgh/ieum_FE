@@ -26,11 +26,13 @@ function NotificationItem({ entry, onOpen, deleteMode, onDelete }: NotificationI
   return (
     <div className="relative w-full">
       {/* 삭제 모드에서는 본문 탭으로 딥링크 이동하지 않는다. X(20px)를 빗맞히면
-          삭제하려던 사용자가 질문/모임 상세로 튕겨나가기 때문. */}
+          삭제하려던 사용자가 질문/모임 상세로 튕겨나가기 때문.
+          aria-disabled 가 아니라 disabled 를 쓰는 이유: 탭 순서에서도 빠져야
+          키보드 사용자가 빈 버튼을 거치지 않고 X 로 바로 이동한다. */}
       <button
         type="button"
-        onClick={deleteMode ? undefined : onOpen}
-        aria-disabled={deleteMode || undefined}
+        disabled={deleteMode}
+        onClick={onOpen}
         className="flex w-full flex-col items-start gap-1.5 p-4 text-left"
       >
         <span className="flex min-w-0 max-w-full items-center gap-2">

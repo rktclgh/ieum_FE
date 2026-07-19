@@ -126,7 +126,16 @@ function useDeleteAllNotifications() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (ids: number[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deleteNotification(id)))
+      // 한 번에 다 쏘면 알림이 수십 건일 때 요청이 그만큼 동시에 나간다. 브라우저의
+      // 도메인당 동시 연결 제한에 걸리는 데다, BE 서버 램이 1GB 라 순간 부하도 부담이다.
+      // 청크로 끊어 동시 실행 수를 제한한다.
+      const CONCURRENCY = 5
+      const results: PromiseSettledResult<void>[] = []
+      for (let index = 0; index < ids.length; index += CONCURRENCY) {
+        const chunk = ids.slice(index, index + CONCURRENCY)
+        results.push(...(await Promise.allSettled(chunk.map((id) => deleteNotification(id)))))
+      }
+
       const failed = results.filter((result) => result.status === "rejected").length
       if (failed > 0 && failed === ids.length) throw new Error("failed to delete notifications")
       return { deleted: ids.length - failed, failed }
