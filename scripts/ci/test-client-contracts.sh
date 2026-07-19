@@ -29,6 +29,7 @@ node --experimental-strip-types --test src/features/schedule/lib/schedule-contra
 node --experimental-strip-types --test src/features/schedule/lib/schedule-editor.test.ts
 node --experimental-strip-types --test src/features/schedule/lib/schedule-query-error.test.ts
 node --experimental-strip-types --test src/features/schedule/lib/schedule-query-range.test.ts
+node --experimental-strip-types --test src/features/map/lib/map-tile-error.test.ts
 node --experimental-strip-types --test src/features/report/lib/report-target.test.ts
 node --experimental-strip-types --test src/features/pwa/lib/install-availability.test.ts
 node --experimental-strip-types --test src/features/pwa/lib/platform.test.ts
