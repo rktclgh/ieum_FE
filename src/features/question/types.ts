@@ -1,6 +1,6 @@
 // 홈 지도 상세 시트가 쓰는 질문 요약 뷰 모델.
 // 백엔드 QuestionDetailResponse에서 lib/question-adapter.ts:adaptQuestionSummary 로 파생한다.
-// 상세 화면(question-detail-screen)은 더 풍부한 QuestionDetailView 를 직접 사용한다.
+// 답변 보기 화면(answer-view-screen)은 더 풍부한 QuestionDetailView 를 직접 사용한다.
 export interface QuestionSummary {
   id: string
   /** 작성자 userId — 내가 쓴 질문인지 판별해 답변 입력을 막는 데 쓴다 */

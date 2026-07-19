@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation"
 import * as React from "react"
 
 import { RoutePageState } from "@/components/ui/route-page-state"
-import { QuestionDetailScreen } from "@/features/question/components/question-detail-screen"
+import { AnswerViewScreen } from "@/features/question/components/answer-view-screen"
 import { parsePositiveInteger } from "@/lib/navigation/routes"
 
 function QuestionDetailRoute() {
@@ -13,7 +13,7 @@ function QuestionDetailRoute() {
 
   if (questionId === null) return <RoutePageState kind="invalid-link" />
 
-  return <QuestionDetailScreen key={questionId} questionId={questionId} />
+  return <AnswerViewScreen key={questionId} questionId={questionId} />
 }
 
 export default function QuestionDetailPage() {

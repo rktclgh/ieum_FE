@@ -84,25 +84,24 @@ test("chat and question DTO/adapters do not expose frontend source language fiel
 })
 
 test("translation controls are gated only by nonblank text and existing pending/report safeguards", () => {
-  const questionItem = read("src/features/question/components/question-answer-item.tsx")
-  const questionAuthorItem = read("src/features/question/components/question-answer-author-item.tsx")
+  // question-answer-item.tsx / question-answer-author-item.tsx were deleted when the
+  // 질문 상세 screen was replaced by the author-only 답변 보기 screen; the per-answer
+  // translation toggle now lives in answer-view-screen.tsx (AnswerRow), with answer-card.tsx
+  // as the presentational counterpart that just renders whatever content it is given.
+  const screen = read("src/features/question/components/answer-view-screen.tsx")
+  const answerCard = read("src/features/question/components/answer-card.tsx")
   const chatRoom = read("src/features/chat/components/chat-room-page-content.tsx")
 
-  assert.doesNotMatch(questionItem, /shouldShowTranslateButton|sourceLang|language/)
-  assert.match(questionItem, /const\s+content\s*=\s*answer\.content\s*\?\?\s*""/)
-  assert.match(questionItem, /useTranslateToggle\(\{\s*text:\s*content,\s*isAuthenticated,/)
-  assert.match(questionItem, /translate\.canTranslate/)
-  assert.match(questionItem, /translate\.displayText/)
+  assert.doesNotMatch(screen, /shouldShowTranslateButton|sourceLang/)
+  assert.match(screen, /useTranslateToggle\(\{\s*text:\s*answer\.content,\s*isAuthenticated\s*\}\)/)
+  assert.match(screen, /translate\.canTranslate/)
+  assert.match(screen, /translate\.displayText/)
 
-  assert.doesNotMatch(questionAuthorItem, /shouldShowTranslateButton|sourceLang|language/)
-  assert.match(questionAuthorItem, /const\s+content\s*=\s*answer\.content\s*\?\?\s*""/)
-  assert.match(questionAuthorItem, /useTranslateToggle\(\{\s*text:\s*content,\s*isAuthenticated,/)
-  assert.match(questionAuthorItem, /translate\.canTranslate/)
-  assert.match(questionAuthorItem, /translate\.displayText/)
+  assert.doesNotMatch(answerCard, /shouldShowTranslateButton|sourceLang|language/)
   assert.match(
-    questionAuthorItem,
-    /\{\.\.\.\(!isReported\s*&&\s*\(!isMine\s*\|\|\s*translate\.canTranslate\)\s*\?\s*longPress\s*:\s*\{\}\)\}/,
-    "long-press should remain available for reportable answers but avoid actionless overlays for own non-translatable answers"
+    answerCard,
+    /<div\s*\{\.\.\.longPress\}/,
+    "answer card should keep long-press available on the card wrapper regardless of report state"
   )
 
   assert.doesNotMatch(chatRoom, /shouldShowTranslateButton|sourceLang/)
