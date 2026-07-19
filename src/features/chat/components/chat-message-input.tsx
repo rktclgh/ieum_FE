@@ -5,6 +5,7 @@ import Image from "next/image"
 
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
 
 type ChatMessageSendResult = "published" | "awaiting-echo" | "failed"
 
@@ -36,7 +37,7 @@ function ChatMessageInput({
 }: ChatMessageInputProps) {
   const { messages } = useTranslation()
   const [uncontrolledValue, setUncontrolledValue] = React.useState("")
-  const inputRef = React.useRef<HTMLInputElement>(null)
+  const inputRef = React.useRef<HTMLTextAreaElement>(null)
   const isControlled = value !== undefined
   const currentValue = isControlled ? value : uncontrolledValue
   const replyMessageId = replyPreview?.messageId
@@ -52,7 +53,8 @@ function ChatMessageInput({
 
   const handleSend = () => {
     if (disabled || !currentValue.trim()) return
-    const sent = onSend?.(currentValue)
+    // 줄바꿈이 가능해지면서 앞뒤 개행이 그대로 실려 말풍선에 빈 줄이 생길 수 있어 다듬어 보낸다.
+    const sent = onSend?.(currentValue.trim())
     if (sent !== "failed" && sent !== "awaiting-echo") setValue("")
   }
 
@@ -61,7 +63,7 @@ function ChatMessageInput({
       data-slot="chat-message-input"
       aria-disabled={disabled}
       className={cn(
-        "flex items-center justify-between gap-2 rounded-full border border-gray-50 bg-gray-50/95 p-2 shadow-[0px_2px_4px_0px_rgba(0,0,0,0.1)]",
+        "flex items-end justify-between gap-2 rounded-3xl border border-gray-50 bg-gray-50/95 p-2 shadow-[0px_2px_4px_0px_rgba(0,0,0,0.1)]",
         className
       )}
       {...props}
@@ -75,17 +77,14 @@ function ChatMessageInput({
       >
         <Image src="/icons/chat/camera-fill.svg" alt="" width={20} height={20} className="size-5" />
       </button>
-      <input
+      <MessageTextarea
         ref={inputRef}
         disabled={disabled}
         value={currentValue}
         onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          // 한글/일본어/중국어 IME 조합 중 Enter로 글자를 확정할 때는 전송하지 않는다.
-          if (event.key === "Enter" && !event.nativeEvent.isComposing) handleSend()
-        }}
+        onSubmit={handleSend}
         placeholder={messages.chat.messageInputPlaceholder}
-        className="flex-1 bg-transparent text-body-regular-14 text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed"
+        className="py-1.5"
       />
       <button
         type="button"

@@ -1,10 +1,8 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useRouter } from "next/navigation"
 import * as React from "react"
 
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { MapBounds, MapPin, PinType } from "@/features/map/api/pin-types"
 import { CategoryChipGroup, type Category } from "@/features/map/components/category-chip-group"
 import { MapAttribution } from "@/features/map/components/map-attribution"
@@ -30,10 +28,8 @@ import { CreateQuestionScreen } from "@/features/question/components/create-ques
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
-import { useMe } from "@/features/session/hooks/use-me"
 import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { routes } from "@/lib/navigation/routes"
 import { cn } from "@/lib/utils"
 
 // 스켈레톤 페이드아웃 시간(ms). CSS transition-opacity duration과 맞춘다.
@@ -61,12 +57,6 @@ interface SelectedLocation {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
-  const router = useRouter()
-  const { data: me } = useMe()
-  const isLoggedIn = Boolean(me)
-  const [loginPromptOpen, setLoginPromptOpen] = React.useState(false)
-  // 모임/질문 생성은 로그인 필요. 게스트가 누르면 폼 대신 로그인 안내 다이얼로그를 띄운다.
-  const requireAuth = (action: () => void) => (isLoggedIn ? action() : setLoginPromptOpen(true))
   const { position, status } = useGeolocation()
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
@@ -217,8 +207,8 @@ function HomeMapScreen() {
         {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
         <MapControls
           onRecenter={handleRecenter}
-          onCreateMeetup={() => requireAuth(() => setCreateMeetupOpen(true))}
-          onCreateQuestion={() => requireAuth(() => setCreateQuestionOpen(true))}
+          onCreateMeetup={() => setCreateMeetupOpen(true)}
+          onCreateQuestion={() => setCreateQuestionOpen(true)}
           onListView={() => setListOpen(true)}
           className={`pointer-events-auto absolute right-4 ${FAB_BOTTOM_WITH_TABBAR} flex flex-col gap-2`}
         />
@@ -255,8 +245,8 @@ function HomeMapScreen() {
           onClose={() => setListOpen(false)}
           onOpenMeetup={(id) => setSelectedMeetingId(id)}
           onOpenQuestion={(id) => setSelectedQuestionId(id)}
-          onCreateMeetup={() => requireAuth(() => setCreateMeetupOpen(true))}
-          onCreateQuestion={() => requireAuth(() => setCreateQuestionOpen(true))}
+          onCreateMeetup={() => setCreateMeetupOpen(true)}
+          onCreateQuestion={() => setCreateQuestionOpen(true)}
         />
       ) : null}
 
@@ -289,16 +279,6 @@ function HomeMapScreen() {
           onClose={() => setSelectedQuestionId(null)}
         />
       ) : null}
-
-      <ConfirmDialog
-        open={loginPromptOpen}
-        onOpenChange={setLoginPromptOpen}
-        title={messages.home.loginRequiredTitle}
-        description={messages.home.loginRequiredDescription}
-        cancelLabel={messages.home.loginRequiredCancel}
-        confirmLabel={messages.home.loginLabel}
-        onConfirm={() => router.push(routes.login())}
-      />
     </div>
   )
 }

@@ -21,13 +21,7 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Ieum",
   },
-  icons: {
-    icon: [
-      { url: "/icons/pwa/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/pwa/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [{ url: "/icons/pwa/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-  },
+  // 파비콘/터치 아이콘은 app/ 파일 컨벤션(favicon.ico, icon.svg, apple-icon.png)이 처리한다.
   other: {
     "apple-mobile-web-app-capable": "yes",
   },
@@ -37,7 +31,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#171717",
+  themeColor: "#fc7045",
 };
 
 export default function RootLayout({

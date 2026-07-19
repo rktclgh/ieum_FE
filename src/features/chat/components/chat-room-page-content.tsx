@@ -976,8 +976,9 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                   className="w-full"
                   leaveLabel={isGroup ? messages.meetup.leaveButton : undefined}
                   // 방장은 '나가기' 숨김(해체만) — 주인 없는 방 방지. 그 외(멤버·1:1)만 나가기 노출.
+                  // 그룹방 meeting 로딩 중에는 방장 판별 전이라 나가기도 숨긴다(방장에게 잠깐 노출되는 결함 방지).
                   onLeave={
-                    isMeetingHost
+                    (isGroup && !meeting) || isMeetingHost
                       ? undefined
                       : () => {
                           if (session.authenticated) setConfirmLeaveOpen(true)

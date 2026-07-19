@@ -138,7 +138,12 @@ function QuestionsListPageContent() {
         <AppBar title={messages.question.historyTitle} leadingIcon={null} trailingIcon={null} />
 
         <div className="flex flex-1 flex-col px-4 pt-2 pb-24">
-          {items.length === 0 && !query.isLoading ? (
+          {/* 로드 실패를 "질문 없음"으로 오인하게 두지 않는다 — 알림 목록과 동일한 처리. */}
+          {query.isError ? (
+            <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
+              {messages.question.loadError}
+            </p>
+          ) : items.length === 0 && !query.isLoading ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.question.historyEmpty}
             </p>

@@ -74,10 +74,12 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
   const hasAcceptedAnswer = question?.answers.some((a) => a.isAccepted) ?? false
 
   // 비작성자는 이 화면을 볼 이유가 없다 — 답변은 홈 지도 질문 시트에서 한다.
+  // 비로그인 사용자는 /questions/layout.tsx의 AuthGate(protected)가 먼저 /login으로 보내므로
+  // 여기까지 오지 않는다. 그래도 게이트가 걷히는 경우를 대비해 me가 확정된 뒤에만 판정한다.
   React.useEffect(() => {
-    if (!question || !me.data) return
+    if (!question || me.isLoading) return
     if (!isAuthor) router.replace(routes.home())
-  }, [question, me.data, isAuthor, router])
+  }, [question, me.isLoading, isAuthor, router])
 
   const handleAccept = (answer: QuestionAnswerView) => {
     // 채택은 되돌릴 수 없다 — 연타로 두 번 요청이 나가지 않게 막는다(두 번째는 BE가 409).
@@ -111,7 +113,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
   }
 
   const handleConfirmReport = () => {
-    if (pendingReportId == null) return
+    if (pendingReportId == null || reportAnswer.isPending) return
     const answerId = pendingReportId
     setPendingReportId(null)
     reportAnswer.mutate(
@@ -267,6 +269,9 @@ function AnswerRow({
   const translate = useTranslateToggle({ text: answer.content, isAuthenticated })
 
   const handleOpenMenu = () => {
+    // 띄울 액션이 하나도 없으면 아무것도 열지 않는다 — 카드만 떠올라 닫을 수 없는 상태가 되는 걸 막는다.
+    // (menuItems는 아래에서 선언되지만 이 핸들러는 렌더 후 이벤트 시점에만 호출된다.)
+    if (menuItems.length === 0) return
     const rect = rowRef.current?.getBoundingClientRect()
     if (rect) {
       const spaceBelow = window.innerHeight - rect.bottom
