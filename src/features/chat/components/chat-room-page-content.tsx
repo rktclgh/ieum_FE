@@ -323,8 +323,10 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const programmaticScrollQuietUntilRef = React.useRef(0)
 
   const scrollToBottom = React.useCallback(() => {
-    programmaticScrollQuietUntilRef.current = Date.now() + PROGRAMMATIC_SCROLL_QUIET_MS
-    bottomRef.current?.scrollIntoView({ block: "end" })
+    // 스크롤이 실제로 일어나지 않는데 무시 창을 열면 직후의 사용자 스크롤이 삼켜진다.
+    if (!bottomRef.current) return
+    programmaticScrollQuietUntilRef.current = performance.now() + PROGRAMMATIC_SCROLL_QUIET_MS
+    bottomRef.current.scrollIntoView({ block: "end" })
   }, [])
 
   const markReadMutation = useMarkRead()
@@ -537,7 +539,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   const handleMessagesAreaScroll = () => {
     // 사용자가 직접 스크롤할 때만 스크롤바·날짜 뱃지를 띄운다.
-    if (Date.now() >= programmaticScrollQuietUntilRef.current) handleMessagesScroll()
+    if (performance.now() >= programmaticScrollQuietUntilRef.current) handleMessagesScroll()
     updateIsAtBottom()
     if (!scrollTicking.current) {
       requestAnimationFrame(() => {
