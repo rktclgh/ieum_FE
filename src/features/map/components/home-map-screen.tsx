@@ -27,7 +27,6 @@ import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup
 import { InstallPrompt } from "@/features/pwa/components/install-prompt"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
-import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
 import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -215,10 +214,6 @@ function HomeMapScreen() {
         />
 
         <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3" />
-      </div>
-
-      <div className="absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-sm">
-        <TabBar />
       </div>
 
       {isSearchOpen ? (
