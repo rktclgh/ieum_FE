@@ -18,6 +18,14 @@ export const th: Messages = {
     checking: "กำลังตรวจสอบสถานะการเข้าสู่ระบบ",
     backendUnavailable: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ โปรดลองอีกครั้งในภายหลัง",
   },
+  pwa: {
+    title: "ติดตั้งแอป Ieum",
+    description: "เพิ่มลงหน้าจอหลักเพื่อใช้งานสะดวกขึ้น",
+    later: "ภายหลัง",
+    install: "ติดตั้ง",
+    iosDescription: "แตะปุ่มแชร์ แล้วเลือก 'เพิ่มไปยังหน้าจอโฮม'",
+    confirm: "ตกลง",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "กรอกอีเมล",

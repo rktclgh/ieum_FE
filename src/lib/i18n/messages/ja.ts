@@ -18,6 +18,14 @@ export const ja: Messages = {
     checking: "ログイン状態を確認しています。",
     backendUnavailable: "サーバーに接続できません。しばらくしてからもう一度お試しください。",
   },
+  pwa: {
+    title: "イウムアプリをインストール",
+    description: "ホーム画面に追加してもっと便利に使いましょう。",
+    later: "後で",
+    install: "インストール",
+    iosDescription: "共有ボタンを押して「ホーム画面に追加」を選択してください。",
+    confirm: "確認",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "メールアドレスを入力",

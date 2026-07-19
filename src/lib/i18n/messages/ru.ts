@@ -18,6 +18,14 @@ export const ru: Messages = {
     checking: "Проверяем статус входа.",
     backendUnavailable: "Не удалось подключиться к серверу. Попробуйте ещё раз чуть позже.",
   },
+  pwa: {
+    title: "Установить Ieum",
+    description: "Добавьте на главный экран для удобства.",
+    later: "Позже",
+    install: "Установить",
+    iosDescription: "Нажмите «Поделиться», затем «На экран Домой».",
+    confirm: "OK",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "Введите email",

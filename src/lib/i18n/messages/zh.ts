@@ -18,6 +18,14 @@ export const zh: Messages = {
     checking: "正在检查登录状态。",
     backendUnavailable: "无法连接到服务器，请稍后重试。",
   },
+  pwa: {
+    title: "安装 Ieum",
+    description: "添加到主屏幕，使用更方便。",
+    later: "以后",
+    install: "安装",
+    iosDescription: "点击分享按钮，然后选择“添加到主屏幕”。",
+    confirm: "确定",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "请输入邮箱",

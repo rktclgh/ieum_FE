@@ -18,6 +18,14 @@ export const en: Messages = {
     checking: "Checking your sign-in status.",
     backendUnavailable: "We couldn't connect to the server. Please try again shortly.",
   },
+  pwa: {
+    title: "Install Ieum",
+    description: "Add it to your home screen for quicker access.",
+    later: "Later",
+    install: "Install",
+    iosDescription: "Tap the Share button, then choose 'Add to Home Screen'.",
+    confirm: "OK",
+  },
   login: {
     logoText: "ieum",
     emailPlaceholder: "Enter your email",

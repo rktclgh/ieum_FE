@@ -212,6 +212,10 @@ async function syncSubscriptionChange(event) {
   }
 }
 
+// Chrome 설치 가능(installability) 판정은 fetch 핸들러 존재를 요구한다.
+// 요청을 가로채지 않고 네트워크로 통과시키는 no-op(오프라인 캐싱 없음).
+self.addEventListener("fetch", () => {})
+
 self.addEventListener("push", (event) => {
   event.waitUntil(showPushNotification(event))
 })
