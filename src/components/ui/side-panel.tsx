@@ -3,7 +3,16 @@ import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 import { cn } from "@/lib/utils"
 
 function SidePanel(props: DrawerPrimitive.Root.Props) {
-  return <DrawerPrimitive.Root data-slot="side-panel" swipeDirection="right" {...props} />
+  return (
+    <DrawerPrimitive.Root
+      data-slot="side-panel"
+      swipeDirection="right"
+      // 바깥(백드롭) 탭으로는 닫히지 않도록 한다. AppBar의 뒤로가기 버튼으로만 닫는다.
+      // (Figma node 1349-5916: 패널 AppBar에 뒤로가기 chevron만 존재, 별도의 바깥 탭 닫힘 동작 없음)
+      disablePointerDismissal
+      {...props}
+    />
+  )
 }
 
 function SidePanelPortal(props: DrawerPrimitive.Portal.Props) {
