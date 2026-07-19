@@ -28,10 +28,21 @@ interface ChatContextMenuProps extends React.ComponentProps<"div"> {
 function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, ...props }: ChatContextMenuProps) {
   // 조건부 마운트라 첫 페인트에 이미 최종 상태면 트랜지션이 돌지 않는다.
   // 초기 상태로 한 프레임 그린 뒤 enter 상태로 넘겨야 눌린 아이템의 리프트와 같은 리듬으로 떠오른다.
+  //
+  // rAF 를 두 번 겹치는 이유: 이 메뉴는 롱프레스(discrete 이벤트)에서 열리는데, React 가
+  // 그 이벤트 끝에서 passive effect 를 페인트 전에 flush 하면 단일 rAF 콜백도 같은 페인트
+  // 안에서 실행되어 entered=true 인 채로 첫 페인트가 나간다 — 트랜지션이 통째로 생략된다.
+  // 두 번째 rAF 는 반드시 다음 페인트 직전이라 초기 상태가 최소 한 프레임 그려지는 걸 보장한다.
   const [entered, setEntered] = React.useState(false)
   React.useEffect(() => {
-    const frame = requestAnimationFrame(() => setEntered(true))
-    return () => cancelAnimationFrame(frame)
+    let inner = 0
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setEntered(true))
+    })
+    return () => {
+      cancelAnimationFrame(outer)
+      cancelAnimationFrame(inner)
+    }
   }, [])
 
   React.useEffect(() => {

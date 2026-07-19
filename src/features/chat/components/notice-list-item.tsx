@@ -27,7 +27,7 @@ function NoticeListItem({ className, title, authorName, authorAvatarSrc, time, p
       className={cn(
         "flex w-full items-start gap-3 py-3",
         LONG_PRESS_TRANSITION,
-        active ? cn(LONG_PRESS_SURFACE_ACTIVE, "px-3") : LONG_PRESS_INACTIVE,
+        active ? cn(LONG_PRESS_SURFACE_ACTIVE, "gap-2 px-3") : LONG_PRESS_INACTIVE,
         className
       )}
       {...props}
