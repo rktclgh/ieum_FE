@@ -101,6 +101,8 @@ const MESSAGE_MENU_HEIGHT_ESTIMATE = 180
 const MESSAGE_BOTTOM_SAFE_AREA = 96
 // 낙관적 말풍선을 서버 메시지와 같은 것으로 볼 시간 창(에코를 놓쳐 백필로 들어온 경우 매칭용).
 const PENDING_MATCH_WINDOW_MS = 60_000
+// 자동 하단 스크롤이 만든 scroll 이벤트를 사용자 스크롤과 구분하기 위한 시간 창.
+const PROGRAMMATIC_SCROLL_QUIET_MS = 250
 
 interface MessageRowProps {
   message: ChatBubbleMessage
@@ -316,6 +318,16 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   // 과거 페이지 prepend 직전 scrollHeight. prepend 후 스크롤 위치 보정(anchor)에 쓴다.
   const prevScrollHeightRef = React.useRef<number | null>(null)
   const { isScrolling, onScroll: handleMessagesScroll } = useFadeScrollbar()
+  // 자동 하단 스크롤이 발생시킨 scroll 이벤트가 스크롤바·날짜 뱃지를 띄우지 않도록,
+  // 프로그램적 스크롤 직후 이 시간(ms) 동안은 페이드 스크롤바 트리거를 무시한다.
+  const programmaticScrollQuietUntilRef = React.useRef(0)
+
+  const scrollToBottom = React.useCallback(() => {
+    // 스크롤이 실제로 일어나지 않는데 무시 창을 열면 직후의 사용자 스크롤이 삼켜진다.
+    if (!bottomRef.current) return
+    programmaticScrollQuietUntilRef.current = performance.now() + PROGRAMMATIC_SCROLL_QUIET_MS
+    bottomRef.current.scrollIntoView({ block: "end" })
+  }, [])
 
   const markReadMutation = useMarkRead()
   const setPinnedMutation = useSetPinned()
@@ -526,7 +538,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   }, [])
 
   const handleMessagesAreaScroll = () => {
-    handleMessagesScroll()
+    // 사용자가 직접 스크롤할 때만 스크롤바·날짜 뱃지를 띄운다.
+    if (performance.now() >= programmaticScrollQuietUntilRef.current) handleMessagesScroll()
     updateIsAtBottom()
     if (!scrollTicking.current) {
       requestAnimationFrame(() => {
@@ -643,12 +656,12 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   React.useEffect(() => {
     if (chatMessages.length === 0) return
     if (!didInitialScrollRef.current) {
-      bottomRef.current?.scrollIntoView({ block: "end" })
+      scrollToBottom()
       didInitialScrollRef.current = true
       return
     }
     if (isAtBottomRef.current) {
-      bottomRef.current?.scrollIntoView({ block: "end" })
+      scrollToBottom()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastMessageId])
