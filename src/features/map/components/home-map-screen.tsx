@@ -216,51 +216,47 @@ function HomeMapScreen() {
         <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3" />
       </div>
 
-      {isSearchOpen ? (
-        <SearchOverlay
-          near={position}
-          onClose={() => setSearchOpen(false)}
-          onSelectPlace={(place) => {
-            setSelectedLocation({
-              lat: place.lat,
-              lng: place.lng,
-              label: place.name,
-              address: place.address,
-            })
-            recenterTo({ lat: place.lat, lng: place.lng })
-            setSearchOpen(false)
-          }}
-          onOpenMeetup={(id) => setSelectedMeetingId(id)}
-          onOpenQuestion={(id) => setSelectedQuestionId(id)}
-        />
-      ) : null}
+      <SearchOverlay
+        open={isSearchOpen}
+        near={position}
+        onClose={() => setSearchOpen(false)}
+        onSelectPlace={(place) => {
+          setSelectedLocation({
+            lat: place.lat,
+            lng: place.lng,
+            label: place.name,
+            address: place.address,
+          })
+          recenterTo({ lat: place.lat, lng: place.lng })
+          setSearchOpen(false)
+        }}
+        onOpenMeetup={(id) => setSelectedMeetingId(id)}
+        onOpenQuestion={(id) => setSelectedQuestionId(id)}
+      />
 
-      {isListOpen ? (
-        <PinListOverlay
-          bounds={bounds}
-          onClose={() => setListOpen(false)}
-          onOpenMeetup={(id) => setSelectedMeetingId(id)}
-          onOpenQuestion={(id) => setSelectedQuestionId(id)}
-          onCreateMeetup={() => setCreateMeetupOpen(true)}
-          onCreateQuestion={() => setCreateQuestionOpen(true)}
-        />
-      ) : null}
+      <PinListOverlay
+        open={isListOpen}
+        bounds={bounds}
+        onClose={() => setListOpen(false)}
+        onOpenMeetup={(id) => setSelectedMeetingId(id)}
+        onOpenQuestion={(id) => setSelectedQuestionId(id)}
+        onCreateMeetup={() => setCreateMeetupOpen(true)}
+        onCreateQuestion={() => setCreateQuestionOpen(true)}
+      />
 
-      {createMeetupOpen ? (
-        <CreateMeetupScreen
-          initialPlace={selectedPlace}
-          currentPosition={position}
-          onClose={() => setCreateMeetupOpen(false)}
-        />
-      ) : null}
+      <CreateMeetupScreen
+        open={createMeetupOpen}
+        initialPlace={selectedPlace}
+        currentPosition={position}
+        onClose={() => setCreateMeetupOpen(false)}
+      />
 
-      {createQuestionOpen ? (
-        <CreateQuestionScreen
-          initialPlace={selectedPlace}
-          currentPosition={position}
-          onClose={() => setCreateQuestionOpen(false)}
-        />
-      ) : null}
+      <CreateQuestionScreen
+        open={createQuestionOpen}
+        initialPlace={selectedPlace}
+        currentPosition={position}
+        onClose={() => setCreateQuestionOpen(false)}
+      />
 
       {selectedMeetingId !== null ? (
         <MeetupDetailContainer

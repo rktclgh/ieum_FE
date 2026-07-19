@@ -202,7 +202,6 @@ function EditProfileForm({ user }: { user: MeUser }) {
         </div>
 
         <ProfileImageEditor
-          key={editorSrc ?? "none"}
           open={editorSrc !== null}
           imageSrc={editorSrc}
           onClose={() => {

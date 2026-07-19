@@ -165,9 +165,12 @@ function QuestionsListPageContent() {
         </div>
       </main>
 
-      {editId != null && (
-        <CreateQuestionScreen mode="edit" questionId={editId} onClose={() => setEditId(null)} />
-      )}
+      <CreateQuestionScreen
+        open={editId != null}
+        mode="edit"
+        questionId={editId ?? undefined}
+        onClose={() => setEditId(null)}
+      />
 
       <ConfirmDialog
         open={pendingDeleteId != null}

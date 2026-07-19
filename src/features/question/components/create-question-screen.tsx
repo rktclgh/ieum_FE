@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { uploadImage } from "@/features/question/api/question-file-api"
@@ -25,7 +26,33 @@ const TITLE_MAX_LENGTH = 200
 const CONTENT_MAX_LENGTH = 5000
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
-interface CreateQuestionScreenProps {
+interface CreateQuestionScreenProps extends CreateQuestionScreenContentProps {
+  open: boolean
+}
+
+/**
+ * 새 질문 작성 풀스크린 오버레이. 지도 홈 FAB의 "질문하기"에서 열린다(모임 만들기와 동일한 흐름).
+ * 제목·장소·내용을 채우면 제출이 활성화되고, 제출 시 POST /questions 로 생성한 뒤 지도로 돌아간다.
+ * 장소는 MeetupLocationPicker(지도 기반)에서 좌표·주소·라벨까지 확보한다.
+ *
+ * mode="edit"이면 질문 내역 리스트 롱프레스 → 수정에서 열리며, 기존 제목/내용/장소/이미지를
+ * prefill한 뒤 PATCH /questions/{id}로 제출한다(#92).
+ *
+ * 오버레이 껍데기(fixed·모션·언마운트 지연)는 FullScreenOverlay가 맡고, 상세 fetch를 포함한
+ * 모든 상태는 Content가 들고 있어 닫히면 함께 언마운트된다.
+ */
+function CreateQuestionScreen({ open, ...props }: CreateQuestionScreenProps) {
+  return (
+    <FullScreenOverlay
+      open={open}
+      className="z-50 mx-auto flex w-full max-w-sm flex-col bg-white"
+    >
+      <CreateQuestionScreenContent {...props} />
+    </FullScreenOverlay>
+  )
+}
+
+interface CreateQuestionScreenContentProps {
   /** 닫기(X) 또는 제출 완료 시 호출 — 오버레이 언마운트는 부모가 담당 */
   onClose: () => void
   /** "edit"이면 기존 질문을 prefill해 수정 화면으로 동작한다. 기본값 "create". */
@@ -39,23 +66,16 @@ interface CreateQuestionScreenProps {
 }
 
 /**
- * 새 질문 작성 풀스크린 오버레이. 지도 홈 FAB의 "질문하기"에서 열린다(모임 만들기와 동일한 흐름).
- * 제목·장소·내용을 채우면 제출이 활성화되고, 제출 시 POST /questions 로 생성한 뒤 지도로 돌아간다.
- * 장소는 MeetupLocationPicker(지도 기반)에서 좌표·주소·라벨까지 확보한다.
- *
- * mode="edit"이면 질문 내역 리스트 롱프레스 → 수정에서 열리며, 기존 제목/내용/장소/이미지를
- * prefill한 뒤 PATCH /questions/{id}로 제출한다(#92).
- *
  * 컨테이너: edit 모드에서는 상세가 로드된 뒤에만 폼을 마운트해, 프리필용 렌더 중
  * setState 없이 초기값을 확정한다(edit-profile-content.tsx와 동일한 패턴).
  */
-function CreateQuestionScreen({
+function CreateQuestionScreenContent({
   onClose,
   mode = "create",
   questionId,
   initialPlace = null,
   currentPosition = null,
-}: CreateQuestionScreenProps) {
+}: CreateQuestionScreenContentProps) {
   const { messages } = useTranslation()
   const detail = useQuestionDetail(questionId ?? 0, mode === "edit")
 
@@ -63,7 +83,7 @@ function CreateQuestionScreen({
     // 상세 fetch 실패 시 null을 반환하면 AppBar도 없는 먹통 화면이 되므로,
     // answer-view-screen.tsx와 동일하게 닫기 가능한 에러 상태를 보여준다.
     return (
-      <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-sm flex-col bg-white">
+      <>
         <AppBar
           title={messages.question.editTitle}
           leadingIcon={null}
@@ -74,7 +94,7 @@ function CreateQuestionScreen({
         <p className="w-full px-4 pt-10 text-center text-body-regular-14 text-gray-400">
           {getQuestionErrorMessage(detail.error, messages) || messages.question.loadError}
         </p>
-      </div>
+      </>
     )
   }
 
@@ -217,7 +237,7 @@ function CreateQuestionForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-sm flex-col bg-white">
+    <>
       <AppBar
         title={mode === "edit" ? t.editTitle : t.createTitle}
         leadingIcon={null}
@@ -308,15 +328,14 @@ function CreateQuestionForm({
         className="hidden"
       />
 
-      {locationPickerOpen ? (
-        <MeetupLocationPicker
-          value={place?.label ?? null}
-          currentPosition={currentPosition}
-          onConfirm={setPlace}
-          onClose={() => setLocationPickerOpen(false)}
-        />
-      ) : null}
-    </div>
+      <MeetupLocationPicker
+        open={locationPickerOpen}
+        value={place?.label ?? null}
+        currentPosition={currentPosition}
+        onConfirm={setPlace}
+        onClose={() => setLocationPickerOpen(false)}
+      />
+    </>
   )
 }
 
