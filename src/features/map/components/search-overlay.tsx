@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 
+import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { SearchBox } from "@/components/ui/search-box"
 import type { Place } from "@/features/map/api/place-search-api"
 import { MeetupResultCard } from "@/features/map/components/meetup-result-card"
@@ -16,7 +17,26 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 // "전체" 탭에서 타입별로 미리보기할 최대 개수(상세 fetch 부담 제한).
 const PREVIEW_LIMIT = 3
 
-interface SearchOverlayProps {
+interface SearchOverlayProps extends SearchOverlayContentProps {
+  open: boolean
+}
+
+/**
+ * 검색 결과 fetch·디바운스 상태는 Content가 들고 있고, 오버레이가 닫히면 Content가 언마운트되므로
+ * 다시 열 때 항상 빈 검색어에서 시작한다(기존 조건부 마운트와 동일한 동작).
+ */
+function SearchOverlay({ open, ...props }: SearchOverlayProps) {
+  return (
+    <FullScreenOverlay
+      open={open}
+      className="z-40 mx-auto flex w-full max-w-sm flex-col bg-white"
+    >
+      <SearchOverlayContent {...props} />
+    </FullScreenOverlay>
+  )
+}
+
+interface SearchOverlayContentProps {
   near: Coordinates | null
   initialQuery?: string
   onClose: () => void
@@ -25,14 +45,14 @@ interface SearchOverlayProps {
   onOpenQuestion: (questionId: number) => void
 }
 
-function SearchOverlay({
+function SearchOverlayContent({
   near,
   initialQuery = "",
   onClose,
   onSelectPlace,
   onOpenMeetup,
   onOpenQuestion,
-}: SearchOverlayProps) {
+}: SearchOverlayContentProps) {
   const { messages } = useTranslation()
   const [query, setQuery] = React.useState(initialQuery)
   const [debounced, setDebounced] = React.useState(initialQuery)
@@ -61,7 +81,7 @@ function SearchOverlay({
     (!showPlaces || places.length === 0)
 
   return (
-    <div className="fixed inset-0 z-40 mx-auto flex w-full max-w-sm flex-col bg-white">
+    <>
       <div className="flex items-center gap-2 p-4">
         <button
           type="button"
@@ -151,7 +171,7 @@ function SearchOverlay({
           </section>
         ) : null}
       </div>
-    </div>
+    </>
   )
 }
 

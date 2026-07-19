@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { NoticeListItem } from "@/features/chat/components/notice-list-item"
@@ -145,7 +146,8 @@ function NoticePageContent() {
         ]
 
   return (
-    <div className="fixed inset-0 mx-auto flex w-full max-w-sm flex-col overflow-hidden bg-white">
+    // 라우트 화면이라 항상 열려 있다 — 마운트 시 아래에서 올라오는 진입 모션만 쓴다.
+    <FullScreenOverlay open className="mx-auto flex w-full max-w-sm flex-col overflow-hidden bg-white">
       <AppBar
         title={messages.chat.noticeLabel}
         trailingVariant="close"
@@ -171,7 +173,7 @@ function NoticePageContent() {
           ))
         )}
       </div>
-    </div>
+    </FullScreenOverlay>
   )
 }
 

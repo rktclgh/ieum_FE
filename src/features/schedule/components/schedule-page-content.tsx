@@ -354,19 +354,18 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
         }}
       />
 
-      {editor ? (
-        <ScheduleEditor
-          mode={editor.mode}
-          selectedDate={editor.mode === "edit" ? editor.schedule.date : selectedDate}
-          todayDate={today}
-          schedule={editor.mode === "edit" ? editor.schedule : undefined}
-          isPending={isEditorPending}
-          onClose={() => {
-            if (!isEditorPending) setEditor(null)
-          }}
-          onSubmit={submitEditor}
-        />
-      ) : null}
+      <ScheduleEditor
+        open={editor !== null}
+        mode={editor?.mode ?? "create"}
+        selectedDate={editor?.mode === "edit" ? editor.schedule.date : selectedDate}
+        todayDate={today}
+        schedule={editor?.mode === "edit" ? editor.schedule : undefined}
+        isPending={isEditorPending}
+        onClose={() => {
+          if (!isEditorPending) setEditor(null)
+        }}
+        onSubmit={submitEditor}
+      />
 
       {actionError ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-8 z-[60] flex justify-center px-4">
