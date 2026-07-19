@@ -11,31 +11,29 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 interface NotificationItemProps {
   entry: NotificationEntry
   onOpen: () => void
-  onLongPress: (rect: DOMRect) => void
+  onLongPress: () => void
+  /** 컨텍스트 메뉴가 열린 행 — 채팅 목록과 동일하게 제자리에서 부상시킨다. */
+  active?: boolean
 }
 
 // 알림 한 줄 — 탭하면 읽음 처리 후 딥링크 이동, 롱프레스로 삭제 메뉴. 안 읽은 알림은 점으로 강조.
-function NotificationItem({ entry, onOpen, onLongPress }: NotificationItemProps) {
+function NotificationItem({ entry, onOpen, onLongPress, active }: NotificationItemProps) {
   const { messages } = useTranslation()
-  const ref = React.useRef<HTMLButtonElement>(null)
-  const longPress = useLongPress({
-    onLongPress: () => {
-      const rect = ref.current?.getBoundingClientRect()
-      if (rect) onLongPress(rect)
-    },
-  })
+  const longPress = useLongPress({ onLongPress })
   // 상대시각 문구는 question 카탈로그의 공용 포맷터를 재사용한다.
   const timeLabel = formatRelativeTime(entry.createdAt, messages.question)
 
   return (
     <button
-      ref={ref}
       type="button"
       onClick={onOpen}
       {...longPress}
       className={cn(
-        "flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]",
-        entry.isRead ? "bg-white" : "bg-primary/10"
+        "flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left transition-all duration-200 ease-out",
+        entry.isRead ? "bg-white" : "bg-primary/10",
+        active
+          ? "relative z-50 -translate-y-1 scale-[1.02] shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
+          : "translate-y-0 scale-100 shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]"
       )}
     >
       <span

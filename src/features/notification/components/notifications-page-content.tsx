@@ -6,9 +6,9 @@ import { Trash2 } from "lucide-react"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
-  LongPressActionOverlay,
-  type LongPressAction,
-} from "@/features/question/components/long-press-action-overlay"
+  ChatContextMenu,
+  type ChatContextMenuItem,
+} from "@/features/chat/components/chat-context-menu"
 import { NotificationItem } from "@/features/notification/components/notification-item"
 import { NotificationListAppBar } from "@/features/notification/components/notification-list-app-bar"
 import { useNotifications } from "@/features/notification/hooks/use-notification-queries"
@@ -25,6 +25,60 @@ import {
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
+// 컨텍스트 메뉴 대략 높이 + 하단 여유. 아래 공간이 부족하면 메뉴를 행 위로 띄운다.
+const CONTEXT_MENU_HEIGHT_ESTIMATE = 100
+const BOTTOM_SAFE_AREA = 96
+
+interface NotificationRowProps {
+  entry: NotificationEntry
+  menuOpen: boolean
+  menuItems: ChatContextMenuItem[]
+  onOpenMenu: () => void
+  onCloseMenu: () => void
+  onNavigate: () => void
+}
+
+/** 채팅 목록(ChatRow)과 동일한 롱프레스 동작 — 행을 부상시키고 아래에 컨텍스트 메뉴를 앵커한다. */
+function NotificationRow({
+  entry,
+  menuOpen,
+  menuItems,
+  onOpenMenu,
+  onCloseMenu,
+  onNavigate,
+}: NotificationRowProps) {
+  const rowRef = React.useRef<HTMLDivElement>(null)
+  const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
+
+  const handleOpenMenu = () => {
+    const rect = rowRef.current?.getBoundingClientRect()
+    if (rect) {
+      const spaceBelow = window.innerHeight - rect.bottom
+      setPlacement(spaceBelow < CONTEXT_MENU_HEIGHT_ESTIMATE + BOTTOM_SAFE_AREA ? "top" : "bottom")
+    }
+    onOpenMenu()
+  }
+
+  return (
+    <div ref={rowRef} className="relative">
+      <NotificationItem
+        entry={entry}
+        active={menuOpen}
+        onOpen={onNavigate}
+        onLongPress={handleOpenMenu}
+      />
+      {menuOpen && (
+        <ChatContextMenu
+          items={menuItems}
+          dimmed
+          onDismiss={onCloseMenu}
+          className={placement === "top" ? "bottom-full left-0 mb-3" : "top-full left-0 mt-2"}
+        />
+      )}
+    </div>
+  )
+}
+
 // 알림센터 — 목록 + 무한스크롤 + 롱프레스 삭제 + 전체읽음 + SSE 실시간 수신.
 // 항목 탭: 읽음 처리 후 refId/type 딥링크로 이동(대상이 없으면 읽음만).
 function NotificationsPageContent() {
@@ -40,11 +94,7 @@ function NotificationsPageContent() {
   // 이 화면에 있는 동안 실시간으로 새 알림을 받아 목록/미읽음을 최신화한다.
   useNotificationSse(Boolean(me))
 
-  const [active, setActive] = React.useState<{
-    id: number
-    rect: DOMRect
-    entry: NotificationEntry
-  } | null>(null)
+  const [openMenuId, setOpenMenuId] = React.useState<number | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = React.useState<number | null>(null)
 
   const entries = React.useMemo(
@@ -92,38 +142,30 @@ function NotificationsPageContent() {
             </p>
           ) : (
             entries.map((entry) => (
-              <NotificationItem
+              <NotificationRow
                 key={entry.notificationId}
                 entry={entry}
-                onOpen={() => handleOpen(entry)}
-                onLongPress={(rect) =>
-                  setActive({ id: entry.notificationId, rect, entry })
-                }
+                menuOpen={openMenuId === entry.notificationId}
+                menuItems={[
+                  {
+                    icon: <Trash2 className="size-6 text-red" />,
+                    label: messages.notification.deleteAction,
+                    tone: "destructive" as const,
+                    onClick: () => {
+                      setOpenMenuId(null)
+                      setPendingDeleteId(entry.notificationId)
+                    },
+                  },
+                ]}
+                onOpenMenu={() => setOpenMenuId(entry.notificationId)}
+                onCloseMenu={() => setOpenMenuId(null)}
+                onNavigate={() => handleOpen(entry)}
               />
             ))
           )}
           <div ref={sentinelRef} className="h-4" />
         </div>
       </main>
-
-      {active && (
-        <LongPressActionOverlay
-          anchorRect={active.rect}
-          onDismiss={() => setActive(null)}
-          actions={
-            [
-              {
-                icon: <Trash2 className="size-5 text-red" />,
-                label: messages.notification.deleteAction,
-                tone: "destructive",
-                onClick: () => setPendingDeleteId(active.id),
-              },
-            ] satisfies LongPressAction[]
-          }
-        >
-          <NotificationItem entry={active.entry} onOpen={() => {}} onLongPress={() => {}} />
-        </LongPressActionOverlay>
-      )}
 
       <ConfirmDialog
         open={pendingDeleteId != null}

@@ -301,7 +301,7 @@ test("fixed query pages validate IDs before mounting data content", () => {
     {
       path: "src/app/questions/detail/page.tsx",
       params: [{ query: "questionId", variable: "questionId" }],
-      content: "<QuestionDetailScreen",
+      content: "<AnswerViewScreen",
     },
   ]
 
@@ -748,15 +748,16 @@ test("chat room controls wait for canonical state and never act before room type
   )
 })
 
-test("답변 채택 확인창은 사용자 이벤트에서 작성자 이름을 보존한다", () => {
-  const detail = compact(read("src/features/question/components/question-detail-screen.tsx"))
+test("답변 채택 완료창은 성공 이벤트에서 작성자 이름을 보존한다", () => {
+  // 답변 채택은 사전 확인 없이 즉시 실행되도록 바뀌었다(질문 상세 화면 삭제 시점). 확인창 대신
+  // 성공 뒤 완료창이 뜨며, 그 완료창에 채택된 답변의 작성자 이름을 담아 보존해야 한다.
+  const screen = compact(read("src/features/question/components/answer-view-screen.tsx"))
 
   assert.ok(
-    detail.includes(
-      "constopenAcceptConfirm=(answer:QuestionAnswerView)=>{setLastAcceptedAuthorName(answer.authorName)setPendingAcceptId(answer.answerId)}"
+    screen.includes(
+      "onSuccess:()=>setAcceptedAuthor({name:answer.authorName,userId:answer.authorUserId})"
     )
   )
-  assert.doesNotMatch(detail, /React\.useEffect\(\(\)=>\{if\(pendingAcceptAnswer\?\.authorName\)/)
 })
 
 test("profile upload failure is visible and does not change the meeting failure contract", () => {

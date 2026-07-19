@@ -194,18 +194,16 @@ export interface Messages {
     closeLabel: string
     imageAlt: string
     flagAlt: string
-    detailTitle: string
-    resolvedBadge: string
-    answersTitle: (count: number) => string
     emptyAnswers: string
     loadError: string
-    aiBadge: string
-    acceptedBadge: string
-    acceptButton: string
-    acceptConfirmTitle: (name: string) => string
-    acceptConfirmDescription: string
-    acceptConfirmCancel: string
-    acceptConfirmConfirm: string
+    acceptAction: string
+    acceptedLabel: string
+    openChatWithAuthor: (nickname: string) => string
+    acceptedDialogTitle: string
+    acceptedDialogDescription: (nickname: string) => string
+    acceptedDialogClose: string
+    acceptedDialogStartChat: string
+    reportConfirmCancel: string
     createTitle: string
     editTitle: string
     titlePlaceholder: string
@@ -230,8 +228,6 @@ export interface Messages {
     deleteConfirmDescription: string
     deleteConfirmCancel: string
     deleteConfirmConfirm: string
-    startChatLabel: string
-    personalChatLabel: string
     reportAction: string
     reportConfirmTitle: string
     reportConfirmDescription: string
@@ -687,18 +683,17 @@ export const ko: Messages = {
     closeLabel: "닫기",
     imageAlt: "질문 이미지",
     flagAlt: "국기",
-    detailTitle: "질문",
-    resolvedBadge: "해결됨",
-    answersTitle: (count) => `답변 ${count}`,
     emptyAnswers: "아직 답변이 없어요.",
     loadError: "질문을 불러오지 못했어요.",
-    aiBadge: "AI",
-    acceptedBadge: "채택됨",
-    acceptButton: "채택",
-    acceptConfirmTitle: (name) => `${name}님의 답변을 채택할까요?`,
-    acceptConfirmDescription: "채택 후에는 변경할 수 없습니다",
-    acceptConfirmCancel: "취소",
-    acceptConfirmConfirm: "확정",
+    acceptAction: "답변 채택",
+    acceptedLabel: "채택 완료",
+    openChatWithAuthor: (nickname: string) => `${nickname}님과 개인 채팅 열기`,
+    acceptedDialogTitle: "답변을 채택했습니다",
+    acceptedDialogDescription: (nickname: string) =>
+      `${nickname}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,
+    acceptedDialogClose: "닫기",
+    acceptedDialogStartChat: "개인 채팅",
+    reportConfirmCancel: "취소",
     createTitle: "질문하기",
     editTitle: "질문 수정",
     titlePlaceholder: "질문 제목",
@@ -723,8 +718,6 @@ export const ko: Messages = {
     deleteConfirmDescription: "삭제하면 답변과 함께 사라지며 되돌릴 수 없어요.",
     deleteConfirmCancel: "취소",
     deleteConfirmConfirm: "삭제",
-    startChatLabel: "채팅 시작",
-    personalChatLabel: "개인 채팅",
     reportAction: "신고",
     reportConfirmTitle: "이 답변을 신고할까요?",
     reportConfirmDescription: "신고하면 검토 후 조치될 수 있어요.",
