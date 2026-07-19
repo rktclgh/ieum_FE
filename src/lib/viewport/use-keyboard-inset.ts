@@ -20,9 +20,20 @@ export function useKeyboardInset(): void {
     // visualViewport 미지원 환경에서는 fallback 0px 로 남겨 두고 아무것도 하지 않는다.
     if (!viewport) return
 
-    const sync = () => {
+    let rafId: number | null = null
+
+    const applyInset = () => {
+      rafId = null
       const inset = Math.max(0, window.innerHeight - (viewport.height + viewport.offsetTop))
       root.style.setProperty(CSS_VARIABLE, `${Math.round(inset)}px`)
+    }
+
+    // iOS가 키보드 애니메이션 중 resize/scroll을 고빈도로 쏘기 때문에, 프레임당 한 번만
+    // 쓰도록 rAF로 묶는다. 새 이벤트가 오면 이전 예약을 취소하고 다시 예약하므로,
+    // 값 자체는 항상 마지막 이벤트 기준으로 계산돼 유실되지 않는다.
+    const sync = () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(applyInset)
     }
 
     sync()
@@ -34,6 +45,7 @@ export function useKeyboardInset(): void {
     return () => {
       viewport.removeEventListener("resize", sync)
       viewport.removeEventListener("scroll", sync)
+      if (rafId !== null) cancelAnimationFrame(rafId)
       root.style.removeProperty(CSS_VARIABLE)
     }
   }, [])

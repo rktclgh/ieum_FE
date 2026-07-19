@@ -212,7 +212,7 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-2">
+      <div className="fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-2">
         <Button
           type="submit"
           variant="primary"
