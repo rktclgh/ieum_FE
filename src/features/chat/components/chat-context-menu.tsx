@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { LONG_PRESS_TRANSITION } from "@/lib/long-press-styles"
 
 interface ChatContextMenuItem {
   icon: React.ReactNode
@@ -25,6 +26,14 @@ interface ChatContextMenuProps extends React.ComponentProps<"div"> {
  * 메뉴를 쓰는 모든 화면이 이 컴포넌트 하나를 공유한다.
  */
 function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, ...props }: ChatContextMenuProps) {
+  // 조건부 마운트라 첫 페인트에 이미 최종 상태면 트랜지션이 돌지 않는다.
+  // 초기 상태로 한 프레임 그린 뒤 enter 상태로 넘겨야 눌린 아이템의 리프트와 같은 리듬으로 떠오른다.
+  const [entered, setEntered] = React.useState(false)
+  React.useEffect(() => {
+    const frame = requestAnimationFrame(() => setEntered(true))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
   React.useEffect(() => {
     if (!onDismiss) return
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -38,7 +47,11 @@ function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, .
     <>
       {dimmed && (
         <div
-          className="fixed inset-0 z-40 bg-black/10"
+          className={cn(
+            "fixed inset-0 z-40 bg-black/10",
+            LONG_PRESS_TRANSITION,
+            entered ? "opacity-100" : "opacity-0"
+          )}
           onClick={onDismiss}
           role="presentation"
         />
@@ -48,6 +61,8 @@ function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, .
         role="menu"
         className={cn(
           "absolute z-50 flex flex-col gap-1 rounded-3xl bg-white/80 px-6 py-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)] backdrop-blur-sm",
+          LONG_PRESS_TRANSITION,
+          entered ? "scale-100 opacity-100" : "scale-95 opacity-0",
           className
         )}
         style={style}

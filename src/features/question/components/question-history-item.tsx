@@ -3,7 +3,12 @@
 import * as React from "react"
 
 import { NoImage } from "@/components/ui/no-image"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useLongPress } from "@/lib/hooks/use-long-press"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_SURFACE_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
 import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
 import {
   deriveContentPreview,
@@ -63,10 +68,9 @@ function QuestionHistoryItem({ item, onOpen, onLongPress, active }: QuestionHist
       onClick={onOpen}
       {...longPress}
       className={cn(
-        "flex w-full items-center gap-3 py-3 text-left transition-all duration-200 ease-out",
-        active
-          ? "relative z-50 -translate-y-1 scale-[1.02] gap-2 rounded-2xl bg-white px-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
-          : "translate-y-0 scale-100"
+        "flex w-full items-center gap-3 py-3 text-left",
+        LONG_PRESS_TRANSITION,
+        active ? cn(LONG_PRESS_SURFACE_ACTIVE, "gap-2 px-3") : LONG_PRESS_INACTIVE
       )}
     >
       <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-gray-100">

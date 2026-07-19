@@ -7,14 +7,19 @@ import { useRouter } from "next/navigation"
 import { AppBar } from "@/components/ui/app-bar"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { NoticeListItem } from "@/features/chat/components/notice-list-item"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { MOCK_NOTICES } from "@/features/chat/constants/mock-data"
+import { cn } from "@/lib/utils"
 import { Globe } from "lucide-react"
 
 type Notice = (typeof MOCK_NOTICES)[number]
+
+// 번역 항목이 붙을 수 있어 최대 2줄 기준으로 잡는다.
+const NOTICE_MENU_HEIGHT_ESTIMATE = 140
+const NOTICE_BOTTOM_SAFE_AREA = 96
 
 interface NoticeRowProps {
   notice: Notice
@@ -27,7 +32,20 @@ interface NoticeRowProps {
 
 function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, onCloseMenu }: NoticeRowProps) {
   const { messages } = useTranslation()
-  const longPress = useLongPress({ onLongPress: onOpenMenu })
+  const rowRef = React.useRef<HTMLDivElement>(null)
+  const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
+
+  // 목록 하단 행에서 메뉴가 화면 밖으로 잘리지 않도록 여유 공간을 보고 위/아래를 고른다.
+  const handleOpenMenu = () => {
+    const rect = rowRef.current?.getBoundingClientRect()
+    if (rect) {
+      const spaceBelow = window.innerHeight - rect.bottom
+      setPlacement(spaceBelow < NOTICE_MENU_HEIGHT_ESTIMATE + NOTICE_BOTTOM_SAFE_AREA ? "top" : "bottom")
+    }
+    onOpenMenu()
+  }
+
+  const longPress = useLongPress({ onLongPress: handleOpenMenu })
   const translate = useTranslateToggle({ text: notice.title, isAuthenticated })
 
   const translateMenuItem: ChatContextMenuItem = {
@@ -46,13 +64,14 @@ function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, o
   const fullMenuItems = translate.canTranslate ? [translateMenuItem, ...menuItems] : menuItems
 
   return (
-    <div className="relative" {...longPress}>
+    <div ref={rowRef} className="relative" {...longPress}>
       <NoticeListItem
         title={translate.displayText}
         authorName={notice.authorName}
         authorAvatarSrc={notice.authorAvatarSrc}
         time={notice.time}
         pinned={notice.pinned}
+        active={menuOpen}
       />
       {translate.isError ? (
         <p className="ml-[52px] -mt-1 pb-2 text-body-regular-12 text-red">
@@ -65,7 +84,10 @@ function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, o
           dimmed
           onDismiss={onCloseMenu}
           // 아바타(40px) + gap(12px)만큼 밀어 제목 좌측 라인에 맞춘다
-          className="top-full left-[52px] mt-2"
+          className={cn(
+            "left-[52px]",
+            placement === "top" ? "bottom-full mb-3" : "top-full mt-2"
+          )}
         />
       )}
     </div>

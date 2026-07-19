@@ -10,7 +10,7 @@ import { FriendListAppBar } from "@/features/friends/components/friend-list-app-
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { FriendRequestItem } from "@/features/friends/components/friend-request-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value"
 import {

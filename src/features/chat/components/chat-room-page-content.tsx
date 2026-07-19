@@ -33,7 +33,12 @@ import { ChatRoomInfoSection } from "@/features/chat/components/chat-room-info-s
 import { ChatRoomMemberItem } from "@/features/chat/components/chat-room-member-item"
 import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-danger-actions"
 import { SectionTitle } from "@/features/chat/components/section-title"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useLongPress } from "@/lib/hooks/use-long-press"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_LIFT_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
 import {
   chatKeys,
   useChatMessages,
@@ -185,7 +190,11 @@ function MessageRow({
         replyImageAlt={messages.chat.replyImageLabel}
         position={position}
         variant={message.variant}
-        className={cn(menuOpen && "relative z-50")}
+        className={cn(
+          LONG_PRESS_TRANSITION,
+          // 말풍선은 배경색·라운드가 고유하므로 기준의 흰 카드 표면은 빼고 리프트만 맞춘다.
+          menuOpen ? LONG_PRESS_LIFT_ACTIVE : LONG_PRESS_INACTIVE
+        )}
       />
       {translate.isError ? (
         <p className={cn("mt-1 text-body-regular-12 text-red", isMe ? "text-right" : "text-left")}>

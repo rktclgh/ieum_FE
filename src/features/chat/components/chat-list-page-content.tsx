@@ -10,7 +10,7 @@ import { TabBar } from "@/features/navigation/components/tab-bar"
 import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useChatRoomsView } from "@/features/chat/hooks/use-chat-queries"
 import {
   useLeaveChatRoom,

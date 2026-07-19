@@ -7,7 +7,12 @@ import { CountryFlag } from "@/features/chat/components/country-flag"
 import { AnswerAcceptButton } from "@/features/question/components/answer-accept-button"
 import type { AcceptButtonState } from "@/features/question/lib/answer-acceptance"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useLongPress } from "@/lib/hooks/use-long-press"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_SURFACE_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
@@ -59,11 +64,10 @@ function AnswerCard({
           }
         : {})}
       className={cn(
-        "flex w-full flex-col gap-3 rounded-xl px-3 py-4 transition-all duration-200 ease-out",
+        "flex w-full flex-col gap-3 rounded-xl px-3 py-4",
+        LONG_PRESS_TRANSITION,
         onOpenChat && "cursor-pointer",
-        active
-          ? "relative z-50 -translate-y-1 scale-[1.02] bg-white shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
-          : "translate-y-0 scale-100 bg-gray-50"
+        active ? LONG_PRESS_SURFACE_ACTIVE : cn(LONG_PRESS_INACTIVE, "bg-gray-50")
       )}
     >
       <div className="flex w-full items-center justify-between gap-3">
