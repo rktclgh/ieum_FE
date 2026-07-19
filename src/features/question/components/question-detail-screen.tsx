@@ -301,7 +301,7 @@ function QuestionDetailScreen({ questionId }: QuestionDetailScreenProps) {
         )}
 
         {question && !isAuthor && !question.isResolved ? (
-          <div className="fixed inset-x-0 bottom-0 app-column bg-white px-4 pt-2 pb-6">
+          <div className="fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] app-column bg-white px-4 pt-2 pb-6">
             <div className="flex w-full items-end justify-between gap-2 rounded-3xl border border-gray-50 bg-gray-50/95 py-2 pr-2 pl-4">
               <MessageTextarea
                 aria-label={messages.question.answerPlaceholder}
