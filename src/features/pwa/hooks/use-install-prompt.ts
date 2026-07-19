@@ -28,12 +28,24 @@ function useInstallPrompt() {
     void registerServiceWorker().catch(() => {})
   }, [])
 
-  const method: InstallMethod = resolveInstallMethod({
-    isStandalone: isStandalone(),
-    isIOSSafari: isIOSSafari(),
-    hasDeferredPrompt: deferredPrompt !== null,
-    isDismissed: dismissedAtMount,
-  })
+  // 마운트 전에는 판정을 보류해 서버 프리렌더와 클라 첫 렌더를 "unavailable"로 일치시킨다.
+  // 지금도 닫힌 Portal이 DOM을 만들지 않아 실제 mismatch는 없지만, 그 성질은 Base UI 내부
+  // 구현(Portal이 null 반환)에 기대고 있다. 클라 전용 API(matchMedia·UA)를 렌더 중 호출하지
+  // 않도록 묶어 두면 그 의존이 사라진다. home-map-screen과 같은 관용구.
+  const isMounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
+
+  const method: InstallMethod = isMounted
+    ? resolveInstallMethod({
+        isStandalone: isStandalone(),
+        isIOSSafari: isIOSSafari(),
+        hasDeferredPrompt: deferredPrompt !== null,
+        isDismissed: dismissedAtMount,
+      })
+    : "unavailable"
 
   // 노출 가능해지는 순간 열고 즉시 플래그 기록 → 무엇을 누르든 다시 안 뜸.
   React.useEffect(() => {
