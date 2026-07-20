@@ -107,18 +107,22 @@ function ScheduleRow({
         }}
         onMoreClick={canTranslate || menuItems.length > 0 ? onOpenMenu : undefined}
         moreAriaLabel={messages.common.more}
+        menuSlot={
+          menuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={onCloseMenu} role="presentation" />
+              <ChatContextMenu
+                items={fullMenuItems}
+                onDismiss={onCloseMenu}
+                className="top-full right-0 mt-2"
+              />
+            </>
+          )
+        }
       />
       {isError ? (
         <p className="mt-1 px-3 text-body-regular-12 text-red">{messages.translate.translateFailedLabel}</p>
       ) : null}
-      {menuOpen && (
-        <ChatContextMenu
-          items={fullMenuItems}
-          dimmed
-          onDismiss={onCloseMenu}
-          className="top-full right-0 mt-2"
-        />
-      )}
     </div>
   )
 }
