@@ -69,7 +69,7 @@ function NotificationsForm({ settings: serverSettings }: { settings: UserSetting
       : null
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col">
+    <main className="app-column flex min-h-dvh flex-col">
       <AppBar
         title={messages.my.notifications.title}
         trailingIcon={null}
@@ -119,7 +119,7 @@ function NotificationsForm({ settings: serverSettings }: { settings: UserSetting
       </div>
 
       {visibleError && (
-        <div className="fixed inset-x-0 bottom-[calc(1.5rem+var(--safe-area-bottom))] z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(1.5rem+var(--safe-area-bottom))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {visibleError}
           </div>

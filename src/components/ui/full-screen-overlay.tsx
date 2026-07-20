@@ -106,7 +106,11 @@ function FullScreenOverlay({ open, className, children, ...props }: FullScreenOv
       inert={isLeaving}
       aria-hidden={isLeaving || undefined}
       className={cn(
-        "fixed inset-0 transition-transform duration-base ease-base motion-reduce:transition-none",
+        // inset-0 대신 bottom을 --keyboard-inset 으로 따로 지정한다(issue #269).
+        // iOS Safari는 키보드가 떠도 layout viewport를 줄이지 않아, bottom:0이면 오버레이 하단이
+        // 키보드 뒤로 숨는다. 오버레이 박스 자체를 키보드 높이만큼 줄여 안의 입력·CTA가 키보드 위에 남게 한다.
+        // inset-0을 남긴 채 bottom-*로 덮어쓰지 않는 이유: className 순서는 CSS 우선순위를 정하지 않는다.
+        "fixed inset-x-0 top-0 bottom-[var(--keyboard-inset,0px)] transition-transform duration-base ease-base motion-reduce:transition-none",
         // "open" 단계에서는 transform 유틸리티를 아예 붙이지 않는다.
         // translate-y-0라도 transform이 남으면 자식의 position:fixed 기준이 이 요소로 바뀐다.
         (phase === "enter-start" || isLeaving) && "translate-y-full",

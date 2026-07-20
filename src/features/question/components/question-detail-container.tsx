@@ -87,7 +87,7 @@ function QuestionDetailContainer({ questionId, onClose }: QuestionDetailContaine
       />
 
       {actionError && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+var(--safe-area-bottom))] z-[60] mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-[60] app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {actionError}
           </div>

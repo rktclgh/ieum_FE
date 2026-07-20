@@ -679,6 +679,19 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastMessageId])
 
+  // 키보드가 열리면 app-viewport-height가 셸을 줄이고 이 스크롤 영역도 함께 압축된다.
+  // 하단을 보고 있었다면 그대로 두면 최신 메시지가 화면 밖으로 밀리므로, 크기 변화에 맞춰 다시 내린다.
+  // (scrollToBottom은 프로그램적 스크롤 무시 창을 열어 스크롤바·날짜 뱃지가 깜빡이지 않게 한다 — #277)
+  React.useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    const observer = new ResizeObserver(() => {
+      if (isAtBottomRef.current) scrollToBottom()
+    })
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [scrollToBottom])
+
   // 과거 페이지 prepend 후 스크롤 위치 보정: 늘어난 높이만큼 scrollTop을 더해 보던 위치를 유지한다.
   React.useLayoutEffect(() => {
     const container = scrollContainerRef.current
@@ -764,7 +777,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   return (
     <>
-      <main className="mx-auto flex h-dvh w-full max-w-sm flex-col">
+      <main className="app-column app-viewport-height flex flex-col">
         <AppBar
           title={roomTitle}
           onLeadingClick={() => router.back()}

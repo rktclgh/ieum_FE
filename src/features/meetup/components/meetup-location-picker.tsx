@@ -22,7 +22,7 @@ interface MeetupLocationPickerProps extends MeetupLocationPickerContentProps {
  */
 function MeetupLocationPicker({ open, ...props }: MeetupLocationPickerProps) {
   return (
-    <FullScreenOverlay open={open} className="z-50 mx-auto w-full max-w-sm bg-white">
+    <FullScreenOverlay open={open} className="z-50 app-column bg-white">
       <MeetupLocationPickerContent {...props} />
     </FullScreenOverlay>
   )

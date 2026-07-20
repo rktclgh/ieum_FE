@@ -296,6 +296,24 @@
 
 @theme {
   --animate-map-skeleton-shimmer: map-skeleton-shimmer 1.8s ease-in-out infinite;
+  --app-column: 420px;
+}
+
+/* 앱 셸 폭 정책 단일 정의.
+   640px 미만(폰)에서는 화면을 꽉 채우고, 그 이상에서만 중앙 컬럼(--app-column)으로 제한한다.
+   화면별로 max-width 값을 직접 복붙하지 말고 항상 이 유틸리티를 통해서만 셸 폭을 제한할 것. */
+@utility app-column {
+  width: 100%;
+  margin-inline: auto;
+  @media (width >= 40rem) {
+    max-width: var(--app-column);
+  }
+}
+
+/* 키보드가 열리면 셸 높이를 그만큼 줄인다. flex-1 스크롤 영역이 압축되면서
+   하단 입력창이 키보드 바로 위에 붙고, Safari가 페이지를 밀어 올릴 이유가 사라진다. */
+@utility app-viewport-height {
+  height: calc(100dvh - var(--keyboard-inset, 0px));
 }
 
 /*

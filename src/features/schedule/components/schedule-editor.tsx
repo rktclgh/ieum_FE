@@ -36,7 +36,7 @@ function ScheduleEditor({ open, ...props }: ScheduleEditorProps) {
   return (
     <FullScreenOverlay
       open={open}
-      className="z-50 mx-auto flex w-full max-w-sm flex-col bg-white"
+      className="z-50 app-column flex flex-col bg-white"
     >
       <ScheduleEditorContent {...props} />
     </FullScreenOverlay>

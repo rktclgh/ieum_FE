@@ -82,7 +82,7 @@ function NotificationsPageContent() {
 
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-white">
+      <main className="app-column flex min-h-dvh flex-col bg-white">
         <NotificationListAppBar
           deleteMode={showDeleteMode}
           onBack={() => (showDeleteMode ? setDeleteMode(false) : router.back())}

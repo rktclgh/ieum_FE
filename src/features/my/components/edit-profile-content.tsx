@@ -168,7 +168,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto flex min-h-dvh w-full max-w-sm flex-col">
+    <form onSubmit={handleSubmit} className="app-column flex min-h-dvh flex-col">
       <AppBar
         title={messages.my.edit.title}
         trailingIcon={null}
@@ -280,7 +280,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
         {errorCode && <Explanation variant="error" text={errorCode} />}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+var(--safe-area-bottom))]">
+      <div className="fixed inset-x-0 bottom-0 z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))]">
         <Button
           type="submit"
           variant="primary"

@@ -246,7 +246,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
 
   if (meetingAccessError) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center px-4">
+      <main className="app-column flex min-h-dvh items-center justify-center px-4">
         <p role="alert" className="text-center text-body-medium-16 text-gray-900">
           {getMeetupErrorMessage(meetingAccessError, messages)}
         </p>
@@ -280,7 +280,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
   }
 
   return (
-    <div className="relative mx-auto flex h-dvh w-full max-w-sm flex-col overflow-hidden bg-white">
+    <div className="relative app-column flex h-dvh flex-col overflow-hidden bg-white">
       <AppBar
         trailingVariant="close"
         onLeadingClick={() => router.back()}

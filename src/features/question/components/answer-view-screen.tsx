@@ -132,7 +132,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
 
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-white">
+      <main className="app-column flex min-h-dvh flex-col bg-white">
         <AppBar
           center={
             <span className="min-w-0 flex-1 truncate text-center text-title-semibold-18 text-gray-900">
@@ -201,7 +201,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
       </main>
 
       {actionError && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+var(--safe-area-bottom))] z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {actionError}
           </div>

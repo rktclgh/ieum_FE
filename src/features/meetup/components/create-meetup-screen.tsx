@@ -41,7 +41,7 @@ function CreateMeetupScreen({ open, ...props }: CreateMeetupScreenProps) {
   return (
     <FullScreenOverlay
       open={open}
-      className="z-50 mx-auto flex w-full max-w-sm flex-col bg-white"
+      className="z-50 app-column flex flex-col bg-white"
     >
       <CreateMeetupScreenContent {...props} />
     </FullScreenOverlay>

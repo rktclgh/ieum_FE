@@ -49,7 +49,7 @@ function ReportPageContent({ target }: ReportPageContentProps) {
   }
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-sm flex-col bg-white">
+    <main className="app-column app-viewport-height flex flex-col bg-white">
       <AppBar
         title={messages.report.title}
         trailingVariant="close"
