@@ -116,8 +116,11 @@ function VectorTileLayer({ onReady }: { onReady?: () => void }) {
 
     const notifyReady = () => onReadyRef.current?.()
 
-    // 스타일이 이미 로드된 뒤에 이 effect가 붙으면 load 이벤트를 놓치므로 즉시 알린다.
-    if (glMap.loaded()) {
+    // 스타일이 이미 로드된 뒤에 이 effect가 붙으면 load 이벤트(일회성)를 놓치므로 즉시 알린다.
+    // 판정에 loaded()를 쓰면 안 된다 — loaded()는 "타일까지 전부" 로드됐을 때만 true라,
+    // load 발화 후 타일이 하나라도 날아오는 중이면 false다. 그러면 이미 끝난 이벤트를 기다리다
+    // onReady가 영영 오지 않아 스켈레톤이 상한(8초)까지 남는다. 스타일 여부만 보는 게 맞다.
+    if (glMap.isStyleLoaded()) {
       notifyReady()
       return
     }

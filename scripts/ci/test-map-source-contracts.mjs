@@ -52,6 +52,10 @@ test("#339 홈 지도는 GPS·청크·타일을 직렬로 기다리지 않는다
   // (1) 탭 재진입 시 훅이 "loading"부터 다시 시작하지 않도록 최근 좌표로 seed하고, 새 좌표는 기억한다.
   assert.match(hook, /readUsablePosition\(Date\.now\(\)\)/)
   assert.match(hook, /rememberPosition\(next, result\.timestamp\)/)
+  // 렌더 중 seed가 hydration에 안전한 근거는 "캐시는 측위 콜백에서만 채운다"는 불변식뿐이다.
+  // 캐시 모듈이 그 불변식을 명시하고 있는지 함께 고정한다.
+  const cache = read("src/features/map/lib/geolocation-cache.ts")
+  assert.match(cache, /불변식: 이 캐시는 측위 성공 콜백에서만 채운다/)
 
   // (2) maximumAge가 1초면 캐시된 측위가 거부되어 매번 GPS 재측위를 기다리게 된다.
   const maximumAge = hook.match(/maximumAge:\s*([\d_]+)/)
@@ -70,6 +74,10 @@ test("#339 홈 지도는 GPS·청크·타일을 직렬로 기다리지 않는다
   assert.match(home, /if \(!isMapReady\) return\s*const timer = setTimeout\(\(\) => setShowSkeleton\(false\), SKELETON_FADE_MS\)/)
   assert.match(canvas, /<VectorTileLayer onReady=\{onReady\} \/>/)
   assert.match(tileLayer, /glMap\.on\("load", notifyReady\)/)
+  // loaded()는 타일까지 전부 받아야 true라, load 발화 후 타일 로딩 중이면 false → 이미 끝난
+  // 이벤트를 기다리며 onReady가 영영 오지 않는다. 스타일 여부만 보는 isStyleLoaded()여야 한다.
+  assert.match(tileLayer, /if \(glMap\.isStyleLoaded\(\)\)/)
+  assert.doesNotMatch(tileLayer, /if \(glMap\.loaded\(\)\)/)
   // 스타일 로드가 실패해 onReady가 오지 않아도 스켈레톤이 갇히지 않아야 한다.
   assert.match(home, /setTimeout\(\(\) => setMapReady\(true\), MAP_READY_MAX_WAIT_MS\)/)
 })

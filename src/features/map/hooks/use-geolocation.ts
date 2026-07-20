@@ -29,10 +29,14 @@ const GEOLOCATION_OPTIONS: PositionOptions = {
 // TIMEOUT·POSITION_UNAVAILABLE은 watcher의 후속 success를 기다리고, 권한 거부만 최초 fallback으로 확정한다.
 // position은 갱신마다 새 객체가 되므로 지도 뷰 재중심에 직접 쓰면 안 된다 — MapCanvas recenterKey로만 이동한다.
 function useGeolocation({ enabled = true }: UseGeolocationOptions = {}) {
-  // 탭 이동으로 훅이 재마운트되면 "loading"부터 다시 시작해 지도가 GPS를 기다리게 된다.
+  // 탭 이동으로 훅이 재마운트되면 "loading"부터 다시 시작해 지도가 GPS 재측위를 기다리게 된다.
   // 최근 좌표가 남아 있으면 그것으로 즉시 출발한다. watcher가 곧 실제 좌표로 덮어쓴다.
-  // 서버 렌더에서는 캐시가 항상 비어 있어 "loading"이고, 클라 첫 렌더의 출력은 isMounted
-  // 게이트에 가려 서버와 동일하므로 hydration은 어긋나지 않는다.
+  //
+  // hydration 안전성: 캐시는 watcher 성공 콜백에서만 채워지고 그 콜백은 effect에서 등록되므로,
+  // hydration 렌더 시점에는 반드시 비어 있다(= 서버와 같은 "loading"). 클라 내비게이션은
+  // hydration이 아니라 일반 렌더라 불일치가 생길 수 없다. 이 불변식은 geolocation-cache.ts에
+  // 명시해 두었다 — 캐시를 모듈 로드 시점에 채우도록 바꾸면 그때 이 seed도 함께 손봐야 한다.
+  // (effect에서 seed하는 대안은 react-hooks/set-state-in-effect 규칙에 걸린다.)
   const [seededPosition] = React.useState<Coordinates | null>(() => readUsablePosition(Date.now()))
   const [position, setPosition] = React.useState<Coordinates | null>(seededPosition)
   const [status, setStatus] = React.useState<GeolocationStatus>(
