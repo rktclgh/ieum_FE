@@ -162,7 +162,6 @@ export interface Messages {
     appBarTitle: string
     imageUploadFailed: string
     titlePlaceholder: string
-    titleCounter: (current: number, max: number) => string
     titleTooLongExplanation: (max: number) => string
     datePlaceholder: string
     dateUndecidedLabel: string
@@ -689,7 +688,6 @@ export const ko: Messages = {
     appBarTitle: "새 모임 작성",
     imageUploadFailed: "이미지 업로드에 실패했어요. 다시 시도해 주세요.",
     titlePlaceholder: "모임 제목 (15자 이하)",
-    titleCounter: (current, max) => `(${current}/${max})`,
     titleTooLongExplanation: (max) => `모임 제목을 ${max}글자 이내로 적어주세요.`,
     datePlaceholder: "날짜 선택",
     dateUndecidedLabel: "날짜 미정",
@@ -749,7 +747,7 @@ export const ko: Messages = {
     reportConfirmCancel: "취소",
     createTitle: "질문하기",
     editTitle: "질문 수정",
-    titlePlaceholder: "질문 제목",
+    titlePlaceholder: "질문 제목 (15자 이하)",
     contentPlaceholder: "질문 내용을 입력해주세요.",
     locationPlaceholder: "장소 선택",
     submitButton: "질문 올리기",

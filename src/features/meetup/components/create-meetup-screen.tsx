@@ -72,7 +72,6 @@ function CreateMeetupScreenContent({
   const [datePickerOpen, setDatePickerOpen] = React.useState(false)
   const [timePickerOpen, setTimePickerOpen] = React.useState(false)
   const [locationPickerOpen, setLocationPickerOpen] = React.useState(false)
-  const [titleFocused, setTitleFocused] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
   const fileInputRef = React.useRef<HTMLInputElement>(null)
@@ -161,20 +160,10 @@ function CreateMeetupScreenContent({
         {/* 제목 — 15자(공백 포함)까지만 입력 가능, 포커스 시 카운터 표시 */}
         <Input
           value={form.title}
-          // maxLength만으로는 한글(IME) 조합 중 16번째 글자가 새어 들어가므로 상태에서 직접 자름
-          onChange={(event) => form.setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
-          onFocus={() => setTitleFocused(true)}
-          onBlur={() => setTitleFocused(false)}
+          onValueChange={form.setTitle}
           maxLength={TITLE_MAX_LENGTH}
+          showCounter
           placeholder={t.titlePlaceholder}
-          // 포커스 중에만 카운터, 그 밖에는 Input 기본 지우기 버튼을 그대로 쓴다
-          endAdornment={
-            titleFocused ? (
-              <span className="shrink-0 text-body-regular-14 text-gray-400">
-                {t.titleCounter(form.title.length, TITLE_MAX_LENGTH)}
-              </span>
-            ) : null
-          }
           className="shrink-0"
         />
 

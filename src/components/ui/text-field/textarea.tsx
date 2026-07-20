@@ -13,6 +13,8 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
   bottomSlot?: React.ReactNode
   /** 래퍼가 아닌 textarea 자체에 붙일 클래스 (높이는 래퍼 className으로 준다) */
   textareaClassName?: string
+  /** 값만 받는 변경 콜백. maxLength가 있으면 그 길이로 잘라서 넘긴다 — Input.onValueChange와 동일. */
+  onValueChange?: (value: string) => void
 }
 
 /**
@@ -21,7 +23,16 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
  *
  * 자동으로 높이가 늘어나는 채팅 컴포저용 입력은 MessageTextarea를 쓴다.
  */
-function Textarea({ className, textareaClassName, error, bottomSlot, ...props }: TextareaProps) {
+function Textarea({
+  className,
+  textareaClassName,
+  error,
+  bottomSlot,
+  maxLength,
+  onChange,
+  onValueChange,
+  ...props
+}: TextareaProps) {
   return (
     <div
       data-slot="textarea-wrapper"
@@ -38,6 +49,12 @@ function Textarea({ className, textareaClassName, error, bottomSlot, ...props }:
           bottomSlot ? "pb-24" : "pb-3",
           textareaClassName
         )}
+        maxLength={maxLength}
+        onChange={(event) => {
+          const next = event.target.value
+          onChange?.(event)
+          onValueChange?.(maxLength != null ? next.slice(0, maxLength) : next)
+        }}
         {...props}
       />
       {bottomSlot ? <div className="absolute bottom-4 left-4">{bottomSlot}</div> : null}
