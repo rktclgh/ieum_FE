@@ -23,17 +23,19 @@
 export const APP_BAR_SAFE_TOP = "pt-[calc(1rem+var(--safe-area-top))]"
 
 /**
- * 화면 하단에 떠 있는 요소의 바닥 여백 — 뷰포트 바닥에서 **무조건 28px**.
+ * 화면 하단에 떠 있는 요소의 바닥 여백 — **홈 인디케이터 위로 28px**.
  *
  * 탭바와 바텀시트가 같은 기준선에서 뜨도록 한 곳에서 관리한다. 둘은 z축으로 겹치므로
  * (시트가 탭바 위를 덮는다) 값이 어긋나면 시트 아래로 탭바 모서리가 삐져나온다.
- * 이 값을 바꾸면 아래 `FAB_BOTTOM_WITH_TABBAR`의 기준선도 같이 움직인다.
  *
- * safe-area를 더하지 않는 것은 의도된 디자인 결정이다(Figma가 프레임 바닥 기준 28px).
- * 저장소 기본 규칙은 하단 고정 요소에 `--safe-area-bottom`을 더하는 것이지만,
- * 이 두 요소만 예외다 — 홈 인디케이터가 있는 기기에서는 그 위에 겹쳐 놓인다.
+ * issue #419에서 `pb-7`(28px 고정)에 `--safe-area-bottom`을 더했다. 이전에는 Figma가
+ * 프레임 바닥 기준 28px이라는 이유로 일부러 빼고 있었는데, 실측 결과 아이폰의
+ * `--safe-area-bottom`이 34px이라 **탭바가 홈 인디케이터를 덮고 있었다.**
+ *
+ * 이 값은 `globals.css`의 `--tab-bar-height` 내역(96px = 8 + 60 + 28)과 짝이다.
+ * 한쪽만 바꾸면 탭바 높이와 페이지 클리어런스가 어긋난다.
  */
-export const SCREEN_BOTTOM_GAP = "pb-7"
+export const SCREEN_BOTTOM_GAP = "pb-[calc(1.75rem+var(--safe-area-bottom))]"
 
 /**
  * 우측 하단 고정 원형 버튼(FAB)의 하단 위치 규칙.
@@ -42,17 +44,13 @@ export const SCREEN_BOTTOM_GAP = "pb-7"
  * - 하단 탭바가 있는 화면(홈·모임·질문·마이): 탭바(가시 pill) 상단 기준 12px 위.
  * - 탭바가 없는 화면(지도 오버레이·장소 선택 등): 화면 바닥 기준 12px 위.
  *
- * 탭바(`features/navigation/components/tab-bar.tsx`) 가시 높이 계산:
- *   링크 h-[52px] + pill p-1(4px×2) = 60px, 래퍼 하단 여백(`SCREEN_BOTTOM_GAP` 28px) 만큼 띄움.
- *   → 가시 pill 상단은 뷰포트 바닥에서 88px.
- *   → 탭바 기준 FAB 하단 = 88 + 12 = 100px.
- *
- * 탭바가 safe-area를 더하지 않으므로(SCREEN_BOTTOM_GAP 참고) 여기서도 더하지 않는다.
- * 둘 중 한쪽만 safe-area를 쓰면 홈 인디케이터가 있는 기기에서 FAB가 탭바에 겹친다.
+ * issue #419 이전에는 pill 상단 88px을 주석 안에서 손으로 계산해 `bottom-[6.25rem]`(100px)
+ * 리터럴로 박아뒀다. 탭바 높이가 바뀌면 이 숫자를 손으로 따라 고쳐야 했고, 실제로
+ * 어긋나 있었다. 이제 `--tab-bar-pill-top`(globals.css)에서 파생시킨다.
  */
 
-/** 탭바가 있는 화면: 탭바 위 12px (뷰포트 바닥 기준 100px). */
-export const FAB_BOTTOM_WITH_TABBAR = "bottom-[6.25rem]"
+/** 탭바가 있는 화면: pill 상단에서 12px 위. */
+export const FAB_BOTTOM_WITH_TABBAR = "bottom-[calc(0.75rem+var(--tab-bar-pill-top))]"
 
 /** 탭바가 없는 화면: 화면 바닥 위 12px + 홈 인디케이터. */
 export const FAB_BOTTOM_FLOOR = "bottom-[calc(0.75rem+var(--safe-area-bottom))]"
