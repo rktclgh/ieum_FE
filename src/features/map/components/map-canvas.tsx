@@ -429,7 +429,7 @@ function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBoun
 // 크기가 잠잠해지면(디바운스) onSizeSettle로 "이제 최종 크기다"를 알린다 — 부모가 이 신호로
 // 스켈레톤을 걷으면, 잘못된 크기가 잠깐 노출됐다가 애니메이션 종료 후 툭 튀는 스냅 없이
 // 최종 크기로 자리잡은 지도만 크로스페이드로 드러난다.
-function MapSizeObserver({ onSizeSettle }: { onSizeSettle?: () => void }) {
+function MapSizeWatcher({ onSizeSettle }: { onSizeSettle?: () => void }) {
   const map = useMap()
   const onSizeSettleRef = React.useRef(onSizeSettle)
   React.useEffect(() => {
@@ -502,7 +502,7 @@ function MapCanvas({
       className={className}
     >
       <VectorTileLayer onReady={onReady} />
-      <MapSizeObserver onSizeSettle={onSizeSettle} />
+      <MapSizeWatcher onSizeSettle={onSizeSettle} />
       <MapCenterUpdater
         center={center}
         recenterKey={recenterKey ?? 0}
