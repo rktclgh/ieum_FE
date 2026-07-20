@@ -12,6 +12,7 @@ import { QuestionResultCard } from "@/features/map/components/question-result-ca
 import { SearchTabBar, type SearchTab } from "@/features/map/components/search-tab-bar"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useSearchResults } from "@/features/map/hooks/use-search-results"
+import { useMe } from "@/features/session/hooks/use-me"
 import { APP_BAR_SAFE_TOP } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
@@ -55,6 +56,10 @@ function SearchOverlayContent({
   onOpenQuestion,
 }: SearchOverlayContentProps) {
   const { messages } = useTranslation()
+  // 롱프레스 번역 메뉴는 로그인 사용자에게만 뜬다(useTranslateToggle.canTranslate).
+  // users/me 는 홈 화면에서 이미 채워져 있어 오버레이가 새로 요청하지 않는다.
+  const { data: me } = useMe()
+  const isAuthenticated = me != null
   const [query, setQuery] = React.useState(initialQuery)
   const [debounced, setDebounced] = React.useState(initialQuery)
   const [tab, setTab] = React.useState<SearchTab>("all")
@@ -132,6 +137,7 @@ function SearchOverlayContent({
                 key={pin.pinId}
                 pin={pin}
                 query={q}
+                isAuthenticated={isAuthenticated}
                 onClick={() => onOpenMeetup(pin.targetId)}
               />
             ))}
@@ -150,6 +156,7 @@ function SearchOverlayContent({
                 key={pin.pinId}
                 pin={pin}
                 query={q}
+                isAuthenticated={isAuthenticated}
                 onClick={() => onOpenQuestion(pin.targetId)}
               />
             ))}

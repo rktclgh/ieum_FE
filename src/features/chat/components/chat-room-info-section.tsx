@@ -21,11 +21,11 @@ function ChatRoomInfoSection({ className, onNoticeClick, onScheduleClick, ...pro
       {...props}
     >
       <button type="button" onClick={onNoticeClick} className="flex items-center gap-2 px-4 py-2">
-        <Image src="/icons/chat/notification.svg" alt="" width={20} height={20} className="size-5" />
+        <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} className="size-6" />
         <span className="text-body-medium-16 text-gray-900">{messages.chat.noticeLabel}</span>
       </button>
       <button type="button" onClick={onScheduleClick} className="flex items-center gap-2 px-4 py-2">
-        <Image src="/icons/chat/calender.svg" alt="" width={20} height={20} className="size-5" />
+        <Image src="/icons/chat/calendar.svg" alt="" width={24} height={24} className="size-6" />
         <span className="text-body-medium-16 text-gray-900">{messages.chat.scheduleLabel}</span>
       </button>
     </div>
