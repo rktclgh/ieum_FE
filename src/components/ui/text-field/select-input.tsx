@@ -142,11 +142,7 @@ function SelectInput({
                 onScroll={handleOptionsScroll}
                 data-scrolling={isScrolling}
                 className={cn(
-                  "flex w-full flex-col items-start overflow-y-auto",
-                  // 검색형(예: 국적)만 리스트 높이를 고정한다 — 검색 결과 개수가 keystroke마다
-                  // 바뀌어도 시트 전체 높이가 확확 바뀌지 않도록. 검색 없는 짧은 목록(반경 등)은
-                  // 항목 수가 고정이라 기존처럼 콘텐츠에 맞춰 자연스럽게 크기를 잡는다.
-                  searchPlaceholder ? "h-[280px] shrink-0" : "min-h-0 flex-1",
+                  "flex w-full min-h-0 flex-1 flex-col items-start overflow-y-auto",
                   FADE_SCROLLBAR_CLASSNAME
                 )}
               >
