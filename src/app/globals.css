@@ -334,6 +334,44 @@
 }
 
 /*
+ * 탭 전환 슬라이딩 — issue #303.
+ *
+ * 이동 방향(app/template.tsx)에 따라 들어오는 화면을 반대편에서 밀어 넣는다.
+ * 마이 → 홈처럼 왼쪽 탭으로 가면 새 화면이 왼쪽에서 들어온다.
+ *
+ * 이동 거리를 화면 폭이 아니라 2rem으로 잡은 이유: 나가는 화면이 즉시 사라지기 때문에
+ * 풀 슬라이드를 주면 그 자리가 빈 공간으로 드러난다. 짧은 방향 이동 + 페이드가
+ * 방향감은 남기면서 빈 화면은 보이지 않는 지점이다.
+ *
+ * duration은 시트류와 같은 `--motion-duration-base`를 참조하므로 아래 reduced-motion
+ * 블록 하나로 함께 무력화된다.
+ */
+@keyframes tab-slide-in-forward {
+  from {
+    opacity: 0;
+    transform: translate3d(2rem, 0, 0);
+  }
+}
+@keyframes tab-slide-in-backward {
+  from {
+    opacity: 0;
+    transform: translate3d(-2rem, 0, 0);
+  }
+}
+
+/*
+ * fill-mode를 쓰지 않는다. 애니메이션이 끝난 뒤 transform이 남으면 이 요소가
+ * position:fixed 자식의 컨테이닝 블록이 되어(홈 지도·오버레이가 전부 fixed다)
+ * 화면이 조용히 어긋난다. 끝나면 transform이 완전히 사라져야 한다.
+ */
+[data-tab-transition="forward"] {
+  animation: tab-slide-in-forward var(--motion-duration-base) var(--ease-base);
+}
+[data-tab-transition="backward"] {
+  animation: tab-slide-in-backward var(--motion-duration-base) var(--ease-base);
+}
+
+/*
  * 접근성 — issue #280.
  * `duration-base` 유틸리티가 `var(--motion-duration-base)`를 참조하므로,
  * 토큰 하나만 재정의하면 이번에 추가/변경한 상태 전환 모션만 정확히 무력화된다.
