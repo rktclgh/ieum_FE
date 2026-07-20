@@ -5,6 +5,9 @@ import * as React from "react"
 import { AppBar } from "@/components/ui/app-bar"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
+import { Input } from "@/components/ui/text-field/input"
+import { SelectField } from "@/components/ui/text-field/select-field"
+import { Textarea } from "@/components/ui/text-field/textarea"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { uploadMeetingImage } from "@/features/meetup/api/meetup-file-api"
 import {
@@ -17,7 +20,6 @@ import {
 import { MeetupDatePicker } from "@/features/meetup/components/meetup-date-picker"
 import { MeetupImagePicker } from "@/features/meetup/components/meetup-image-picker"
 import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
-import { MeetupSelectField } from "@/features/meetup/components/meetup-select-field"
 import { MeetupTimePicker } from "@/features/meetup/components/meetup-time-picker"
 import { useCreateMeetupForm } from "@/features/meetup/hooks/use-create-meetup-form"
 import { useCreateMeeting } from "@/features/meetup/hooks/use-meetup-mutations"
@@ -154,29 +156,28 @@ function CreateMeetupScreenContent({
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3">
         {/* 제목 — 15자(공백 포함)까지만 입력 가능, 포커스 시 카운터 표시 */}
-        <div className="shrink-0">
-          <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary">
-            <input
-              value={form.title}
-              // maxLength만으로는 한글(IME) 조합 중 16번째 글자가 새어 들어가므로 상태에서 직접 자름
-              onChange={(event) => form.setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
-              onFocus={() => setTitleFocused(true)}
-              onBlur={() => setTitleFocused(false)}
-              maxLength={TITLE_MAX_LENGTH}
-              placeholder={t.titlePlaceholder}
-              className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
-            />
-            {titleFocused ? (
+        <Input
+          value={form.title}
+          // maxLength만으로는 한글(IME) 조합 중 16번째 글자가 새어 들어가므로 상태에서 직접 자름
+          onChange={(event) => form.setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
+          onFocus={() => setTitleFocused(true)}
+          onBlur={() => setTitleFocused(false)}
+          maxLength={TITLE_MAX_LENGTH}
+          placeholder={t.titlePlaceholder}
+          // 포커스 중에만 카운터, 그 밖에는 Input 기본 지우기 버튼을 그대로 쓴다
+          endAdornment={
+            titleFocused ? (
               <span className="shrink-0 text-body-regular-14 text-gray-400">
                 {t.titleCounter(form.title.length, TITLE_MAX_LENGTH)}
               </span>
-            ) : null}
-          </div>
-        </div>
+            ) : null
+          }
+          className="shrink-0"
+        />
 
         {/* 날짜 · 시간 */}
         <div className="flex shrink-0 items-center gap-3">
-          <MeetupSelectField
+          <SelectField
             iconSrc="/icons/write/calendar-200.svg"
             selectedIconSrc="/icons/write/calendar-700.svg"
             placeholder={t.datePlaceholder}
@@ -184,7 +185,7 @@ function CreateMeetupScreenContent({
             active={datePickerOpen}
             onClick={() => setDatePickerOpen(true)}
           />
-          <MeetupSelectField
+          <SelectField
             iconSrc="/icons/write/clock-200.svg"
             selectedIconSrc="/icons/write/clock-700.svg"
             placeholder={t.timePlaceholder}
@@ -196,7 +197,7 @@ function CreateMeetupScreenContent({
         </div>
 
         {/* 장소 */}
-        <MeetupSelectField
+        <SelectField
           iconSrc="/icons/write/location-200.svg"
           selectedIconSrc="/icons/write/location-700.svg"
           placeholder={t.addressPlaceholder}
@@ -207,26 +208,25 @@ function CreateMeetupScreenContent({
         />
 
         {/* 내용 + 사진 첨부 */}
-        <div className="relative min-h-40 flex-1 rounded-lg border border-gray-100 transition-colors focus-within:border-primary">
-          <textarea
-            value={form.description}
-            onChange={(event) => form.setDescription(event.target.value)}
-            placeholder={t.descriptionPlaceholder}
-            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary outline-none placeholder:text-gray-400"
-          />
-          <MeetupImagePicker
-            image={form.image?.preview ?? null}
-            onTakePhoto={() => cameraInputRef.current?.click()}
-            onChooseAlbum={() => albumInputRef.current?.click()}
-            onRemove={() => form.setImage(null)}
-            className="absolute bottom-[15px] left-[15px]"
-          />
-        </div>
+        <Textarea
+          value={form.description}
+          onChange={(event) => form.setDescription(event.target.value)}
+          placeholder={t.descriptionPlaceholder}
+          className="min-h-40 flex-1"
+          bottomSlot={
+            <MeetupImagePicker
+              image={form.image?.preview ?? null}
+              onTakePhoto={() => cameraInputRef.current?.click()}
+              onChooseAlbum={() => albumInputRef.current?.click()}
+              onRemove={() => form.setImage(null)}
+            />
+          }
+        />
       </div>
 
       {/* 제출 */}
       <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+var(--safe-area-bottom))]">
-        {error ? <Explanation variant="error" text={error} className="px-1 pb-1" /> : null}
+        {error ? <Explanation variant="error" text={error} /> : null}
         <button
           type="button"
           disabled={!form.canSubmit || submitting}

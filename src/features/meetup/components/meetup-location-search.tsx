@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { HighlightedText } from "@/components/ui/highlighted-text"
+import { SearchBox } from "@/components/ui/search-box"
 import type { Place } from "@/features/map/api/place-search-api"
 import type { GeocodedAddress } from "@/features/map/api/geocode-api"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
@@ -66,34 +66,13 @@ function MeetupLocationSearch({
 
       {/* 검색 입력 (아이콘 · 텍스트 · 지우기) */}
       <div className="flex justify-center px-4 pb-2">
-        <div className="flex h-[46px] w-full items-center justify-between gap-3 rounded-full bg-gray-50 px-4 py-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Image
-              src="/icons/search-bar/search.svg"
-              alt=""
-              width={20}
-              height={20}
-              className="size-5 shrink-0"
-            />
-            <input
-              autoFocus
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t.searchPlaceholder}
-              className="w-full min-w-0 bg-transparent text-body-medium-15 text-gray-900 caret-primary outline-none placeholder:text-body-regular-15 placeholder:text-gray-400"
-            />
-          </div>
-          {query.length > 0 && (
-            <button
-              type="button"
-              aria-label={t.clearLabel}
-              onClick={() => setQuery("")}
-              className="flex size-4 shrink-0 items-center justify-center rounded-full bg-gray-400"
-            >
-              <Image src="/icons/common/clear.svg" alt="" width={8} height={8} className="size-2" />
-            </button>
-          )}
-        </div>
+        <SearchBox
+          tone="flat"
+          autoFocus
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t.searchPlaceholder}
+        />
       </div>
 
       {/* 결과 리스트 — 상호(선택) + 도로명/지번 주소(입력) */}
