@@ -22,7 +22,7 @@ interface ProfileImageEditorProps {
  */
 function ProfileImageEditor({ open, imageSrc, onClose, onCropped }: ProfileImageEditorProps) {
   return (
-    <FullScreenOverlay open={open && imageSrc !== null} className="z-50 flex flex-col bg-black">
+    <FullScreenOverlay open={open && imageSrc !== null} className="z-50 flex flex-col bg-white">
       {imageSrc ? (
         <ProfileImageEditorContent
           key={imageSrc}
@@ -78,13 +78,22 @@ function ProfileImageEditorContent({ imageSrc, onClose, onCropped }: ProfileImag
           onCropChange={setCrop}
           onZoomChange={setZoom}
           onCropComplete={handleCropComplete}
+          style={{
+            containerStyle: { backgroundColor: "#ffffff" },
+            cropAreaStyle: { boxShadow: "0 0 0 9999em rgba(255, 255, 255, 0.75)", border: "none" },
+          }}
         />
       </div>
-      <div className="flex items-center justify-between gap-3 bg-black px-4 py-4 pb-[calc(1rem+var(--safe-area-bottom))]">
-        <Button variant="ghost" onClick={onClose} className="flex-1 text-white">
+      <div className="flex items-center gap-2 bg-white px-4 py-4 pb-[calc(1rem+var(--safe-area-bottom))]">
+        <Button variant="grayscale" onClick={onClose} className="h-11 flex-1">
           {t.cropCancel}
         </Button>
-        <Button onClick={handleConfirm} disabled={isProcessing || !areaPixels} className="flex-1">
+        <Button
+          variant="primary"
+          onClick={handleConfirm}
+          disabled={isProcessing || !areaPixels}
+          className="h-11 flex-1"
+        >
           {t.cropConfirm}
         </Button>
       </div>
