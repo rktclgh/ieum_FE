@@ -20,6 +20,25 @@ import { useTabTransition } from "@/features/navigation/hooks/use-tab-transition
 export default function Template({ children }: { children: React.ReactNode }) {
   const direction = useTabTransition()
 
-  // 애니메이션이 없을 땐 속성 자체를 붙이지 않아 CSS 규칙이 아예 매칭되지 않게 한다.
-  return <div data-tab-transition={direction ?? undefined}>{children}</div>
+  /*
+   * 바깥 래퍼의 `overflow-x-clip`은 장식이 아니다 — issue #376.
+   *
+   * forward 키프레임은 들어오는 화면을 `translate3d(2rem, 0, 0)`에서 시작시킨다. 이때
+   * 이 요소가 뷰포트 오른쪽으로 2rem 삐져나가고, **오른쪽(inline-end) 오버플로는 브라우저가
+   * 스크롤 가능 영역으로 만든다.** 반대로 backward는 왼쪽으로 나가는데 왼쪽(inline-start)
+   * 오버플로는 그냥 잘려서 스크롤 영역이 생기지 않는다. 그래서 좌→우 이동에서만 애니메이션
+   * 동안 문서가 32px 넓어졌다 돌아온다(실측 확인).
+   *
+   * 자기 자신의 overflow로는 막을 수 없다(요소의 박스가 부모를 넘치는 것이라서). 부모에서
+   * 잘라야 한다. `hidden`이 아니라 `clip`인 이유는 스크롤 컨테이너를 만들지 않기 위해서다 —
+   * `overflow-x: clip`은 세로 `visible`과 짝지어 쓸 수 있어 페이지 스크롤 동작을 건드리지 않는다.
+   *
+   * 안쪽 div에 붙은 `data-tab-transition`은 애니메이션이 없을 때 속성 자체를 떼어,
+   * CSS 규칙이 아예 매칭되지 않게 한다.
+   */
+  return (
+    <div className="overflow-x-clip">
+      <div data-tab-transition={direction ?? undefined}>{children}</div>
+    </div>
+  )
 }
