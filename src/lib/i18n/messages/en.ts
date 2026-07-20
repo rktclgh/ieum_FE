@@ -19,12 +19,35 @@ export const en: Messages = {
     backendUnavailable: "We couldn't connect to the server. Please try again shortly.",
   },
   pwa: {
-    title: "Install Ieum",
+    title: "Add Ieum to your Home Screen",
     description: "Add it to your home screen for quicker access.",
     later: "Later",
     install: "Install",
-    iosDescription: "Tap the Share button, then choose 'Add to Home Screen'.",
     confirm: "OK",
+    iosSteps: {
+      modern: [
+        ["Tap the More (", { icon: "ellipsis" }, ") button at the bottom."],
+        ["Choose ", { icon: "share" }, ' "Share" from the menu.'],
+        [{ icon: "square-plus" }, ' Find and tap "Add to Home Screen".'],
+        ['Tap "Add" at the top right and you\'re done!'],
+      ],
+      legacy: [
+        ["Tap the Share (", { icon: "share" }, ") button at the bottom."],
+        ["Find and tap ", { icon: "square-plus" }, ' "Add to Home Screen" in the menu.'],
+        ['Tap "Add" at the top right and you\'re done!'],
+      ],
+      unknown: [
+        [
+          "Tap the Share (",
+          { icon: "share" },
+          ") or More (",
+          { icon: "ellipsis" },
+          ") button at the bottom.",
+        ],
+        ["Find and tap ", { icon: "square-plus" }, ' "Add to Home Screen" in the menu.'],
+        ['Tap "Add" at the top right and you\'re done!'],
+      ],
+    },
   },
   login: {
     logoText: "ieum",
