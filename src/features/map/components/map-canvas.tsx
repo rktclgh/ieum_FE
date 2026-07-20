@@ -71,6 +71,12 @@ const selectedLocationIcon = L.divIcon({
   iconAnchor: [20, 41],
 })
 
+// Leaflet은 같은 pane의 마커를 화면 y좌표 순으로 쌓아, 남쪽(아래) 마커가 위로 온다.
+// 겹침 순서를 좌표가 아닌 역할로 고정하기 위해, 뷰포트 높이(px)보다 훨씬 큰 오프셋을 준다.
+// 장소 선택 핀 > 내 위치 > 모임/질문 핀(오프셋 0).
+const USER_LOCATION_Z_OFFSET = 10000
+const SELECTED_LOCATION_Z_OFFSET = 20000
+
 const userLocationIcon = L.divIcon({
   html: `<div style="position:relative;width:48px;height:48px">
     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" style="position:absolute;inset:0">
@@ -467,11 +473,19 @@ function MapCanvas({
         <ActiveMarker
           position={[selectedPosition.lat, selectedPosition.lng]}
           icon={selectedLocationIcon}
+          zIndexOffset={SELECTED_LOCATION_Z_OFFSET}
           eventHandlers={onSelectedPositionClick ? { click: onSelectedPositionClick } : undefined}
         />
       )}
       {livePosition && (
-        <ActiveMarker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
+        <ActiveMarker
+          position={[livePosition.lat, livePosition.lng]}
+          icon={userLocationIcon}
+          zIndexOffset={USER_LOCATION_Z_OFFSET}
+          // 시각적으로는 맨 위지만 클릭은 통과시킨다(leaflet.css: .leaflet-interactive가 없으면 pointer-events:none).
+          // 아래에 겹친 모임/질문 핀이 선택되도록.
+          interactive={false}
+        />
       )}
     </MapContainer>
   )
