@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Globe } from "lucide-react"
 
 import { RoutePageState } from "@/components/ui/route-page-state"
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { Circle } from "@/components/ui/circle"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -277,11 +278,11 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
 
   if (meetingAccessError) {
     return (
-      <main className="app-column flex min-h-dvh items-center justify-center px-4">
+      <Screen kind="scroll" as="main" centered className="px-4">
         <p role="alert" className="text-center text-body-medium-16 text-gray-900">
           {getMeetupErrorMessage(meetingAccessError, messages)}
         </p>
-      </main>
+      </Screen>
     )
   }
 
@@ -311,7 +312,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
   }
 
   return (
-    <div className="relative app-column flex h-dvh flex-col overflow-hidden bg-white">
+    <Screen kind="fixed" className="bg-white">
       <AppBar
         trailingVariant="close"
         onLeadingClick={() => router.back()}
@@ -403,7 +404,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
           <p className="rounded-full bg-gray-900/90 px-4 py-2 text-body-regular-13 text-white">{actionError}</p>
         </div>
       ) : null}
-    </div>
+    </Screen>
   )
 }
 

@@ -1,3 +1,4 @@
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -41,10 +42,7 @@ const DAYS_PER_WEEK = 7
 
 function SchedulePageSkeleton() {
   return (
-    <div
-      aria-busy="true"
-      className="relative app-column flex h-dvh flex-col overflow-hidden bg-white"
-    >
+    <Screen kind="fixed" aria-busy="true" className="bg-white">
       {/* AppBar를 직접 흉내 내지 않고 그대로 쓴다 — 상태바 인셋까지 같아야 헤더가 튀지 않는다. */}
       <AppBar
         leadingIcon={null}
@@ -75,7 +73,7 @@ function SchedulePageSkeleton() {
           <ScheduleListSkeleton />
         </div>
       </div>
-    </div>
+    </Screen>
   )
 }
 

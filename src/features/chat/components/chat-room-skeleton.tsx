@@ -1,3 +1,4 @@
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -20,10 +21,7 @@ const BUBBLES = [
 // leadingIcon/trailingIcon을 null로 두면 동작하지 않는 버튼 대신 같은 크기의 빈 자리가 들어간다.
 function ChatRoomSkeleton() {
   return (
-    <main
-      aria-busy="true"
-      className="app-screen-fixed app-column flex flex-col bg-white pb-[var(--keyboard-inset,0px)]"
-    >
+    <Screen kind="fixed" as="main" aria-busy="true" className="bg-white">
       <AppBar
         leadingIcon={null}
         trailingIcon={null}
@@ -56,7 +54,7 @@ function ChatRoomSkeleton() {
         <Skeleton className="h-10 flex-1 rounded-full" />
         <Skeleton className="size-6 shrink-0" />
       </div>
-    </main>
+    </Screen>
   )
 }
 

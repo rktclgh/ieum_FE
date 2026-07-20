@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { Download, Globe } from "lucide-react"
 
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Toast } from "@/components/ui/toast"
@@ -773,13 +774,9 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   return (
     <>
-      {/* app-viewport-height(height: 100dvh - keyboard-inset) 대신 fixed + padding-bottom을
-          쓴다. iOS 키보드 위 입력 액세서리 바는 visualViewport 리사이즈에 잡히지 않아
-          --keyboard-inset이 항상 그 높이만큼 부족한데(full-screen-overlay.tsx 참고, issue #328),
-          박스 자체 높이를 줄이는 방식은 그 부족분이 입력창과 키보드 사이 빈 틈으로 그대로
-          노출된다. 박스를 화면 전체에 고정하고 padding-bottom만 줄이면 배경이 끝까지 채워져
-          같은 부족분이 여백으로 드러나지 않는다. */}
-      <main className="app-screen-fixed app-column flex flex-col bg-white pb-[var(--keyboard-inset,0px)]">
+      {/* Screen kind="fixed"가 fixed+padding 패턴을 제공한다 — 키보드 부족분이 빈 틈으로
+          노출되지 않는 이유는 screen.tsx 주석 참고(issue #328). */}
+      <Screen kind="fixed" as="main" className="bg-white">
         <AppBar
           title={roomTitle}
           onLeadingClick={() => router.back()}
@@ -900,7 +897,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             onCancelReply={() => setSelectedReply(null)}
           />
         </div>
-      </main>
+      </Screen>
 
       <SidePanel
         open={session.authenticated && moreOpen}
