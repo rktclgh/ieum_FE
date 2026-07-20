@@ -14,6 +14,8 @@ interface ScheduleListItemProps extends React.ComponentProps<"div"> {
   onSelect?: () => void
   onMoreClick?: () => void
   moreAriaLabel?: string
+  /** 더보기 버튼 하단에 우측 정렬로 앵커할 메뉴 — 박스 전체가 아니라 버튼 기준으로 위치시키기 위해 버튼을 감싼 relative 래퍼 안에 렌더링한다. */
+  menuSlot?: React.ReactNode
 }
 
 function ScheduleListItem({
@@ -22,6 +24,7 @@ function ScheduleListItem({
   onSelect,
   onMoreClick,
   moreAriaLabel,
+  menuSlot,
   ...props
 }: ScheduleListItemProps) {
   // onSelect가 없으면 클릭 동작이 없어 button 대신 비대화형 div로 렌더링한다(시맨틱/a11y).
@@ -52,14 +55,17 @@ function ScheduleListItem({
         </span>
       </ContentWrapper>
       {onMoreClick && (
-        <button
-          type="button"
-          onClick={onMoreClick}
-          aria-label={moreAriaLabel}
-          className="-my-2 -mr-2 flex size-11 shrink-0 items-center justify-center"
-        >
-          <Image src="/icons/schedule/more.svg" alt="" width={20} height={20} className="size-5" />
-        </button>
+        <div className="relative -my-2 -mr-2 shrink-0">
+          <button
+            type="button"
+            onClick={onMoreClick}
+            aria-label={moreAriaLabel}
+            className="flex size-11 items-center justify-center"
+          >
+            <Image src="/icons/schedule/more.svg" alt="" width={20} height={20} className="size-5" />
+          </button>
+          {menuSlot}
+        </div>
       )}
     </div>
   )
