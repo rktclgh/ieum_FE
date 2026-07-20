@@ -18,7 +18,7 @@ function Toast({ open, message, className }: ToastProps) {
       role="status"
       aria-live="polite"
       className={cn(
-        "app-column fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 flex justify-center px-4",
+        "bottom-anchor-auto app-column fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 flex justify-center px-4",
         className
       )}
     >

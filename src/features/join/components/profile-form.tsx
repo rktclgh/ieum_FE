@@ -138,7 +138,7 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
         )}
       </div>
 
-      <div className="app-bottom-fixed z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))]">
+      <div className="app-bottom-fixed bottom-anchor-auto z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))]">
         <Button
           type="submit"
           variant="primary"
