@@ -103,17 +103,30 @@ const USER_LOCATION_HALO_SIZE = 48
 const USER_LOCATION_HALO_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_HALO_SIZE) / 2
 
 // 중심 점은 주황 코어 12px + 흰 테두리 3px = 바깥지름 18px.
-// 테두리를 outline이 아닌 border로 그리는 것이 핵심이다. outline은 박스 바깥에 그려져
-// box-shadow의 기준 박스가 코어(12px)로 남는 탓에, 주황 글로우가 흰 테두리와 같은 자리에서
-// 피어올라 테두리 바깥 대비를 죽인다. border면 기준 박스가 18px이라 글로우가 테두리
-// '바깥'에서 시작해, 흰 테두리가 헤일로 위에 또렷하게 얹힌다.
+//
+// issue #412 — 글로우와 흰 테두리를 **다른 요소로 분리**한다.
+//
+// #397에서 `outline`을 `border`로 바꿔 box-shadow 기준 박스를 18px로 키웠지만, 실기기에서는
+// 여전히 테두리가 묻혔다. 원인은 z-order가 아니라 한 요소가 둘을 다 갖고 있다는 데 있었다.
+// box-shadow는 박스 '바깥'에 그려지므로, 반경 8px·60% 주황 글로우가 흰 테두리 바로 바깥을
+// 감싼다. 흰 3px이 안쪽 코어와 바깥 글로우 사이에 끼여, 맨 위에 그려져도 시각적으로 파묻힌다.
+//
+// 그래서 아래에서 위로 세 겹으로 쌓는다.
+//   1) 헤일로  2) 글로우만 담당하는 레이어(흰색 없음)  3) 흰 테두리 + 코어(그림자 없음)
+// 3번이 어떤 글로우보다도 뒤에 그려지므로 테두리가 항상 또렷하다.
+const USER_LOCATION_DOT_SIZE = 18
+const USER_LOCATION_DOT_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_DOT_SIZE) / 2
+// 글로우 레이어는 코어(12px)와 같은 크기여야 글로우가 흰 테두리 '바깥'에서 시작하지 않는다.
+const USER_LOCATION_CORE_SIZE = 12
+const USER_LOCATION_CORE_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_CORE_SIZE) / 2
 const userLocationIcon = L.divIcon({
   html: `<div style="position:relative;width:${USER_LOCATION_SIZE}px;height:${USER_LOCATION_SIZE}px">
     <svg xmlns="http://www.w3.org/2000/svg" width="${USER_LOCATION_HALO_SIZE}" height="${USER_LOCATION_HALO_SIZE}" viewBox="0 0 48 48" fill="none" style="position:absolute;left:${USER_LOCATION_HALO_OFFSET}px;top:${USER_LOCATION_HALO_OFFSET}px">
       <g filter="url(#user_loc_halo_blur)"><circle cx="24" cy="24" r="22" fill="${LIVE_ACCENT}" fill-opacity="0.2"/></g>
       <defs><filter id="user_loc_halo_blur" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/></filter></defs>
     </svg>
-    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:18px;height:18px;border-radius:999px;background:${LIVE_ACCENT};border:3px solid #ffffff;box-shadow:0 0 4px 0 rgba(0,0,0,0.25),0 0 8px 0 rgba(252,112,69,0.6)"></div>
+    <div style="position:absolute;left:${USER_LOCATION_CORE_OFFSET}px;top:${USER_LOCATION_CORE_OFFSET}px;width:${USER_LOCATION_CORE_SIZE}px;height:${USER_LOCATION_CORE_SIZE}px;border-radius:999px;box-shadow:0 0 4px 0 rgba(0,0,0,0.25),0 0 8px 0 rgba(252,112,69,0.6)"></div>
+    <div style="position:absolute;left:${USER_LOCATION_DOT_OFFSET}px;top:${USER_LOCATION_DOT_OFFSET}px;box-sizing:border-box;width:${USER_LOCATION_DOT_SIZE}px;height:${USER_LOCATION_DOT_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};border:3px solid #ffffff"></div>
   </div>`,
   className: "",
   iconSize: [USER_LOCATION_SIZE, USER_LOCATION_SIZE],
