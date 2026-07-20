@@ -90,9 +90,12 @@ function useChatRoomsView(type?: RoomType) {
   // 상세 설계: docs/superpowers/specs/2026-07-15-chat-list-realtime-design.md
   const onRoomEvent = useCallback(
     (event: WsRoomEvent) => {
+      // remove는 명시적으로만 매칭한다. else로 받으면 서버가 보내는 알 수 없는 이벤트
+      // (알림/고정 변경 알림 등)가 전부 삭제로 해석돼 방이 목록에서 사라졌다가,
+      // mutation의 무효화 리페치로 다시 나타나는 깜빡임이 생긴다.
       if (event.type === "upsert") {
         upsertRoomInCaches(queryClient, event.room)
-      } else {
+      } else if (event.type === "remove") {
         removeRoomFromAllLoadedListCaches(queryClient, roomsListKey, event.roomId)
       }
     },

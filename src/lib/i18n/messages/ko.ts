@@ -14,6 +14,8 @@ export interface Messages {
     close: string
     more: string
     retry: string
+    saveImage: string
+    saveImageFailed: string
   }
   route: {
     invalidLink: string
@@ -115,6 +117,8 @@ export interface Messages {
     meetupMarkerLabel: string
     questionMarkerLabel: string
     clusterMarkerLabel: (count: number) => string
+    pinStackMarkerLabel: (count: number) => string
+    pinStackIndexLabel: (current: number, total: number) => string
     attributionButtonLabel: string
     pinsTruncatedNotice: string
     categoryPlace: string
@@ -174,8 +178,6 @@ export interface Messages {
     submittingButton: string
     cancelButton: string
     confirmButton: string
-    takePhotoAction: string
-    chooseAlbumAction: string
     amLabel: string
     pmLabel: string
     yearLabel: (year: number) => string
@@ -325,8 +327,6 @@ export interface Messages {
     }
   }
   profileImage: {
-    takePhoto: string
-    chooseAlbum: string
     editLabel: string
     deleteLabel: string
     uploadFailed: string
@@ -374,6 +374,7 @@ export interface Messages {
     pinFailed: string
     enableNotificationAction: string
     disableNotificationAction: string
+    notificationOffBadge: string
     deleteAction: string
     replyAction: string
     replyToLabel: (targetName: string) => string
@@ -386,8 +387,7 @@ export interface Messages {
     unsetChatNoticeAction: string
     noticeEmptyLabel: string
     blockAction: string
-    takePhotoAction: string
-    chooseAlbumAction: string
+    attachImageAction: string
     noticeLabel: string
     scheduleLabel: string
     membersTitle: string
@@ -522,6 +522,8 @@ export const ko: Messages = {
     close: "닫기",
     more: "더보기",
     retry: "다시 시도",
+    saveImage: "사진 저장",
+    saveImageFailed: "사진을 저장하지 못했어요",
   },
   route: {
     invalidLink: "유효하지 않은 링크입니다.",
@@ -642,6 +644,8 @@ export const ko: Messages = {
     meetupMarkerLabel: "모임",
     questionMarkerLabel: "질문",
     clusterMarkerLabel: (count) => `이 지역 ${count}개`,
+    pinStackMarkerLabel: (count) => `같은 위치 ${count}개`,
+    pinStackIndexLabel: (current, total) => `${current} / ${total}`,
     attributionButtonLabel: "지도 저작권 정보",
     pinsTruncatedNotice: "이 지역에 핀이 많아요. 확대해서 보세요",
     categoryPlace: "장소",
@@ -701,8 +705,6 @@ export const ko: Messages = {
     submittingButton: "올리는 중…",
     cancelButton: "취소",
     confirmButton: "완료",
-    takePhotoAction: "사진 찍기",
-    chooseAlbumAction: "앨범에서 고르기",
     amLabel: "오전",
     pmLabel: "오후",
     yearLabel: (year) => `${year}년`,
@@ -853,8 +855,6 @@ export const ko: Messages = {
     },
   },
   profileImage: {
-    takePhoto: "사진 찍기",
-    chooseAlbum: "앨범에서 고르기",
     editLabel: "프로필 사진 편집",
     deleteLabel: "사진 삭제",
     uploadFailed: "사진 업로드에 실패했어요. 잠시 후 다시 시도해주세요.",
@@ -902,6 +902,7 @@ export const ko: Messages = {
     pinFailed: "고정 설정에 실패했어요",
     enableNotificationAction: "알림 켜기",
     disableNotificationAction: "알림 끄기",
+    notificationOffBadge: "알림 꺼짐",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     replyToLabel: (targetName) => `${targetName}님에게 답장`,
@@ -914,8 +915,7 @@ export const ko: Messages = {
     unsetChatNoticeAction: "채팅방 공지 해지하기",
     noticeEmptyLabel: "등록된 공지가 없어요",
     blockAction: "차단",
-    takePhotoAction: "사진 찍기",
-    chooseAlbumAction: "앨범에서 고르기",
+    attachImageAction: "사진 첨부",
     noticeLabel: "공지",
     scheduleLabel: "일정",
     membersTitle: "대화 상대",

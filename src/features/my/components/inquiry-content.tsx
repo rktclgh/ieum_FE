@@ -4,6 +4,8 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Textarea } from "@/components/ui/text-field/textarea"
+import { Toast } from "@/components/ui/toast"
 import { useSubmitInquiry } from "@/features/my/hooks/use-my-mutations"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -52,11 +54,11 @@ function InquiryContent() {
       />
 
       <div className="flex w-full flex-col gap-6 px-4 pt-3 pb-[calc(8rem+var(--safe-area-bottom))]">
-        <textarea
+        <Textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
           placeholder={messages.my.inquiry.placeholder}
-          className="h-40 w-full resize-none rounded-lg border border-gray-100 p-4 text-body-regular-14 text-gray-900 caret-primary outline-none transition-colors placeholder:text-gray-400 focus-within:border-primary"
+          className="h-40"
         />
 
         <ul className="flex w-full flex-col gap-2">
@@ -93,21 +95,8 @@ function InquiryContent() {
         <span className="h-1 w-[135px] rounded-full bg-gray-900" />
       </div>
 
-      {submitted && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
-          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
-            {messages.my.inquiry.success}
-          </div>
-        </div>
-      )}
-
-      {submitInquiry.isError && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
-          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
-            {messages.my.inquiry.error}
-          </div>
-        </div>
-      )}
+      <Toast open={submitted} message={messages.my.inquiry.success} />
+      <Toast open={submitInquiry.isError} message={messages.my.inquiry.error} />
     </main>
   )
 }
