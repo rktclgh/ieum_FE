@@ -10,6 +10,8 @@ export const en: Messages = {
     close: "Close",
     more: "More",
     retry: "Retry",
+    saveImage: "Save photo",
+    saveImageFailed: "Couldn't save the photo",
   },
   route: {
     invalidLink: "This link is invalid.",
