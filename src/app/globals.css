@@ -187,19 +187,23 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
 
   /*
-   * ICB 부족분 — issue #395.
+   * ICB 부족분 — issue #395 → #411.
    *
-   * `statusBarStyle: "black-translucent"`에서 iOS는 웹뷰를 상태바 뒤까지 끌어올리면서도
-   * 레이아웃 뷰포트(ICB) 높이는 상태바를 뺀 옛 값 그대로 둔다. `position: fixed`가 이 ICB를
-   * 기준으로 잡히므로, 화면을 꽉 채워야 할 요소들이 바닥에서 상태바 높이만큼 떠 버린다.
-   * (#304에서 이 문제로 #381에서 통째로 되돌렸던 지점이다.)
+   * #395(PR #409)는 "black-translucent에서 iOS가 레이아웃 뷰포트(ICB) 높이를 상태바를 뺀 옛
+   * 값 그대로 둔다"는 #381의 기록을 전제로, 전체화면 셸과 하단 바를 `--safe-area-top`만큼
+   * 아래로 더 뻗게 했다.
    *
-   * 부족분은 곧 상태바 높이이고, black-translucent에서 그 값이 `--safe-area-top`으로 들어온다.
+   * **실기기에서 반증됐다(#411).** 탭바가 정확히 그 보정량만큼 화면 아래로 밀려 라벨이
+   * 잘리고 흰 띠가 남았다. #381이 보고한 "요소가 바닥에서 뜨는" 증상과 방향이 반대다.
+   * 밀려난 양 == 보정량이라는 건 메울 부족분이 애초에 없었다는 뜻이다 — ICB는 이미
+   * 화면 전체 높이였다.
    *
-   * **`@media (display-mode: standalone)` 안에 두는 것이 이 규칙의 안전장치다.**
-   * 사파리 탭에서는 웹뷰가 상태바 뒤로 가지 않아 ICB가 부족하지 않은데, 노치 때문에
-   * `--safe-area-top`은 여전히 0이 아니다. 게이트 없이 적용하면 브라우저에서 탭바가
-   * 노치 높이만큼 화면 밖으로 밀린다.
+   * 그래서 값은 항상 0px로 둔다. 변수와 유틸리티는 남긴다: 나중에 특정 기기·OS에서
+   * 부족분이 실재하는 것으로 **실측되면** 이 한 줄만 되살리면 되고, 지금 유틸리티를
+   * 되돌리면 9개 파일을 다시 건드려야 한다.
+   *
+   * 되살릴 때 주의: `--safe-area-top`은 사파리 탭에서도 노치 때문에 0이 아니다. 반드시
+   * `@media (display-mode: standalone)`로 감싸야 브라우저에서 탭바가 밀리지 않는다.
    */
   --icb-shortfall: 0px;
   --background: oklch(1 0 0);
@@ -357,16 +361,11 @@
 }
 
 /*
- * ICB 부족분 보정 — issue #395. 설명은 `--icb-shortfall` 정의부 참고.
+ * ICB 부족분 보정 — issue #395 → #411. 설명은 `--icb-shortfall` 정의부 참고.
  *
- * standalone이 아닐 때 `--icb-shortfall`은 0px이라 두 유틸리티는 각각
- * `inset: 0` / `bottom: 0`과 완전히 같아진다 — 사파리·데스크톱 동작은 그대로다.
+ * 현재 `--icb-shortfall`은 어디서나 0px이라, 아래 두 유틸리티는 각각 `inset: 0` /
+ * `bottom: 0`과 완전히 동일하게 컴파일된다. 보정 훅만 남겨둔 상태다.
  */
-@media (display-mode: standalone) {
-  :root {
-    --icb-shortfall: var(--safe-area-top);
-  }
-}
 
 /** 화면을 꽉 채우는 셸 (`fixed inset-0` 대체). 바닥이 진짜 화면 바닥에 닿는다. */
 @utility app-screen-fixed {
