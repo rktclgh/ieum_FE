@@ -39,7 +39,13 @@ function hasRequiredNotificationMessageParams(
   params: NotificationMessageParams | null | undefined,
 ): boolean {
   const required = REQUIRED_NOTIFICATION_MESSAGE_PARAMS[key]
-  return !required || required.every((name) => typeof params?.[name] === "string" && params[name].trim())
+  return (
+    !required ||
+    required.every((name) => {
+      const value = params?.[name]
+      return typeof value === "string" && value.trim() !== ""
+    })
+  )
 }
 
 export {

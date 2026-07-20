@@ -23,6 +23,23 @@ function sourceOfTruthKeys() {
   return [...block[1].matchAll(/"([^"]+)"/g)].map((match) => match[1])
 }
 
+/** parameterized notification keys and their required snapshot values. */
+function requiredNotificationMessageParams() {
+  const source = readSource("src/lib/i18n/notification-message-keys.ts")
+  const block = source.match(
+    /const REQUIRED_NOTIFICATION_MESSAGE_PARAMS[\s\S]*?= \{([\s\S]*?)\n\}/,
+  )
+  assert.ok(block, "REQUIRED_NOTIFICATION_MESSAGE_PARAMS 객체를 찾지 못했다")
+
+  return Object.fromEntries(
+    [...block[1].matchAll(/["']([^"']+)["']\s*:\s*\[([^\]]*)\]/g)].map((match) => {
+      const params = [...match[2].matchAll(/["']([^"']+)["']/g)].map((param) => param[1])
+      assert.ok(params.length > 0, `${match[1]}의 필수 파라미터가 비어 있다`)
+      return [match[1], params]
+    }),
+  )
+}
+
 /** languages.ts 의 지원 언어. */
 function supportedLanguages() {
   const source = readSource("src/lib/i18n/languages.ts")
@@ -88,31 +105,32 @@ test("React 카탈로그의 각 언어도 SSOT 키 전부를 갖는다", () => {
 
 test("파라미터를 쓰는 키는 두 카탈로그 모두에서 플레이스홀더를 갖는다", () => {
   // 값이 비면 "님이 친구 요청을 보냈어요" 처럼 주어 없는 문장이 나가므로 치환 자리를 강제한다.
-  const parameterised = {
-    "notification.friend.request": "nickname",
-    "notification.radius.question": "subject",
-    "notification.radius.meeting": "subject",
-  }
+  const parameterised = requiredNotificationMessageParams()
+  assert.ok(Object.keys(parameterised).length > 0, "필수 파라미터 알림 키가 비어 있다")
 
   const worker = readSource("public/sw.js")
-  for (const [key, param] of Object.entries(parameterised)) {
+  for (const [key, params] of Object.entries(parameterised)) {
     const lines = worker.split("\n").filter((line) => line.includes(`"${key}":`))
     assert.ok(lines.length > 0, `sw.js 에 ${key} 가 없다`)
-    for (const line of lines) {
-      assert.ok(line.includes(`{${param}}`), `sw.js 의 ${key} 에 {${param}} 이 없다: ${line.trim()}`)
+    for (const param of params) {
+      for (const line of lines) {
+        assert.ok(line.includes(`{${param}}`), `sw.js 의 ${key} 에 {${param}} 이 없다: ${line.trim()}`)
+      }
     }
   }
 
   for (const language of supportedLanguages()) {
     const source = readSource(`src/lib/i18n/messages/${language}.ts`)
-    for (const [key, param] of Object.entries(parameterised)) {
+    for (const [key, params] of Object.entries(parameterised)) {
       const index = source.indexOf(`"${key}"`)
       assert.ok(index >= 0, `${language}.ts 에 ${key} 가 없다`)
       const entry = source.slice(index, index + 400)
-      assert.ok(
-        entry.includes(`params.${param}`),
-        `${language}.ts 의 ${key} 가 params.${param} 을 안 쓴다`
-      )
+      for (const param of params) {
+        assert.ok(
+          entry.includes(`params.${param}`),
+          `${language}.ts 의 ${key} 가 params.${param} 을 안 쓴다`
+        )
+      }
     }
   }
 })

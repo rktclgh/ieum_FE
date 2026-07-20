@@ -98,9 +98,10 @@ function substituteParams(template, params) {
 }
 
 function hasRequiredTemplateParams(template, params) {
-  return [...template.matchAll(/\{(\w+)\}/g)].every(
-    ([, name]) => typeof params?.[name] === "string" && params[name].trim(),
-  )
+  return [...template.matchAll(/\{(\w+)\}/g)].every(([, name]) => {
+    const value = params?.[name]
+    return typeof value === "string" && value.trim() !== ""
+  })
 }
 
 // 키를 수신자 언어로 렌더한다. 키가 없거나(구 서버) 카탈로그에 없으면 null 을 돌려
@@ -119,7 +120,7 @@ function copyFromMessageKey(payload) {
   }
 
   return {
-    title: entry[0],
+    title: substituteParams(entry[0], payload.messageParams),
     body: substituteParams(entry[1], payload.messageParams),
   }
 }
