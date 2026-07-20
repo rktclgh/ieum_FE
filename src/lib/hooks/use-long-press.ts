@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { triggerHaptic } from "@/lib/haptics"
+import { LONG_PRESS_TARGET_PROPS } from "@/lib/long-press-styles"
 
 interface UseLongPressOptions {
   onLongPress: () => void
@@ -29,6 +30,9 @@ function useLongPress({ onLongPress, delay = 500 }: UseLongPressOptions) {
   }, [])
 
   return {
+    // OS 기본 선택/편집 메뉴 억제용 표시자. contextmenu preventDefault 만으로는
+    // iOS 의 selection callout 이 막히지 않아 CSS 로 함께 눌러야 한다.
+    ...LONG_PRESS_TARGET_PROPS,
     onPointerDown: start,
     onPointerUp: clear,
     onPointerLeave: clear,

@@ -25,9 +25,21 @@ const LONG_PRESS_SURFACE_ACTIVE = `${LONG_PRESS_LIFT_ACTIVE} rounded-2xl bg-whit
 /** 평상시 상태. 트랜지션이 되돌아갈 목적지를 명시해야 해제 모션이 생긴다. */
 const LONG_PRESS_INACTIVE = "translate-y-0 scale-100"
 
+/**
+ * 롱프레스 대상 표시자. globals.css 가 이 속성을 셀렉터로 잡아 OS 기본 텍스트 선택과
+ * iOS 편집 메뉴(Copy·Look Up·Translate)를 끈다. 셀렉터와 속성 이름이 갈라지면 조용히
+ * 무효가 되므로 양쪽이 이 상수 하나를 본다.
+ */
+const LONG_PRESS_ATTRIBUTE = "data-long-press"
+
+/** useLongPress 반환값에 실려 모든 롱프레스 대상에 자동으로 붙는다. */
+const LONG_PRESS_TARGET_PROPS = { [LONG_PRESS_ATTRIBUTE]: "" }
+
 export {
   LONG_PRESS_TRANSITION,
   LONG_PRESS_LIFT_ACTIVE,
   LONG_PRESS_SURFACE_ACTIVE,
   LONG_PRESS_INACTIVE,
+  LONG_PRESS_ATTRIBUTE,
+  LONG_PRESS_TARGET_PROPS,
 }
