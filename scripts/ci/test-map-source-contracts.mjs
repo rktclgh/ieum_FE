@@ -85,11 +85,39 @@ test("장소 선택 map은 최초 fallback을 고정하고 명시적 GPS 재중�
   )
   assert.match(source, /const isFallbackLocked = initialStatus === "error" && !hasExplicitRecenter/)
   assert.match(source, /status: initialStatus/)
-  assert.match(source, /const target = resolvePlaceSelectionTarget\(/)
+  assert.match(source, /const target = centerTarget/)
   assert.match(source, /disabled=\{!position\}/)
   assert.equal((source.match(/recenterTo\(position\)/g) ?? []).length, 1)
   assert.match(handleGps, /setHasExplicitRecenter\(true\)[\s\S]*recenterTo\(position\)/)
   assert.match(handleGps, /if \(!position\) return/)
+})
+
+test("장소 선택 map은 화면 고정 핀에서 좌표를 읽고 탭-투-핀으로 되돌아가지 않는다", () => {
+  const source = read("src/features/meetup/components/meetup-location-map.tsx")
+
+  // 핀은 지도 좌표에 붙은 마커가 아니라 스페이서 정중앙의 화면 고정 오버레이다. (#313)
+  assert.match(source, /<MapCenterPin isLifted=\{isMoving\} \/>/)
+  assert.match(source, /alignCenterToVisibleArea/)
+  assert.match(source, /onCenterSettle=\{handleCenterSettle\}/)
+  assert.match(source, /onCenterMoveStart=\{handleCenterMoveStart\}/)
+
+  // 선택/해제 개념이 없어야 한다 — 이게 남아 있으면 핀 재선택 UX 문제가 되살아난다.
+  assert.doesNotMatch(source, /onMapClick=/)
+  assert.doesNotMatch(source, /selectedPosition=/)
+  assert.doesNotMatch(source, /onSelectedPositionClick=/)
+
+  // 인셋 보정으로 되돌아온 중심이 재조회를 유발하지 않도록 격자 단위로 dedupe한다.
+  assert.match(source, /isSameCoordinate\(prev, next\) \? prev : next/)
+})
+
+test("보이는 영역 중심 수식은 visible-center 한 곳에서만 나온다", () => {
+  const canvas = read("src/features/map/components/map-canvas.tsx")
+  const screen = read("src/features/meetup/components/meetup-location-map.tsx")
+
+  assert.match(canvas, /from "@\/features\/map\/lib\/visible-center"/)
+  // 핀 위치와 조회 좌표가 어긋나지 않도록, 중심 계산을 화면 쪽에서 손으로 다시 하지 않는다.
+  assert.doesNotMatch(screen, /containerPointToLatLng/)
+  assert.doesNotMatch(screen, /topInset \+ \(/)
 })
 
 test("모임 마커 썸네일은 파일 URL을 정규화한다", () => {

@@ -8,8 +8,8 @@ interface LocationListItemProps {
   iconSrc: string
   /** 장소명 — 검색 강조를 위해 ReactNode 허용 */
   title: React.ReactNode
-  /** 도로명 주소 등 부가 설명 */
-  subtitle: string
+  /** 도로명 주소 등 부가 설명 — 로딩 스켈레톤을 위해 ReactNode 허용 */
+  subtitle: React.ReactNode
   /** 우측 버튼 라벨 (선택 / 입력 등) */
   actionLabel: string
   /** outlined: 테두리(선택), filled: 파란 채움(입력) */

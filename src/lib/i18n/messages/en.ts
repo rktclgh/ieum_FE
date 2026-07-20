@@ -188,7 +188,6 @@ export const en: Messages = {
     doneButton: "Done",
     currentLocationLabel: "My location",
     loadingAddress: "Loading address…",
-    locationUnavailable: "Couldn't find your location. Showing the area around Seoul City Hall.",
     searchEmpty: "No results found.",
     clearLabel: "Clear",
   },

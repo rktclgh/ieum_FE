@@ -187,7 +187,6 @@ export const zh: Messages = {
     doneButton: "完成",
     currentLocationLabel: "我的位置",
     loadingAddress: "正在加载地址…",
-    locationUnavailable: "无法获取当前位置，正在显示首尔市厅附近。",
     searchEmpty: "没有搜索结果。",
     clearLabel: "清除",
   },

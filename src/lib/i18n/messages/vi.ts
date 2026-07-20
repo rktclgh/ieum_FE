@@ -188,7 +188,6 @@ export const vi: Messages = {
     doneButton: "Xong",
     currentLocationLabel: "Vị trí của tôi",
     loadingAddress: "Đang tải địa chỉ…",
-    locationUnavailable: "Không thể xác định vị trí hiện tại. Đang hiển thị khu vực quanh Tòa thị chính Seoul.",
     searchEmpty: "Không có kết quả.",
     clearLabel: "Xóa",
   },
