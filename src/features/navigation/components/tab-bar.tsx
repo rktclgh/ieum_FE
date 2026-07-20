@@ -81,7 +81,7 @@ function TabBarNav({
       className={cn(
         // issue #279: 하단 홈 인디케이터 위로 pill을 띄운다. 바닥 여백은 바텀시트와
         // 같은 기준선(SCREEN_BOTTOM_GAP)을 쓰고, `FAB_BOTTOM_WITH_TABBAR`가 여기서 파생된다.
-        "fixed inset-x-0 bottom-0 z-10 app-column flex min-w-80 flex-col items-center justify-end gap-2 px-4 pt-2",
+        "app-bottom-fixed z-10 app-column flex min-w-80 flex-col items-center justify-end gap-2 px-4 pt-2",
         SCREEN_BOTTOM_GAP,
         className
       )}

@@ -779,7 +779,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           박스 자체 높이를 줄이는 방식은 그 부족분이 입력창과 키보드 사이 빈 틈으로 그대로
           노출된다. 박스를 화면 전체에 고정하고 padding-bottom만 줄이면 배경이 끝까지 채워져
           같은 부족분이 여백으로 드러나지 않는다. */}
-      <main className="fixed inset-0 app-column flex flex-col bg-white pb-[var(--keyboard-inset,0px)]">
+      <main className="app-screen-fixed app-column flex flex-col bg-white pb-[var(--keyboard-inset,0px)]">
         <AppBar
           title={roomTitle}
           onLeadingClick={() => router.back()}

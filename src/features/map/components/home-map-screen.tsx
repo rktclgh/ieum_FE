@@ -240,7 +240,7 @@ function HomeMapScreen() {
   }, [position, recenterTo])
 
   return (
-    <div className="fixed inset-0 flex w-full flex-col overflow-hidden">
+    <div className="app-screen-fixed flex w-full flex-col overflow-hidden">
       {canShowMap ? (
         <MapCanvas
           center={recenterTarget ?? position ?? DEFAULT_MAP_CENTER}
