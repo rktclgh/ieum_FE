@@ -229,6 +229,8 @@ export const ja: Messages = {
     acceptedLabel: "採用済み",
     openChatWithAuthor: (nickname: string) => `${nickname}さんと個人チャットを開く`,
     acceptedDialogTitle: "回答を採用しました",
+    chatPromptDialogTitle: (nickname: string) =>
+      `${nickname}さんと個人チャットをしますか？`,
     acceptedDialogDescription: (nickname: string) =>
       `${nickname}さんにもっと聞きたいことがあれば、個人チャットで続けて質問できます。`,
     acceptedDialogClose: "閉じる",

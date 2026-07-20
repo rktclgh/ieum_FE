@@ -230,6 +230,8 @@ export const ru: Messages = {
     acceptedLabel: "Выбран",
     openChatWithAuthor: (nickname: string) => `Открыть личный чат с ${nickname}`,
     acceptedDialogTitle: "Ответ выбран",
+    chatPromptDialogTitle: (nickname: string) =>
+      `Начать личный чат с ${nickname}?`,
     acceptedDialogDescription: (nickname: string) =>
       `Если у вас есть ещё вопросы к ${nickname}, продолжите в личном чате.`,
     acceptedDialogClose: "Закрыть",

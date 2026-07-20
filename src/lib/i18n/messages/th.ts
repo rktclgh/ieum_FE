@@ -229,6 +229,8 @@ export const th: Messages = {
     acceptedLabel: "เลือกแล้ว",
     openChatWithAuthor: (nickname: string) => `เปิดแชทส่วนตัวกับ ${nickname}`,
     acceptedDialogTitle: "เลือกคำตอบแล้ว",
+    chatPromptDialogTitle: (nickname: string) =>
+      `แชทส่วนตัวกับ ${nickname} ไหม?`,
     acceptedDialogDescription: (nickname: string) =>
       `หากมีข้อสงสัยเพิ่มเติมกับ ${nickname} สามารถถามต่อในแชทส่วนตัวได้`,
     acceptedDialogClose: "ปิด",

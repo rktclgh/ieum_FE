@@ -223,6 +223,8 @@ export const zh: Messages = {
     acceptedLabel: "已采纳",
     openChatWithAuthor: (nickname: string) => `与${nickname}开始私聊`,
     acceptedDialogTitle: "已采纳回答",
+    chatPromptDialogTitle: (nickname: string) =>
+      `要和${nickname}私聊吗？`,
     acceptedDialogDescription: (nickname: string) =>
       `如果还想问${nickname}更多问题，可以通过私聊继续询问。`,
     acceptedDialogClose: "关闭",
