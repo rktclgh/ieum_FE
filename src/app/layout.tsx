@@ -92,6 +92,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${pretendard.variable} h-full antialiased`}>
+      <head>
+        {/*
+         * standalone(홈 화면 추가 PWA) 여부를 첫 페인트 전에 `<html data-standalone>`으로 심는다.
+         * 하단 고정 요소의 앵커 방식이 모드에 따라 갈리기 때문이다(globals.css의 `.bottom-anchor`,
+         * docs/viewport-behavior.md). `@media (display-mode: standalone)`은 iOS standalone에서
+         * 매칭되지 않으므로(실측) CSS로 분기할 수 없어 JS로 `navigator.standalone`을 읽는다.
+         * 인라인 스크립트라 하이드레이션 전에 실행돼 앵커가 어긋난 첫 프레임(FOUC)이 없다.
+         */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var s=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;if(s)document.documentElement.setAttribute('data-standalone','');}catch(e){}})()",
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <KeyboardInsetProvider />
         <I18nProvider>

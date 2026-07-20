@@ -372,6 +372,22 @@
 }
 
 /*
+ * 하단 고정 요소를 **화면의 진짜 바닥**에 앵커한다 — 지도 edge-to-edge(black-translucent) 대응.
+ * 배경과 실측은 docs/viewport-behavior.md 참고.
+ *
+ * black-translucent standalone에서 뷰포트가 812↔874로 흔들리고 `bottom:0`은 그 흔들림을 따라간다
+ * (탭바가 스크롤에 따라 위아래로 튄다). 안정적인 `100lvh`(=화면 높이) 상단 앵커로 잡으면 고정된다.
+ * Safari에서는 브라우저 크롬이 lvh를 흔들어 이 앵커가 틀리므로, standalone에서만 적용한다.
+ *
+ * 사용법: 요소에 `bottom-anchor` 클래스와 자기 점유 높이 `--anchor-h`를 함께 준다. 기본(Safari·
+ * 비-standalone)에서는 이 규칙이 적용되지 않아 요소의 기존 `bottom-0`이 그대로 산다 → 회귀 없음.
+ */
+:root[data-standalone] .bottom-anchor {
+  top: calc(100lvh - var(--anchor-h, 0px));
+  bottom: auto;
+}
+
+/*
  * 지도 원형 마커 히트 영역 — issue #302.
  * Leaflet이 만드는 `.leaflet-marker-icon` 루트는 border-radius 없는 44x44 정사각형이라,
  * 원 밖 네 모서리(박스의 약 21%)까지 클릭을 가로챈다. 마커가 겹치면 눈에는 클러스터만
