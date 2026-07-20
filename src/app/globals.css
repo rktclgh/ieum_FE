@@ -163,6 +163,25 @@
     "Courier New", monospace;
   /* issue #280 — `--transition-duration-base`가 참조하는 실제 값 */
   --motion-duration-base: 300ms;
+
+  /*
+   * Safe area — issue #279.
+   * `layout.tsx`의 `viewportFit: "cover"`와 한 쌍이다. cover가 켜져야 아래 env()가
+   * 0px이 아닌 실제 노치·홈 인디케이터 높이로 해석된다.
+   *
+   * **이 네 줄이 저장소 전체의 단일 출처다.** 컴포넌트에서 `env(safe-area-inset-*)`를
+   * 직접 쓰지 말고 항상 이 변수를 참조한다. 기본 여백과 합쳐야 할 때는 calc로 더한다:
+   *   `pt-[calc(1rem+var(--safe-area-top))]`, `pb-[calc(0.5rem+var(--safe-area-bottom))]`
+   *
+   * 이름 붙인 Tailwind 유틸리티(`pt-safe` 등) 대신 임의값 문법을 쓰는 이유:
+   * `@utility`로 만든 커스텀 클래스는 tailwind-merge가 `p-4`/`py-2` 같은 기존
+   * 패딩과의 충돌을 인식하지 못해, `cn()`으로 병합되는 지점에서 조용히 둘 다 남는다.
+   * `pt-[...]`는 tailwind-merge와 Tailwind 정렬 규칙 양쪽에서 결정적으로 동작한다.
+   */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

@@ -98,7 +98,7 @@ function NotificationsPageContent() {
           />
         )}
 
-        <div className="flex flex-1 flex-col pb-16">
+        <div className="flex flex-1 flex-col pb-[calc(4rem+var(--safe-area-bottom))]">
           {query.isError ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.notification.loadError}

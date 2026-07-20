@@ -136,7 +136,7 @@ function QuestionsListPageContent() {
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col bg-white">
         <AppBar title={messages.question.historyTitle} leadingIcon={null} trailingIcon={null} />
 
-        <div className="flex flex-1 flex-col px-4 pt-2 pb-24">
+        <div className="flex flex-1 flex-col px-4 pt-2 pb-[calc(6rem+var(--safe-area-bottom))]">
           {/* 로드 실패를 "질문 없음"으로 오인하게 두지 않는다 — 알림 목록과 동일한 처리. */}
           {query.isError ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">

@@ -46,7 +46,7 @@ function DrawerPopup({ className, children, ...props }: DrawerPrimitive.Popup.Pr
     <DrawerPrimitive.Popup
       data-slot="drawer-popup"
       className={cn(
-        "flex w-full max-h-[85vh] flex-col items-center gap-4 rounded-t-3xl bg-white px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] outline-none [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-base ease-base data-ending-style:translate-y-full data-starting-style:translate-y-full",
+        "flex w-full max-h-[85vh] flex-col items-center gap-4 rounded-t-3xl bg-white px-4 pt-4 pb-[calc(1rem+var(--safe-area-bottom))] outline-none [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-base ease-base data-ending-style:translate-y-full data-starting-style:translate-y-full",
         className
       )}
       {...props}

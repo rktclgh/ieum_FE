@@ -98,7 +98,7 @@ function ReportPageContent({ target }: ReportPageContentProps) {
         </div>
       )}
 
-      <div className="flex items-center gap-2 px-4 pt-2 pb-4">
+      <div className="flex items-center gap-2 px-4 pt-2 pb-[calc(1rem+var(--safe-area-bottom))]">
         <button
           type="button"
           onClick={handleClose}

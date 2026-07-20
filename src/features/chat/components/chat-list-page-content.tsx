@@ -159,7 +159,7 @@ function ChatListPageContent() {
 
   return (
     <>
-      <main className="mx-auto flex w-full max-w-sm flex-col gap-2 p-4 pb-28">
+      <main className="mx-auto flex w-full max-w-sm flex-col gap-2 px-4 pt-[calc(1rem+var(--safe-area-top))] pb-[calc(7rem+var(--safe-area-bottom))]">
         <div className="flex items-center gap-2 py-2">
           <SearchBox
             placeholder={messages.chat.listSearchPlaceholder}

@@ -76,7 +76,7 @@ function NotificationsForm({ settings: serverSettings }: { settings: UserSetting
         onLeadingClick={() => router.back()}
       />
 
-      <div className="flex w-full flex-col px-4 pb-16">
+      <div className="flex w-full flex-col px-4 pb-[calc(4rem+var(--safe-area-bottom))]">
         <div className="flex w-full items-center justify-between py-3.5">
           <span className="text-body-medium-16 text-gray-900">
             {messages.my.notifications.notifyAllLabel}
@@ -119,7 +119,7 @@ function NotificationsForm({ settings: serverSettings }: { settings: UserSetting
       </div>
 
       {visibleError && (
-        <div className="fixed inset-x-0 bottom-6 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(1.5rem+var(--safe-area-bottom))] z-50 mx-auto flex w-full max-w-sm justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {visibleError}
           </div>

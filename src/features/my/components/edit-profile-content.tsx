@@ -175,7 +175,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
         onLeadingClick={() => router.back()}
       />
 
-      <div className="flex w-full flex-col gap-3 px-4 pb-32 [&>[data-slot=explanation]]:-mt-3">
+      <div className="flex w-full flex-col gap-3 px-4 pb-[calc(8rem+var(--safe-area-bottom))] [&>[data-slot=explanation]]:-mt-3">
         <div className="flex w-full flex-col items-center py-4">
           <ProfileAvatarButton
             previewUrl={resolveFileUrl(user.profileImageUrl) ?? null}
@@ -280,7 +280,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
         {errorCode && <Explanation variant="error" text={errorCode} />}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm flex-col items-center gap-2 bg-white px-4 pt-2 pb-2">
+      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+var(--safe-area-bottom))]">
         <Button
           type="submit"
           variant="primary"

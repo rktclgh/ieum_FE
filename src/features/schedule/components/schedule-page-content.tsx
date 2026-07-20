@@ -300,7 +300,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-6 pt-2 pb-28">
+        <div className="flex flex-col gap-6 pt-2 pb-[calc(7rem+var(--safe-area-bottom))]">
           <ScheduleCalendar
             year={year}
             month={month}
@@ -319,7 +319,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
           aria-label={messages.schedule.addButtonLabel}
           iconSrc="/icons/circle/plus-white.svg"
           background="primary"
-          className="absolute right-4 bottom-6 z-10"
+          className="absolute right-4 bottom-[calc(1.5rem+var(--safe-area-bottom))] z-10"
           onClick={() => setEditor({ mode: "create" })}
         />
       ) : null}
@@ -368,7 +368,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
       />
 
       {actionError ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-8 z-[60] flex justify-center px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-[calc(2rem+var(--safe-area-bottom))] z-[60] flex justify-center px-4">
           <p className="rounded-full bg-gray-900/90 px-4 py-2 text-body-regular-13 text-white">{actionError}</p>
         </div>
       ) : null}

@@ -20,7 +20,7 @@ function BottomSheet({ children, className, ...props }: BottomSheetProps) {
     <DrawerPrimitive.Root data-slot="bottom-sheet" {...props}>
       <DrawerPrimitive.Portal>
         <DrawerPrimitive.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/20 opacity-[calc(1_-_var(--drawer-swipe-progress))] transition-opacity duration-base ease-base data-ending-style:opacity-0 data-starting-style:opacity-0" />
-        <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_env(safe-area-inset-bottom,0px))]">
+        <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_var(--safe-area-bottom))]">
           <DrawerPrimitive.Popup
             data-slot="bottom-sheet-popup"
             className={cn(

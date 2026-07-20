@@ -69,7 +69,9 @@ function TabBarNav({
     <div
       data-slot="tab-bar"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm min-w-80 flex-col items-center justify-end gap-2 px-4 py-2",
+        // issue #279: 하단 홈 인디케이터 위로 pill을 띄운다. 기준선이 바뀌므로
+        // `FAB_BOTTOM_WITH_TABBAR`(lib/constants/layout.ts)도 같은 양만큼 함께 올라간다.
+        "fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm min-w-80 flex-col items-center justify-end gap-2 px-4 pt-2 pb-[calc(0.5rem+var(--safe-area-bottom))]",
         className
       )}
       {...props}

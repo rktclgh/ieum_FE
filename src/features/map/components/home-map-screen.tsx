@@ -28,7 +28,7 @@ import { InstallPrompt } from "@/features/pwa/components/install-prompt"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
-import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
+import { APP_BAR_SAFE_TOP, FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -183,7 +183,10 @@ function HomeMapScreen() {
         />
       ) : null}
 
-      <div className="relative z-10 mx-auto flex w-full max-w-sm flex-col gap-2 p-4">
+      {/* 홈 지도는 AppBar 없이 툴바를 직접 그린다 — 상단 safe-area도 직접 받는다 (issue #279). */}
+      <div
+        className={`relative z-10 mx-auto flex w-full max-w-sm flex-col gap-2 px-4 pb-4 ${APP_BAR_SAFE_TOP}`}
+      >
         <div className="flex items-center gap-2">
           <MapSearchBar
             onFocus={() => setSearchOpen(true)}
@@ -213,7 +216,7 @@ function HomeMapScreen() {
           className={`pointer-events-auto absolute right-4 ${FAB_BOTTOM_WITH_TABBAR} flex flex-col gap-2`}
         />
 
-        <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3" />
+        <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+var(--safe-area-bottom))] left-3" />
       </div>
 
       <SearchOverlay

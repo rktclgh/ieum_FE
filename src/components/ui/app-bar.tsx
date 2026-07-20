@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
+import { APP_BAR_SAFE_TOP } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 const TRAILING_ICON_SRC = {
@@ -40,7 +41,8 @@ function AppBar({
   return (
     <div
       data-slot="app-bar"
-      className={cn("flex w-full items-center justify-between p-4", className)}
+      // issue #279: 대부분 화면의 첫 요소라 상태바/노치를 직접 받아낸다.
+      className={cn("flex w-full items-center justify-between px-4 pb-4", APP_BAR_SAFE_TOP, className)}
       {...props}
     >
       {leadingIcon === null ? (

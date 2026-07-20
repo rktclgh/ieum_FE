@@ -12,6 +12,7 @@ import { QuestionResultCard } from "@/features/map/components/question-result-ca
 import { SearchTabBar, type SearchTab } from "@/features/map/components/search-tab-bar"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useSearchResults } from "@/features/map/hooks/use-search-results"
+import { APP_BAR_SAFE_TOP } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 // "전체" 탭에서 타입별로 미리보기할 최대 개수(상세 fetch 부담 제한).
@@ -82,7 +83,8 @@ function SearchOverlayContent({
 
   return (
     <>
-      <div className="flex items-center gap-2 p-4">
+      {/* AppBar를 쓰지 않는 자체 헤더라 상단 safe-area를 직접 받는다 (issue #279). */}
+      <div className={`flex items-center gap-2 px-4 pb-4 ${APP_BAR_SAFE_TOP}`}>
         <button
           type="button"
           aria-label={messages.common.back}
@@ -104,7 +106,8 @@ function SearchOverlayContent({
         <SearchTabBar value={tab} onChange={setTab} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8">
+      {/* fixed inset-0 오버레이라 마지막 결과가 홈 인디케이터에 걸린다 (issue #279). */}
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(2rem+var(--safe-area-bottom))]">
         {isLoading && q.length > 0 ? (
           <div className="mt-16 flex justify-center">
             <div className="size-6 animate-spin rounded-full border-2 border-gray-200 border-t-primary" />
