@@ -314,6 +314,7 @@ function HomeMapScreen() {
       <SearchOverlay
         open={isSearchOpen}
         near={position}
+        bounds={bounds}
         onClose={() => setSearchOpen(false)}
         onSelectPlace={(place) => {
           setSelectedLocation({
