@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import type { FormEvent } from "react"
 
+import { Screen } from "@/components/layout/screen"
 import { Button } from "@/components/ui/button"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { Input } from "@/components/ui/text-field/input"
@@ -35,7 +36,12 @@ function LoginContent() {
   return (
     // issue #279: AppBar가 없는 화면이라 상태바·홈 인디케이터를 main이 직접 받는다.
     // 세로 중앙 정렬이지만 짧은 뷰포트에서는 내용이 화면 끝까지 차므로 위아래 모두 필요하다.
-    <main className="app-column flex min-h-dvh flex-col items-center justify-center gap-4 px-4 pt-[calc(1.5rem+var(--safe-area-top))] pb-[calc(1.5rem+var(--safe-area-bottom))] sm:gap-5 [@media(max-height:620px)]:gap-3 [@media(max-height:620px)]:pt-[calc(0.75rem+var(--safe-area-top))] [@media(max-height:620px)]:pb-[calc(0.75rem+var(--safe-area-bottom))]">
+    <Screen
+      kind="scroll"
+      as="main"
+      centered
+      className="gap-4 px-4 pt-[calc(1.5rem+var(--safe-area-top))] pb-[calc(1.5rem+var(--safe-area-bottom))] sm:gap-5 [@media(max-height:620px)]:gap-3 [@media(max-height:620px)]:pt-[calc(0.75rem+var(--safe-area-top))] [@media(max-height:620px)]:pb-[calc(0.75rem+var(--safe-area-bottom))]"
+    >
       <LanguageToggle />
 
       {/* Figma 1774:11266 — 로고 영역 120px(상하 패딩 32 + 로고 56).
@@ -128,7 +134,7 @@ function LoginContent() {
           {messages.login.continueWithKakao}
         </Button>
       </div>
-    </main>
+    </Screen>
   )
 }
 
