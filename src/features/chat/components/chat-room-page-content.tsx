@@ -4,10 +4,11 @@ import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
-import { Globe } from "lucide-react"
+import { Download, Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Toast } from "@/components/ui/toast"
 import {
   SidePanel,
   SidePanelBackdrop,
@@ -35,6 +36,7 @@ import { ChatRoomMemberItem } from "@/features/chat/components/chat-room-member-
 import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-danger-actions"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { useLongPress } from "@/lib/hooks/use-long-press"
+import { useSaveImage } from "@/lib/hooks/use-save-image"
 import {
   LONG_PRESS_INACTIVE,
   LONG_PRESS_LIFT_ACTIVE,
@@ -265,6 +267,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const queryClient = useQueryClient()
   const { messages } = useTranslation()
   const myUserId = session.userId ?? -1
+  const saveImageAction = useSaveImage()
 
   const { data: room } = useChatRoom(roomId, session)
   const {
@@ -734,6 +737,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         },
       })
     }
+    // 업로드 중인 낙관적 말풍선은 blob: 미리보기라 저장 대상이 아니다.
+    if (message.imageUrl && !message.imageUploading) {
+      const imageUrl = message.imageUrl
+      items.push({
+        icon: <Download className="size-6 text-gray-900" />,
+        label: messages.common.saveImage,
+        onClick: () => {
+          setActiveMessageId(null)
+          void saveImageAction.save(imageUrl)
+        },
+      })
+    }
     items.push(
       {
         icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
@@ -1092,6 +1107,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           })
         }}
       />
+      <Toast open={saveImageAction.failed} message={messages.common.saveImageFailed} />
     </>
   )
 }

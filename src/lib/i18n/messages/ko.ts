@@ -14,6 +14,8 @@ export interface Messages {
     close: string
     more: string
     retry: string
+    saveImage: string
+    saveImageFailed: string
   }
   route: {
     invalidLink: string
@@ -517,6 +519,8 @@ export const ko: Messages = {
     close: "닫기",
     more: "더보기",
     retry: "다시 시도",
+    saveImage: "사진 저장",
+    saveImageFailed: "사진을 저장하지 못했어요",
   },
   route: {
     invalidLink: "유효하지 않은 링크입니다.",

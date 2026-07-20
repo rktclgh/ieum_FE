@@ -68,7 +68,7 @@ function MyPageContent() {
       <main className="app-column flex min-h-dvh flex-col items-center px-4 pb-[calc(7rem+var(--safe-area-bottom))]">
         {/* 프로필 */}
         <div className="flex flex-col items-center gap-3 pt-[calc(2rem+var(--safe-area-top))] pb-6">
-          <div className="size-24 overflow-hidden rounded-full border-4 border-gray-100 bg-gray-100">
+          <div className="size-24 overflow-hidden rounded-full bg-gray-100">
             {user.profileImageUrl ? (
               // 백엔드 프로필 이미지 호스트가 next.config remotePatterns에 없어 일반 img로 렌더한다.
               // eslint-disable-next-line @next/next/no-img-element

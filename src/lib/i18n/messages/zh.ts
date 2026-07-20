@@ -10,6 +10,8 @@ export const zh: Messages = {
     close: "关闭",
     more: "更多",
     retry: "重试",
+    saveImage: "保存照片",
+    saveImageFailed: "无法保存照片",
   },
   route: {
     invalidLink: "此链接无效。",

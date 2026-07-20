@@ -5,6 +5,9 @@ import * as React from "react"
 import { AppBar } from "@/components/ui/app-bar"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
+import { Input } from "@/components/ui/text-field/input"
+import { SelectField } from "@/components/ui/text-field/select-field"
+import { Textarea } from "@/components/ui/text-field/textarea"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { uploadImage } from "@/features/question/api/question-file-api"
 import { SimilarQuestionsSection } from "@/features/question/components/similar-questions-section"
@@ -18,7 +21,6 @@ import type { QuestionDetailView } from "@/features/question/lib/question-adapte
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
 import { MeetupImagePicker } from "@/features/meetup/components/meetup-image-picker"
 import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
-import { MeetupSelectField } from "@/features/meetup/components/meetup-select-field"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -247,18 +249,16 @@ function CreateQuestionForm({
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pt-3 pb-4">
         {/* 제목 */}
-        <div className="flex h-[3.375rem] w-full shrink-0 items-center rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary">
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
-            maxLength={TITLE_MAX_LENGTH}
-            placeholder={t.titlePlaceholder}
-            className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
-          />
-        </div>
+        <Input
+          value={title}
+          onChange={(event) => setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
+          maxLength={TITLE_MAX_LENGTH}
+          placeholder={t.titlePlaceholder}
+          className="shrink-0"
+        />
 
         {/* 장소 */}
-        <MeetupSelectField
+        <SelectField
           iconSrc="/icons/write/location-200.svg"
           selectedIconSrc="/icons/write/location-700.svg"
           placeholder={t.locationPlaceholder}
@@ -269,25 +269,24 @@ function CreateQuestionForm({
         />
 
         {/* 내용 + 사진 첨부 */}
-        <div className="relative h-[18.75rem] shrink-0 rounded-lg border border-gray-100 transition-colors focus-within:border-primary">
-          <textarea
-            value={content}
-            onChange={(event) => setContent(event.target.value.slice(0, CONTENT_MAX_LENGTH))}
-            maxLength={CONTENT_MAX_LENGTH}
-            placeholder={t.contentPlaceholder}
-            className="size-full resize-none bg-transparent px-[15px] pt-[11px] pb-24 text-body-regular-14 text-gray-900 caret-primary outline-none placeholder:text-gray-400"
-          />
-          <MeetupImagePicker
-            image={image?.preview ?? existingImageUrl}
-            onPick={() => fileInputRef.current?.click()}
-            onRemove={() => {
-              if (existingImageUrl && !image) setImageCleared(true)
-              setImage(null)
-              setExistingImageUrl(null)
-            }}
-            className="absolute bottom-[15px] left-[15px]"
-          />
-        </div>
+        <Textarea
+          value={content}
+          onChange={(event) => setContent(event.target.value.slice(0, CONTENT_MAX_LENGTH))}
+          maxLength={CONTENT_MAX_LENGTH}
+          placeholder={t.contentPlaceholder}
+          className="h-[18.75rem] shrink-0"
+          bottomSlot={
+            <MeetupImagePicker
+              image={image?.preview ?? existingImageUrl}
+              onPick={() => fileInputRef.current?.click()}
+              onRemove={() => {
+                if (existingImageUrl && !image) setImageCleared(true)
+                setImage(null)
+                setExistingImageUrl(null)
+              }}
+            />
+          }
+        />
 
         {/* 비슷한 질문 (채택 답변 있는 질문만 · 데이터는 백엔드 API 연동 후) */}
         <SimilarQuestionsSection items={similarQuestions} className="shrink-0" />
@@ -295,7 +294,7 @@ function CreateQuestionForm({
 
       {/* 제출 */}
       <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+var(--safe-area-bottom))]">
-        {error ? <Explanation variant="error" text={error} className="px-1 pb-1" /> : null}
+        {error ? <Explanation variant="error" text={error} /> : null}
         <button
           type="button"
           disabled={!canSubmit}
