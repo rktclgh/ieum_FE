@@ -7,6 +7,7 @@ import {
   type MeetupDateSelection,
   type MeetupDateValue,
   type MeetupPlaceValue,
+  type MeetupTimeSelection,
   type MeetupTimeValue,
 } from "@/features/meetup/constants/create-meetup"
 import { hasCompleteMeetupSchedule } from "@/features/meetup/lib/create-meetup-schedule"
@@ -26,6 +27,7 @@ function useCreateMeetupForm(initialPlace: MeetupPlaceValue | null = null) {
   const [date, setDate] = React.useState<MeetupDateValue | null>(null)
   const [time, setTime] = React.useState<MeetupTimeValue | null>(null)
   const [isDateUndecided, setIsDateUndecided] = React.useState(false)
+  const [isTimeUndecided, setIsTimeUndecided] = React.useState(false)
   const [place, setPlace] = React.useState<MeetupPlaceValue | null>(initialPlace)
   const [description, setDescription] = React.useState("")
   const [image, setImage] = React.useState<MeetupImageValue | null>(null)
@@ -43,14 +45,20 @@ function useCreateMeetupForm(initialPlace: MeetupPlaceValue | null = null) {
     setDate(nextIsDateUndecided ? null : nextDate)
     if (isDateChanged) {
       setTime(null)
+      setIsTimeUndecided(false)
     }
+  }
+
+  const setTimeSelection = ({ time: nextTime, isTimeUndecided: nextIsTimeUndecided }: MeetupTimeSelection) => {
+    setIsTimeUndecided(nextIsTimeUndecided)
+    setTime(nextIsTimeUndecided ? null : nextTime)
   }
 
   // 이미지는 선택 항목. 나머지 필수값이 모두 채워지고 제목 글자 수가 유효할 때만 제출 가능.
   const canSubmit =
     title.trim().length > 0 &&
     !titleTooLong &&
-    hasCompleteMeetupSchedule({ date, time, isDateUndecided }) &&
+    hasCompleteMeetupSchedule({ date, time, isDateUndecided, isTimeUndecided }) &&
     place !== null &&
     description.trim().length > 0
 
@@ -60,9 +68,10 @@ function useCreateMeetupForm(initialPlace: MeetupPlaceValue | null = null) {
     date,
     setDate,
     time,
-    setTime,
     isDateUndecided,
     setDateSelection,
+    isTimeUndecided,
+    setTimeSelection,
     place,
     setPlace,
     description,
