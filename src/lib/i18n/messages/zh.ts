@@ -511,6 +511,33 @@ export const zh: Messages = {
     unreadBadgeLabel: (count) => `${count} 条未读通知`,
     aiAnswerSourceLabel: "AI回答",
     humanAnswerSourceLabel: "用户回答",
+    copy: {
+      "notification.answer.created": {
+        title: "新回答",
+        body: () => "有人回答了你的提问",
+      },
+      "notification.answer.accepted": {
+        title: "回答被采纳",
+        body: () => "你的回答被采纳了",
+      },
+      "notification.friend.request": {
+        title: "好友申请",
+        body: (params) => `${params.nickname ?? ""} 向你发送了好友申请`,
+      },
+      // subject 是用户自己填写的提问·聚会标题原文，不翻译，原样透传。
+      "notification.radius.question": {
+        title: "附近的新提问",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.radius.meeting": {
+        title: "附近的新聚会",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.chat.message": {
+        title: "新消息",
+        body: () => "你有一条新的聊天消息",
+      },
+    },
   },
   translate: {
     menuLabel: "翻译",

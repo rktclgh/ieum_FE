@@ -518,6 +518,33 @@ export const vi: Messages = {
     unreadBadgeLabel: (count) => `${count} thông báo chưa đọc`,
     aiAnswerSourceLabel: "Câu trả lời AI",
     humanAnswerSourceLabel: "Câu trả lời người dùng",
+    copy: {
+      "notification.answer.created": {
+        title: "Câu trả lời mới",
+        body: () => "Có người đã trả lời câu hỏi của bạn",
+      },
+      "notification.answer.accepted": {
+        title: "Câu trả lời được chọn",
+        body: () => "Câu trả lời của bạn đã được chọn",
+      },
+      "notification.friend.request": {
+        title: "Lời mời kết bạn",
+        body: (params) => `${params.nickname ?? ""} đã gửi lời mời kết bạn`,
+      },
+      // subject là tiêu đề câu hỏi/buổi gặp do người dùng viết — giữ nguyên, không dịch.
+      "notification.radius.question": {
+        title: "Câu hỏi mới gần bạn",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.radius.meeting": {
+        title: "Buổi gặp mới gần bạn",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.chat.message": {
+        title: "Tin nhắn mới",
+        body: () => "Bạn có tin nhắn trò chuyện mới",
+      },
+    },
   },
   translate: {
     menuLabel: "Dịch",

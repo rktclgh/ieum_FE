@@ -4,8 +4,14 @@
 interface NotificationItem {
   notificationId: number
   type: string
+  // 서버가 렌더한 한국어 폴백. messageKey 를 못 읽는 경우에만 쓴다.
   title: string
   body: string
+  // 사건 식별자. 이 키로 카탈로그에서 사용자 언어의 문구를 찾는다(백엔드 이슈 #193).
+  // v36 마이그레이션 이전에 쌓인 알림은 null 이라 title/body 로 폴백한다.
+  messageKey: string | null
+  // 발송 시점에 굳어진 스냅샷 값(닉네임·제목 등). 파라미터가 없으면 빈 객체.
+  messageParams: Record<string, string>
   // 딥링크 대상 식별자(질문/모임/채팅). 대상이 없으면 null.
   refId: number | null
   // 답변 알림의 출처. 답변과 무관한 알림이면 null.

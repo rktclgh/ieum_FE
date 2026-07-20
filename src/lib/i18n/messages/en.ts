@@ -518,6 +518,33 @@ export const en: Messages = {
     unreadBadgeLabel: (count) => `${count} unread notifications`,
     aiAnswerSourceLabel: "AI answer",
     humanAnswerSourceLabel: "Human answer",
+    copy: {
+      "notification.answer.created": {
+        title: "New answer",
+        body: () => "Someone answered your question",
+      },
+      "notification.answer.accepted": {
+        title: "Answer accepted",
+        body: () => "Your answer was accepted",
+      },
+      "notification.friend.request": {
+        title: "Friend request",
+        body: (params) => `${params.nickname ?? ""} sent you a friend request`,
+      },
+      // subject is the user's own question/meetup title — passed through untranslated.
+      "notification.radius.question": {
+        title: "New question nearby",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.radius.meeting": {
+        title: "New meetup nearby",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.chat.message": {
+        title: "New message",
+        body: () => "You have a new chat message",
+      },
+    },
   },
   translate: {
     menuLabel: "Translate",
