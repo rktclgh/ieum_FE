@@ -18,6 +18,13 @@ interface GroupChatMemberListItem {
   canRemove: boolean
 }
 
+// 목록 정렬 우선순위: 나 > 방장 > 참여순(joinedAt 오름차순). rank가 낮을수록 상단.
+function participantRank(participant: MeetingParticipant, currentUserId: number): number {
+  if (participant.userId === currentUserId) return 0
+  if (participant.isHost) return 1
+  return 2
+}
+
 // 모임 참가자 API가 이름·프로필·참가 상태의 정본이다. chat room members는 국적 표시 보강에만 쓴다.
 function buildGroupChatMemberList({
   currentUserId,
@@ -31,10 +38,17 @@ function buildGroupChatMemberList({
 
   return participants
     .map((participant, index) => ({ participant, index }))
-    .sort(
-      (left, right) =>
-        Number(right.participant.isHost) - Number(left.participant.isHost) || left.index - right.index
-    )
+    .sort((left, right) => {
+      const rankDiff =
+        participantRank(left.participant, currentUserId) - participantRank(right.participant, currentUserId)
+      if (rankDiff !== 0) return rankDiff
+
+      const joinedAtDiff =
+        new Date(left.participant.joinedAt).getTime() - new Date(right.participant.joinedAt).getTime()
+      if (!Number.isNaN(joinedAtDiff) && joinedAtDiff !== 0) return joinedAtDiff
+
+      return left.index - right.index
+    })
     .map(({ participant }) => {
       const metadata = metadataByUserId.get(participant.userId)
       const isMe = participant.userId === currentUserId
