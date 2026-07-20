@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { TAB_ITEMS } from "@/features/navigation/constants/tab-items"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { useHasScreenOverlay } from "@/lib/overlay/screen-overlay"
 
 /** 활성일 때 보여줄 아이콘은 fill, 비활성일 때는 line */
 const ICON_VARIANTS = [
@@ -33,19 +34,27 @@ const normalizePath = (path: string) => path.replace(/\/$/, "") || "/"
  * 하단 고정 탭바. 루트 layout에서 한 번만 렌더하며(issue #280), 라우트 전환 중에도
  * 인스턴스가 유지되어야 활성 pill 슬라이딩 애니메이션이 성립한다.
  *
- * 노출 조건은 `TAB_ITEMS`의 href와 pathname이 **완전 일치**할 때뿐이다.
- * prefix 매칭을 넣으면 원래 탭바가 없던 하위 경로(`/my/edit` 등)에 탭바가 새로 생긴다.
+ * 노출 조건은 두 가지다.
  *
- * 경로 판정을 먼저 하고 세션 조회를 안쪽 컴포넌트로 미루는 이유: 탭 경로가 아닌
+ * 1. `TAB_ITEMS`의 href와 pathname이 **완전 일치**할 것.
+ *    prefix 매칭을 넣으면 원래 탭바가 없던 하위 경로(`/my/edit` 등)에 탭바가 새로 생긴다.
+ * 2. 화면을 덮는 오버레이가 열려 있지 않을 것 (issue #317).
+ *    홈의 검색·리스트·새 모임 작성·새 질문 작성·핀 상세 시트는 별도 라우트가 아니라 `/` 위의
+ *    오버레이 상태라, 경로만 보면 전부 "홈"이라 탭바가 그대로 남는다. Figma에는 이 화면들에
+ *    탭바가 없다. z-index로 덮는 것만으로는 진입·퇴장 모션 중과 키보드가 올라와 오버레이
+ *    박스가 줄어들 때(`--keyboard-inset`), 그리고 반투명 backdrop 뒤로 그대로 비친다.
+ *
+ * 경로·오버레이 판정을 먼저 하고 세션 조회를 안쪽 컴포넌트로 미루는 이유: 탭 경로가 아닌
  * 화면(`/login` 등)에서 `useMe` 요청이 새로 발생하지 않게 하기 위해서다.
  */
 function TabBar(props: React.ComponentProps<"div">) {
   const pathname = usePathname()
+  const hasScreenOverlay = useHasScreenOverlay()
 
   const activeIndex = TAB_ITEMS.findIndex(
     (item) => normalizePath(item.href) === normalizePath(pathname)
   )
-  if (activeIndex === -1) return null
+  if (activeIndex === -1 || hasScreenOverlay) return null
 
   return <TabBarNav activeIndex={activeIndex} {...props} />
 }
