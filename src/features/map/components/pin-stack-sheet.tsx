@@ -9,14 +9,17 @@ import { QuestionDetailContainer } from "@/features/question/components/question
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 /**
- * 슬라이드 폭 = 카드 폭 + 카드 사이 간격(8px).
+ * 슬라이드 폭 = 카드 폭 + 카드 사이 간격(12px).
  *
  * 좌우로 이웃 카드가 살짝 보이도록 화면보다 좁게 잡되, 카드 자체는 단일 시트와 같은
- * 최대 폭(345px)을 넘지 않는다. 간격은 슬라이드 안쪽 좌우 패딩(4px씩)으로 만들어
+ * 최대 폭(345px)을 넘지 않는다. 간격은 슬라이드 안쪽 좌우 패딩(6px씩 = px-1.5)으로 만들어
  * flex gap 대신 슬라이드 폭에 포함시킨다 — gap을 쓰면 앞쪽 스페이서 뒤에도 gap이 붙어
  * 첫 카드가 중앙에서 밀린다. 앞뒤 스페이서가 이 값에 맞춰 첫/마지막 슬라이드를 중앙에 세운다.
+ *
+ * ★ 이 값을 바꾸면 슬라이드의 px-* 도 절반값으로 함께 바꿔야 한다(12px → px-1.5).
+ *   둘이 어긋나면 스냅 중앙 정렬이 카드마다 조금씩 틀어진다.
  */
-const SLIDE_GAP_PX = 8
+const SLIDE_GAP_PX = 12
 const SLIDE_WIDTH = `min(${345 + SLIDE_GAP_PX}px, calc(100% - 3rem))`
 
 /** 활성 슬라이드 기준 좌우 몇 장까지 실제 내용을 렌더할지. 나머지는 자리만 잡아 조회를 아낀다. */
@@ -85,14 +88,16 @@ function PinStackSheet({ pins, onClose }: PinStackSheetProps) {
         <div
           ref={trackRef}
           onScroll={handleScroll}
-          className="flex w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          // items-end: 카드 높이는 내용에 따라 제각각이므로(모임은 짧고, 아바타가 있는 질문은 길다)
+          // 바닥을 기준선으로 맞춰야 스와이프할 때 카드가 위아래로 튀지 않는다.
+          className="flex w-full items-end snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <StackSpacer />
           {pins.map((pin, index) => (
             <div
               key={pin.pinId}
               data-pin-stack-slide
-              className="w-[var(--pin-stack-slide)] shrink-0 snap-center px-1"
+              className="w-[var(--pin-stack-slide)] shrink-0 snap-center px-1.5"
             >
               <div className="flex w-full flex-col items-center gap-4 rounded-3xl bg-white px-4 pt-6 pb-5 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]">
                 {Math.abs(index - activeIndex) <= RENDER_WINDOW ? (
