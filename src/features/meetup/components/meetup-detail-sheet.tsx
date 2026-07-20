@@ -15,7 +15,6 @@ interface MeetupDetailSheetProps {
   pending: boolean
   error?: string | null
   onJoin: () => void
-  onLeave: () => void
   onEnterRoom: () => void
 }
 
@@ -35,7 +34,6 @@ function MeetupDetailSheet({
   pending,
   error,
   onJoin,
-  onLeave,
   onEnterRoom,
 }: MeetupDetailSheetProps) {
   const { messages } = useTranslation()
@@ -45,8 +43,8 @@ function MeetupDetailSheet({
   if (!display) return null
   const hasImage = Boolean(display.imageUrl)
   const isOpen = display.status === "open"
-  const isHost = display.isHost
-  const isMember = display.myStatus === "joined"
+  // 방장·참여자 모두 시트에선 '채팅방 가기'만 노출한다. 나가기는 채팅방 더보기로 일원화(#249).
+  const isJoined = display.isHost || display.myStatus === "joined"
   const closedLabel = display.status === "cancelled" ? t.statusCancelled : t.statusClosed
 
   return (
@@ -94,21 +92,12 @@ function MeetupDetailSheet({
 
       {error ? <p className="w-full text-body-regular-12 text-red">{error}</p> : null}
 
-      {/* 액션: myStatus 에 따라 분기 */}
+      {/* 액션: 참여(방장·멤버) 여부에 따라 분기. 나가기는 채팅방 더보기에서만 처리한다. */}
       <div className="flex w-full flex-col gap-2">
-        {isHost ? (
+        {isJoined ? (
           <Button variant="primary" size="block" disabled={pending} onClick={onEnterRoom}>
             {t.enterRoomButton}
           </Button>
-        ) : isMember ? (
-          <>
-            <Button variant="primary" size="block" disabled={pending} onClick={onEnterRoom}>
-              {t.enterRoomButton}
-            </Button>
-            <Button variant="secondary" size="block" disabled={pending} onClick={onLeave}>
-              {t.leaveButton}
-            </Button>
-          </>
         ) : (
           <Button variant="primary" size="block" disabled={pending || !isOpen} onClick={onJoin}>
             {isOpen ? t.joinButton : closedLabel}

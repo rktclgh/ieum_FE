@@ -29,6 +29,12 @@ node --experimental-strip-types --test src/features/schedule/lib/schedule-contra
 node --experimental-strip-types --test src/features/schedule/lib/schedule-editor.test.ts
 node --experimental-strip-types --test src/features/schedule/lib/schedule-query-error.test.ts
 node --experimental-strip-types --test src/features/schedule/lib/schedule-query-range.test.ts
+node --experimental-strip-types --test src/features/map/lib/map-tile-error.test.ts
 node --experimental-strip-types --test src/features/report/lib/report-target.test.ts
+node --experimental-strip-types --test src/features/pwa/lib/install-availability.test.ts
+node --experimental-strip-types --test src/features/pwa/lib/platform.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/lib/long-press-styles.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/chat/lib/context-menu-geometry.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/question/lib/question-adapter.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/question/lib/answer-acceptance.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/notification/lib/notification-link.test.ts

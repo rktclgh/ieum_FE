@@ -3,13 +3,9 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { MeetupDetailSheet } from "@/features/meetup/components/meetup-detail-sheet"
 import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
-import {
-  useJoinMeeting,
-  useLeaveMeeting,
-} from "@/features/meetup/hooks/use-meetup-mutations"
+import { useJoinMeeting } from "@/features/meetup/hooks/use-meetup-mutations"
 import { adaptMeetingDetail } from "@/features/meetup/lib/meetup-adapter"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -33,19 +29,10 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
   const detail = meetingQuery.data ? adaptMeetingDetail(meetingQuery.data, language) : null
 
   const join = useJoinMeeting(meetingId)
-  const leave = useLeaveMeeting(meetingId)
 
   const [error, setError] = React.useState<string | null>(null)
-  // 되돌리기 어려운 파괴적 액션(나가기/내보내기/마감/취소)은 실행 전 확인 다이얼로그를 거친다.
-  const [confirm, setConfirm] = React.useState<{
-    title: string
-    description: string
-    confirmLabel: string
-    onConfirm: () => void
-  } | null>(null)
-  const m = messages.meetup
 
-  const pending = join.isPending || leave.isPending
+  const pending = join.isPending
 
   const run = async (action: () => Promise<void>) => {
     setError(null)
@@ -63,13 +50,6 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
       const { roomId } = await join.mutateAsync()
       router.replace(routes.chatRoom(roomId))
     })
-  const handleLeave = () =>
-    setConfirm({
-      title: m.leaveConfirmTitle,
-      description: m.leaveConfirmDescription,
-      confirmLabel: m.leaveButton,
-      onConfirm: () => run(async () => { await leave.mutateAsync(); close() }),
-    })
   const handleEnterRoom = () => {
     if (detail) router.push(routes.chatRoom(detail.roomId))
   }
@@ -85,34 +65,17 @@ function MeetupDetailContainer({ meetingId, onClose }: MeetupDetailContainerProp
   }
 
   return (
-    <>
-      <MeetupDetailSheet
-        open
-        onOpenChange={(next) => {
-          if (!next) close()
-        }}
-        detail={detail}
-        pending={pending}
-        error={error}
-        onJoin={handleJoin}
-        onLeave={handleLeave}
-        onEnterRoom={handleEnterRoom}
-      />
-      <ConfirmDialog
-        open={confirm !== null}
-        onOpenChange={(next) => {
-          if (!next) setConfirm(null)
-        }}
-        title={confirm?.title ?? ""}
-        description={confirm?.description ?? ""}
-        cancelLabel={m.confirmCancelLabel}
-        confirmLabel={confirm?.confirmLabel ?? ""}
-        onConfirm={() => {
-          confirm?.onConfirm()
-          setConfirm(null)
-        }}
-      />
-    </>
+    <MeetupDetailSheet
+      open
+      onOpenChange={(next) => {
+        if (!next) close()
+      }}
+      detail={detail}
+      pending={pending}
+      error={error}
+      onJoin={handleJoin}
+      onEnterRoom={handleEnterRoom}
+    />
   )
 }
 

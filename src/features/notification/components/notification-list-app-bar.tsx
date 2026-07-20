@@ -4,20 +4,24 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
+import { APP_BAR_SAFE_TOP } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface NotificationListAppBarProps extends React.ComponentProps<"div"> {
   onBack?: () => void
-  onReadAll?: () => void
-  readAllDisabled?: boolean
+  onEnterDeleteMode?: () => void
+  onOpenSettings?: () => void
+  deleteMode?: boolean
 }
 
-// 알림센터 상단바 — 뒤로가기 + 제목 + "전체 읽음". 미읽음이 없으면 전체읽음 비활성화.
+// 알림센터 상단바 — 뒤로가기 + 가운데 제목 + 우측 쓰레기통·톱니.
+// 쓰레기통은 삭제 모드 진입용이라 삭제 모드에서는 숨기고 톱니만 남긴다(시안 1835:11204).
 function NotificationListAppBar({
   className,
   onBack,
-  onReadAll,
-  readAllDisabled,
+  onEnterDeleteMode,
+  onOpenSettings,
+  deleteMode,
   ...props
 }: NotificationListAppBarProps) {
   const { messages } = useTranslation()
@@ -25,7 +29,12 @@ function NotificationListAppBar({
   return (
     <div
       data-slot="notification-list-app-bar"
-      className={cn("relative flex h-[62px] w-full items-center justify-between p-4", className)}
+      // issue #279: safe-area 패딩이 붙으면 고정 높이는 내용물을 눌러버리므로 min-h로 바꿔 아래로 자란다.
+      className={cn(
+        "relative flex min-h-[57px] w-full items-center justify-between px-4 pb-4",
+        APP_BAR_SAFE_TOP,
+        className
+      )}
       {...props}
     >
       <button
@@ -36,17 +45,43 @@ function NotificationListAppBar({
       >
         <Image src="/icons/arrow/left.svg" alt="" width={24} height={24} className="size-6" />
       </button>
+
       <p className="-translate-x-1/2 absolute left-1/2 text-title-semibold-18 text-gray-900">
         {messages.notification.appBarTitle}
       </p>
-      <button
-        type="button"
-        onClick={onReadAll}
-        disabled={readAllDisabled}
-        className="shrink-0 text-body-medium-14 text-primary disabled:text-gray-300"
-      >
-        {messages.notification.readAllButton}
-      </button>
+
+      <div className="flex shrink-0 items-center gap-3">
+        {!deleteMode && (
+          <button
+            type="button"
+            aria-label={messages.notification.deleteModeLabel}
+            onClick={onEnterDeleteMode}
+            className="flex size-6 shrink-0 items-center justify-center"
+          >
+            <Image
+              src="/icons/app-bar/trash.svg"
+              alt=""
+              width={24}
+              height={24}
+              className="size-6"
+            />
+          </button>
+        )}
+        <button
+          type="button"
+          aria-label={messages.notification.settingsLabel}
+          onClick={onOpenSettings}
+          className="flex size-6 shrink-0 items-center justify-center"
+        >
+          <Image
+            src="/icons/app-bar/setting.svg"
+            alt=""
+            width={24}
+            height={24}
+            className="size-6"
+          />
+        </button>
+      </div>
     </div>
   )
 }

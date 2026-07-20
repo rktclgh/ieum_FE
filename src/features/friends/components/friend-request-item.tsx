@@ -3,6 +3,11 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_SURFACE_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
 import { HighlightedText } from "@/components/ui/highlighted-text"
 import { ChatProfile } from "@/features/chat/components/chat-profile"
 import { CountryFlag } from "@/features/chat/components/country-flag"
@@ -21,6 +26,8 @@ interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   variant: FriendRequestVariant
   /** 롱프레스 메뉴가 열려 있는 동안 딤 오버레이 위로 떠 보이도록 강조 */
   active?: boolean
+  /** 온라인 상태(최근 5분 이내 활동) — 아바타 우하단 상태 점. undefined면 점을 숨긴다. */
+  online?: boolean
   onAccept?: () => void
   onReject?: () => void
   onAdd?: () => void
@@ -58,6 +65,7 @@ function FriendRequestItem({
   nation,
   variant,
   active,
+  online,
   onAccept,
   onReject,
   onAdd,
@@ -93,21 +101,22 @@ function FriendRequestItem({
       onClick={isTappable || onClickProp ? handleClick : undefined}
       onKeyDown={isTappable || onKeyDownProp ? handleKeyDown : undefined}
       className={cn(
-        "flex w-full items-center justify-between py-3 transition-all duration-200 ease-out",
-        isTappable && "cursor-pointer active:opacity-70",
-        active
-          ? "relative z-50 -translate-y-1 scale-[1.02] gap-2 rounded-2xl bg-white px-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
-          : "translate-y-0 scale-100",
+        "flex w-full items-center justify-between py-3",
+        LONG_PRESS_TRANSITION,
+        // 롱프레스 리프트와 겹쳐 눌린 동안 카드가 흐려 보이므로 :active 딤은 두지 않는다 (채팅 목록 기준).
+        isTappable && "cursor-pointer",
+        active ? cn(LONG_PRESS_SURFACE_ACTIVE, "gap-2 px-3") : LONG_PRESS_INACTIVE,
         className
       )}
       {...restProps}
     >
       <div className="flex items-center gap-3">
-        <ChatProfile src={avatarSrc} size={active ? 40 : 44} className="transition-all duration-200 ease-out" />
+        <ChatProfile src={avatarSrc} size={active ? 40 : 44} online={online} className={LONG_PRESS_TRANSITION} />
         <div className="flex flex-col items-start gap-0.5">
           <p
             className={cn(
-              "text-gray-900 transition-all duration-200 ease-out",
+              "text-gray-900",
+              LONG_PRESS_TRANSITION,
               active ? "text-body-semibold-15" : "text-title-semibold-16"
             )}
           >

@@ -4,10 +4,10 @@ import test from "node:test"
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
 import { buildScheduleActions } from "./schedule-actions.ts"
 
-test("buildScheduleActions exposes edit and delete only for an editable schedule", () => {
+test("buildScheduleActions never exposes edit (removed #249); editable schedule shows delete only", () => {
   assert.deepEqual(
     buildScheduleActions({ canEdit: true, canDelete: true, canReport: false }),
-    ["edit", "delete"]
+    ["delete"]
   )
 })
 

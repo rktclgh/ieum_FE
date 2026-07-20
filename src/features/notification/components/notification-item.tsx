@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
 import type { NotificationEntry } from "@/features/notification/lib/notification-adapter"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
 import { cn } from "@/lib/utils"
@@ -11,49 +11,37 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 interface NotificationItemProps {
   entry: NotificationEntry
   onOpen: () => void
-  onLongPress: (rect: DOMRect) => void
+  deleteMode?: boolean
+  onDelete?: () => void
 }
 
-// 알림 한 줄 — 탭하면 읽음 처리 후 딥링크 이동, 롱프레스로 삭제 메뉴. 안 읽은 알림은 점으로 강조.
-function NotificationItem({ entry, onOpen, onLongPress }: NotificationItemProps) {
+// 알림 한 줄 — 제목(Primary/400 13) · 본문(Gray/900 14) · 시각(Gray/400 12) 세로 스택.
+// 탭하면 읽음 처리 후 딥링크 이동. 삭제 모드에서는 우상단 X 로 단건 삭제한다(시안 1835:11154).
+// 이미 읽은 알림은 제목을 Gray/400 으로 낮춰 미읽음과 구분한다.
+function NotificationItem({ entry, onOpen, deleteMode, onDelete }: NotificationItemProps) {
   const { messages } = useTranslation()
-  const ref = React.useRef<HTMLButtonElement>(null)
-  const longPress = useLongPress({
-    onLongPress: () => {
-      const rect = ref.current?.getBoundingClientRect()
-      if (rect) onLongPress(rect)
-    },
-  })
   // 상대시각 문구는 question 카탈로그의 공용 포맷터를 재사용한다.
   const timeLabel = formatRelativeTime(entry.createdAt, messages.question)
 
   return (
-    <button
-      ref={ref}
-      type="button"
-      onClick={onOpen}
-      {...longPress}
-      className={cn(
-        "flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]",
-        entry.isRead ? "bg-white" : "bg-primary/10"
-      )}
-    >
-      <span
-        aria-hidden
-        className={cn(
-          "mt-1.5 size-2 shrink-0 rounded-full",
-          entry.isRead ? "bg-transparent" : "bg-primary"
-        )}
-      />
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <div className="flex min-w-0 items-center gap-2">
+    <div className="relative w-full">
+      {/* 삭제 모드에서는 본문 탭으로 딥링크 이동하지 않는다. X(20px)를 빗맞히면
+          삭제하려던 사용자가 질문/모임 상세로 튕겨나가기 때문.
+          aria-disabled 가 아니라 disabled 를 쓰는 이유: 탭 순서에서도 빠져야
+          키보드 사용자가 빈 버튼을 거치지 않고 X 로 바로 이동한다. */}
+      <button
+        type="button"
+        disabled={deleteMode}
+        onClick={onOpen}
+        className="flex w-full flex-col items-start gap-1.5 p-4 text-left"
+      >
+        <span className="flex min-w-0 max-w-full items-center gap-2">
           {entry.isAiAnswer !== null ? (
             <span
               className={cn(
                 "shrink-0 rounded-full px-2 py-0.5 text-body-medium-12",
-                entry.isAiAnswer
-                  ? "bg-primary-50 text-primary-700"
-                  : "bg-gray-100 text-gray-600"
+                // primary-50/700 은 정의된 토큰이 아니라 배지가 배경 없이 렌더됐다. 정의된 primary 로 대체.
+                entry.isAiAnswer ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-600"
               )}
             >
               {entry.isAiAnswer
@@ -63,23 +51,35 @@ function NotificationItem({ entry, onOpen, onLongPress }: NotificationItemProps)
           ) : null}
           <span
             className={cn(
-              "min-w-0 flex-1 truncate",
-              entry.isRead
-                ? "text-body-medium-15 text-gray-700"
-                : "text-title-semibold-16 text-gray-900"
+              "min-w-0 truncate text-body-medium-13",
+              entry.isRead ? "text-gray-400" : "text-primary"
             )}
           >
             {entry.title}
           </span>
-        </div>
+        </span>
+
         {entry.body ? (
-          <span className="line-clamp-2 text-body-regular-14 text-gray-500">{entry.body}</span>
+          // 시안은 본문을 두 줄까지 그대로 흘려보낸다(말줄임 없음).
+          <span className="w-full break-words text-body-medium-14 text-gray-900">{entry.body}</span>
         ) : null}
+
         {timeLabel ? (
-          <span className="text-body-regular-13 text-gray-400">{timeLabel}</span>
+          <span className="text-body-regular-12 text-gray-400">{timeLabel}</span>
         ) : null}
-      </div>
-    </button>
+      </button>
+
+      {deleteMode && (
+        <button
+          type="button"
+          aria-label={messages.notification.deleteItemLabel}
+          onClick={onDelete}
+          className="absolute top-[15px] right-4 flex size-5 items-center justify-center rounded-full"
+        >
+          <Image src="/icons/app-bar/close.svg" alt="" width={20} height={20} className="size-5" />
+        </button>
+      )}
+    </div>
   )
 }
 

@@ -4,6 +4,8 @@ import * as React from "react"
 import Image from "next/image"
 
 import { BottomSheet, BottomSheetClose } from "@/components/ui/bottom-sheet"
+import { NoImageProfile } from "@/components/ui/no-image"
+import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
 import type { QuestionSummary } from "@/features/question/types"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -100,7 +102,9 @@ function QuestionDetailSheet({
               {display.authorAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={display.authorAvatarUrl} alt="" className="size-full object-cover" />
-              ) : null}
+              ) : (
+                <NoImageProfile />
+              )}
             </div>
             <div className="flex min-w-0 flex-col gap-0.5">
               <div className="flex items-center gap-2">
@@ -140,8 +144,8 @@ function QuestionDetailSheet({
 
       {bottomVariant === "answer" ? (
       <>
-      <div className="flex w-full items-center justify-between gap-2 rounded-full border border-gray-50 bg-gray-50/95 p-2 shadow-[0px_2px_4px_0px_rgba(0,0,0,0.1)]">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex w-full items-end justify-between gap-2 rounded-3xl border border-gray-50 bg-gray-50/95 p-2 shadow-[0px_2px_4px_0px_rgba(0,0,0,0.1)]">
+        <div className="flex min-w-0 flex-1 items-end gap-2">
           <button
             type="button"
             aria-label={t.addImageLabel}
@@ -155,16 +159,13 @@ function QuestionDetailSheet({
               <Image src="/icons/chat/camera-fill.svg" alt="" width={20} height={20} className="size-5" />
             )}
           </button>
-          <input
+          <MessageTextarea
             aria-label={t.answerPlaceholder}
             value={reply}
             onChange={(event) => setReply(event.target.value)}
-            onKeyDown={(event) => {
-              // 한글/일본어/중국어 IME 조합 중 Enter로 글자를 확정할 때는 전송하지 않는다.
-              if (event.key === "Enter" && !event.nativeEvent.isComposing) handleSend()
-            }}
+            onSubmit={handleSend}
             placeholder={t.answerPlaceholder}
-            className="min-w-0 flex-1 bg-transparent text-body-regular-14 text-gray-900 outline-none placeholder:text-gray-400"
+            className="py-1.5"
           />
         </div>
         <button

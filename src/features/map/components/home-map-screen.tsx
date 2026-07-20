@@ -24,11 +24,11 @@ import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
+import { InstallPrompt } from "@/features/pwa/components/install-prompt"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
-import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
-import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
+import { APP_BAR_SAFE_TOP, FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -183,7 +183,8 @@ function HomeMapScreen() {
         />
       ) : null}
 
-      <div className="relative z-10 mx-auto flex w-full max-w-sm flex-col gap-2 p-4">
+      {/* 홈 지도는 AppBar 없이 툴바를 직접 그린다 — 상단 safe-area도 직접 받는다 (issue #279). */}
+      <div className={`relative z-10 app-column flex flex-col gap-2 px-4 pb-4 ${APP_BAR_SAFE_TOP}`}>
         <div className="flex items-center gap-2">
           <MapSearchBar
             onFocus={() => setSearchOpen(true)}
@@ -201,9 +202,9 @@ function HomeMapScreen() {
         )}
       </div>
 
-      {/* 지도는 풀블리드지만 컨트롤·저작권 표기는 앱 전역 max-w-sm 컬럼에 맞춰 중앙 정렬 유지.
+      {/* 지도는 풀블리드지만 컨트롤·저작권 표기는 앱 전역 app-column에 맞춰 중앙 정렬 유지.
           wrapper는 pointer-events-none으로 지도 클릭을 통과시키고, 실제 컨트롤만 pointer-events-auto. */}
-      <div className="pointer-events-none absolute inset-0 z-10 mx-auto w-full max-w-sm">
+      <div className="pointer-events-none absolute inset-0 z-10 app-column">
         {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
         <MapControls
           onRecenter={handleRecenter}
@@ -213,58 +214,50 @@ function HomeMapScreen() {
           className={`pointer-events-auto absolute right-4 ${FAB_BOTTOM_WITH_TABBAR} flex flex-col gap-2`}
         />
 
-        <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3" />
+        <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+var(--safe-area-bottom))] left-3" />
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-sm">
-        <TabBar />
-      </div>
+      <SearchOverlay
+        open={isSearchOpen}
+        near={position}
+        onClose={() => setSearchOpen(false)}
+        onSelectPlace={(place) => {
+          setSelectedLocation({
+            lat: place.lat,
+            lng: place.lng,
+            label: place.name,
+            address: place.address,
+          })
+          recenterTo({ lat: place.lat, lng: place.lng })
+          setSearchOpen(false)
+        }}
+        onOpenMeetup={(id) => setSelectedMeetingId(id)}
+        onOpenQuestion={(id) => setSelectedQuestionId(id)}
+      />
 
-      {isSearchOpen ? (
-        <SearchOverlay
-          near={position}
-          onClose={() => setSearchOpen(false)}
-          onSelectPlace={(place) => {
-            setSelectedLocation({
-              lat: place.lat,
-              lng: place.lng,
-              label: place.name,
-              address: place.address,
-            })
-            recenterTo({ lat: place.lat, lng: place.lng })
-            setSearchOpen(false)
-          }}
-          onOpenMeetup={(id) => setSelectedMeetingId(id)}
-          onOpenQuestion={(id) => setSelectedQuestionId(id)}
-        />
-      ) : null}
+      <PinListOverlay
+        open={isListOpen}
+        bounds={bounds}
+        onClose={() => setListOpen(false)}
+        onOpenMeetup={(id) => setSelectedMeetingId(id)}
+        onOpenQuestion={(id) => setSelectedQuestionId(id)}
+        onCreateMeetup={() => setCreateMeetupOpen(true)}
+        onCreateQuestion={() => setCreateQuestionOpen(true)}
+      />
 
-      {isListOpen ? (
-        <PinListOverlay
-          bounds={bounds}
-          onClose={() => setListOpen(false)}
-          onOpenMeetup={(id) => setSelectedMeetingId(id)}
-          onOpenQuestion={(id) => setSelectedQuestionId(id)}
-          onCreateMeetup={() => setCreateMeetupOpen(true)}
-          onCreateQuestion={() => setCreateQuestionOpen(true)}
-        />
-      ) : null}
+      <CreateMeetupScreen
+        open={createMeetupOpen}
+        initialPlace={selectedPlace}
+        currentPosition={position}
+        onClose={() => setCreateMeetupOpen(false)}
+      />
 
-      {createMeetupOpen ? (
-        <CreateMeetupScreen
-          initialPlace={selectedPlace}
-          currentPosition={position}
-          onClose={() => setCreateMeetupOpen(false)}
-        />
-      ) : null}
-
-      {createQuestionOpen ? (
-        <CreateQuestionScreen
-          initialPlace={selectedPlace}
-          currentPosition={position}
-          onClose={() => setCreateQuestionOpen(false)}
-        />
-      ) : null}
+      <CreateQuestionScreen
+        open={createQuestionOpen}
+        initialPlace={selectedPlace}
+        currentPosition={position}
+        onClose={() => setCreateQuestionOpen(false)}
+      />
 
       {selectedMeetingId !== null ? (
         <MeetupDetailContainer
@@ -279,6 +272,8 @@ function HomeMapScreen() {
           onClose={() => setSelectedQuestionId(null)}
         />
       ) : null}
+
+      <InstallPrompt />
     </div>
   )
 }

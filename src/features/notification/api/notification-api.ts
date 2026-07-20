@@ -1,10 +1,7 @@
 import { apiClient } from "@/lib/api/client"
 import { DEV_BACKEND_ORIGIN } from "@/lib/runtime/dev-backend-origin"
 
-import type {
-  NotificationsPage,
-  ReadAllResponse,
-} from "@/features/notification/api/notification-types"
+import type { NotificationsPage } from "@/features/notification/api/notification-types"
 
 // 조회 (CSRF 불필요) — apiClient 가 withCredentials/CSRF/401 refresh 를 자동 처리한다.
 
@@ -26,12 +23,6 @@ async function readNotification(notificationId: number) {
   await apiClient.post(`/api/v1/notifications/${notificationId}/read`)
 }
 
-// 전체 읽음 처리 — { updated } 반환.
-async function readAllNotifications() {
-  const { data } = await apiClient.post<ReadAllResponse>("/api/v1/notifications/read-all")
-  return data
-}
-
 // 단건 삭제 — 204.
 async function deleteNotification(notificationId: number) {
   await apiClient.delete(`/api/v1/notifications/${notificationId}`)
@@ -48,7 +39,6 @@ function notificationStreamUrl(): string {
 export {
   getNotifications,
   readNotification,
-  readAllNotifications,
   deleteNotification,
   notificationStreamUrl,
 }

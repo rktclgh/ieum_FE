@@ -10,7 +10,8 @@ import { FriendListAppBar } from "@/features/friends/components/friend-list-app-
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { FriendRequestItem } from "@/features/friends/components/friend-request-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
+import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value"
 import {
@@ -37,7 +38,6 @@ type ConfirmAction =
   | { type: "cancelRequest"; target: FriendEntry }
 
 // 컨텍스트 메뉴(2개 항목) 높이 추정치 + 화면 하단(홈 인디케이터)과 겹치지 않기 위한 여유 공간
-const FRIEND_CONTEXT_MENU_HEIGHT_ESTIMATE = 130
 const FRIEND_BOTTOM_SAFE_AREA = 24
 const EMPTY_FRIENDS: FriendEntry[] = []
 const EMPTY_RECEIVED_REQUESTS: FriendEntry[] = []
@@ -191,9 +191,9 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
 
   return (
     <>
-      <main className="mx-auto flex w-full max-w-sm flex-col">
+      <main className="app-column flex flex-col">
         <FriendListAppBar onBack={() => router.back()} />
-        <div className="flex flex-col gap-2 px-4 pb-10">
+        <div className="flex flex-col gap-2 px-4 pb-[calc(2.5rem+var(--safe-area-bottom))]">
           <SearchBox
             placeholder={messages.chat.friendSearchPlaceholder}
             tone="flat"
@@ -311,7 +311,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
       </main>
 
       {actionError && (
-        <div className="fixed inset-x-0 bottom-6 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(1.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {actionError}
           </div>
@@ -386,7 +386,7 @@ function FriendRequestItemWithLongPress({
     if (rect) {
       const spaceBelow = window.innerHeight - rect.bottom
       setPlacement(
-        spaceBelow < FRIEND_CONTEXT_MENU_HEIGHT_ESTIMATE + FRIEND_BOTTOM_SAFE_AREA ? "top" : "bottom"
+        spaceBelow < contextMenuHeight(menuItems.length) + FRIEND_BOTTOM_SAFE_AREA ? "top" : "bottom"
       )
     }
     onOpenMenu()
@@ -403,6 +403,7 @@ function FriendRequestItemWithLongPress({
         flagSrc={friend.flagSrc}
         nation={nation}
         variant="friend"
+        online={friend.active ? true : undefined}
         active={menuOpen}
         onStartChat={onStartChat}
         {...longPress}
@@ -412,7 +413,7 @@ function FriendRequestItemWithLongPress({
           items={menuItems}
           dimmed
           onDismiss={onCloseMenu}
-          className={placement === "top" ? "bottom-full left-0 mb-3" : "top-full left-0 mt-2"}
+          className={placement === "top" ? "bottom-full left-0 mb-5" : "top-full left-0 mt-3"}
         />
       )}
     </div>

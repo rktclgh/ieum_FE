@@ -1,7 +1,7 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
 import { formatKstTime } from "@/lib/date/kst"
 import type { ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
-import { resolveChatRoomAvatar } from "@/features/chat/lib/chat-avatar"
+import { resolveChatRoomAvatars, type ChatRoomAvatars } from "@/features/chat/lib/chat-avatar"
 import type {
   ChatMessageResponse,
   ChatReplyPreview,
@@ -24,6 +24,9 @@ interface ChatListEntry {
   title: string
   category: Exclude<ChatFilterCategory, "all">
   avatarSrc?: string
+  // 3명 이상 방에서 겹쳐 그릴 두 번째 프로필과 겹침 표시 여부.
+  secondaryAvatarSrc?: string
+  grouped?: boolean
   memberCount?: number
   lastMessage?: string
   time?: string
@@ -99,16 +102,15 @@ function resolveRoomAvatar(
   roomType: RoomType,
   meetingImageUrl?: string | null,
   counterpart?: ChatRoomMemberResponse | null
-): string | undefined {
-  if (roomType === "group") return resolveFileUrl(meetingImageUrl)
-  return resolveChatRoomAvatar(
+): ChatRoomAvatars {
+  return resolveChatRoomAvatars(
     roomType,
     members.map((member) => ({
       userId: member.userId,
       avatarSrc: resolveFileUrl(member.profileImageUrl),
     })),
     myUserId,
-    undefined,
+    resolveFileUrl(meetingImageUrl),
     counterpart
       ? {
           userId: counterpart.userId,
@@ -135,19 +137,16 @@ function adaptRoomSummary(
       : detail
         ? resolveRoomTitle(members, myUserId, summary.roomType)
         : `채팅방 ${summary.roomId}`
+  const avatars = resolveRoomAvatar(members, myUserId, summary.roomType, meetingImageUrl, detail?.counterpart)
   return {
     roomId: summary.roomId,
     roomType: summary.roomType,
     meetingId: summary.meetingId,
     title,
     category: roomCategory(summary.roomType),
-    avatarSrc: resolveRoomAvatar(
-      members,
-      myUserId,
-      summary.roomType,
-      meetingImageUrl,
-      detail?.counterpart
-    ),
+    avatarSrc: avatars.avatarSrc,
+    secondaryAvatarSrc: avatars.secondaryAvatarSrc,
+    grouped: avatars.grouped,
     memberCount: summary.roomType === "direct" ? undefined : members.length || undefined,
     lastMessage: last ? messagePreview(last) : undefined,
     time: last ? formatKstTime(last.createdAt) : undefined,

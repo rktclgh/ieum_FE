@@ -38,7 +38,7 @@ function ChatRoomMemberItem({
   return (
     <div
       data-slot="chat-room-member-item"
-      className={cn("flex w-full items-center justify-between p-3", className)}
+      className={cn("flex w-full items-center justify-between px-4 py-3", className)}
       {...props}
     >
       <div className="flex items-center gap-3">
@@ -50,7 +50,7 @@ function ChatRoomMemberItem({
                 {messages.chat.meLabel}
               </span>
             )}
-            <span className="text-title-semibold-16 text-gray-900">{name}</span>
+            <span className={cn("text-gray-900", isMe ? "text-title-semibold-16" : "text-body-medium-16")}>{name}</span>
             {isOwner && (
               <Image src="/icons/chat/crown.svg" alt="" width={20} height={20} className="size-5" />
             )}

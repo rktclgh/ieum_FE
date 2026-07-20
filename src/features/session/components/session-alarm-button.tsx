@@ -22,23 +22,22 @@ function SessionAlarmButton() {
   useNotificationSse(isLoggedIn)
 
   const hasUnread = isLoggedIn && unreadCount > 0
-  const badgeText = unreadCount > 99 ? "99+" : String(unreadCount)
 
   return (
-    <div className="relative shrink-0">
+    <div className="shrink-0">
+      {/* 미읽음 점 배지는 CSS가 아니라 아이콘 자체(alarm-on.svg)로 그린다 — 종 모양과 점의 상대 위치를
+          디자인 원본 그대로 유지하기 위함. 개수는 버튼의 접근가능한 이름으로 전달한다. */}
       <Circle
-        iconSrc="/icons/circle/alarm.svg"
-        aria-label={isLoggedIn ? messages.notification.bellLabel : messages.home.loginLabel}
+        iconSrc={hasUnread ? "/icons/circle/alarm-on.svg" : "/icons/circle/alarm.svg"}
+        aria-label={
+          isLoggedIn
+            ? hasUnread
+              ? `${messages.notification.bellLabel} ${messages.notification.unreadBadgeLabel(unreadCount)}`
+              : messages.notification.bellLabel
+            : messages.home.loginLabel
+        }
         onClick={() => router.push(isLoggedIn ? routes.notifications() : routes.login())}
       />
-      {hasUnread && (
-        <span
-          aria-label={messages.notification.unreadBadgeLabel(unreadCount)}
-          className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red px-1 text-[11px] font-semibold leading-none text-white"
-        >
-          {badgeText}
-        </span>
-      )}
     </div>
   )
 }

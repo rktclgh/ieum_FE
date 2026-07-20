@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { NoImageProfile } from "@/components/ui/no-image"
 import { CountryFlag } from "@/features/chat/components/country-flag"
 import { LanguageSettingItem } from "@/features/my/components/language-setting-item"
 import { MyMenuRow } from "@/features/my/components/my-menu-row"
@@ -13,7 +14,6 @@ import { useWithdrawMe } from "@/features/my/hooks/use-my-mutations"
 import { fromIso2, flagFromIso2 } from "@/features/join/lib/nationality-map"
 import { useLogoutMutation } from "@/features/session/hooks/use-logout-mutation"
 import { useMe } from "@/features/session/hooks/use-me"
-import { TabBar } from "@/features/navigation/components/tab-bar"
 import { resolveFileUrl } from "@/lib/api/file-url"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
@@ -65,11 +65,11 @@ function MyPageContent() {
 
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center px-4 pb-28">
+      <main className="app-column flex min-h-dvh flex-col items-center px-4 pb-[calc(7rem+var(--safe-area-bottom))]">
         {/* 프로필 */}
-        <div className="flex flex-col items-center gap-3 pt-8 pb-6">
+        <div className="flex flex-col items-center gap-3 pt-[calc(2rem+var(--safe-area-top))] pb-6">
           <div className="size-24 overflow-hidden rounded-full border-4 border-gray-100 bg-gray-100">
-            {user.profileImageUrl && (
+            {user.profileImageUrl ? (
               // 백엔드 프로필 이미지 호스트가 next.config remotePatterns에 없어 일반 img로 렌더한다.
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -77,6 +77,8 @@ function MyPageContent() {
                 alt=""
                 className="size-full object-cover"
               />
+            ) : (
+              <NoImageProfile />
             )}
           </div>
 
@@ -147,10 +149,6 @@ function MyPageContent() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-sm">
-        <TabBar />
-      </div>
-
       <ConfirmDialog
         open={logoutOpen}
         onOpenChange={setLogoutOpen}
@@ -172,7 +170,7 @@ function MyPageContent() {
       />
 
       {withdrawError && (
-        <div className="fixed inset-x-0 bottom-24 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(6rem+var(--safe-area-bottom))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {messages.my.withdrawDialog.error}
           </div>

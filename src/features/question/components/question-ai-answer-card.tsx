@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleCheck, Globe } from "lucide-react"
+import { CheckCircle2, Globe } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import type { QuestionAnswerView } from "@/features/question/lib/question-adapter"
@@ -20,14 +20,14 @@ function QuestionAiAnswerCard({ answer, isAuthenticated }: QuestionAiAnswerCardP
   })
 
   return (
-    <div className="flex w-full flex-col gap-2 rounded-2xl bg-gray-50 p-4">
-      <div className="flex items-center gap-1.5">
-        <CircleCheck className="size-5 text-primary" />
+    <div className="flex w-full flex-col gap-3 rounded-xl bg-gray-50 px-3 py-4">
+      <div className="flex items-center gap-2">
+        <CheckCircle2 className="size-6 text-primary" />
         <span className="text-title-semibold-16 text-gray-900">
           {messages.question.aiAnswerTitle}
         </span>
       </div>
-      <p className="whitespace-pre-line text-body-regular-14 text-gray-700">
+      <p className="whitespace-pre-line text-body-regular-14 text-gray-600">
         {translate.displayText}
       </p>
       {translate.canTranslate ? (

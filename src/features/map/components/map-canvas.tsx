@@ -64,6 +64,14 @@ const userLocationIcon = L.divIcon({
   iconAnchor: [24, 24], 
 })
 
+// react-leaflet Marker는 map이 해제되는 중(StrictMode 재마운트·HMR)에 마운트되면 mapPane이 없어
+// leaflet Marker._initIcon의 getPane().appendChild에서 터진다. map이 살아 있을 때만 렌더한다.
+function ActiveMarker(props: React.ComponentProps<typeof Marker>) {
+  const map = useMap()
+  if (!isLeafletMapActive(map)) return null
+  return <Marker {...props} />
+}
+
 function MapCenterUpdater({
   center,
   recenterKey,
@@ -217,14 +225,14 @@ function MapCanvas({
         />
       )}
       {selectedPosition && (
-        <Marker
+        <ActiveMarker
           position={[selectedPosition.lat, selectedPosition.lng]}
           icon={selectedLocationIcon}
           eventHandlers={onSelectedPositionClick ? { click: onSelectedPositionClick } : undefined}
         />
       )}
       {livePosition && (
-        <Marker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
+        <ActiveMarker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
       )}
     </MapContainer>
   )

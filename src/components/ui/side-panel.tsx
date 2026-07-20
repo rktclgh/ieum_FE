@@ -3,7 +3,16 @@ import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 import { cn } from "@/lib/utils"
 
 function SidePanel(props: DrawerPrimitive.Root.Props) {
-  return <DrawerPrimitive.Root data-slot="side-panel" swipeDirection="right" {...props} />
+  return (
+    <DrawerPrimitive.Root
+      data-slot="side-panel"
+      swipeDirection="right"
+      // 바깥(백드롭) 탭으로는 닫히지 않도록 한다. AppBar의 뒤로가기 버튼으로만 닫는다.
+      // (Figma node 1349-5916: 패널 AppBar에 뒤로가기 chevron만 존재, 별도의 바깥 탭 닫힘 동작 없음)
+      disablePointerDismissal
+      {...props}
+    />
+  )
 }
 
 function SidePanelPortal(props: DrawerPrimitive.Portal.Props) {
@@ -15,7 +24,7 @@ function SidePanelBackdrop({ className, ...props }: DrawerPrimitive.Backdrop.Pro
     <DrawerPrimitive.Backdrop
       data-slot="side-panel-backdrop"
       className={cn(
-        "fixed inset-0 z-50 min-h-dvh bg-black/20 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "fixed inset-0 z-50 min-h-dvh bg-black/20 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-base ease-base data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -38,7 +47,7 @@ function SidePanelPopup({ className, children, ...props }: DrawerPrimitive.Popup
     <DrawerPrimitive.Popup
       data-slot="side-panel-popup"
       className={cn(
-        "flex h-dvh w-full max-w-sm flex-col bg-white outline-none [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:translate-x-full data-starting-style:translate-x-full",
+        "flex h-dvh w-full flex-col bg-white outline-none sm:max-w-(--app-column) [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-base ease-base data-ending-style:translate-x-full data-starting-style:translate-x-full",
         className
       )}
       {...props}

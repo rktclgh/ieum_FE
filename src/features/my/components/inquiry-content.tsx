@@ -44,14 +44,14 @@ function InquiryContent() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col">
+    <main className="app-column flex min-h-dvh flex-col">
       <AppBar
         title={messages.my.inquiry.title}
         trailingIcon={null}
         onLeadingClick={() => router.back()}
       />
 
-      <div className="flex w-full flex-col gap-6 px-4 pt-3 pb-32">
+      <div className="flex w-full flex-col gap-6 px-4 pt-3 pb-[calc(8rem+var(--safe-area-bottom))]">
         <textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
@@ -69,7 +69,7 @@ function InquiryContent() {
         </ul>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm flex-col items-center gap-2 bg-white px-4 pt-2 pb-2">
+      <div className="fixed inset-x-0 bottom-0 z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))]">
         <div className="flex w-full items-center gap-2">
           <button
             type="button"
@@ -94,7 +94,7 @@ function InquiryContent() {
       </div>
 
       {submitted && (
-        <div className="fixed inset-x-0 bottom-24 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {messages.my.inquiry.success}
           </div>
@@ -102,7 +102,7 @@ function InquiryContent() {
       )}
 
       {submitInquiry.isError && (
-        <div className="fixed inset-x-0 bottom-24 z-50 mx-auto flex w-full max-w-sm justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {messages.my.inquiry.error}
           </div>

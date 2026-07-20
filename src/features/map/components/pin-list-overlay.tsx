@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { SearchBox } from "@/components/ui/search-box"
 import type { MapBounds } from "@/features/map/api/pin-types"
 import { CategoryChipGroup, type Category } from "@/features/map/components/category-chip-group"
@@ -14,7 +15,22 @@ import { FAB_BOTTOM_FLOOR } from "@/lib/constants/layout"
 import { hangulIncludes } from "@/lib/hangul-includes"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
-interface PinListOverlayProps {
+interface PinListOverlayProps extends PinListOverlayContentProps {
+  open: boolean
+}
+
+function PinListOverlay({ open, ...props }: PinListOverlayProps) {
+  return (
+    <FullScreenOverlay
+      open={open}
+      className="z-40 app-column flex flex-col bg-white"
+    >
+      <PinListOverlayContent {...props} />
+    </FullScreenOverlay>
+  )
+}
+
+interface PinListOverlayContentProps {
   bounds: MapBounds | null
   onClose: () => void
   onOpenMeetup: (meetingId: number) => void
@@ -24,14 +40,14 @@ interface PinListOverlayProps {
 }
 
 // 지금 지도에 보이는(바운즈) 핀을 리스트로 보여준다. 탭/인리스트 검색은 클라이언트 필터.
-function PinListOverlay({
+function PinListOverlayContent({
   bounds,
   onClose,
   onOpenMeetup,
   onOpenQuestion,
   onCreateMeetup,
   onCreateQuestion,
-}: PinListOverlayProps) {
+}: PinListOverlayContentProps) {
   const { messages } = useTranslation()
   const [category, setCategory] = React.useState<Category>("all")
   const [query, setQuery] = React.useState("")
@@ -49,7 +65,7 @@ function PinListOverlay({
   })
 
   return (
-    <div className="fixed inset-0 z-40 mx-auto flex w-full max-w-sm flex-col bg-white">
+    <>
       <AppBar
         title={messages.home.listTitle}
         leadingIcon={null}
@@ -70,7 +86,7 @@ function PinListOverlay({
         <CategoryChipGroup value={category} onChange={setCategory} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(6rem+var(--safe-area-bottom))]">
         {isLoading ? (
           <div className="mt-16 flex justify-center">
             <div className="size-6 animate-spin rounded-full border-2 border-gray-200 border-t-primary" />
@@ -103,7 +119,7 @@ function PinListOverlay({
         onCreateQuestion={onCreateQuestion}
         className={`absolute right-4 ${FAB_BOTTOM_FLOOR} z-10`}
       />
-    </div>
+    </>
   )
 }
 

@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 
+import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { SearchBox } from "@/components/ui/search-box"
 import type { Place } from "@/features/map/api/place-search-api"
 import { MeetupResultCard } from "@/features/map/components/meetup-result-card"
@@ -11,12 +12,33 @@ import { QuestionResultCard } from "@/features/map/components/question-result-ca
 import { SearchTabBar, type SearchTab } from "@/features/map/components/search-tab-bar"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useSearchResults } from "@/features/map/hooks/use-search-results"
+import { useMe } from "@/features/session/hooks/use-me"
+import { APP_BAR_SAFE_TOP } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 // "전체" 탭에서 타입별로 미리보기할 최대 개수(상세 fetch 부담 제한).
 const PREVIEW_LIMIT = 3
 
-interface SearchOverlayProps {
+interface SearchOverlayProps extends SearchOverlayContentProps {
+  open: boolean
+}
+
+/**
+ * 검색 결과 fetch·디바운스 상태는 Content가 들고 있고, 오버레이가 닫히면 Content가 언마운트되므로
+ * 다시 열 때 항상 빈 검색어에서 시작한다(기존 조건부 마운트와 동일한 동작).
+ */
+function SearchOverlay({ open, ...props }: SearchOverlayProps) {
+  return (
+    <FullScreenOverlay
+      open={open}
+      className="z-40 app-column flex flex-col bg-white"
+    >
+      <SearchOverlayContent {...props} />
+    </FullScreenOverlay>
+  )
+}
+
+interface SearchOverlayContentProps {
   near: Coordinates | null
   initialQuery?: string
   onClose: () => void
@@ -25,15 +47,19 @@ interface SearchOverlayProps {
   onOpenQuestion: (questionId: number) => void
 }
 
-function SearchOverlay({
+function SearchOverlayContent({
   near,
   initialQuery = "",
   onClose,
   onSelectPlace,
   onOpenMeetup,
   onOpenQuestion,
-}: SearchOverlayProps) {
+}: SearchOverlayContentProps) {
   const { messages } = useTranslation()
+  // 롱프레스 번역 메뉴는 로그인 사용자에게만 뜬다(useTranslateToggle.canTranslate).
+  // users/me 는 홈 화면에서 이미 채워져 있어 오버레이가 새로 요청하지 않는다.
+  const { data: me } = useMe()
+  const isAuthenticated = me != null
   const [query, setQuery] = React.useState(initialQuery)
   const [debounced, setDebounced] = React.useState(initialQuery)
   const [tab, setTab] = React.useState<SearchTab>("all")
@@ -61,8 +87,9 @@ function SearchOverlay({
     (!showPlaces || places.length === 0)
 
   return (
-    <div className="fixed inset-0 z-40 mx-auto flex w-full max-w-sm flex-col bg-white">
-      <div className="flex items-center gap-2 p-4">
+    <>
+      {/* AppBar를 쓰지 않는 자체 헤더라 상단 safe-area를 직접 받는다 (issue #279). */}
+      <div className={`flex items-center gap-2 px-4 pb-4 ${APP_BAR_SAFE_TOP}`}>
         <button
           type="button"
           aria-label={messages.common.back}
@@ -84,7 +111,8 @@ function SearchOverlay({
         <SearchTabBar value={tab} onChange={setTab} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-8">
+      {/* fixed inset-0 오버레이라 마지막 결과가 홈 인디케이터에 걸린다 (issue #279). */}
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(2rem+var(--safe-area-bottom))]">
         {isLoading && q.length > 0 ? (
           <div className="mt-16 flex justify-center">
             <div className="size-6 animate-spin rounded-full border-2 border-gray-200 border-t-primary" />
@@ -109,6 +137,7 @@ function SearchOverlay({
                 key={pin.pinId}
                 pin={pin}
                 query={q}
+                isAuthenticated={isAuthenticated}
                 onClick={() => onOpenMeetup(pin.targetId)}
               />
             ))}
@@ -127,6 +156,7 @@ function SearchOverlay({
                 key={pin.pinId}
                 pin={pin}
                 query={q}
+                isAuthenticated={isAuthenticated}
                 onClick={() => onOpenQuestion(pin.targetId)}
               />
             ))}
@@ -151,7 +181,7 @@ function SearchOverlay({
           </section>
         ) : null}
       </div>
-    </div>
+    </>
   )
 }
 
