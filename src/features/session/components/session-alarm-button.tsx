@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Circle } from "@/components/ui/circle"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useUnreadCount } from "@/features/notification/hooks/use-notification-queries"
-import { useNotificationSse } from "@/features/notification/hooks/use-notification-sse"
+import { useAppSse } from "@/features/session/hooks/use-app-sse"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
@@ -19,7 +19,7 @@ function SessionAlarmButton() {
 
   // 배지 미읽음 수 + 홈에서도 실시간으로 갱신되도록 SSE 구독(로그인 상태에서만).
   const { data: unreadCount = 0 } = useUnreadCount(isLoggedIn)
-  useNotificationSse(isLoggedIn)
+  useAppSse(isLoggedIn)
 
   const hasUnread = isLoggedIn && unreadCount > 0
 

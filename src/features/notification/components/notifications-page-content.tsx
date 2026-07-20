@@ -13,7 +13,7 @@ import {
   useDeleteNotification,
   useReadNotification,
 } from "@/features/notification/hooks/use-notification-mutations"
-import { useNotificationSse } from "@/features/notification/hooks/use-notification-sse"
+import { useAppSse } from "@/features/session/hooks/use-app-sse"
 import {
   adaptNotification,
   type NotificationEntry,
@@ -35,7 +35,7 @@ function NotificationsPageContent() {
   const deleteAll = useDeleteAllNotifications()
 
   // 이 화면에 있는 동안 실시간으로 새 알림을 받아 목록/미읽음을 최신화한다.
-  useNotificationSse(Boolean(me))
+  useAppSse(Boolean(me))
 
   const [deleteMode, setDeleteMode] = React.useState(false)
   const [confirmDeleteAll, setConfirmDeleteAll] = React.useState(false)
