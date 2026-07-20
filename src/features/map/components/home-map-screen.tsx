@@ -110,9 +110,14 @@ function HomeMapScreen() {
   const lastSyncedPositionRef = React.useRef<Coordinates | null>(null)
   const inFlightPositionRef = React.useRef<Coordinates | null>(null)
   const queuedPositionRef = React.useRef<Coordinates | null>(null)
+  // 계정 전환 뒤 이전 계정 요청의 completion이 새 계정 좌표 상태를 건드리지 못하게 막는다.
+  const locationSyncGenerationRef = React.useRef(0)
   const sendLastKnownLocation = React.useCallback(function sendLastKnownLocation(
-    nextPosition: Coordinates
+    nextPosition: Coordinates,
+    syncGeneration: number
   ) {
+    if (syncGeneration !== locationSyncGenerationRef.current) return
+
     const payload = createLastKnownLocationPayload({
       isAuthenticated: true,
       position: nextPosition,
@@ -124,11 +129,13 @@ function HomeMapScreen() {
     inFlightPositionRef.current = nextPosition
     updateLocation(payload, {
       onSuccess: () => {
+        if (syncGeneration !== locationSyncGenerationRef.current) return
         if (!queuedPositionRef.current && isSamePosition(nextPosition, inFlightPositionRef.current)) {
           lastSyncedPositionRef.current = nextPosition
         }
       },
       onSettled: () => {
+        if (syncGeneration !== locationSyncGenerationRef.current) return
         if (isSamePosition(nextPosition, inFlightPositionRef.current)) {
           inFlightPositionRef.current = null
         }
@@ -136,7 +143,7 @@ function HomeMapScreen() {
         const queuedPosition = queuedPositionRef.current
         queuedPositionRef.current = null
         if (queuedPosition) {
-          sendLastKnownLocation(queuedPosition)
+          sendLastKnownLocation(queuedPosition, syncGeneration)
         }
       },
     })
@@ -149,6 +156,7 @@ function HomeMapScreen() {
       lastSyncedPositionRef.current = null
       inFlightPositionRef.current = null
       queuedPositionRef.current = null
+      locationSyncGenerationRef.current += 1
     }
 
     if (!me || !position) return
@@ -160,7 +168,7 @@ function HomeMapScreen() {
       return
     }
 
-    sendLastKnownLocation(position)
+    sendLastKnownLocation(position, locationSyncGenerationRef.current)
   }, [me, position, sendLastKnownLocation])
 
   const handlePinClick = React.useCallback((pin: MapPin) => {
