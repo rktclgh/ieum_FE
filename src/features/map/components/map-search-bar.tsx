@@ -2,19 +2,18 @@
 
 import Image from "next/image"
 
-import { SearchBox } from "@/components/ui/search-box"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface MapSearchBarProps {
-  /** 검색바 포커스 시 검색 오버레이를 연다. 실제 검색 입력은 오버레이가 담당한다. */
-  onFocus: () => void
+  /** 검색바를 탭하면 검색 오버레이를 연다. 실제 검색 입력은 오버레이가 담당한다. */
+  onOpenSearch: () => void
   selectedLocationLabel?: string | null
   onClearSelectedLocation?: () => void
   className?: string
 }
 
 function MapSearchBar({
-  onFocus,
+  onOpenSearch,
   selectedLocationLabel,
   onClearSelectedLocation,
   className,
@@ -45,8 +44,18 @@ function MapSearchBar({
 
   return (
     <div className={className ?? "relative flex-1"}>
-      {/* readOnly: 포커스만으로 오버레이를 열고, 타이핑은 오버레이 입력에서 한다. */}
-      <SearchBox readOnly placeholder={messages.home.searchPlaceholder} onFocus={onFocus} />
+      {/* input이 아닌 button: readOnly input을 쓰면 iOS Safari가 그래도 키보드를 띄우고
+          페이지를 스크롤시켜 화면이 밀린다. 타이핑은 오버레이 입력에서 한다. */}
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        className="flex h-[45px] w-full items-center gap-3 rounded-full bg-white px-4 py-3 text-left shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)] outline outline-1 -outline-offset-1 outline-gray-50"
+      >
+        <Image src="/icons/search-bar/search.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
+        <span className="truncate text-body-regular-15 text-gray-400">
+          {messages.home.searchPlaceholder}
+        </span>
+      </button>
     </div>
   )
 }

@@ -280,7 +280,7 @@ function HomeMapScreen() {
       <div className={`relative z-10 app-column flex flex-col gap-2 px-4 pb-4 ${APP_BAR_SAFE_TOP}`}>
         <div className="flex items-center gap-2">
           <MapSearchBar
-            onFocus={() => setSearchOpen(true)}
+            onOpenSearch={() => setSearchOpen(true)}
             selectedLocationLabel={selectedLocationLabel}
             onClearSelectedLocation={() => setSelectedLocation(null)}
           />
