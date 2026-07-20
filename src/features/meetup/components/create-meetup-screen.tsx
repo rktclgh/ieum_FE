@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { uploadMeetingImage } from "@/features/meetup/api/meetup-file-api"
@@ -25,7 +26,29 @@ import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
-interface CreateMeetupScreenProps {
+interface CreateMeetupScreenProps extends CreateMeetupScreenContentProps {
+  open: boolean
+}
+
+/**
+ * 새 모임 작성 풀스크린 오버레이. 지도 홈 FAB의 "모임 만들기"에서 열린다.
+ * 제목·날짜·시간·장소·내용을 채우면 제출 버튼이 활성화되고, 제출 시 POST /meetings 로 생성한다.
+ * 장소는 Figma 지도 기반 MeetupLocationPicker에서 좌표(lat/lng)·주소·라벨까지 확보한다.
+ *
+ * 폼 상태는 Content가 들고 있어 오버레이가 닫히면 함께 언마운트된다(다시 열면 빈 폼).
+ */
+function CreateMeetupScreen({ open, ...props }: CreateMeetupScreenProps) {
+  return (
+    <FullScreenOverlay
+      open={open}
+      className="z-50 app-column flex flex-col bg-white"
+    >
+      <CreateMeetupScreenContent {...props} />
+    </FullScreenOverlay>
+  )
+}
+
+interface CreateMeetupScreenContentProps {
   /** 닫기(X) 또는 제출 완료 시 호출 — 오버레이 언마운트는 부모가 담당 */
   onClose: () => void
   /** 지도 홈 핀에서 넘어온 초기 장소 — 있으면 장소 칸을 프리필한다 */
@@ -34,16 +57,11 @@ interface CreateMeetupScreenProps {
   currentPosition?: Coordinates | null
 }
 
-/**
- * 새 모임 작성 풀스크린 오버레이. 지도 홈 FAB의 "모임 만들기"에서 열린다.
- * 제목·날짜·시간·장소·내용을 채우면 제출 버튼이 활성화되고, 제출 시 POST /meetings 로 생성한다.
- * 장소는 Figma 지도 기반 MeetupLocationPicker에서 좌표(lat/lng)·주소·라벨까지 확보한다.
- */
-function CreateMeetupScreen({
+function CreateMeetupScreenContent({
   onClose,
   initialPlace = null,
   currentPosition = null,
-}: CreateMeetupScreenProps) {
+}: CreateMeetupScreenContentProps) {
   const { messages } = useTranslation()
   const t = messages.createMeetup
   const form = useCreateMeetupForm(initialPlace)
@@ -125,7 +143,7 @@ function CreateMeetupScreen({
   }
 
   return (
-    <div className="fixed inset-x-0 top-0 bottom-[var(--keyboard-inset,0px)] z-50 app-column flex flex-col bg-white">
+    <>
       <AppBar
         title={t.appBarTitle}
         leadingIcon={null}
@@ -252,15 +270,14 @@ function CreateMeetupScreen({
         value={form.time}
         onConfirm={form.setTime}
       />
-      {locationPickerOpen ? (
-        <MeetupLocationPicker
-          value={form.place?.label ?? null}
-          currentPosition={currentPosition}
-          onConfirm={form.setPlace}
-          onClose={() => setLocationPickerOpen(false)}
-        />
-      ) : null}
-    </div>
+      <MeetupLocationPicker
+        open={locationPickerOpen}
+        value={form.place?.label ?? null}
+        currentPosition={currentPosition}
+        onConfirm={form.setPlace}
+        onClose={() => setLocationPickerOpen(false)}
+      />
+    </>
   )
 }
 

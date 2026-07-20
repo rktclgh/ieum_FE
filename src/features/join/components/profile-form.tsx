@@ -150,7 +150,6 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
       </div>
 
       <ProfileImageEditor
-        key={editorSrc ?? "none"}
         open={editorSrc !== null}
         imageSrc={editorSrc}
         onClose={onEditorClose}

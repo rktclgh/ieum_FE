@@ -2,6 +2,7 @@
 
 import * as React from "react"
 
+import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import type { Place } from "@/features/map/api/place-search-api"
 import type { Coordinates, GeolocationStatus } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
@@ -10,7 +11,24 @@ import { MeetupLocationMap } from "@/features/meetup/components/meetup-location-
 import { MeetupLocationName } from "@/features/meetup/components/meetup-location-name"
 import { MeetupLocationSearch } from "@/features/meetup/components/meetup-location-search"
 
-interface MeetupLocationPickerProps {
+interface MeetupLocationPickerProps extends MeetupLocationPickerContentProps {
+  open: boolean
+}
+
+/**
+ * 모임 장소 선택 풀스크린 오버레이. 지도(#1) → 검색(#2) / 직접입력(#3) 3단계를 오간다.
+ * 확정 시 좌표(lat/lng)·도로명 주소·라벨을 담은 MeetupPlaceValue를 내보내 POST /meetings에 매핑한다.
+ * 닫히면 Content가 언마운트되므로 열 때마다 지도 단계에서 새로 시작하고, GPS watch도 그때 시작된다.
+ */
+function MeetupLocationPicker({ open, ...props }: MeetupLocationPickerProps) {
+  return (
+    <FullScreenOverlay open={open} className="z-50 app-column bg-white">
+      <MeetupLocationPickerContent {...props} />
+    </FullScreenOverlay>
+  )
+}
+
+interface MeetupLocationPickerContentProps {
   /** 확정된 장소명 (직접입력 화면 초기값) */
   value: string | null
   /** 홈 지도에서 이미 확보한 최신 GPS 좌표. 있으면 새 watch 없이 첫 지도 중심으로 쓴다. */
@@ -26,17 +44,12 @@ type Step =
   | { name: "search" }
   | { name: "create"; address: string; coords: Coordinates }
 
-/**
- * 모임 장소 선택 풀스크린 오버레이. 지도(#1) → 검색(#2) / 직접입력(#3) 3단계를 오간다.
- * 확정 시 좌표(lat/lng)·도로명 주소·라벨을 담은 MeetupPlaceValue를 내보내 POST /meetings에 매핑한다.
- * 부모가 조건부로 마운트하므로 열 때마다 지도 단계에서 새로 시작한다.
- */
-function MeetupLocationPicker({
+function MeetupLocationPickerContent({
   value,
   currentPosition = null,
   onConfirm,
   onClose,
-}: MeetupLocationPickerProps) {
+}: MeetupLocationPickerContentProps) {
   const [step, setStep] = React.useState<Step>({ name: "map" })
   const { position: watchedPosition, initialStatus: watchedInitialStatus } = useGeolocation({
     enabled: !currentPosition,
@@ -54,7 +67,7 @@ function MeetupLocationPicker({
     confirm({ lat: place.lat, lng: place.lng, address: place.address, label: place.name })
 
   return (
-    <div className="fixed inset-x-0 top-0 bottom-[var(--keyboard-inset,0px)] z-50 app-column bg-white">
+    <>
       {step.name === "map" && (
         <MeetupLocationMap
           position={position}
@@ -85,7 +98,7 @@ function MeetupLocationPicker({
           }
         />
       )}
-    </div>
+    </>
   )
 }
 

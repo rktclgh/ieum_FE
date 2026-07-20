@@ -21,6 +21,14 @@ export interface Messages {
     checking: string
     backendUnavailable: string
   }
+  pwa: {
+    title: string
+    description: string
+    later: string
+    install: string
+    iosDescription: string
+    confirm: string
+  }
   login: {
     logoText: string
     emailPlaceholder: string
@@ -194,18 +202,16 @@ export interface Messages {
     closeLabel: string
     imageAlt: string
     flagAlt: string
-    detailTitle: string
-    resolvedBadge: string
-    answersTitle: (count: number) => string
     emptyAnswers: string
     loadError: string
-    aiBadge: string
-    acceptedBadge: string
-    acceptButton: string
-    acceptConfirmTitle: (name: string) => string
-    acceptConfirmDescription: string
-    acceptConfirmCancel: string
-    acceptConfirmConfirm: string
+    acceptAction: string
+    acceptedLabel: string
+    openChatWithAuthor: (nickname: string) => string
+    acceptedDialogTitle: string
+    acceptedDialogDescription: (nickname: string) => string
+    acceptedDialogClose: string
+    acceptedDialogStartChat: string
+    reportConfirmCancel: string
     createTitle: string
     editTitle: string
     titlePlaceholder: string
@@ -230,8 +236,6 @@ export interface Messages {
     deleteConfirmDescription: string
     deleteConfirmCancel: string
     deleteConfirmConfirm: string
-    startChatLabel: string
-    personalChatLabel: string
     reportAction: string
     reportConfirmTitle: string
     reportConfirmDescription: string
@@ -476,10 +480,13 @@ export interface Messages {
     appBarTitle: string
     empty: string
     loadError: string
-    readAllButton: string
-    deleteAction: string
-    deleteConfirmTitle: string
-    deleteConfirmDescription: string
+    settingsLabel: string
+    deleteModeLabel: string
+    deleteItemLabel: string
+    deleteAll: string
+    deleteModeClose: string
+    deleteAllConfirmTitle: string
+    deleteAllConfirmDescription: string
     deleteConfirmCancel: string
     deleteConfirmConfirm: string
     bellLabel: string
@@ -513,6 +520,14 @@ export const ko: Messages = {
   session: {
     checking: "로그인 상태를 확인하고 있어요.",
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  pwa: {
+    title: "이음 앱 설치",
+    description: "홈 화면에 추가하고 더 편하게 이용하세요.",
+    later: "나중에",
+    install: "설치",
+    iosDescription: "공유 버튼을 누르고 '홈 화면에 추가'를 선택하세요.",
+    confirm: "확인",
   },
   login: {
     logoText: "이음",
@@ -687,18 +702,17 @@ export const ko: Messages = {
     closeLabel: "닫기",
     imageAlt: "질문 이미지",
     flagAlt: "국기",
-    detailTitle: "질문",
-    resolvedBadge: "해결됨",
-    answersTitle: (count) => `답변 ${count}`,
     emptyAnswers: "아직 답변이 없어요.",
     loadError: "질문을 불러오지 못했어요.",
-    aiBadge: "AI",
-    acceptedBadge: "채택됨",
-    acceptButton: "채택",
-    acceptConfirmTitle: (name) => `${name}님의 답변을 채택할까요?`,
-    acceptConfirmDescription: "채택 후에는 변경할 수 없습니다",
-    acceptConfirmCancel: "취소",
-    acceptConfirmConfirm: "확정",
+    acceptAction: "답변 채택",
+    acceptedLabel: "채택 완료",
+    openChatWithAuthor: (nickname: string) => `${nickname}님과 개인 채팅 열기`,
+    acceptedDialogTitle: "답변을 채택했습니다",
+    acceptedDialogDescription: (nickname: string) =>
+      `${nickname}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,
+    acceptedDialogClose: "닫기",
+    acceptedDialogStartChat: "개인 채팅",
+    reportConfirmCancel: "취소",
     createTitle: "질문하기",
     editTitle: "질문 수정",
     titlePlaceholder: "질문 제목",
@@ -723,8 +737,6 @@ export const ko: Messages = {
     deleteConfirmDescription: "삭제하면 답변과 함께 사라지며 되돌릴 수 없어요.",
     deleteConfirmCancel: "취소",
     deleteConfirmConfirm: "삭제",
-    startChatLabel: "채팅 시작",
-    personalChatLabel: "개인 채팅",
     reportAction: "신고",
     reportConfirmTitle: "이 답변을 신고할까요?",
     reportConfirmDescription: "신고하면 검토 후 조치될 수 있어요.",
@@ -969,10 +981,13 @@ export const ko: Messages = {
     appBarTitle: "알림",
     empty: "받은 알림이 없어요.",
     loadError: "알림을 불러오지 못했어요.",
-    readAllButton: "전체 읽음",
-    deleteAction: "삭제",
-    deleteConfirmTitle: "알림을 삭제할까요?",
-    deleteConfirmDescription: "삭제한 알림은 복구할 수 없어요.",
+    settingsLabel: "알림 설정",
+    deleteModeLabel: "알림 삭제 모드",
+    deleteItemLabel: "이 알림 삭제",
+    deleteAll: "전체 삭제",
+    deleteModeClose: "닫기",
+    deleteAllConfirmTitle: "알림을 전체 삭제할까요?",
+    deleteAllConfirmDescription: "삭제한 알림은 복구할 수 없어요.",
     deleteConfirmCancel: "취소",
     deleteConfirmConfirm: "삭제",
     bellLabel: "알림",

@@ -141,12 +141,28 @@
   --radius-2xl: 12px;
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /*
+   * Motion — issue #280.
+   * 요소가 자리를 옮기거나 나타나고 사라지는 상태 전환 모션의 단일 기준값.
+   * 300ms + iOS 시트 커브는 bottom-sheet/drawer가 이미 쓰던 값이라 그대로 승격했다.
+   * 로딩 인디케이터(spin/pulse/shimmer)와 색상 피드백(transition-colors)은 축이 달라 제외한다.
+   *
+   * 값을 `:root`의 `--motion-duration-base`로 한 단계 우회하는 이유:
+   * Tailwind는 리터럴 theme 값을 유틸리티에 인라인해 버려서(`duration-base` → `.3s`)
+   * 토큰을 나중에 재정의해도 반영되지 않는다. var() 참조로 두면 `var(...)`가 그대로
+   * 출력돼 prefers-reduced-motion에서 한 줄로 무력화할 수 있다.
+   */
+  --transition-duration-base: var(--motion-duration-base);
+  --ease-base: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 :root {
   /* stylelint-disable-next-line value-keyword-case -- Preserve the exact SFMono-Regular font family name. */
   --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
+  /* issue #280 — `--transition-duration-base`가 참조하는 실제 값 */
+  --motion-duration-base: 300ms;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -279,4 +295,18 @@
    하단 입력창이 키보드 바로 위에 붙고, Safari가 페이지를 밀어 올릴 이유가 사라진다. */
 @utility app-viewport-height {
   height: calc(100dvh - var(--keyboard-inset, 0px));
+}
+
+/*
+ * 접근성 — issue #280.
+ * `duration-base` 유틸리티가 `var(--motion-duration-base)`를 참조하므로,
+ * 토큰 하나만 재정의하면 이번에 추가/변경한 상태 전환 모션만 정확히 무력화된다.
+ * (`animate-spin` 등 기존 모션은 이 토큰을 쓰지 않으므로 영향이 없다.)
+ * 0s가 아니라 0.01ms인 이유: Base UI가 exit 애니메이션 종료를 transition 이벤트로
+ * 감지하기 때문에 transition 자체는 살아 있어야 팝업이 정상적으로 언마운트된다.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-base: 0.01ms;
+  }
 }

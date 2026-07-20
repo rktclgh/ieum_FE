@@ -1,7 +1,7 @@
 "use client"
 
 import L from "leaflet"
-import type { Map as MaplibreMap } from "maplibre-gl"
+import type { ErrorEvent as MaplibreErrorEvent, Map as MaplibreMap } from "maplibre-gl"
 import * as React from "react"
 import { useMap } from "react-leaflet"
 import "maplibre-gl/dist/maplibre-gl.css"
@@ -10,6 +10,7 @@ import "@maplibre/maplibre-gl-leaflet"
 import { MAP_CATEGORY_COLORS } from "@/features/map/constants/map"
 import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import { applyLabelLanguage, loadMapStyle } from "@/features/map/lib/map-style"
+import { isTransientTileRequestError } from "@/features/map/lib/map-tile-error"
 import { useLanguageStore } from "@/lib/i18n/store"
 
 // 스타일의 각 레이어를 source-layer 기준으로 매칭해 지정 색으로 덮어쓴다.
@@ -38,6 +39,14 @@ function applyCategoryColors(map: MaplibreMap) {
   }
 }
 
+// MapLibre는 error 리스너가 하나도 없을 때만 console.error로 폴백 출력한다(Evented#fire).
+// 즉 리스너를 다는 순간 그 폴백이 꺼지므로, 걸러낼 것만 무시하고 나머지는 여기서 직접 다시 남긴다.
+function handleMapError(event: MaplibreErrorEvent) {
+  if (isTransientTileRequestError(event.error)) return
+
+  console.error("지도 렌더링 오류", event.error)
+}
+
 // 기존 Leaflet 지도 위에 OpenFreeMap 벡터 타일 레이어를 얹고, 지형 카테고리별로 색을 덮어쓴다.
 // 렌더 출력은 없다. 마커·실시간 위치·재중심 등 다른 Leaflet 로직과 독립적으로 동작한다.
 function VectorTileLayer() {
@@ -48,6 +57,7 @@ function VectorTileLayer() {
 
   React.useEffect(() => {
     let layer: L.Layer | null = null
+    let instance: MaplibreMap | null = null
     let cancelled = false
 
     // MapContainer가 해제되는 중이면 Leaflet의 pane도 함께 사라진다. 이 시점에 레이어를 붙이면
@@ -68,8 +78,13 @@ function VectorTileLayer() {
         glLayer.addTo(map)
 
         // 초기화 지연 등으로 내부 MapLibre 인스턴스가 아직 없을 수 있어 존재를 확인하고 바인딩한다.
-        const instance = glLayer.getMaplibreMap()
-        if (instance) setGlMap(instance)
+        instance = glLayer.getMaplibreMap()
+        if (!instance) return
+
+        // error 핸들러는 setGlMap을 거치는 아래 effect가 아니라 여기서 바로 붙인다.
+        // 상태 반영에 렌더 한 틱이 걸리는데, 첫 타일 요청은 그 전에 시작되기 때문이다.
+        instance.on("error", handleMapError)
+        setGlMap(instance)
       })
       .catch((error: unknown) => {
         // 스타일을 못 받으면 지도는 마커만 뜬 빈 배경이 된다. 조용히 죽지 않도록 남긴다.
@@ -78,6 +93,7 @@ function VectorTileLayer() {
 
     return () => {
       cancelled = true
+      instance?.off("error", handleMapError)
       setGlMap(null)
       // 부모 MapContainer가 먼저 제거한 경우에는 이미 layer가 빠져 있다. 해제 중인 map에
       // removeLayer를 호출하면 예외가 나므로 살아 있고 실제로 붙어 있을 때만 제거한다.

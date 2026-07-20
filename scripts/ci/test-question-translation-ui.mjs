@@ -3,95 +3,80 @@ import { readFileSync } from "node:fs"
 
 const read = (path) => readFileSync(path, "utf8")
 
-const screen = read("src/features/question/components/question-detail-screen.tsx")
-const answerItem = read("src/features/question/components/question-answer-item.tsx")
-const authorItem = read("src/features/question/components/question-answer-author-item.tsx")
+// question-detail-screen.tsx / question-answer-item.tsx / question-answer-author-item.tsx were
+// deleted when the 질문 상세 screen was replaced by the author-only 답변 보기 screen
+// (answer-view-screen.tsx + answer-card.tsx). These assertions were rewritten against the
+// current implementation, preserving intent: answer text must remain translatable via
+// long-press, gated by login, without permanently overwriting the original text.
+const screen = read("src/features/question/components/answer-view-screen.tsx")
+const card = read("src/features/question/components/answer-card.tsx")
 const aiCard = read("src/features/question/components/question-ai-answer-card.tsx")
 
 assert.match(
   screen,
-  /useTranslateToggle\(\{\s*text:\s*question\?\.title/,
-  "question title should use text-based translation toggle"
+  /viewerUserId\s*=\s*me\.data\?\.userId\s*\?\?\s*null/,
+  "answer view screen should not treat an unresolved session as an authenticated viewer"
 )
 assert.match(
   screen,
-  /useTranslateToggle\(\{\s*text:\s*question\?\.content/,
-  "question content should use text-based translation toggle"
+  /isAuthenticated\s*=\s*viewerUserId\s*!=\s*null/,
+  "answer view screen should derive authentication from a resolved viewer id"
 )
-assert.match(
-  screen,
-  /label:\s*questionTitleTranslate\.(?:isShowingTranslation|isLoading)/,
-  "question title long-press menu should expose translate/original label"
-)
-assert.match(
-  screen,
-  /label:\s*questionContentTranslate\.(?:isShowingTranslation|isLoading)/,
-  "question content long-press menu should expose translate/original label"
-)
-assert.match(
-  screen,
-  /isAuthenticated\s*=\s*me\.data\s*!=\s*null\s*&&\s*me\.data\.userId\s*!=\s*null/,
-  "question screen should not treat unresolved auth as authenticated"
-)
-assert.match(
-  screen,
-  /canAccept=\{isAuthor\s*&&\s*isAuthenticated\s*&&\s*!question\.isResolved\s*&&\s*!hasAcceptedAnswer\}/,
-  "question author answer accept action must require author authentication"
-)
-assert.match(
-  screen,
-  /canAccept=\{false\}/,
-  "non-author answer list must not expose answer acceptance"
-)
-assert.match(
-  screen,
-  /if\s*\(pendingAcceptId\s*==\s*null\s*\|\|\s*!isAuthor\s*\|\|\s*!isAuthenticated\)\s*return/,
-  "answer acceptance mutation must be guarded to question authors only"
-)
-const contentOverlay = screen.match(
-  /\{activeQuestionText\?\.kind === "content"\s*&&\s*\(\s*(<LongPressActionOverlay[\s\S]*?<\/LongPressActionOverlay>)\s*\)\s*\}/
-)?.[1]
 
-assert.ok(contentOverlay, "question content long-press overlay should be present")
 assert.match(
-  contentOverlay,
-  /<p className="text-body-regular-14 whitespace-pre-line text-gray-700">\s*\{questionContentTranslate\.displayText\}\s*<\/p>/,
-  "question content overlay should render the current translated display text"
+  screen,
+  /useTranslateToggle\(\{\s*text:\s*answer\.content,\s*isAuthenticated\s*\}\)/,
+  "each answer row should use text-based translation toggle gated by authentication"
 )
 assert.doesNotMatch(
-  contentOverlay,
-  /questionContentTranslate\.originalText/,
-  "question content overlay should not revert translated content to its original text"
+  screen,
+  /useTranslateToggle\(\{\s*resource:/,
+  "answer view screen should not use resource-based translation toggle"
+)
+assert.match(
+  screen,
+  /label:\s*translate\.isLoading\s*\?\s*messages\.translate\.translatingLabel\s*:\s*translate\.isShowingTranslation\s*\?\s*messages\.translate\.viewOriginalLabel\s*:\s*messages\.translate\.menuLabel/,
+  "answer long-press menu should expose translate/original/loading labels"
+)
+assert.match(
+  screen,
+  /answer=\{\{\s*\.\.\.answer,\s*content:\s*translate\.displayText\s*\}\}/,
+  "answer card should render the current translated display text, not the raw original"
+)
+assert.match(
+  screen,
+  /translate\.isError/,
+  "answer view screen should surface translation failures separately from the answer text"
 )
 
-for (const [name, source] of [
-  ["answer item", answerItem],
-  ["author answer item", authorItem],
-  ["AI answer card", aiCard],
-]) {
-  assert.doesNotMatch(
-    source,
-    /useTranslateToggle\(\{\s*resource:/,
-    `${name} should not use resource-based translation toggle`
-  )
-  assert.match(
-    source,
-    /useTranslateToggle\(\{\s*text:\s*(?:content|answer\.content)/,
-    `${name} should translate visible answer text`
-  )
-  assert.match(
-    source,
-    /isAuthenticated:/,
-    `${name} should pass login-only translation gating`
-  )
-  assert.match(
-    source,
-    /hasContent\s*=\s*(?:content|answer\.content)\.trim\(\)\.length\s*>\s*0|answer\.content/,
-    `${name} should keep rendering original answer text separately from auth-gated translation`
-  )
-  assert.match(
-    source,
-    /translate\.displayText/,
-    `${name} should render the temporary translated display text`
-  )
-}
+assert.match(
+  card,
+  /const longPress = useLongPress\(\{ onLongPress \}\)/,
+  "answer card should wire long-press to open its context menu"
+)
+assert.match(
+  card,
+  /<div\s*\{\.\.\.longPress\}/,
+  "answer card should attach the long-press handlers to its wrapper"
+)
+assert.match(
+  card,
+  /\{answer\.content\}/,
+  "answer card should render whatever content it is given (translated or original) without its own translation state"
+)
+
+assert.match(
+  aiCard,
+  /useTranslateToggle\(\{\s*text:\s*answer\.content,\s*isAuthenticated,?\s*\}\)/,
+  "AI answer card should translate visible answer text"
+)
+assert.match(
+  aiCard,
+  /translate\.canTranslate/,
+  "AI answer card should gate its translate action on canTranslate"
+)
+assert.match(
+  aiCard,
+  /\{translate\.displayText\}/,
+  "AI answer card should render the temporary translated display text"
+)

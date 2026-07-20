@@ -2,33 +2,34 @@
 
 import * as React from "react"
 
-import { ChevronRight } from "lucide-react"
-
 import { NoImage } from "@/components/ui/no-image"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { useLongPress } from "@/lib/hooks/use-long-press"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_SURFACE_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
 import { useQuestionDetail } from "@/features/question/hooks/use-question-queries"
 import {
   deriveContentPreview,
   type MyQuestionListItemView,
 } from "@/features/question/lib/question-adapter"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
+import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface QuestionHistoryItemProps {
   item: MyQuestionListItemView
   onOpen: () => void
-  onLongPress: (rect: DOMRect) => void
+  onLongPress: () => void
+  /** 컨텍스트 메뉴가 열린 행 — 채팅 목록과 동일하게 부상시킨다(Figma 1722-13490). */
+  active?: boolean
 }
 
-function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemProps) {
+function QuestionHistoryItem({ item, onOpen, onLongPress, active }: QuestionHistoryItemProps) {
   const { messages } = useTranslation()
   const ref = React.useRef<HTMLButtonElement>(null)
-  const longPress = useLongPress({
-    onLongPress: () => {
-      const rect = ref.current?.getBoundingClientRect()
-      if (rect) onLongPress(rect)
-    },
-  })
+  const longPress = useLongPress({ onLongPress })
 
   // N+1 완화: 뷰포트에 들어온 아이템만 상세를 지연 로드한다. 한 번 보이면 계속 유지(React Query 캐시).
   const [hasEntered, setHasEntered] = React.useState(false)
@@ -66,12 +67,20 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
       type="button"
       onClick={onOpen}
       {...longPress}
-      className="flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3 text-left shadow-[0px_2px_12px_0px_rgba(0,0,0,0.05)]"
+      className={cn(
+        "flex w-full items-center gap-3 py-3 text-left",
+        LONG_PRESS_TRANSITION,
+        active ? cn(LONG_PRESS_SURFACE_ACTIVE, "gap-2 px-3") : LONG_PRESS_INACTIVE
+      )}
     >
-      <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+      <div className="size-[72px] shrink-0 overflow-hidden rounded-xl bg-gray-100">
         {item.thumbnailSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.thumbnailSrc} alt={messages.question.imageAlt} className="size-full object-cover" />
+          <img
+            src={item.thumbnailSrc}
+            alt={messages.question.imageAlt}
+            className="size-full object-cover"
+          />
         ) : (
           <NoImage />
         )}
@@ -85,7 +94,6 @@ function QuestionHistoryItem({ item, onOpen, onLongPress }: QuestionHistoryItemP
         ) : null}
         {timeLabel ? <span className="text-body-regular-13 text-gray-400">{timeLabel}</span> : null}
       </div>
-      <ChevronRight className="size-5 shrink-0 text-gray-300" />
     </button>
   )
 }

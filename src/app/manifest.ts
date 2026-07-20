@@ -4,15 +4,15 @@ export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Vivisa+",
-    short_name: "Vivisa+",
-    description: "Vivisa+",
+    name: "Ieum",
+    short_name: "Ieum",
+    description: "이음",
     start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
     background_color: "#ffffff",
-    theme_color: "#171717",
+    theme_color: "#fc7045",
     lang: "ko",
     icons: [
       {

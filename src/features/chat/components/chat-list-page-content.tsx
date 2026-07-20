@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation"
 
 import { SearchBox } from "@/components/ui/search-box"
 import { Circle } from "@/components/ui/circle"
-import { TabBar } from "@/features/navigation/components/tab-bar"
 import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
-import { useLongPress } from "@/features/chat/hooks/use-long-press"
+import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
+import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useChatRoomsView } from "@/features/chat/hooks/use-chat-queries"
 import {
   useLeaveChatRoom,
@@ -23,8 +23,7 @@ import { useTranslation } from "@/lib/i18n/use-translation"
 import { hangulIncludes } from "@/lib/hangul-includes"
 import { routes } from "@/lib/navigation/routes"
 
-// 컨텍스트 메뉴(3개 항목) 높이 추정치 + 하단 고정 TabBar와 겹치지 않기 위한 여유 공간
-const CONTEXT_MENU_HEIGHT_ESTIMATE = 180
+// 하단 고정 TabBar와 겹치지 않기 위한 여유 공간 (메뉴 높이는 contextMenuHeight 로 계산)
 const BOTTOM_SAFE_AREA = 96
 
 interface ChatRowProps {
@@ -45,7 +44,7 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
     const rect = rowRef.current?.getBoundingClientRect()
     if (rect) {
       const spaceBelow = window.innerHeight - rect.bottom
-      setPlacement(spaceBelow < CONTEXT_MENU_HEIGHT_ESTIMATE + BOTTOM_SAFE_AREA ? "top" : "bottom")
+      setPlacement(spaceBelow < contextMenuHeight(menuItems.length) + BOTTOM_SAFE_AREA ? "top" : "bottom")
     }
     onOpenMenu()
   }
@@ -74,7 +73,7 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
           items={menuItems}
           dimmed
           onDismiss={onCloseMenu}
-          className={placement === "top" ? "bottom-full left-0 mb-3" : "top-full left-0 mt-2"}
+          className={placement === "top" ? "bottom-full left-0 mb-5" : "top-full left-0 mt-3"}
         />
       )}
     </div>
@@ -202,10 +201,6 @@ function ChatListPageContent() {
           )}
         </div>
       </main>
-
-      <div className="fixed inset-x-0 bottom-0 app-column">
-        <TabBar />
-      </div>
     </>
   )
 }

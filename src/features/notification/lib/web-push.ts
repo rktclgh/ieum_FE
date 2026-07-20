@@ -1,3 +1,5 @@
+import { registerServiceWorker } from "../../pwa/lib/register-service-worker"
+
 interface WebPushSubscriptionRequest {
   endpoint: string
   expirationTime: number | null
@@ -135,9 +137,8 @@ function serviceWorkerContainer() {
 }
 
 async function registerWebPushServiceWorker() {
-  const container = serviceWorkerContainer()
-  await container.register("/sw.js", { scope: "/" })
-  return container.ready
+  await registerServiceWorker()
+  return serviceWorkerContainer().ready
 }
 
 async function getExistingWebPushSubscription(

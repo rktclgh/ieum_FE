@@ -24,9 +24,9 @@ import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
+import { InstallPrompt } from "@/features/pwa/components/install-prompt"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
-import { TabBar } from "@/features/navigation/components/tab-bar"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
 import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -216,55 +216,47 @@ function HomeMapScreen() {
         <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3" />
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-10 app-column">
-        <TabBar />
-      </div>
+      <SearchOverlay
+        open={isSearchOpen}
+        near={position}
+        onClose={() => setSearchOpen(false)}
+        onSelectPlace={(place) => {
+          setSelectedLocation({
+            lat: place.lat,
+            lng: place.lng,
+            label: place.name,
+            address: place.address,
+          })
+          recenterTo({ lat: place.lat, lng: place.lng })
+          setSearchOpen(false)
+        }}
+        onOpenMeetup={(id) => setSelectedMeetingId(id)}
+        onOpenQuestion={(id) => setSelectedQuestionId(id)}
+      />
 
-      {isSearchOpen ? (
-        <SearchOverlay
-          near={position}
-          onClose={() => setSearchOpen(false)}
-          onSelectPlace={(place) => {
-            setSelectedLocation({
-              lat: place.lat,
-              lng: place.lng,
-              label: place.name,
-              address: place.address,
-            })
-            recenterTo({ lat: place.lat, lng: place.lng })
-            setSearchOpen(false)
-          }}
-          onOpenMeetup={(id) => setSelectedMeetingId(id)}
-          onOpenQuestion={(id) => setSelectedQuestionId(id)}
-        />
-      ) : null}
+      <PinListOverlay
+        open={isListOpen}
+        bounds={bounds}
+        onClose={() => setListOpen(false)}
+        onOpenMeetup={(id) => setSelectedMeetingId(id)}
+        onOpenQuestion={(id) => setSelectedQuestionId(id)}
+        onCreateMeetup={() => setCreateMeetupOpen(true)}
+        onCreateQuestion={() => setCreateQuestionOpen(true)}
+      />
 
-      {isListOpen ? (
-        <PinListOverlay
-          bounds={bounds}
-          onClose={() => setListOpen(false)}
-          onOpenMeetup={(id) => setSelectedMeetingId(id)}
-          onOpenQuestion={(id) => setSelectedQuestionId(id)}
-          onCreateMeetup={() => setCreateMeetupOpen(true)}
-          onCreateQuestion={() => setCreateQuestionOpen(true)}
-        />
-      ) : null}
+      <CreateMeetupScreen
+        open={createMeetupOpen}
+        initialPlace={selectedPlace}
+        currentPosition={position}
+        onClose={() => setCreateMeetupOpen(false)}
+      />
 
-      {createMeetupOpen ? (
-        <CreateMeetupScreen
-          initialPlace={selectedPlace}
-          currentPosition={position}
-          onClose={() => setCreateMeetupOpen(false)}
-        />
-      ) : null}
-
-      {createQuestionOpen ? (
-        <CreateQuestionScreen
-          initialPlace={selectedPlace}
-          currentPosition={position}
-          onClose={() => setCreateQuestionOpen(false)}
-        />
-      ) : null}
+      <CreateQuestionScreen
+        open={createQuestionOpen}
+        initialPlace={selectedPlace}
+        currentPosition={position}
+        onClose={() => setCreateQuestionOpen(false)}
+      />
 
       {selectedMeetingId !== null ? (
         <MeetupDetailContainer
@@ -279,6 +271,8 @@ function HomeMapScreen() {
           onClose={() => setSelectedQuestionId(null)}
         />
       ) : null}
+
+      <InstallPrompt />
     </div>
   )
 }

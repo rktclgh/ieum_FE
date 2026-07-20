@@ -4,6 +4,11 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_SURFACE_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
 import { HighlightedText } from "@/components/ui/highlighted-text"
 import { ChatProfile } from "@/features/chat/components/chat-profile"
 
@@ -61,10 +66,9 @@ function ChatListItem({
       type="button"
       data-slot="chat-list-item"
       className={cn(
-        "flex w-full items-center gap-3 py-3 text-left transition-all duration-200 ease-out",
-        active
-          ? "relative z-50 -translate-y-1 scale-[1.02] gap-2 rounded-2xl bg-white px-3 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]"
-          : "translate-y-0 scale-100",
+        "flex w-full items-center gap-3 py-3 text-left",
+        LONG_PRESS_TRANSITION,
+        active ? cn(LONG_PRESS_SURFACE_ACTIVE, "gap-2 px-3") : LONG_PRESS_INACTIVE,
         className
       )}
       {...props}
@@ -75,7 +79,7 @@ function ChatListItem({
         grouped={grouped}
         online={online}
         size={active ? 40 : 44}
-        className="transition-all duration-200 ease-out"
+        className={LONG_PRESS_TRANSITION}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex w-full min-w-0 items-center">
@@ -86,7 +90,8 @@ function ChatListItem({
             <span
               ref={titleRef}
               className={cn(
-                "min-w-0 truncate text-gray-900 transition-all duration-200 ease-out",
+                "min-w-0 truncate text-gray-900",
+                LONG_PRESS_TRANSITION,
                 active ? "text-body-semibold-15" : "text-title-semibold-16"
               )}
             >
@@ -96,7 +101,8 @@ function ChatListItem({
           {memberCount !== undefined && (
             <span
               className={cn(
-                "shrink-0 whitespace-nowrap text-gray-400 transition-all duration-200 ease-out",
+                "shrink-0 whitespace-nowrap text-gray-400",
+                LONG_PRESS_TRANSITION,
                 active ? "text-body-semibold-15" : "text-title-semibold-16",
                 !titleTruncated && "ml-2"
               )}
@@ -108,7 +114,8 @@ function ChatListItem({
         {lastMessage && (
           <p
             className={cn(
-              "truncate text-gray-400 transition-all duration-200 ease-out",
+              "truncate text-gray-400",
+              LONG_PRESS_TRANSITION,
               active ? "text-body-regular-13" : "text-body-regular-14"
             )}
           >

@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
 import { MeetupSelectField } from "@/features/meetup/components/meetup-select-field"
@@ -26,7 +27,23 @@ import { cn } from "@/lib/utils"
 
 type ScheduleEditorMode = "create" | "edit"
 
-interface ScheduleEditorProps {
+interface ScheduleEditorProps extends ScheduleEditorContentProps {
+  open: boolean
+}
+
+/** 일정 생성·수정 풀스크린 오버레이. 폼 상태는 Content가 들고 있어 닫히면 함께 초기화된다. */
+function ScheduleEditor({ open, ...props }: ScheduleEditorProps) {
+  return (
+    <FullScreenOverlay
+      open={open}
+      className="z-50 app-column flex flex-col bg-white"
+    >
+      <ScheduleEditorContent {...props} />
+    </FullScreenOverlay>
+  )
+}
+
+interface ScheduleEditorContentProps {
   mode: ScheduleEditorMode
   selectedDate: string
   todayDate: string
@@ -36,7 +53,7 @@ interface ScheduleEditorProps {
   onSubmit: (body: ScheduleEditorRequest) => void
 }
 
-function ScheduleEditor({
+function ScheduleEditorContent({
   mode,
   selectedDate,
   todayDate,
@@ -44,7 +61,7 @@ function ScheduleEditor({
   isPending,
   onClose,
   onSubmit,
-}: ScheduleEditorProps) {
+}: ScheduleEditorContentProps) {
   const { messages } = useTranslation()
   const t = messages.schedule
   const createT = messages.createMeetup
@@ -89,7 +106,7 @@ function ScheduleEditor({
   }
 
   return (
-    <div className="fixed inset-x-0 top-0 bottom-[var(--keyboard-inset,0px)] z-50 app-column flex flex-col bg-white">
+    <>
       <AppBar
         title={mode === "create" ? t.editorCreateTitle : t.editorEditTitle}
         trailingVariant="close"
@@ -153,14 +170,13 @@ function ScheduleEditor({
         value={time}
         onConfirm={setTime}
       />
-      {locationPickerOpen ? (
-        <MeetupLocationPicker
-          value={place?.label ?? place?.address ?? null}
-          onConfirm={setPlace}
-          onClose={() => setLocationPickerOpen(false)}
-        />
-      ) : null}
-    </div>
+      <MeetupLocationPicker
+        open={locationPickerOpen}
+        value={place?.label ?? place?.address ?? null}
+        onConfirm={setPlace}
+        onClose={() => setLocationPickerOpen(false)}
+      />
+    </>
   )
 }
 

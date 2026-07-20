@@ -30,7 +30,9 @@ interface ClusteredPinsProps {
 function ClusteredPins({ pins, onPinClick, topInset = 0, bottomInset = 0 }: ClusteredPinsProps) {
   const map = useMap()
   const { messages } = useTranslation()
-  const { items, index } = usePinClusters(pins)
+  // 해결된 질문은 지도와 클러스터 모두에서 제외한다.
+  const visiblePins = React.useMemo(() => pins.filter((pin) => !pin.resolved), [pins])
+  const { items, index } = usePinClusters(visiblePins)
 
   const handleClusterClick = React.useCallback(
     (clusterId: number) => {

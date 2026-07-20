@@ -33,16 +33,21 @@ function LoginContent() {
   }
 
   return (
-    <main className="app-column flex min-h-dvh flex-col items-center justify-center gap-4 px-4 py-6 sm:gap-5">
+    <main className="app-column flex min-h-dvh flex-col items-center justify-center gap-4 px-4 py-6 sm:gap-5 [@media(max-height:620px)]:gap-3 [@media(max-height:620px)]:py-3">
       <LanguageToggle />
 
-      <div className="flex h-12 w-full items-center justify-center sm:h-14">
+      {/* Figma 1774:11266 — 로고 영역 120px(상하 패딩 32 + 로고 56).
+          짧은 뷰포트에서는 한 화면 유지를 위해 영역만 줄고 로고 크기는 유지된다.
+          dvh 대신 미디어 쿼리를 쓰는 이유: 주소창 노출/가상 키보드로 dvh가 실시간
+          변하면 로고 영역이 따라 움직여 레이아웃이 흔들린다. main과 동일 기준(620px). */}
+      <div className="flex h-[120px] w-full shrink-0 items-center justify-center [@media(max-height:620px)]:h-[90px]">
         <Image
           src="/icons/common/ieum-logo.png"
           alt={messages.login.logoText}
-          width={54}
-          height={28}
-          className="h-7 w-auto"
+          width={108}
+          height={56}
+          className="h-14 w-auto"
+          preload
         />
       </div>
 

@@ -24,7 +24,7 @@ function SidePanelBackdrop({ className, ...props }: DrawerPrimitive.Backdrop.Pro
     <DrawerPrimitive.Backdrop
       data-slot="side-panel-backdrop"
       className={cn(
-        "fixed inset-0 z-50 min-h-dvh bg-black/20 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "fixed inset-0 z-50 min-h-dvh bg-black/20 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-base ease-base data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -47,7 +47,7 @@ function SidePanelPopup({ className, children, ...props }: DrawerPrimitive.Popup
     <DrawerPrimitive.Popup
       data-slot="side-panel-popup"
       className={cn(
-        "flex h-dvh w-full flex-col bg-white outline-none sm:max-w-(--app-column) [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:translate-x-full data-starting-style:translate-x-full",
+        "flex h-dvh w-full flex-col bg-white outline-none sm:max-w-(--app-column) [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-base ease-base data-ending-style:translate-x-full data-starting-style:translate-x-full",
         className
       )}
       {...props}

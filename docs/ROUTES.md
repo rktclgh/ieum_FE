@@ -73,7 +73,7 @@
 
 | Canonical URL | 화면 | 백엔드 API | 접근 계약 |
 |---|---|---|---|
-| `/notifications/` | 알림 목록·읽음·삭제 | `GET /api/v1/notifications`, `POST /api/v1/notifications/{id}/read`, `POST /api/v1/notifications/read-all`, `DELETE /api/v1/notifications/{id}`, `GET /api/v1/sse/subscribe` | protected client gate |
+| `/notifications/` | 알림 목록·읽음·삭제 | `GET /api/v1/notifications`, `POST /api/v1/notifications/{id}/read`, `DELETE /api/v1/notifications/{id}`, `GET /api/v1/sse/subscribe` | protected client gate |
 
 ### 마이페이지
 
