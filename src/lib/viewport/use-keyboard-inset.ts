@@ -11,14 +11,38 @@ const CSS_VARIABLE = "--keyboard-inset"
 // 판단 기준을 어긋나지 않게 한다.
 const KEYBOARD_RESIZE_THRESHOLD = 60
 
+// 문서 스크롤이 애초에 일어나면 안 되는데도 iOS가 포커스된 입력창을 보이려 문서를 강제
+// 스크롤해 fixed 셸을 통째로 끌어올리는(AppBar가 위로 사라지는) 화면들. 이들이 떠 있을 때만
+// 스크롤을 0으로 되돌려 셸을 뷰포트에 고정한다.
+//   - `[data-screen="fixed"]`      — 채팅방·일정·신고·공지(입력창을 품은 fixed inset-0 셸)
+//   - `[data-slot="full-screen-overlay"]` — 홈 검색 등 전면 오버레이(자체 입력창)
+// 제외한 것들:
+//   - scroll 화면 — 문서 스크롤이 정상이고, 하단 fixed 바가 그 스크롤에 실려 저절로 키보드
+//     위로 올라간다. 여기서 스크롤을 0으로 되돌리면 오히려 그 바가 키보드 뒤로 숨는다.
+//   - bleed(홈 지도) — 직접 포커스되는 입력창이 없다(상단 검색은 button이고 실제 타이핑은
+//     full-screen-overlay에서 한다, map-search-bar.tsx). 넣으면 지도 위 base-ui 시트가 자체
+//     키보드 처리를 하는데 우리가 문서 스크롤까지 건드려 간섭할 여지만 생긴다.
+const SCROLL_LOCK_SELECTOR = '[data-screen="fixed"],[data-slot="full-screen-overlay"]'
+
 /**
- * iOS Safari에서 키보드는 layout viewport를 줄이지 않는다. 그래서 h-dvh 셸은 키보드가
- * 올라와도 화면 전체 높이를 유지하고, Safari가 포커스된 입력창을 보이게 하려고 페이지를
- * 통째로 밀어 올리면서 입력창과 키보드 사이에 공백이 생긴다.
+ * iOS(PWA standalone·인앱 사파리 모두 실측)에서 가상 키보드가 뜨면:
+ *  - `window.innerHeight`와 `visualViewport.height`가 함께 줄어들고(둘 다 보이는 높이가 된다),
+ *  - `documentElement.clientHeight`(ICB, 레이아웃 뷰포트)는 그대로 유지되며,
+ *  - iOS가 포커스된 입력창을 키보드 위로 보이려 문서를 `scrollY = 키보드 높이`만큼 밀어 올린다.
  *
- * visualViewport로 실제 가려진 높이를 계산해 --keyboard-inset 으로 노출한다.
- * 소비 측은 `Screen kind="fixed"`(pb-[var(--keyboard-inset)]) 나 각 하단 고정 바의
- * pb-[...] 에서 이 값을 반영한다(issue #419).
+ * 그 결과 `fixed inset-0` 셸이 스크롤에 끌려 올라가 AppBar가 화면 밖으로 사라지고, 종전
+ * `innerHeight - visualViewport.height` 공식은 0이 되어(둘이 같이 줄었으므로) 하단 바가
+ * 키보드 위로 뜨지 못했다. 실측값 402x874 기준: clientH=812, vv.h=436, scrollY=offsetTop=376.
+ *
+ * 그래서 스크롤 락 화면(fixed·bleed·full-screen-overlay)에서는:
+ *  1. 문서 스크롤을 0으로 되돌려 셸을 뷰포트에 고정한다(AppBar 밀림 해소). 스크롤이 0이 되면
+ *     iOS가 innerHeight도 원래대로 되돌리고 offsetTop도 0이 된다(실측 확인).
+ *  2. 키보드가 가린 높이를 `clientHeight - visualViewport.height`(스크롤 상태와 무관하게 정확)로
+ *     계산해 `--keyboard-inset`으로 노출한다.
+ *
+ * 락이 아닌 scroll 화면은 종전 경로를 그대로 둔다(하단 fixed 바의 스크롤 라이드-얼롱에 의존).
+ * 소비 측은 `Screen kind="fixed"`(pb-[var(--keyboard-inset)]) 나 각 하단 고정 바의 pb-[...]
+ * 에서 이 값을 반영한다(issue #419).
  */
 export function useKeyboardInset(): void {
   useEffect(() => {
@@ -45,9 +69,26 @@ export function useKeyboardInset(): void {
         return
       }
 
-      // offsetTop을 더하기 전, 순수 높이 감소분으로 먼저 "키보드가 맞는지"를 판단한다.
-      // 문턱값 이하면 브라우저 크롬 움직임으로 보고 0을 퍼블리시한다 — Screen kind="fixed"의
-      // 100dvh가 이미 크롬 상태를 반영하므로, 여기서까지 빼면 이중으로 줄어든다.
+      // 스크롤 락 화면에서는 문서 스크롤을 0으로 고정하고 ICB−visual 로 인셋을 잰다.
+      if (document.querySelector(SCROLL_LOCK_SELECTOR) !== null) {
+        // iOS가 밀어 올린 스크롤을 되돌린다. 입력창은 아래 pb-[--keyboard-inset] 로 이미
+        // 키보드 위에 놓이므로, 스크롤을 0으로 되돌려도 iOS가 다시 밀어 올릴 이유가 없다.
+        if (window.scrollY !== 0) window.scrollTo(0, 0)
+        const scroller = document.scrollingElement
+        if (scroller && scroller.scrollTop !== 0) scroller.scrollTop = 0
+
+        // clientHeight(ICB)는 키보드로 줄지 않으므로, 이 차이가 곧 키보드가 가린 높이다.
+        const covered = root.clientHeight - viewport.height
+        root.style.setProperty(
+          CSS_VARIABLE,
+          covered <= KEYBOARD_RESIZE_THRESHOLD ? "0px" : `${Math.round(covered)}px`
+        )
+        return
+      }
+
+      // scroll 화면(종전 경로, 변경 없음): 하단 fixed 바가 iOS 스크롤에 실려 키보드 위로
+      // 올라가므로 여기서 보정하면 이중이 된다. offsetTop을 더하기 전 순수 높이 감소분으로
+      // 먼저 "키보드가 맞는지"를 판단하고, 문턱값 이하면 브라우저 크롬 움직임으로 본다.
       const reducedHeight = window.innerHeight - viewport.height
       if (reducedHeight <= KEYBOARD_RESIZE_THRESHOLD) {
         root.style.setProperty(CSS_VARIABLE, "0px")

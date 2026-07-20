@@ -870,7 +870,10 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             {activeDateBadgeText && <ChatScrollDateBadge text={activeDateBadgeText} />}
           </div>
         </div>
-        <div className="relative px-4 pt-2 pb-[calc(1rem+var(--safe-area-bottom))]">
+        {/* 키보드가 열리면 홈 인디케이터(safe-area-bottom)는 키보드에 가리므로, 그만큼의
+            하단 여백을 접어 입력창을 키보드에 더 붙인다. max(safe − keyboard-inset, 0)은
+            키보드가 뜨면(inset이 safe보다 큼) 0으로, 닫히면 원래 safe로 수렴한다. */}
+        <div className="relative px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom)-var(--keyboard-inset,0px),0px))]">
           <input
             ref={fileInputRef}
             type="file"
