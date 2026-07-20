@@ -261,6 +261,26 @@
   html {
     @apply font-sans;
   }
+
+  /*
+   * 롱프레스 대상(useLongPress 가 data-long-press 를 붙인다)에서 OS 기본 반응을 끈다.
+   * iOS 는 롱프레스 시 텍스트 선택 핸들과 편집 메뉴(Copy·Look Up·Translate)를 contextmenu 와
+   * 별개 경로로 띄워 JS 의 preventDefault 로 막히지 않고, Android 도 롱프레스를 텍스트 선택으로
+   * 받는다. 둘 다 앱 롱프레스 메뉴를 가리므로 CSS 로 억제한다.
+   * base 레이어라 개별 화면이 유틸리티 클래스로 되돌릴 수 있다.
+   */
+  [data-long-press] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 입력 요소는 커서·선택이 살아 있어야 한다. */
+  [data-long-press] :is(input, textarea, [contenteditable="true"]) {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
 }
 
 /* 답장 인용 클릭 등으로 특정 메시지 위치로 스크롤했을 때, 어떤 말풍선인지 눈에 띄도록 주는 1회성 강조 애니메이션 */
