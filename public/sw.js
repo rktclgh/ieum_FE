@@ -97,6 +97,12 @@ function substituteParams(template, params) {
   )
 }
 
+function hasRequiredTemplateParams(template, params) {
+  return [...template.matchAll(/\{(\w+)\}/g)].every(
+    ([, name]) => typeof params?.[name] === "string" && params[name].trim(),
+  )
+}
+
 // 키를 수신자 언어로 렌더한다. 키가 없거나(구 서버) 카탈로그에 없으면 null 을 돌려
 // 호출부가 서버가 실어보낸 title/body(ko 폴백)를 쓰게 한다.
 function copyFromMessageKey(payload) {
@@ -105,6 +111,12 @@ function copyFromMessageKey(payload) {
   const table = NOTIFICATION_COPY[payload.lang] ?? NOTIFICATION_COPY[FALLBACK_LANGUAGE]
   const entry = table?.[payload.messageKey]
   if (!entry) return null
+  if (
+    !hasRequiredTemplateParams(entry[0], payload.messageParams) ||
+    !hasRequiredTemplateParams(entry[1], payload.messageParams)
+  ) {
+    return null
+  }
 
   return {
     title: entry[0],

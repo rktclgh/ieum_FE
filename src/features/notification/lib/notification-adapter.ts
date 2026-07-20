@@ -1,6 +1,9 @@
 import { resolveNotificationRoute } from "@/features/notification/lib/notification-link"
 import type { NotificationItem } from "@/features/notification/api/notification-types"
-import { isNotificationMessageKey } from "@/lib/i18n/notification-message-keys"
+import {
+  hasRequiredNotificationMessageParams,
+  isNotificationMessageKey,
+} from "@/lib/i18n/notification-message-keys"
 import type { Messages } from "@/lib/i18n/messages/ko"
 
 // UI(NotificationItem 컴포넌트)가 쓰는 뷰 모델. 딥링크 경로는 여기서 미리 계산한다.
@@ -26,6 +29,10 @@ function resolveCopy(item: NotificationItem, messages: Messages): { title: strin
   const fallback = { title: item.title, body: item.body }
 
   if (item.messageKey === null || !isNotificationMessageKey(item.messageKey)) {
+    return fallback
+  }
+
+  if (!hasRequiredNotificationMessageParams(item.messageKey, item.messageParams)) {
     return fallback
   }
 

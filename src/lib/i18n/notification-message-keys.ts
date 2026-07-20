@@ -17,6 +17,14 @@ type NotificationMessageKey = (typeof NOTIFICATION_MESSAGE_KEYS)[number]
 // 발송 시점에 굳어진 스냅샷 값. 닉네임·제목처럼 번역 대상이 아닌 사용자 콘텐츠가 들어온다.
 type NotificationMessageParams = Record<string, string>
 
+const REQUIRED_NOTIFICATION_MESSAGE_PARAMS: Partial<
+  Record<NotificationMessageKey, readonly string[]>
+> = {
+  "notification.friend.request": ["nickname"],
+  "notification.radius.question": ["subject"],
+  "notification.radius.meeting": ["subject"],
+}
+
 interface NotificationCopy {
   title: string
   body: (params: NotificationMessageParams) => string
@@ -26,5 +34,17 @@ function isNotificationMessageKey(value: string): value is NotificationMessageKe
   return (NOTIFICATION_MESSAGE_KEYS as readonly string[]).includes(value)
 }
 
-export { NOTIFICATION_MESSAGE_KEYS, isNotificationMessageKey }
+function hasRequiredNotificationMessageParams(
+  key: NotificationMessageKey,
+  params: NotificationMessageParams | null | undefined,
+): boolean {
+  const required = REQUIRED_NOTIFICATION_MESSAGE_PARAMS[key]
+  return !required || required.every((name) => typeof params?.[name] === "string" && params[name].trim())
+}
+
+export {
+  NOTIFICATION_MESSAGE_KEYS,
+  hasRequiredNotificationMessageParams,
+  isNotificationMessageKey,
+}
 export type { NotificationMessageKey, NotificationMessageParams, NotificationCopy }

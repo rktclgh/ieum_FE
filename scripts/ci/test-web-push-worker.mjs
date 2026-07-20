@@ -282,6 +282,44 @@ test("deep-links a friend-request durable notification to the friends page", asy
   assert.equal(worker.shown[0].options.data.url, "/friends/?highlightUserId=77")
 })
 
+test("uses the server fallback when a friend request has no nickname", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 48,
+    type: "friend",
+    title: "친구 요청",
+    body: "누군가 친구 요청을 보냈어요",
+    messageKey: "notification.friend.request",
+    messageParams: {},
+    refId: 77,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].title, "친구 요청")
+  assert.equal(worker.shown[0].options.body, "누군가 친구 요청을 보냈어요")
+})
+
+test("uses the server fallback when a nearby question has no subject", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 49,
+    type: "question",
+    title: "주변 새 질문",
+    body: "오늘 저녁 뭐 먹을까요?",
+    messageKey: "notification.radius.question",
+    messageParams: {},
+    refId: 9,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].title, "주변 새 질문")
+  assert.equal(worker.shown[0].options.body, "오늘 저녁 뭐 먹을까요?")
+})
+
 test("opens the friends page without a highlight when a friend notification lacks a refId", async () => {
   const worker = loadWorker()
   await dispatchPush(worker, {
