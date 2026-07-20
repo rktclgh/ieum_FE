@@ -16,12 +16,24 @@ type MeetingStatus = "open" | "closed" | "cancelled"
 // 호스트면 "host", 참가 상태(joined/left/kicked) 또는 미참가 "none".
 type MeetingMyStatus = "host" | "joined" | "left" | "kicked" | "none"
 
-interface MeetingScheduleInput {
-  startsAt: string
-  endsAt?: string
-  // 날짜만 정해진 모임. 서버가 아직 모르면 무시되고 startsAt 만 저장된다 (ieum_BE#201).
-  isTimeUndecided?: boolean
+/** one_time 일정은 날짜가 정본이며, startTime 생략은 시간 미정이다. */
+interface OneTimeMeetingScheduleInput {
+  /** KST 기준 일정 날짜. */
+  date: string
+  /** KST 기준 HH:mm. 생략하면 해당 날짜의 시간 미정 일정이다. */
+  startTime?: string
+  endTime?: string
 }
+
+/** recurring 일정의 날짜는 recurrenceRule이 관리하므로 보내지 않는다. */
+interface RecurringMeetingScheduleInput {
+  date?: never
+  /** KST 기준 HH:mm. 반복 일정에서는 필수다. */
+  startTime: string
+  endTime?: string
+}
+
+type MeetingScheduleInput = OneTimeMeetingScheduleInput | RecurringMeetingScheduleInput
 
 type RecurrenceFrequency = "daily" | "weekly" | "monthly"
 
@@ -47,13 +59,13 @@ interface CreateMeetingRequestBase {
 // 날짜 미정은 one_time에만 허용한다. 반복 모임은 서버 계약상 시작 일정이 반드시 필요하다.
 interface OneTimeCreateMeetingRequest extends CreateMeetingRequestBase {
   type: "one_time"
-  schedule?: MeetingScheduleInput
+  schedule?: OneTimeMeetingScheduleInput
   recurrenceRule?: never
 }
 
 interface RecurringCreateMeetingRequest extends CreateMeetingRequestBase {
   type: "recurring"
-  schedule: MeetingScheduleInput
+  schedule: RecurringMeetingScheduleInput
   recurrenceRule: CreateMeetingRecurrenceRule
 }
 
@@ -128,6 +140,8 @@ export type {
   MeetingStatus,
   MeetingMyStatus,
   MeetingScheduleInput,
+  OneTimeMeetingScheduleInput,
+  RecurringMeetingScheduleInput,
   RecurrenceFrequency,
   CreateMeetingRecurrenceRule,
   CreateMeetingRequest,

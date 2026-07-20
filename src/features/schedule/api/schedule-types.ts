@@ -68,8 +68,9 @@ interface MeetingScheduleRange {
 interface ScheduleEditorRequest {
   title: string
   locationName: string
-  startsAt: string
-  endsAt?: string
+  date: string
+  startTime?: string
+  endTime?: string
 }
 
 // 기존 사용처와의 이름 호환을 유지한다.

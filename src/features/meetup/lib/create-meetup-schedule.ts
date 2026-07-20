@@ -1,7 +1,7 @@
-import type { MeetingScheduleInput } from "../api/meetup-types"
+import type { OneTimeMeetingScheduleInput } from "../api/meetup-types"
 import {
-  TIME_UNDECIDED_PLACEHOLDER,
-  toKstIso,
+  toDateKey,
+  toTimeKey,
   type MeetupDateValue,
   type MeetupTimeValue,
 } from "../constants/create-meetup"
@@ -31,16 +31,16 @@ function buildMeetupSchedule({
   time,
   isDateUndecided,
   isTimeUndecided,
-}: MeetupScheduleState): MeetingScheduleInput | undefined {
+}: MeetupScheduleState): OneTimeMeetingScheduleInput | undefined {
   if (isDateUndecided || !date) return undefined
 
   if (isTimeUndecided) {
-    return { startsAt: toKstIso(date, TIME_UNDECIDED_PLACEHOLDER), isTimeUndecided: true }
+    return { date: toDateKey(date) }
   }
 
   if (!time) return undefined
 
-  return { startsAt: toKstIso(date, time) }
+  return { date: toDateKey(date), startTime: toTimeKey(time) }
 }
 
 export { buildMeetupSchedule, hasCompleteMeetupSchedule }

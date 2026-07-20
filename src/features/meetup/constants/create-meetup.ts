@@ -39,10 +39,6 @@ export type MeetupTimeSelection =
   | { time: null; isTimeUndecided: true }
   | { time: MeetupTimeValue | null; isTimeUndecided: false }
 
-// 시간 미정 모임도 startsAt 은 미래여야 서버가 받는다. 자정을 쓰면 오늘 날짜를 고른 순간
-// 과거가 되어 VALIDATION_FAILED 가 나므로, 하루의 끝을 대표 시각으로 보낸다.
-export const TIME_UNDECIDED_PLACEHOLDER: MeetupTimeValue = { period: "pm", hour: 11, minute: 59 }
-
 /** 해당 연·월의 마지막 날 (28~31) */
 export function daysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate()
@@ -66,14 +62,16 @@ function to24Hour({ period, hour }: MeetupTimeValue): number {
   return hour === 12 ? 12 : hour + 12
 }
 
-/**
- * 날짜/시각 값을 KST 오프셋 포함 ISO-8601(`2026-07-07T19:00:00+09:00`)로 조합한다.
- * schedule.startsAt 은 미래 시각이어야 하므로 서버가 과거를 거부하면 VALIDATION_FAILED 로 처리된다.
- */
-export function toKstIso(date: MeetupDateValue, time: MeetupTimeValue): string {
+/** KST 기준 날짜를 API 요청 형식(`YYYY-MM-DD`)으로 만든다. */
+export function toDateKey(date: MeetupDateValue): string {
   const mm = String(date.month).padStart(2, "0")
   const dd = String(date.day).padStart(2, "0")
+  return `${date.year}-${mm}-${dd}`
+}
+
+/** 12시간제 선택값을 API 요청 형식(`HH:mm`, KST)으로 만든다. */
+export function toTimeKey(time: MeetupTimeValue): string {
   const hh = String(to24Hour(time)).padStart(2, "0")
   const min = String(time.minute).padStart(2, "0")
-  return `${date.year}-${mm}-${dd}T${hh}:${min}:00+09:00`
+  return `${hh}:${min}`
 }

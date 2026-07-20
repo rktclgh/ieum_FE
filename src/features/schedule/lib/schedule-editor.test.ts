@@ -4,7 +4,7 @@ import test from "node:test"
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
 import { buildScheduleEditorRequest, isPastScheduleDate } from "./schedule-editor.ts"
 
-test("buildScheduleEditorRequest composes a selected KST date and PM picker time", () => {
+test("buildScheduleEditorRequest sends a selected date and PM picker time separately", () => {
   assert.deepEqual(
     buildScheduleEditorRequest({
       selectedDate: "2026-07-16",
@@ -15,7 +15,8 @@ test("buildScheduleEditorRequest composes a selected KST date and PM picker time
     {
       title: "용산 와인바에서 봅시다",
       locationName: "용산 와인바",
-      startsAt: "2026-07-16T19:05:00+09:00",
+      date: "2026-07-16",
+      startTime: "19:05",
     }
   )
 })
@@ -31,7 +32,8 @@ test("buildScheduleEditorRequest falls back to an address when a place has no la
     {
       title: "저녁 식사",
       locationName: "서울특별시 용산구 한강대로",
-      startsAt: "2026-07-16T00:00:00+09:00",
+      date: "2026-07-16",
+      startTime: "00:00",
     }
   )
 })

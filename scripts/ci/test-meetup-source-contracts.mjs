@@ -6,8 +6,10 @@ const form = fs.readFileSync("src/features/meetup/hooks/use-create-meetup-form.t
 const screen = fs.readFileSync("src/features/meetup/components/create-meetup-screen.tsx", "utf8")
 const picker = fs.readFileSync("src/features/meetup/components/meetup-date-picker.tsx", "utf8")
 const timePicker = fs.readFileSync("src/features/meetup/components/meetup-time-picker.tsx", "utf8")
-const selectField = fs.readFileSync("src/features/meetup/components/meetup-select-field.tsx", "utf8")
+const selectField = fs.readFileSync("src/components/ui/text-field/select-field.tsx", "utf8")
 const schedule = fs.readFileSync("src/features/meetup/lib/create-meetup-schedule.ts", "utf8")
+const meetingTypes = fs.readFileSync("src/features/meetup/api/meetup-types.ts", "utf8")
+const meetingRequestTypes = meetingTypes.slice(0, meetingTypes.indexOf("interface MeetingSchedule {"))
 const localeFiles = ["ko", "en", "ja", "vi", "ru", "th", "zh"]
 
 test("날짜 미정은 폼의 명시적 상태로 날짜를 함께 초기화한다", () => {
@@ -24,7 +26,7 @@ test("날짜 미정은 시간 선택을 native disabled로 만들고 schedule을
   assert.match(screen, /disabled=\{form\.isDateUndecided\}/)
   assert.match(screen, /\.\.\.\(schedule \? \{ schedule \} : \{\}\)/)
   assert.doesNotMatch(screen, /if \(!form\.date \|\| !form\.time \|\| !form\.place\) return/)
-  assert.match(selectField, /disabled\?: boolean/)
+  assert.match(selectField, /SelectFieldProps extends Omit<React\.ComponentProps<"button">, "value">/)
   assert.match(selectField, /disabled=\{disabled\}/)
 })
 
@@ -58,9 +60,15 @@ test("시간 미정은 폼의 명시적 상태이고 날짜 변경 시 초기화
   )
 })
 
-test("일정 헬퍼는 날짜 미정 계약을 문서화한다", () => {
+test("일정 헬퍼는 date와 선택적 startTime을 정본으로 보낸다", () => {
   assert.match(schedule, /\/\*\*[\s\S]*\*\/\s*function hasCompleteMeetupSchedule/)
   assert.match(schedule, /\/\*\*[\s\S]*\*\/\s*function buildMeetupSchedule/)
+  assert.match(schedule, /return \{ date: toDateKey\(date\) \}/)
+  assert.match(schedule, /return \{ date: toDateKey\(date\), startTime: toTimeKey\(time\) \}/)
+  assert.doesNotMatch(schedule, /TIME_UNDECIDED_PLACEHOLDER|startsAt:|isTimeUndecided: true/)
+  assert.match(meetingRequestTypes, /interface OneTimeMeetingScheduleInput[\s\S]*date: string/)
+  assert.match(meetingRequestTypes, /interface RecurringMeetingScheduleInput[\s\S]*date\?: never[\s\S]*startTime: string/)
+  assert.doesNotMatch(meetingRequestTypes, /startsAt|isTimeUndecided/)
 })
 
 test("시간 미정 선택은 접근 가능한 체크 상태와 휠 비활성화로 노출한다", () => {
