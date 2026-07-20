@@ -46,7 +46,7 @@ function PillButton({
       type="button"
       className={cn(
         "flex items-center justify-center rounded-lg px-3 py-2 text-body-regular-13",
-        tone === "filled" ? "bg-primary text-white" : "border border-primary bg-white text-primary",
+        tone === "filled" ? "bg-gray-900 text-white" : "border border-gray-900 bg-white text-gray-900",
         className
       )}
       {...props}

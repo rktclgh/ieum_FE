@@ -114,7 +114,7 @@ function FullScreenOverlay({ open, className, children, ...props }: FullScreenOv
         // 그 높이만큼 항상 부족한데, 박스가 짧아지면 그 오차가 그대로 빈틈으로 드러난다.
         // padding-bottom은 배경(padding-box까지 칠해짐)은 화면 끝까지 유지하면서, 자식의
         // 콘텐츠 영역(h-full/flex-1 등)만 기존과 동일하게 줄어들어 입력·CTA가 키보드 위에 남는다.
-        "fixed inset-0 pb-[var(--keyboard-inset,0px)] transition-transform duration-base ease-base motion-reduce:transition-none",
+        "app-screen-fixed pb-[var(--keyboard-inset,0px)] transition-transform duration-base ease-base motion-reduce:transition-none",
         // "open" 단계에서는 transform 유틸리티를 아예 붙이지 않는다.
         // translate-y-0라도 transform이 남으면 자식의 position:fixed 기준이 이 요소로 바뀐다.
         (phase === "enter-start" || isLeaving) && "translate-y-full",

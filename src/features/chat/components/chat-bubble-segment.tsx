@@ -11,10 +11,11 @@ const OTHERS_RADIUS = {
   last: "rounded-tr-3xl rounded-bl-3xl rounded-br-3xl",
 } as const
 
+// Figma 1414:6700 (Me/Multiple) 기준. OTHERS_RADIUS를 좌우 반전한 값과 대칭이다.
 const ME_RADIUS = {
   solo: "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl",
-  first: "rounded-tl-3xl rounded-bl-3xl rounded-tr-[4px] rounded-br-[4px]",
-  middle: "rounded-tl-3xl rounded-bl-3xl",
+  first: "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl",
+  middle: "rounded-tl-3xl rounded-bl-3xl rounded-tr-[4px] rounded-br-[4px]",
   last: "rounded-tl-3xl rounded-bl-3xl rounded-br-3xl",
 } as const
 

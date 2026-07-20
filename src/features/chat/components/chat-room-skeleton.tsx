@@ -22,7 +22,7 @@ function ChatRoomSkeleton() {
   return (
     <main
       aria-busy="true"
-      className="fixed inset-0 app-column flex flex-col bg-white pb-[var(--keyboard-inset,0px)]"
+      className="app-screen-fixed app-column flex flex-col bg-white pb-[var(--keyboard-inset,0px)]"
     >
       <AppBar
         leadingIcon={null}
