@@ -25,7 +25,10 @@ function hasCompleteMeetupSchedule({
   return date !== null && (time !== null || isTimeUndecided)
 }
 
-/** 완성된 일정을 API schedule로 바꾼다. 날짜 미정·미완성 상태에서는 생략한다. */
+/**
+ * 완성된 일정을 API schedule로 바꾼다. 날짜 미정·미완성 상태에서는 생략한다.
+ * 시간 미정은 `startTime`을 아예 보내지 않는 것으로 표현한다(ieum_BE#206 date/startTime/endTime 계약).
+ */
 function buildMeetupSchedule({
   date,
   time,

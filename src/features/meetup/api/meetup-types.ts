@@ -88,6 +88,11 @@ interface MeetingHost {
 
 interface MeetingSchedule {
   scheduleId: number
+  date?: string
+  startTime?: string | null
+  endTime?: string | null
+  timeUndecided?: boolean
+  // 하위 호환용 파생 캐시(deprecated). 시간 미정이면 KST 자정으로 앵커링돼 있다.
   startsAt: string
   endsAt?: string | null
   status?: string

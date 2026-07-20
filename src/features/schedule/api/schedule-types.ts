@@ -15,12 +15,18 @@ interface LocationSnapshot {
   label?: string
 }
 
-// 10-2 GET /meetings/calendar 항목
+// 10-2 GET /meetings/calendar 항목. 날짜 미정 placeholder는 date/startTime/endTime이 모두 null이고
+// status="unscheduled"다. 시간 미정 일정은 date는 있고 timeUndecided=true, startTime은 null이다.
 interface CalendarItem {
   meetingId: number
   scheduleId: number
   title: string | null
   location: LocationSnapshot
+  date: string | null
+  startTime: string | null
+  endTime: string | null
+  timeUndecided: boolean
+  // 하위 호환용 파생 캐시(deprecated). 시간 미정이면 KST 자정으로 앵커링돼 있다.
   startsAt: string
   endsAt: string | null
   status: ScheduleStatus
@@ -30,10 +36,16 @@ interface CalendarItem {
 
 // 모임 채팅 일정 관리 GET /meetings/{id}/schedules 항목.
 // 권한은 화면에서 재계산하지 않고 서버가 내려준 capability만 사용한다.
+// timeUndecided=true면 startTime이 null이므로 FE는 시각 대신 "시간 미정"을 렌더한다.
 interface MeetingScheduleItem {
   scheduleId: number
   title: string | null
   locationName: string | null
+  date: string
+  startTime: string | null
+  endTime: string | null
+  timeUndecided: boolean
+  // 하위 호환용 파생 캐시(deprecated). 시간 미정이면 KST 자정으로 앵커링돼 있다.
   startsAt: string
   endsAt: string | null
   status: ScheduleStatus
@@ -64,7 +76,7 @@ interface MeetingScheduleRange {
 }
 
 // 모임 채팅 일정 생성/수정 요청. 위치의 좌표는 모임 장소 picker에서만 쓰고,
-// 일정 API에는 사람이 읽을 수 있는 이름만 전달한다.
+// 일정 API에는 사람이 읽을 수 있는 이름만 전달한다. date는 필수, startTime을 생략하면 시간 미정.
 interface ScheduleEditorRequest {
   title: string
   locationName: string

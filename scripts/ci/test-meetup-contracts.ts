@@ -78,7 +78,7 @@ test("시간 미정은 날짜 없이 성립하지 않는다", () => {
   )
 })
 
-test("실제 시각이 있으면 시간 미정 플래그를 싣지 않는다", () => {
+test("실제 시각이 있으면 startTime을 함께 싣는다", () => {
   assert.deepEqual(buildMeetupSchedule({ date, time, isDateUndecided: false, isTimeUndecided: false }), {
     date: "2026-07-16",
     startTime: "19:00",
