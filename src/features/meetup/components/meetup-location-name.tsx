@@ -3,6 +3,8 @@
 import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Input } from "@/components/ui/text-field/input"
+import { Title } from "@/components/ui/text-field/title"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -43,19 +45,16 @@ function MeetupLocationName({ address, initialValue = "", onBack, onDone }: Meet
 
       <div className="flex flex-1 flex-col gap-3 px-4 pt-3">
         <div className="flex w-full flex-col items-start">
-          <p className="px-2 py-1 text-body-medium-14 text-gray-900">{address}</p>
-          <div className="flex h-[3.375rem] w-full items-center rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary">
-            <input
-              autoFocus
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleDone()
-              }}
-              placeholder={t.namePlaceholder}
-              className="w-full bg-transparent text-body-regular-16 text-gray-900 caret-primary outline-none placeholder:text-body-regular-16 placeholder:text-gray-400"
-            />
-          </div>
+          <Title text={address} />
+          <Input
+            autoFocus
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") handleDone()
+            }}
+            placeholder={t.namePlaceholder}
+          />
         </div>
       </div>
 

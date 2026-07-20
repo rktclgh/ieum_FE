@@ -7,7 +7,7 @@ import { AppBar } from "@/components/ui/app-bar"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
-import { MeetupSelectField } from "@/features/meetup/components/meetup-select-field"
+import { SelectField } from "@/components/ui/text-field/select-field"
 import { MeetupTimePicker } from "@/features/meetup/components/meetup-time-picker"
 import {
   formatDateValue,
@@ -130,7 +130,7 @@ function ScheduleEditorContent({
           />
         </div>
 
-        <MeetupSelectField
+        <SelectField
           iconSrc="/icons/write/clock-200.svg"
           selectedIconSrc="/icons/write/clock-700.svg"
           placeholder={t.timePlaceholder}
@@ -139,7 +139,7 @@ function ScheduleEditorContent({
           onClick={() => setTimePickerOpen(true)}
         />
 
-        <MeetupSelectField
+        <SelectField
           iconSrc="/icons/write/location-200.svg"
           selectedIconSrc="/icons/write/location-700.svg"
           placeholder={t.locationPlaceholder}
