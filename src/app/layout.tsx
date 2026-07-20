@@ -24,31 +24,29 @@ export const metadata: Metadata = {
      * ===== 상단 계약 스위치 — 이 앱의 레이아웃에서 가장 파급이 큰 한 줄 =====
      *
      * issue #419. **바꾸기 전에 `docs/viewport-behavior.md`를 읽을 것.**
-     * 이 값은 #304→#381→#395→#409→#411로 다섯 번 뒤집혔고, 매번 실기기 측정 없이
-     * 한쪽 증상만 보고 뒤집혔다. 이번에는 재고 정했다.
+     * 이 값은 #304→#381→#395→#409→#411로 다섯 번, 매번 실기기 측정 없이 한쪽 증상만 보고
+     * 뒤집혔다. 이번(#419 edge-to-edge)에는 "후속 측정" 섹션의 실기기 검증을 근거로 정했다.
      *
-     * "black-translucent"를 쓰지 않는 이유 (iPhone 16 Pro / iOS 18.7 standalone 실측):
+     * "black-translucent" — standalone에서 지도가 상태바 뒤(top:0)까지 깔리는 유일한 길이다.
+     * "default"는 iOS가 상단 62px을 소유해 지도가 그 아래에서만 그려지므로 상단 edge-to-edge가
+     * 원천 불가능하다. 사용자가 상단까지 채우기를 명시적으로 요구해 black-translucent를 택했다.
      *
-     *   - 뷰포트 높이가 812↔874로 흔들린다. 로드 직후 812, 첫 스크롤 이후 874.
-     *     변동폭 62px은 정확히 상태바 높이다.
-     *   - `position: fixed`는 이 흔들리는 뷰포트를 따라간다. 그래서 하단 탭바가
-     *     스크롤에 따라 62px 위아래로 움직인다 — "항상 같은 위치"가 성립하지 않는다.
-     *   - 812 상태에서는 화면 하단 62px이 아예 뷰포트 밖이라 CSS로 칠할 수 없다.
-     *     홈 지도는 스크롤이 없어 이 상태에 고정되므로, edge-to-edge를 가장 원하는
-     *     화면에서 오히려 하단에 죽은 띠가 상시로 남는다.
+     * black-translucent의 알려진 함정과 이번 해법:
      *
-     * 즉 값을 잘 맞추면 되는 문제가 아니라 구조적 비호환이다. #381(하단 공백)과
-     * #414(이미 꽉 참)는 **둘 다 맞았다** — 서로 다른 상태를 봤을 뿐이다.
+     *   - 뷰포트가 812↔874로 흔들린다(변동폭 62px=상태바). `fixed bottom:0`은 이 흔들림을 따라가
+     *     하단 요소가 62px 위아래로 튄다 → 과거 5번의 실패 원인.
+     *     **해법**: 하단 고정 요소를 흔들리는 `bottom:0`(ICB)이 아니라 안정적인 `100lvh` floor에
+     *     앵커한다. 탭바=`.bottom-anchor`(top:calc(100lvh−H)), 높이 가변 바=`.bottom-anchor-auto`
+     *     (translateY(100lvh−100dvh)). 둘 다 실기기로 고정 확인(globals.css, viewport-behavior.md).
+     *   - 812 상태에서 하단 62px이 뷰포트 밖이라 `fixed inset-0` 아래 죽은 띠가 남는다.
+     *     **해법**: 전면 화면(`[data-screen=bleed|fixed]`)을 `height:100lvh`로 채운다(globals.css).
+     *   - 상태바 글자가 앱 전역에서 흰색이 된다(탭별 분기 불가). 지도·어두운 화면은 정상,
+     *     밝은 배경 화면(마이·질문 등)은 가독성이 떨어질 수 있으나 **의도된 트레이드오프**로 수용했다.
      *
-     * "default"에서는 `innerHeight = ICB = 100dvh = 100% = 812`로 전부 일치하고 흔들리지
-     * 않는다. 대가는 상단 62px을 iOS가 소유하는 것이다. 지도는 그 아래까지만 그려진다.
-     *
-     * standalone에서 `--safe-area-top`이 0px이 되는 것은 회귀가 아니라 정상이다. 그 영역을
-     * iOS가 떼어 갔으므로 페이지가 추가로 피할 여백이 없다. `APP_BAR_SAFE_TOP`은
-     * `calc(1rem + var(--safe-area-top))`이라 0px이면 기본 16px로 수렴한다.
-     * 사파리 탭에서는 종전대로 실제 노치 값이 들어온다.
+     * `--safe-area-top`이 standalone에서 62px로 들어온다(default의 0px과 다름). `APP_BAR_SAFE_TOP`
+     * = `calc(1rem + var(--safe-area-top))`이 그만큼 콘텐츠를 상태바 아래로 민다. 사파리 탭은 종전대로.
      */
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Ieum",
   },
   // 파비콘/터치 아이콘은 app/ 파일 컨벤션(favicon.ico, icon.svg, apple-icon.png)이 처리한다.

@@ -388,6 +388,51 @@
 }
 
 /*
+ * 높이무관 바닥 앵커 — 자기 점유 높이를 토큰화할 수 없는 하단 고정 요소용(토스트·폼 CTA바).
+ *
+ * `.bottom-anchor`는 `top: calc(100lvh - H)`라 요소 높이 H를 알아야 하지만, 이 요소들은 높이가
+ * 내용에 따라 변한다. 대신 요소의 기존 `bottom`은 그대로 두고 흔들림만 상쇄한다:
+ *
+ *   흔들림 = 100lvh − 100dvh   (874 − 현재높이. 812 상태면 +62, 874 상태면 0)
+ *
+ * `bottom:0`은 흔들리는 뷰포트 바닥(812↔874)을 따라가는데, 위로 `100lvh − 100dvh`만큼 내리면
+ * 항상 안정적인 874 floor에 꽂힌다. lvh는 큰 값(874)에 고정이고 dvh는 현재값을 따라가므로
+ * 이 차가 흔들림과 정확히 같다 — 사파리 브라우저 크롬 여닫힘(714↔754)에서 실측 확인(bottom+dvh−lvh 프로브).
+ * 기본(비-standalone)에서는 규칙 미적용, default standalone에서는 dvh=lvh라 translateY(0) 무해.
+ *
+ * 사용법: `bottom-anchor-auto` 한 클래스만 추가. `--anchor-h` 불필요.
+ */
+:root[data-standalone] .bottom-anchor-auto {
+  transform: translateY(calc(100lvh - 100dvh));
+}
+
+/*
+ * 전면 화면(홈 지도·채팅방 등)을 화면의 진짜 바닥(100lvh=874)까지 채운다 — edge-to-edge.
+ *
+ * `fixed inset-0`의 bottom:0은 흔들리는 뷰포트(812↔874)를 따라가고, standalone에서 문서 스크롤이
+ * 없는 화면은 축소 상태(812)에 고정돼 하단 62px이 뷰포트 밖 죽은 띠로 남는다(docs/viewport-behavior.md).
+ * 안정적인 100lvh로 높이를 고정하면 그 죽은 띠가 사라지고 상태바 뒤(top:0)까지 콘텐츠가 깔린다.
+ *
+ * 키보드: `interactive-widget: resizes-content`가 키보드만큼 레이아웃 뷰포트를 줄이면 lvh도 함께
+ * 줄어 fixed 화면이 키보드 위로 축소되고, `pb-[--keyboard-inset]`는 0으로 degrade한다(layout.tsx).
+ *
+ * 적용 대상:
+ *   - `[data-screen=bleed|fixed]` — Screen 셸(홈 지도·채팅방·일정·신고·공지).
+ *   - `[data-slot=full-screen-overlay]` — 지도 위 전면 오버레이(검색·리스트·모임/질문 만들기 등).
+ *     슬라이드 모션은 자신의 transform(translate-y-full)이 담당하므로 높이 확장과 무관하다.
+ *   - `.bottom-sheet-viewport` — 부분 바텀시트의 items-end 정렬 기준. 이게 없으면 시트가 812
+ *     라인에 정렬돼 물리 바닥(874)에서 62px 떠 보이고, 바닥 앵커된 탭바와도 어긋난다.
+ *     팝업은 자기 transform으로 뜨고 지므로 뷰포트 높이 확장이 드래그/모션을 건드리지 않는다.
+ */
+:root[data-standalone] [data-screen="bleed"],
+:root[data-standalone] [data-screen="fixed"],
+:root[data-standalone] [data-slot="full-screen-overlay"],
+:root[data-standalone] .bottom-sheet-viewport {
+  height: 100lvh;
+  bottom: auto;
+}
+
+/*
  * 지도 원형 마커 히트 영역 — issue #302.
  * Leaflet이 만드는 `.leaflet-marker-icon` 루트는 border-radius 없는 44x44 정사각형이라,
  * 원 밖 네 모서리(박스의 약 21%)까지 클릭을 가로챈다. 마커가 겹치면 눈에는 클러스터만
