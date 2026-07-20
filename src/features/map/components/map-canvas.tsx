@@ -13,6 +13,10 @@ import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
 import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import {
+  createProgrammaticMoveGate,
+  type ProgrammaticMoveGate,
+} from "@/features/map/lib/locate-following"
+import {
   resolveVisibleCenterOffsetY,
   resolveVisibleCenterPoint,
 } from "@/features/map/lib/visible-center"
@@ -52,6 +56,8 @@ interface MapCanvasProps {
    * 마운트 시에는 지도의 기하 중심(= center)을 보이는 영역 중심으로 정렬하는 효과.
    */
   alignCenterToVisibleArea?: boolean
+  /** 사용자가 직접 지도를 움직였을 때. 코드가 일으킨 재중심에서는 호출되지 않는다 */
+  onUserGesture?: () => void
 }
 
 const LIVE_ACCENT = PIN_ACCENT
@@ -93,6 +99,7 @@ function MapCenterUpdater({
   animate,
   topInset = 0,
   bottomInset = 0,
+  moveGate,
 }: {
   center: Coordinates | null
   recenterKey: number
@@ -100,6 +107,7 @@ function MapCenterUpdater({
   animate?: boolean
   topInset?: number
   bottomInset?: number
+  moveGate: ProgrammaticMoveGate
 }) {
   const map = useMap()
   // 최초 마운트 시점의 key를 "이미 적용됨"으로 두어, 마운트만으로는 재중심하지 않는다.
@@ -115,6 +123,10 @@ function MapCenterUpdater({
     const targetZoom = zoom ?? map.getZoom()
     appliedKeyRef.current = recenterKey
 
+    // 이 이동이 만들어낼 movestart/zoomstart를 사용자 제스처로 오인하지 않도록 구간을 연다.
+    // 구간은 아래 moveend 리스너가 닫는다.
+    moveGate.begin()
+
     // 헤더·하단 시트가 지도를 가리면 그만큼 패딩을 줘, 보이는 영역의 정중앙에 오도록 flyToBounds로 이동.
     if (topInset > 0 || bottomInset > 0) {
       map.flyToBounds(L.latLngBounds([center.lat, center.lng], [center.lat, center.lng]), {
@@ -127,7 +139,56 @@ function MapCenterUpdater({
     } else {
       map.setView([center.lat, center.lng], targetZoom)
     }
-  }, [center, recenterKey, zoom, animate, topInset, bottomInset, map])
+  }, [center, recenterKey, zoom, animate, topInset, bottomInset, map, moveGate])
+
+  // 이동이 끝나면 구간을 닫는다. 목적지가 현재 뷰와 같아 moveend가 아예 오지 않을 수도 있으므로
+  // 언마운트 시 reset으로 남은 구간을 정리한다.
+  React.useEffect(() => {
+    const closeGate = () => moveGate.end()
+    map.on("moveend", closeGate)
+    return () => {
+      map.off("moveend", closeGate)
+      moveGate.reset()
+    }
+  }, [map, moveGate])
+
+  return null
+}
+
+/**
+ * 사용자가 직접 지도를 움직였을 때만 알린다.
+ *
+ * dragstart는 사용자 드래그에서만 발생하지만 zoomstart는 flyTo에서도 발생하므로,
+ * 프로그래매틱 이동 구간에서는 무시한다.
+ */
+function MapUserGestureWatcher({
+  onUserGesture,
+  moveGate,
+}: {
+  onUserGesture: () => void
+  moveGate: ProgrammaticMoveGate
+}) {
+  const map = useMap()
+  const onUserGestureRef = React.useRef(onUserGesture)
+
+  React.useEffect(() => {
+    onUserGestureRef.current = onUserGesture
+  }, [onUserGesture])
+
+  React.useEffect(() => {
+    const handle = () => {
+      if (moveGate.isProgrammatic()) return
+      onUserGestureRef.current()
+    }
+
+    map.on("dragstart", handle)
+    map.on("zoomstart", handle)
+
+    return () => {
+      map.off("dragstart", handle)
+      map.off("zoomstart", handle)
+    }
+  }, [map, moveGate])
 
   return null
 }
@@ -353,10 +414,13 @@ function MapCanvas({
   onCenterMoveStart,
   onCenterSettle,
   alignCenterToVisibleArea,
+  onUserGesture,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
   // React refresh/조건부 재마운트에서 이전 Leaflet map의 remove가 늦더라도 새 map은 다른 DOM 컨테이너를 쓴다.
   const [mapContainerKey] = React.useState(() => crypto.randomUUID())
+  // 재중심을 일으키는 쪽(MapCenterUpdater)과 제스처를 판정하는 쪽(MapUserGestureWatcher)이 공유한다.
+  const [moveGate] = React.useState(createProgrammaticMoveGate)
 
   return (
     <MapContainer
@@ -375,6 +439,7 @@ function MapCanvas({
         animate={animateCenter}
         topInset={topInset}
         bottomInset={bottomInset}
+        moveGate={moveGate}
       />
       {alignCenterToVisibleArea && (
         <VisibleCenterAligner topInset={topInset} bottomInset={bottomInset} />
@@ -387,6 +452,7 @@ function MapCanvas({
           onSettle={onCenterSettle}
         />
       )}
+      {onUserGesture && <MapUserGestureWatcher onUserGesture={onUserGesture} moveGate={moveGate} />}
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
       {pins && pins.length > 0 && (

@@ -19,12 +19,29 @@ export const zh: Messages = {
     backendUnavailable: "无法连接到服务器，请稍后重试。",
   },
   pwa: {
-    title: "安装 Ieum",
+    title: "把 Ieum 添加到主屏幕吧",
     description: "添加到主屏幕，使用更方便。",
     later: "以后",
     install: "安装",
-    iosDescription: "点击分享按钮，然后选择“添加到主屏幕”。",
     confirm: "确定",
+    iosSteps: {
+      modern: [
+        ["点击底部的更多(", { icon: "ellipsis" }, ")按钮。"],
+        ["在菜单中选择", { icon: "share" }, "“分享”。"],
+        [{ icon: "square-plus" }, "找到并点击“添加到主屏幕”。"],
+        ["点击右上角的“添加”就完成了!"],
+      ],
+      legacy: [
+        ["点击底部的分享(", { icon: "share" }, ")按钮。"],
+        ["在菜单中找到并点击", { icon: "square-plus" }, "“添加到主屏幕”。"],
+        ["点击右上角的“添加”就完成了!"],
+      ],
+      unknown: [
+        ["点击底部的分享(", { icon: "share" }, ")或更多(", { icon: "ellipsis" }, ")按钮。"],
+        ["在菜单中找到并点击", { icon: "square-plus" }, "“添加到主屏幕”。"],
+        ["点击右上角的“添加”就完成了!"],
+      ],
+    },
   },
   login: {
     logoText: "ieum",

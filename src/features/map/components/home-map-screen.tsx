@@ -21,6 +21,10 @@ import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
+import {
+  isLocateFollowingVisible,
+  reduceLocateFollowing,
+} from "@/features/map/lib/locate-following"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
@@ -69,6 +73,10 @@ function HomeMapScreen() {
   const [bounds, setBounds] = React.useState<MapBounds | null>(null)
   const [isSearchOpen, setSearchOpen] = React.useState(false)
   const [isListOpen, setListOpen] = React.useState(false)
+  // 위치 버튼으로 지도를 내 위치에 맞춘 상태인지. 아이콘 색으로만 드러난다.
+  // 내 위치를 잃은 동안은 표시할 근거가 없어 좌표 유무와 함께 파생시킨다.
+  const [followRequested, setFollowRequested] = React.useState(false)
+  const isFollowingMe = isLocateFollowingVisible(followRequested, position)
 
   // 검색으로 고른 핀은 이미 label/address를 가지므로 역지오코딩하지 않는다.
   // 좌표만 있는(지도 클릭) 핀에만 역지오코딩해 검색바 라벨과 프리필용 주소를 얻는다.
@@ -149,9 +157,11 @@ function HomeMapScreen() {
     recenterTo(position)
   }, [position, recenterTo])
 
-  // 위치 버튼: 현재 내 위치를 화면 정중앙으로.
+  // 위치 버튼: 현재 내 위치를 화면 정중앙으로. 좌표가 없으면 아무 일도 하지 않으므로 상태도 켜지 않는다.
   const handleRecenter = React.useCallback(() => {
-    if (position) recenterTo(position)
+    if (!position) return
+    recenterTo(position)
+    setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-to-me" }))
   }, [position, recenterTo])
 
   return (
@@ -164,7 +174,14 @@ function HomeMapScreen() {
           topInset={MAP_TOP_INSET}
           bottomInset={MAP_BOTTOM_INSET}
           className="absolute inset-0 z-0 size-full"
-          onMapClick={(position) => setSelectedLocation({ lat: position.lat, lng: position.lng })}
+          onMapClick={(position) => {
+            // 다른 지점을 골랐으므로 더는 "내 위치 기준"이 아니다.
+            setSelectedLocation({ lat: position.lat, lng: position.lng })
+            setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-elsewhere" }))
+          }}
+          onUserGesture={() =>
+            setFollowRequested((state) => reduceLocateFollowing(state, { type: "user-gesture" }))
+          }
           onBoundsChange={setBounds}
           pins={pins}
           onPinClick={handlePinClick}
@@ -208,6 +225,7 @@ function HomeMapScreen() {
         {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
         <MapControls
           onRecenter={handleRecenter}
+          isLocateActive={isFollowingMe}
           onCreateMeetup={() => setCreateMeetupOpen(true)}
           onCreateQuestion={() => setCreateQuestionOpen(true)}
           onListView={() => setListOpen(true)}
@@ -228,7 +246,9 @@ function HomeMapScreen() {
             label: place.name,
             address: place.address,
           })
+          // 검색 결과는 내 위치가 아니므로 팔로잉 표시를 끈다.
           recenterTo({ lat: place.lat, lng: place.lng })
+          setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-elsewhere" }))
           setSearchOpen(false)
         }}
         onOpenMeetup={(id) => setSelectedMeetingId(id)}

@@ -41,7 +41,7 @@ function ProfileAvatarButton({ previewUrl, onFileSelected, className }: ProfileA
           type="button"
           aria-label={t.editLabel}
           onClick={() => setMenuOpen(true)}
-          className="absolute right-0 bottom-0 flex size-8 items-center justify-center rounded-full border-2 border-white bg-gray-700"
+          className="absolute right-0 bottom-0 flex aspect-square size-8 items-center justify-center rounded-full border-[3px] border-white bg-gray-400"
         >
           <Image src="/icons/chat/camera-line.svg" alt="" width={16} height={16} className="size-4 invert" />
         </button>

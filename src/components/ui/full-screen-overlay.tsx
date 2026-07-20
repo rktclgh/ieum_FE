@@ -2,6 +2,7 @@
 
 import * as React from "react"
 
+import { ScreenOverlayMarker } from "@/lib/overlay/screen-overlay"
 import { cn } from "@/lib/utils"
 
 /**
@@ -119,6 +120,9 @@ function FullScreenOverlay({ open, className, children, ...props }: FullScreenOv
       )}
       {...props}
     >
+      {/* 마운트되어 있는 동안(=퇴장 모션이 끝날 때까지) 전역 크롬에 "화면이 덮여 있음"을 알린다.
+          `phase === "closed"`면 위에서 이미 언마운트되므로 등록 수명이 노출 수명과 정확히 겹친다. */}
+      <ScreenOverlayMarker />
       {renderedChildren}
     </div>
   )

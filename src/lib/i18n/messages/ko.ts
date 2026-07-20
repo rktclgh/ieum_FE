@@ -3,6 +3,7 @@ import type { CountryCode } from "@/lib/constants/countries"
 
 import { adminKo } from "./admin"
 import type { AdminMessages } from "./admin"
+import type { InstallGuideStep } from "./install-guide-step"
 
 export interface Messages {
   admin: AdminMessages
@@ -26,8 +27,12 @@ export interface Messages {
     description: string
     later: string
     install: string
-    iosDescription: string
     confirm: string
+    iosSteps: {
+      modern: InstallGuideStep[]
+      legacy: InstallGuideStep[]
+      unknown: InstallGuideStep[]
+    }
   }
   login: {
     logoText: string
@@ -521,12 +526,35 @@ export const ko: Messages = {
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   pwa: {
-    title: "이음 앱 설치",
+    title: "Ieum을 홈 화면에 추가해보세요",
     description: "홈 화면에 추가하고 더 편하게 이용하세요.",
     later: "나중에",
     install: "설치",
-    iosDescription: "공유 버튼을 누르고 '홈 화면에 추가'를 선택하세요.",
     confirm: "확인",
+    iosSteps: {
+      modern: [
+        ["하단 더보기(", { icon: "ellipsis" }, ") 버튼을 탭하세요."],
+        ["메뉴에서 ", { icon: "share" }, ' "공유"를 누르세요.'],
+        [{ icon: "square-plus" }, ' "홈 화면에 추가"를 찾아 누르세요.'],
+        ['오른쪽 위 "추가"를 누르면 끝!'],
+      ],
+      legacy: [
+        ["하단 공유(", { icon: "share" }, ") 버튼을 탭하세요."],
+        ["메뉴에서 ", { icon: "square-plus" }, ' "홈 화면에 추가"를 찾아 눌러주세요.'],
+        ['오른쪽 위 "추가"를 누르면 끝!'],
+      ],
+      unknown: [
+        [
+          "하단의 공유(",
+          { icon: "share" },
+          ") 또는 더보기(",
+          { icon: "ellipsis" },
+          ") 버튼을 탭하세요.",
+        ],
+        ["메뉴에서 ", { icon: "square-plus" }, ' "홈 화면에 추가"를 찾아 눌러주세요.'],
+        ['오른쪽 위 "추가"를 누르면 끝!'],
+      ],
+    },
   },
   login: {
     logoText: "이음",

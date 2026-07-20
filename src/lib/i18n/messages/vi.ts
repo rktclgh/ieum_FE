@@ -19,12 +19,35 @@ export const vi: Messages = {
     backendUnavailable: "Không thể kết nối với máy chủ. Vui lòng thử lại sau.",
   },
   pwa: {
-    title: "Cài đặt Ieum",
+    title: "Thêm Ieum vào Màn hình chính",
     description: "Thêm vào màn hình chính để dùng tiện hơn.",
     later: "Để sau",
     install: "Cài đặt",
-    iosDescription: "Nhấn nút Chia sẻ, rồi chọn 'Thêm vào MH chính'.",
     confirm: "OK",
+    iosSteps: {
+      modern: [
+        ["Chạm nút Thêm (", { icon: "ellipsis" }, ") ở dưới cùng."],
+        ["Chọn ", { icon: "share" }, ' "Chia sẻ" trong menu.'],
+        [{ icon: "square-plus" }, ' Tìm và chạm "Thêm vào MH chính".'],
+        ['Chạm "Thêm" ở góc trên bên phải là xong!'],
+      ],
+      legacy: [
+        ["Chạm nút Chia sẻ (", { icon: "share" }, ") ở dưới cùng."],
+        ["Tìm và chạm ", { icon: "square-plus" }, ' "Thêm vào MH chính" trong menu.'],
+        ['Chạm "Thêm" ở góc trên bên phải là xong!'],
+      ],
+      unknown: [
+        [
+          "Chạm nút Chia sẻ (",
+          { icon: "share" },
+          ") hoặc Thêm (",
+          { icon: "ellipsis" },
+          ") ở dưới cùng.",
+        ],
+        ["Tìm và chạm ", { icon: "square-plus" }, ' "Thêm vào MH chính" trong menu.'],
+        ['Chạm "Thêm" ở góc trên bên phải là xong!'],
+      ],
+    },
   },
   login: {
     logoText: "ieum",

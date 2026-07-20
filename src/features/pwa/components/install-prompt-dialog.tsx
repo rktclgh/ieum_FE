@@ -10,16 +10,25 @@ import {
   AlertDialogTitle,
   AlertDialogViewport,
 } from "@/components/ui/alert-dialog"
+import { IosInstallGuide } from "@/features/pwa/components/ios-install-guide"
+import type { IosInstallFlow } from "@/features/pwa/lib/platform"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface InstallPromptDialogProps {
   method: "prompt" | "ios-manual"
+  flow: IosInstallFlow
   open: boolean
   onOpenChange: (open: boolean) => void
   onInstall: () => void
 }
 
-function InstallPromptDialog({ method, open, onOpenChange, onInstall }: InstallPromptDialogProps) {
+function InstallPromptDialog({
+  method,
+  flow,
+  open,
+  onOpenChange,
+  onInstall,
+}: InstallPromptDialogProps) {
   const { messages } = useTranslation()
   const t = messages.pwa
 
@@ -31,9 +40,13 @@ function InstallPromptDialog({ method, open, onOpenChange, onInstall }: InstallP
           <AlertDialogPopup>
             <div className="flex w-full max-w-[272px] flex-col items-center gap-2.5 px-2 pt-2 pb-4">
               <AlertDialogTitle>{t.title}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {method === "ios-manual" ? t.iosDescription : t.description}
-              </AlertDialogDescription>
+              {/* AlertDialogDescription은 <p>로 렌더되어 <ol>을 품을 수 없다.
+                  ios-manual에서는 설명 대신 단계 목록을 제목의 형제로 둔다. */}
+              {method === "ios-manual" ? (
+                <IosInstallGuide flow={flow} />
+              ) : (
+                <AlertDialogDescription>{t.description}</AlertDialogDescription>
+              )}
             </div>
             {method === "ios-manual" ? (
               <div className="flex w-full max-w-[272px]">
