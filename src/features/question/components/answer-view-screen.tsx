@@ -201,7 +201,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
       </main>
 
       {actionError && (
-        <div className="fixed inset-x-0 bottom-24 z-50 app-column flex justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(6rem+var(--keyboard-inset,0px))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {actionError}
           </div>
