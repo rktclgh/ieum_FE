@@ -21,7 +21,15 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
  *
  * 자동으로 높이가 늘어나는 채팅 컴포저용 입력은 MessageTextarea를 쓴다.
  */
-function Textarea({ className, textareaClassName, error, bottomSlot, ...props }: TextareaProps) {
+function Textarea({
+  className,
+  textareaClassName,
+  error,
+  bottomSlot,
+  maxLength,
+  onChange,
+  ...props
+}: TextareaProps) {
   return (
     <div
       data-slot="textarea-wrapper"
@@ -38,6 +46,14 @@ function Textarea({ className, textareaClassName, error, bottomSlot, ...props }:
           bottomSlot ? "pb-24" : "pb-3",
           textareaClassName
         )}
+        maxLength={maxLength}
+        onChange={(event) => {
+          // Input과 같은 이유 — 한글(IME) 조합 중에는 브라우저 maxLength가 걸리지 않는다.
+          if (maxLength != null && event.target.value.length > maxLength) {
+            event.target.value = event.target.value.slice(0, maxLength)
+          }
+          onChange?.(event)
+        }}
         {...props}
       />
       {bottomSlot ? <div className="absolute bottom-4 left-4">{bottomSlot}</div> : null}

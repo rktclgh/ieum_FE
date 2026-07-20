@@ -75,7 +75,7 @@ function ReportPageContent({ target }: ReportPageContentProps) {
 
         <Textarea
           value={detail}
-          onChange={(event) => setDetail(event.target.value.slice(0, MAX_DETAIL_LENGTH))}
+          onChange={(event) => setDetail(event.target.value)}
           maxLength={MAX_DETAIL_LENGTH}
           placeholder={messages.report.detailPlaceholder}
           className="h-40 shrink-0"
