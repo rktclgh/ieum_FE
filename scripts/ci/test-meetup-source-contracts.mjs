@@ -5,6 +5,7 @@ import test from "node:test"
 const form = fs.readFileSync("src/features/meetup/hooks/use-create-meetup-form.ts", "utf8")
 const screen = fs.readFileSync("src/features/meetup/components/create-meetup-screen.tsx", "utf8")
 const picker = fs.readFileSync("src/features/meetup/components/meetup-date-picker.tsx", "utf8")
+const timePicker = fs.readFileSync("src/features/meetup/components/meetup-time-picker.tsx", "utf8")
 const selectField = fs.readFileSync("src/features/meetup/components/meetup-select-field.tsx", "utf8")
 const schedule = fs.readFileSync("src/features/meetup/lib/create-meetup-schedule.ts", "utf8")
 const localeFiles = ["ko", "en", "ja", "vi", "ru", "th", "zh"]
@@ -60,6 +61,32 @@ test("시간 미정은 폼의 명시적 상태이고 날짜 변경 시 초기화
 test("일정 헬퍼는 날짜 미정 계약을 문서화한다", () => {
   assert.match(schedule, /\/\*\*[\s\S]*\*\/\s*function hasCompleteMeetupSchedule/)
   assert.match(schedule, /\/\*\*[\s\S]*\*\/\s*function buildMeetupSchedule/)
+})
+
+test("시간 미정 선택은 접근 가능한 체크 상태와 휠 비활성화로 노출한다", () => {
+  assert.match(timePicker, /role="checkbox"/)
+  assert.match(timePicker, /aria-checked=\{isTimeUndecided\}/)
+  assert.match(timePicker, /inert=\{isTimeUndecided\}/)
+  assert.match(timePicker, /pointer-events-none opacity-40/)
+  assert.match(timePicker, /t\.timeUndecidedLabel/)
+})
+
+test("시간 미정 확정은 실제 시각 대신 명시적 선택값을 올려보낸다", () => {
+  assert.match(timePicker, /onConfirm\(\{ time: null, isTimeUndecided: true \}\)/)
+  assert.match(timePicker, /onConfirm\(\{ time: draft, isTimeUndecided: false \}\)/)
+})
+
+test("작성 화면은 시간 필드에 시간 미정을 표시하고 선택값을 폼에 넘긴다", () => {
+  assert.match(screen, /value=\{form\.isTimeUndecided \? t\.timeUndecidedLabel : timeValue\}/)
+  assert.match(screen, /onConfirm=\{form\.setTimeSelection\}/)
+  assert.match(screen, /isTimeUndecided: form\.isTimeUndecided/)
+})
+
+test("시간 미정 라벨은 모든 지원 언어에 있다", () => {
+  for (const locale of localeFiles) {
+    const source = fs.readFileSync(`src/lib/i18n/messages/${locale}.ts`, "utf8")
+    assert.match(source, /timeUndecidedLabel:/, `${locale} is missing timeUndecidedLabel`)
+  }
 })
 
 test("날짜 미정 라벨은 모든 지원 언어에 있다", () => {

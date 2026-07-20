@@ -168,7 +168,10 @@ function ScheduleEditorContent({
         open={timePickerOpen}
         onOpenChange={setTimePickerOpen}
         value={time}
-        onConfirm={setTime}
+        // 일정은 시각이 필수라 시간 미정 옵션을 열지 않는다. 확정값에는 항상 시각이 들어온다.
+        onConfirm={({ time: nextTime }) => {
+          if (nextTime) setTime(nextTime)
+        }}
       />
       <MeetupLocationPicker
         open={locationPickerOpen}
