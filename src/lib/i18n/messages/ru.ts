@@ -519,6 +519,33 @@ export const ru: Messages = {
     unreadBadgeLabel: (count) => `${count} непрочитанных уведомлений`,
     aiAnswerSourceLabel: "Ответ ИИ",
     humanAnswerSourceLabel: "Ответ пользователя",
+    copy: {
+      "notification.answer.created": {
+        title: "Новый ответ",
+        body: () => "На ваш вопрос ответили",
+      },
+      "notification.answer.accepted": {
+        title: "Ответ принят",
+        body: () => "Ваш ответ был принят",
+      },
+      "notification.friend.request": {
+        title: "Заявка в друзья",
+        body: (params) => `${params.nickname ?? ""} отправил(а) вам заявку в друзья`,
+      },
+      // subject — заголовок вопроса или встречи, написанный пользователем. Передаётся без перевода.
+      "notification.radius.question": {
+        title: "Новый вопрос рядом",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.radius.meeting": {
+        title: "Новая встреча рядом",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.chat.message": {
+        title: "Новое сообщение",
+        body: () => "У вас новое сообщение в чате",
+      },
+    },
   },
   translate: {
     menuLabel: "Перевести",

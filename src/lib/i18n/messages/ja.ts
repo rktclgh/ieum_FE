@@ -518,6 +518,33 @@ export const ja: Messages = {
     unreadBadgeLabel: (count) => `未読のお知らせ${count}件`,
     aiAnswerSourceLabel: "AI回答",
     humanAnswerSourceLabel: "ユーザー回答",
+    copy: {
+      "notification.answer.created": {
+        title: "新しい回答",
+        body: () => "あなたの質問に回答が届きました",
+      },
+      "notification.answer.accepted": {
+        title: "回答が採用されました",
+        body: () => "あなたの回答が採用されました",
+      },
+      "notification.friend.request": {
+        title: "友だち申請",
+        body: (params) => `${params.nickname ?? ""}さんから友だち申請が届きました`,
+      },
+      // subject はユーザーが書いた質問・集まりのタイトル原文。翻訳せずそのまま渡す。
+      "notification.radius.question": {
+        title: "近くの新しい質問",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.radius.meeting": {
+        title: "近くの新しい集まり",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.chat.message": {
+        title: "新しいメッセージ",
+        body: () => "新しいチャットメッセージが届きました",
+      },
+    },
   },
   translate: {
     menuLabel: "翻訳",

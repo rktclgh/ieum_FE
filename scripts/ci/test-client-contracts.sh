@@ -8,6 +8,7 @@ bash scripts/ci/test-transport-contracts.sh
 bash scripts/ci/test-chat-avatar-contracts.sh
 bash scripts/ci/test-web-push-contracts.sh
 node --test scripts/ci/test-web-push-worker.mjs
+node --test scripts/ci/test-notification-copy-contracts.mjs
 bash scripts/ci/test-admin-contracts.sh
 bash scripts/ci/test-map-contracts.sh
 bash scripts/ci/test-meetup-contracts.sh

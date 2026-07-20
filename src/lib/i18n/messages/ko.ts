@@ -1,4 +1,5 @@
 import type { LanguageCode } from "@/lib/i18n/languages"
+import type { NotificationCopy, NotificationMessageKey } from "@/lib/i18n/notification-message-keys"
 import type { CountryCode } from "@/lib/constants/countries"
 
 import { adminKo } from "./admin"
@@ -502,6 +503,8 @@ export interface Messages {
     unreadBadgeLabel: (count: number) => string
     aiAnswerSourceLabel: string
     humanAnswerSourceLabel: string
+    // 서버가 키로 내려주는 알림 문구. messageKey 가 없는 구(舊) 알림은 서버의 title/body 를 그대로 쓴다.
+    copy: Record<NotificationMessageKey, NotificationCopy>
   }
   translate: {
     menuLabel: string
@@ -1030,6 +1033,33 @@ export const ko: Messages = {
     unreadBadgeLabel: (count) => `읽지 않은 알림 ${count}건`,
     aiAnswerSourceLabel: "AI 답변",
     humanAnswerSourceLabel: "사용자 답변",
+    copy: {
+      "notification.answer.created": {
+        title: "새 답변",
+        body: () => "회원님의 질문에 답변이 달렸어요",
+      },
+      "notification.answer.accepted": {
+        title: "답변 채택",
+        body: () => "회원님의 답변이 채택됐어요",
+      },
+      "notification.friend.request": {
+        title: "친구 요청",
+        body: (params) => `${params.nickname ?? ""}님이 친구 요청을 보냈어요`,
+      },
+      // subject 는 사용자가 쓴 질문·모임 제목 원문이다. 번역 대상이 아니라 그대로 흘려보낸다.
+      "notification.radius.question": {
+        title: "주변 새 질문",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.radius.meeting": {
+        title: "주변 새 모임",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.chat.message": {
+        title: "새 메시지",
+        body: () => "새 채팅 메시지가 도착했어요",
+      },
+    },
   },
   translate: {
     menuLabel: "번역",

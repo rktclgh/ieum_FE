@@ -24,6 +24,94 @@ function nonEmptyString(value, fallback) {
   return typeof value === "string" && value.trim() ? value : fallback
 }
 
+// 서버는 완성된 문장이 아니라 messageKey + messageParams + 수신자 언어(lang)를 보낸다(백엔드 이슈 #193).
+// 서비스워커는 React i18n 카탈로그(src/lib/i18n/messages/*.ts)에 접근할 수 없어 알림 문구만 여기 인라인한다.
+// ★ src/lib/i18n/messages/*.ts 의 notification.copy 와 항상 같은 내용을 유지할 것.
+//   드리프트는 scripts/ci/test-web-push-worker.mjs 의 카탈로그 계약 테스트가 잡는다.
+// 형식: [제목, 본문] — 본문의 {name} 은 messageParams 로 치환한다.
+const NOTIFICATION_COPY = {
+  ko: {
+    "notification.answer.created": ["새 답변", "회원님의 질문에 답변이 달렸어요"],
+    "notification.answer.accepted": ["답변 채택", "회원님의 답변이 채택됐어요"],
+    "notification.friend.request": ["친구 요청", "{nickname}님이 친구 요청을 보냈어요"],
+    "notification.radius.question": ["주변 새 질문", "{subject}"],
+    "notification.radius.meeting": ["주변 새 모임", "{subject}"],
+    "notification.chat.message": ["새 메시지", "새 채팅 메시지가 도착했어요"],
+  },
+  en: {
+    "notification.answer.created": ["New answer", "Someone answered your question"],
+    "notification.answer.accepted": ["Answer accepted", "Your answer was accepted"],
+    "notification.friend.request": ["Friend request", "{nickname} sent you a friend request"],
+    "notification.radius.question": ["New question nearby", "{subject}"],
+    "notification.radius.meeting": ["New meetup nearby", "{subject}"],
+    "notification.chat.message": ["New message", "You have a new chat message"],
+  },
+  ja: {
+    "notification.answer.created": ["新しい回答", "あなたの質問に回答が届きました"],
+    "notification.answer.accepted": ["回答が採用されました", "あなたの回答が採用されました"],
+    "notification.friend.request": ["友だち申請", "{nickname}さんから友だち申請が届きました"],
+    "notification.radius.question": ["近くの新しい質問", "{subject}"],
+    "notification.radius.meeting": ["近くの新しい集まり", "{subject}"],
+    "notification.chat.message": ["新しいメッセージ", "新しいチャットメッセージが届きました"],
+  },
+  zh: {
+    "notification.answer.created": ["新回答", "有人回答了你的提问"],
+    "notification.answer.accepted": ["回答被采纳", "你的回答被采纳了"],
+    "notification.friend.request": ["好友申请", "{nickname} 向你发送了好友申请"],
+    "notification.radius.question": ["附近的新提问", "{subject}"],
+    "notification.radius.meeting": ["附近的新聚会", "{subject}"],
+    "notification.chat.message": ["新消息", "你有一条新的聊天消息"],
+  },
+  vi: {
+    "notification.answer.created": ["Câu trả lời mới", "Có người đã trả lời câu hỏi của bạn"],
+    "notification.answer.accepted": ["Câu trả lời được chọn", "Câu trả lời của bạn đã được chọn"],
+    "notification.friend.request": ["Lời mời kết bạn", "{nickname} đã gửi lời mời kết bạn"],
+    "notification.radius.question": ["Câu hỏi mới gần bạn", "{subject}"],
+    "notification.radius.meeting": ["Buổi gặp mới gần bạn", "{subject}"],
+    "notification.chat.message": ["Tin nhắn mới", "Bạn có tin nhắn trò chuyện mới"],
+  },
+  th: {
+    "notification.answer.created": ["คำตอบใหม่", "มีคนตอบคำถามของคุณแล้ว"],
+    "notification.answer.accepted": ["คำตอบได้รับเลือก", "คำตอบของคุณได้รับเลือกแล้ว"],
+    "notification.friend.request": ["คำขอเป็นเพื่อน", "{nickname} ส่งคำขอเป็นเพื่อนถึงคุณ"],
+    "notification.radius.question": ["คำถามใหม่ใกล้คุณ", "{subject}"],
+    "notification.radius.meeting": ["นัดพบใหม่ใกล้คุณ", "{subject}"],
+    "notification.chat.message": ["ข้อความใหม่", "คุณมีข้อความแชทใหม่"],
+  },
+  ru: {
+    "notification.answer.created": ["Новый ответ", "На ваш вопрос ответили"],
+    "notification.answer.accepted": ["Ответ принят", "Ваш ответ был принят"],
+    "notification.friend.request": ["Заявка в друзья", "{nickname} отправил(а) вам заявку в друзья"],
+    "notification.radius.question": ["Новый вопрос рядом", "{subject}"],
+    "notification.radius.meeting": ["Новая встреча рядом", "{subject}"],
+    "notification.chat.message": ["Новое сообщение", "У вас новое сообщение в чате"],
+  },
+}
+
+const FALLBACK_LANGUAGE = "ko"
+
+function substituteParams(template, params) {
+  if (!params || typeof params !== "object") return template
+  return template.replace(/\{(\w+)\}/g, (match, name) =>
+    typeof params[name] === "string" ? params[name] : match
+  )
+}
+
+// 키를 수신자 언어로 렌더한다. 키가 없거나(구 서버) 카탈로그에 없으면 null 을 돌려
+// 호출부가 서버가 실어보낸 title/body(ko 폴백)를 쓰게 한다.
+function copyFromMessageKey(payload) {
+  if (typeof payload.messageKey !== "string") return null
+
+  const table = NOTIFICATION_COPY[payload.lang] ?? NOTIFICATION_COPY[FALLBACK_LANGUAGE]
+  const entry = table?.[payload.messageKey]
+  if (!entry) return null
+
+  return {
+    title: entry[0],
+    body: substituteParams(entry[1], payload.messageParams),
+  }
+}
+
 // 알림 type/refId 를 앱 내부 경로로 변환한다. 인앱 알림센터
 // (src/features/notification/lib/notification-link.ts)와 동일한 규칙이므로 함께 유지한다.
 // 매핑 불가하면 null 을 돌려 호출부가 알림센터로 폴백하게 한다.
@@ -67,17 +155,21 @@ function fallbackNotification() {
 function notificationFromPayload(payload) {
   if (!payload || payload.version !== 1) return fallbackNotification()
 
+  // messageKey 가 있으면 수신자 언어로 렌더하고, 없거나 카탈로그에 빠진 키면
+  // 서버가 함께 실어보낸 title/body(ko 폴백)를 쓴다.
+  const copy = copyFromMessageKey(payload)
+
   if (payload.kind === "chat") {
     return {
-      title: nonEmptyString(payload.title, FALLBACK_TITLE),
-      body: nonEmptyString(payload.body, FALLBACK_BODY),
+      title: nonEmptyString(copy?.title ?? payload.title, FALLBACK_TITLE),
+      body: nonEmptyString(copy?.body ?? payload.body, FALLBACK_BODY),
       tag: nonEmptyString(payload.tag, FALLBACK_TAG),
       url: safeDestination(payload.url),
     }
   }
 
   if (payload.kind === "notification") {
-    const title = nonEmptyString(payload.title, FALLBACK_TITLE)
+    const title = nonEmptyString(copy?.title ?? payload.title, FALLBACK_TITLE)
     const notificationId = Number.isSafeInteger(payload.notificationId) && payload.notificationId > 0
       ? payload.notificationId
       : null
@@ -85,7 +177,7 @@ function notificationFromPayload(payload) {
     const destination = resolveNotificationDestination(payload.type, payload.refId)
     return {
       title: payload.answerIsAi === true ? `AI · ${title}` : title,
-      body: nonEmptyString(payload.body, FALLBACK_BODY),
+      body: nonEmptyString(copy?.body ?? payload.body, FALLBACK_BODY),
       tag: notificationId === null ? FALLBACK_TAG : `notification-${notificationId}`,
       url: destination === null ? NOTIFICATION_CENTER : safeDestination(destination),
     }
