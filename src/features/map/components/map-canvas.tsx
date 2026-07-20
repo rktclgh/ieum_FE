@@ -94,38 +94,23 @@ const selectedLocationIcon = L.divIcon({
 const USER_LOCATION_Z_OFFSET = 10000
 const SELECTED_LOCATION_Z_OFFSET = 20000
 
-// Figma MyLocation (node 1716:11478): 44x44 컨테이너 = 헤일로 원 + 정중앙 점.
-// 헤일로 에셋(Ellipse 400)은 44px 원(primary 20%)에 1px 가우시안 블러라, 블러가 사방 2px
-// 번져 48x48로 그려진다. 그래서 컨테이너는 44인데 svg만 -2px 오프셋의 48x48이다.
+// 내 위치 마커: 연한 헤일로 → 중간 링 → 진한 코어로 이어지는 동심원 "핑".
+// 44x44 컨테이너·앵커·z-index·accent 색은 그대로 두고 세 겹의 원만 새 디자인으로 교체한다.
+//
+// issue #412 — 세 겹을 **명시적 z-index로** 아래에서 위로 쌓는다: z-0 헤일로 → z-1 중간 링 → z-2 코어.
+// DOM 순서만으로도 이론상 같은 결과지만, 실기기에서 바깥 링이 코어 위로 보인다는 리포트가
+// 반복돼 순서를 브라우저 해석에 맡기지 않고 못 박는다.
 const USER_LOCATION_SIZE = 44
-const USER_LOCATION_HALO_SIZE = 48
-const USER_LOCATION_HALO_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_HALO_SIZE) / 2
-
-// 중심 점은 주황 코어 12px + 흰 테두리 3px = 바깥지름 18px.
-//
-// issue #412 — 세 겹을 **명시적 z-index로** 쌓는다. 아래에서 위로:
-//   z-0 헤일로 → z-1 글로우(흰색 없음) → z-2 흰 테두리 + 코어(그림자 없음)
-//
-// 왜 z-index를 명시하는가: DOM 순서만으로도 이론상 같은 결과지만, 헤일로 `<svg>`가 `filter`를
-// 갖고 있어 자체 스택 컨텍스트를 만든다. 실기기에서 헤일로가 점 위로 보인다는 리포트가
-// 반복돼, 순서를 브라우저 해석에 맡기지 않고 못 박는다.
-//
-// 왜 글로우를 따로 떼는가: `box-shadow`는 박스 '바깥'에 그려진다. #397처럼 흰 테두리와 글로우를
-// 한 요소에 두면 박스가 18px이라 주황 글로우가 흰 테두리 **바로 바깥**을 감싼다. 흰 3px이
-// 안쪽 코어와 바깥 글로우 사이에 끼여, 맨 위에 그려져도 시각적으로 파묻힌다.
-// 글로우 레이어를 코어와 같은 12px로 두어야 글로우가 테두리 안쪽 경계에서 끝난다.
-const USER_LOCATION_DOT_SIZE = 18
-const USER_LOCATION_DOT_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_DOT_SIZE) / 2
-const USER_LOCATION_CORE_SIZE = 12
-const USER_LOCATION_CORE_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_CORE_SIZE) / 2
+// 바깥 헤일로(가장 옅음) = 컨테이너 전체, 중간 링 = 절반 남짓, 코어 = 진한 점.
+const USER_LOCATION_HALO_SIZE = 44
+const USER_LOCATION_RING_SIZE = 24
+const USER_LOCATION_CORE_SIZE = 14
+const centered = (size: number) => (USER_LOCATION_SIZE - size) / 2
 const userLocationIcon = L.divIcon({
   html: `<div style="position:relative;width:${USER_LOCATION_SIZE}px;height:${USER_LOCATION_SIZE}px;isolation:isolate">
-    <svg xmlns="http://www.w3.org/2000/svg" width="${USER_LOCATION_HALO_SIZE}" height="${USER_LOCATION_HALO_SIZE}" viewBox="0 0 48 48" fill="none" style="position:absolute;left:${USER_LOCATION_HALO_OFFSET}px;top:${USER_LOCATION_HALO_OFFSET}px;z-index:0">
-      <g filter="url(#user_loc_halo_blur)"><circle cx="24" cy="24" r="22" fill="${LIVE_ACCENT}" fill-opacity="0.2"/></g>
-      <defs><filter id="user_loc_halo_blur" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/></filter></defs>
-    </svg>
-    <div style="position:absolute;left:${USER_LOCATION_CORE_OFFSET}px;top:${USER_LOCATION_CORE_OFFSET}px;width:${USER_LOCATION_CORE_SIZE}px;height:${USER_LOCATION_CORE_SIZE}px;border-radius:999px;box-shadow:0 0 4px 0 rgba(0,0,0,0.25),0 0 8px 0 rgba(252,112,69,0.6);z-index:1"></div>
-    <div style="position:absolute;left:${USER_LOCATION_DOT_OFFSET}px;top:${USER_LOCATION_DOT_OFFSET}px;box-sizing:border-box;width:${USER_LOCATION_DOT_SIZE}px;height:${USER_LOCATION_DOT_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};border:3px solid #ffffff;z-index:2"></div>
+    <div style="position:absolute;left:${centered(USER_LOCATION_HALO_SIZE)}px;top:${centered(USER_LOCATION_HALO_SIZE)}px;width:${USER_LOCATION_HALO_SIZE}px;height:${USER_LOCATION_HALO_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};opacity:0.15;z-index:0"></div>
+    <div style="position:absolute;left:${centered(USER_LOCATION_RING_SIZE)}px;top:${centered(USER_LOCATION_RING_SIZE)}px;width:${USER_LOCATION_RING_SIZE}px;height:${USER_LOCATION_RING_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};opacity:0.3;z-index:1"></div>
+    <div style="position:absolute;left:${centered(USER_LOCATION_CORE_SIZE)}px;top:${centered(USER_LOCATION_CORE_SIZE)}px;width:${USER_LOCATION_CORE_SIZE}px;height:${USER_LOCATION_CORE_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};box-shadow:0 0 3px 0 rgba(0,0,0,0.25);z-index:2"></div>
   </div>`,
   className: "",
   iconSize: [USER_LOCATION_SIZE, USER_LOCATION_SIZE],
