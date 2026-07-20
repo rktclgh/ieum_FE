@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Textarea } from "@/components/ui/text-field/textarea"
 import { Toast } from "@/components/ui/toast"
 import { useSubmitInquiry } from "@/features/my/hooks/use-my-mutations"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -53,11 +54,11 @@ function InquiryContent() {
       />
 
       <div className="flex w-full flex-col gap-6 px-4 pt-3 pb-[calc(8rem+var(--safe-area-bottom))]">
-        <textarea
+        <Textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
           placeholder={messages.my.inquiry.placeholder}
-          className="h-40 w-full resize-none rounded-lg border border-gray-100 p-4 text-body-regular-14 text-gray-900 caret-primary outline-none transition-colors placeholder:text-gray-400 focus-within:border-primary"
+          className="h-40"
         />
 
         <ul className="flex w-full flex-col gap-2">

@@ -117,6 +117,8 @@ export interface Messages {
     meetupMarkerLabel: string
     questionMarkerLabel: string
     clusterMarkerLabel: (count: number) => string
+    pinStackMarkerLabel: (count: number) => string
+    pinStackIndexLabel: (current: number, total: number) => string
     attributionButtonLabel: string
     pinsTruncatedNotice: string
     categoryPlace: string
@@ -372,6 +374,7 @@ export interface Messages {
     pinFailed: string
     enableNotificationAction: string
     disableNotificationAction: string
+    notificationOffBadge: string
     deleteAction: string
     replyAction: string
     replyToLabel: (targetName: string) => string
@@ -641,6 +644,8 @@ export const ko: Messages = {
     meetupMarkerLabel: "모임",
     questionMarkerLabel: "질문",
     clusterMarkerLabel: (count) => `이 지역 ${count}개`,
+    pinStackMarkerLabel: (count) => `같은 위치 ${count}개`,
+    pinStackIndexLabel: (current, total) => `${current} / ${total}`,
     attributionButtonLabel: "지도 저작권 정보",
     pinsTruncatedNotice: "이 지역에 핀이 많아요. 확대해서 보세요",
     categoryPlace: "장소",
@@ -897,6 +902,7 @@ export const ko: Messages = {
     pinFailed: "고정 설정에 실패했어요",
     enableNotificationAction: "알림 켜기",
     disableNotificationAction: "알림 끄기",
+    notificationOffBadge: "알림 꺼짐",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     replyToLabel: (targetName) => `${targetName}님에게 답장`,
