@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import { Screen } from "@/components/layout/screen"
 import { Skeleton } from "@/components/ui/skeleton"
 import { MeetupDetailCard } from "@/features/meetup/components/meetup-detail-card"
 import { MeetupDetailSheet } from "@/features/meetup/components/meetup-detail-sheet"
@@ -77,9 +78,9 @@ function MeetupDetailContainer({
     return variant === "card" ? (
       <p className="w-full py-6 text-center text-body-regular-14 text-gray-500">{errorMessage}</p>
     ) : (
-      <div className="flex min-h-dvh w-full items-center justify-center p-6">
+      <Screen kind="scroll" centered className="p-6">
         <p className="text-body-regular-14 text-gray-500">{errorMessage}</p>
-      </div>
+      </Screen>
     )
   }
 
