@@ -21,24 +21,26 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     /*
-     * issue #381 — #304에서 "black-translucent"로 켰다가 되돌린다.
+     * issue #395 — #304에서 켰다가 #381에서 되돌렸던 값을, 하단 공백 대책과 함께 다시 켠다.
      *
-     * black-translucent는 웹뷰를 상태바 뒤까지 끌어올려 `--safe-area-top`에 실제 노치
-     * 높이를 넘겨준다. 그런데 iOS는 이때 레이아웃 뷰포트(ICB) 높이를 상태바를 뺀 옛 값
-     * 그대로 둔다. 결과적으로 콘텐츠만 위로 당겨지고 **바닥에 상태바 높이만큼 공백**이
-     * 남는다. `position: fixed`는 이 ICB를 기준으로 잡히므로, 홈 지도(`fixed inset-0`)와
-     * 탭바(`fixed bottom-0`)가 나란히 화면 바닥에 못 닿고 그 위에서 끊긴다.
+     * 왜 다시 켜는가: "default"는 iOS가 상태바 영역을 직접 소유하고 웹뷰를 그 아래에서
+     * 시작시킨다. 그래서 그 영역에는 우리 콘텐츠가 절대 그려질 수 없고, 홈 지도가 화면
+     * 끝까지 차지 못한 채 빈 회색 띠가 남는다(#395). black-translucent만이 웹뷰를 상태바
+     * 뒤까지 끌어올린다.
      *
-     * "default"에서는 iOS가 상태바 영역을 직접 소유하고 웹뷰를 그 아래에서 시작시킨다.
-     * ICB와 실제 그려지는 영역이 일치하므로 바닥 공백이 사라진다. 대신 상태바 뒤로
-     * 배경을 흘려보내는 연출은 포기한다 — 상태바 영역은 iOS가 칠한다.
+     * #381이 되돌린 이유(하단 공백): iOS는 웹뷰를 위로 끌어올리면서도 레이아웃 뷰포트(ICB)
+     * 높이는 상태바를 뺀 옛 값 그대로 둔다. `position: fixed`가 이 ICB 기준이라, 홈 지도와
+     * 탭바가 나란히 화면 바닥에 못 닿고 상태바 높이만큼 위에서 끊긴다.
      *
-     * `--safe-area-top`은 standalone에서 0px이 되지만, 이건 회귀가 아니라 정상이다.
-     * 그 영역을 이미 iOS가 떼어 갔으므로 페이지가 추가로 피할 여백이 없다.
-     * `APP_BAR_SAFE_TOP`은 `calc(1rem + var(--safe-area-top))`이라 0px이면 기본 16px로
-     * 자연스럽게 수렴한다. Safari(브라우저 탭)에서는 종전대로 실제 노치 값이 들어온다.
+     * 이번 대책: 그 부족분을 `--icb-shortfall`(globals.css)로 이름 붙이고, 화면을 꽉 채우는
+     * 셸과 하단 고정 바가 `app-screen-fixed` / `app-bottom-fixed` 유틸리티로 그만큼 아래까지
+     * 뻗도록 했다. 값은 `@media (display-mode: standalone)`에서만 살아나므로 사파리 탭·
+     * 데스크톱 동작은 종전 그대로다.
+     *
+     * `--safe-area-top`은 여기서 실제 노치 높이로 돌아온다. 상단 safe-area를 쓰는 화면들이
+     * 이 값에 의존하므로(`APP_BAR_SAFE_TOP` 등) 이 설정을 다시 건드릴 때는 상·하단을 함께 볼 것.
      */
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Ieum",
   },
   // 파비콘/터치 아이콘은 app/ 파일 컨벤션(favicon.ico, icon.svg, apple-icon.png)이 처리한다.
