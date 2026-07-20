@@ -242,6 +242,8 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
                       key={request.userId}
                       name={request.nickname}
                       avatarSrc={request.avatarSrc}
+                      flagSrc={request.flagSrc}
+                      nation={nationOf(request)}
                       variant="sent"
                       onCancel={() => handleCancelRequest(request)}
                     />
