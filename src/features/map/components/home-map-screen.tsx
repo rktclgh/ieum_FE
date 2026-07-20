@@ -21,13 +21,20 @@ import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
+import {
+  createLastKnownLocationPayload,
+  isSamePosition,
+  isWithinLocationSyncThreshold,
+} from "@/features/map/lib/last-known-location-sync"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
+import { useUpdateLocation } from "@/features/my/hooks/use-my-mutations"
 import { InstallPrompt } from "@/features/pwa/components/install-prompt"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
+import { useMe } from "@/features/session/hooks/use-me"
 import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -57,7 +64,9 @@ interface SelectedLocation {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
+  const { data: me } = useMe()
   const { position, status } = useGeolocation()
+  const { mutate: updateLocation } = useUpdateLocation()
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
   const [selectedLocation, setSelectedLocation] = React.useState<SelectedLocation | null>(null)
@@ -96,6 +105,63 @@ function HomeMapScreen() {
 
   const { data: pinData } = useMapPins(bounds, toPinType(category))
   const pins = pinData?.pins
+
+  const lastLocationSyncUserIdRef = React.useRef<number | null>(null)
+  const lastSyncedPositionRef = React.useRef<Coordinates | null>(null)
+  const inFlightPositionRef = React.useRef<Coordinates | null>(null)
+  const queuedPositionRef = React.useRef<Coordinates | null>(null)
+  const sendLastKnownLocation = React.useCallback(function sendLastKnownLocation(
+    nextPosition: Coordinates
+  ) {
+    const payload = createLastKnownLocationPayload({
+      isAuthenticated: true,
+      position: nextPosition,
+      lastSyncedPosition: lastSyncedPositionRef.current,
+    })
+
+    if (!payload) return
+
+    inFlightPositionRef.current = nextPosition
+    updateLocation(payload, {
+      onSuccess: () => {
+        if (!queuedPositionRef.current && isSamePosition(nextPosition, inFlightPositionRef.current)) {
+          lastSyncedPositionRef.current = nextPosition
+        }
+      },
+      onSettled: () => {
+        if (isSamePosition(nextPosition, inFlightPositionRef.current)) {
+          inFlightPositionRef.current = null
+        }
+
+        const queuedPosition = queuedPositionRef.current
+        queuedPositionRef.current = null
+        if (queuedPosition) {
+          sendLastKnownLocation(queuedPosition)
+        }
+      },
+    })
+  }, [updateLocation])
+
+  React.useEffect(() => {
+    const userId = me?.userId ?? null
+    if (lastLocationSyncUserIdRef.current !== userId) {
+      lastLocationSyncUserIdRef.current = userId
+      lastSyncedPositionRef.current = null
+      inFlightPositionRef.current = null
+      queuedPositionRef.current = null
+    }
+
+    if (!me || !position) return
+
+    if (inFlightPositionRef.current) {
+      if (!isWithinLocationSyncThreshold(position, inFlightPositionRef.current)) {
+        queuedPositionRef.current = position
+      }
+      return
+    }
+
+    sendLastKnownLocation(position)
+  }, [me, position, sendLastKnownLocation])
 
   const handlePinClick = React.useCallback((pin: MapPin) => {
     // 핀 종류별로 그 대상(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.
