@@ -3,6 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 
+import { NoImageProfile } from "@/components/ui/no-image"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -31,7 +32,7 @@ function ProfileAvatarButton({ previewUrl, onFileSelected, className }: ProfileA
           // eslint-disable-next-line @next/next/no-img-element
           <img src={previewUrl} alt="" className="size-24 rounded-full object-cover" />
         ) : (
-          <div className="size-24 rounded-full bg-gray-100" />
+          <NoImageProfile className="size-24 rounded-full" />
         )}
         <button
           type="button"

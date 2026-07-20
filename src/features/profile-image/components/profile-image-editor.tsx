@@ -80,7 +80,12 @@ function ProfileImageEditorContent({ imageSrc, onClose, onCropped }: ProfileImag
           onCropComplete={handleCropComplete}
           style={{
             containerStyle: { backgroundColor: "#ffffff" },
-            cropAreaStyle: { boxShadow: "0 0 0 9999em rgba(255, 255, 255, 0.75)", border: "none" },
+            // 흰 배경에서는 기본 흰색 테두리가 보이지 않는다. 밝은 사진에서도 크롭 경계가
+            // 식별되도록 회색 테두리로 바꾼다(리뷰 반영).
+            cropAreaStyle: {
+              boxShadow: "0 0 0 9999em rgba(255, 255, 255, 0.75)",
+              border: "1px solid rgba(31, 35, 36, 0.24)",
+            },
           }}
         />
       </div>
