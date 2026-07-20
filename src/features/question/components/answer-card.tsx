@@ -80,7 +80,7 @@ function AnswerCard({
               <NoImageProfile />
             )}
           </div>
-          <div className="flex min-w-0 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-col items-start gap-0.5">
             <span className="truncate text-title-semibold-16 text-gray-900">
               {answer.authorName}
             </span>
