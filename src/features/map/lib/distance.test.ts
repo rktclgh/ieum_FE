@@ -27,6 +27,11 @@ test("near가 없으면 원본 순서를 유지한다", () => {
   assert.deepEqual(sortByDistance(items, null), items)
 })
 
+test("정렬하지 않는 경로에서도 새 배열을 반환한다", () => {
+  const items = [{ location: { lat: 0, lng: 3 } }]
+  assert.notEqual(sortByDistance(items, null), items)
+})
+
 test("원본 배열을 변형하지 않는다", () => {
   const near = { lat: 0, lng: 0 }
   const items = [{ location: { lat: 0, lng: 2 } }, { location: { lat: 0, lng: 1 } }]

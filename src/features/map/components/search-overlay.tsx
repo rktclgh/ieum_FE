@@ -74,6 +74,8 @@ function SearchOverlayContent({
 
   const q = debounced.trim()
   const hasQuery = q.length > 0
+  // 결과는 디바운스를 따르지만 탭 노출은 키 입력에 바로 반응해야 한다 — 300ms 늦게 뜨면 끊겨 보인다.
+  const isTyping = query.trim().length > 0
   const { meetups, questions, places, isLoading } = useSearchResults(debounced, near, bounds)
 
   // 장소 탭은 쿼리가 있을 때만 존재한다. 쿼리가 지워지면 선택 상태를 되돌리는 대신
@@ -116,7 +118,7 @@ function SearchOverlayContent({
       </div>
 
       <div className="px-4 pb-2">
-        <SearchTabBar value={activeTab} onChange={setTab} hidePlace={!hasQuery} />
+        <SearchTabBar value={activeTab} onChange={setTab} hidePlace={!isTyping} />
       </div>
 
       {/* fixed inset-0 오버레이라 마지막 결과가 홈 인디케이터에 걸린다 (issue #279). */}

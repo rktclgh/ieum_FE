@@ -17,9 +17,10 @@ function haversineMeters(a: LatLng, b: LatLng): number {
   return 2 * EARTH_RADIUS_METERS * Math.asin(Math.sqrt(h))
 }
 
-// near가 없으면(위치 미확보) 정렬하지 않고 원본 순서를 유지한다. 원본 배열은 변형하지 않는다.
+// near가 없으면(위치 미확보) 정렬하지 않고 원본 순서를 유지한다.
+// 어느 경로로든 새 배열을 반환한다 — 입력이 React Query 캐시 배열이라 제자리 변형이 캐시를 오염시킨다.
 function sortByDistance<T extends { location: LatLng }>(items: T[], near: LatLng | null): T[] {
-  if (!near) return items
+  if (!near) return [...items]
   return [...items].sort(
     (a, b) => haversineMeters(near, a.location) - haversineMeters(near, b.location)
   )

@@ -8,6 +8,7 @@ import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
 import { usePinList } from "@/features/map/hooks/use-pin-list"
 import { usePlaceSearch } from "@/features/map/hooks/use-place-search"
+import { roundCoordinateValue } from "@/features/map/lib/coordinate-precision"
 import { sortByDistance } from "@/features/map/lib/distance"
 import { hangulIncludes } from "@/lib/hangul-includes"
 
@@ -33,6 +34,15 @@ function useSearchResults(
   const { data: places, isLoading: placesLoading } = usePlaceSearch(trimmed, near)
   const { data: nearbyPinData, isLoading: nearbyLoading } = useMapPins(hasQuery ? null : bounds)
 
+  // watchPosition은 좌표가 그대로여도 갱신마다 새 객체를 준다. 격자에 스냅해두지 않으면
+  // GPS 콜백마다 정렬이 다시 돌아 리스트가 사용자 손 밑에서 재배열된다(usePlaceSearch와 동일 이유).
+  const nearLat = near ? roundCoordinateValue(near.lat) : null
+  const nearLng = near ? roundCoordinateValue(near.lng) : null
+  const snappedNear = React.useMemo(
+    () => (nearLat === null || nearLng === null ? null : { lat: nearLat, lng: nearLng }),
+    [nearLat, nearLng]
+  )
+
   const { meetups, questions } = React.useMemo(() => {
     if (hasQuery) {
       if (!pins) return { meetups: [] as MapPin[], questions: [] as MapPin[] }
@@ -42,18 +52,20 @@ function useSearchResults(
         questions: matched.filter((pin) => pin.pinType === "question"),
       }
     }
-    const sorted = sortByDistance(nearbyPinData?.pins ?? [], near)
+    const sorted = sortByDistance(nearbyPinData?.pins ?? [], snappedNear)
     return {
       meetups: sorted.filter((pin) => pin.pinType === "meeting"),
       questions: sorted.filter((pin) => pin.pinType === "question"),
     }
-  }, [hasQuery, pins, trimmed, nearbyPinData, near])
+  }, [hasQuery, pins, trimmed, nearbyPinData, snappedNear])
 
   return {
     meetups,
     questions,
     places: hasQuery ? (places ?? []) : [],
-    isLoading: hasQuery ? pinsLoading || placesLoading : nearbyLoading,
+    // bounds가 아직 없으면(지도 mount 전) 쿼리가 비활성이라 nearbyLoading이 false다.
+    // 그대로 두면 데이터가 오기 전에 "결과 없음"이 먼저 번쩍이므로 로딩으로 취급한다.
+    isLoading: hasQuery ? pinsLoading || placesLoading : bounds === null || nearbyLoading,
   }
 }
 
