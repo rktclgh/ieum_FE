@@ -72,7 +72,9 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
             onChange={(event) => onNicknameChange(event.target.value)}
             error={nicknameStatus === "duplicate"}
             buttonLabel={messages.join.nicknameDuplicateCheckButton}
-            buttonDisabled={!nickname || checkNicknameMutation.isPending}
+            buttonDisabled={
+              !nickname || checkNicknameMutation.isPending || nicknameStatus !== "idle"
+            }
             onButtonClick={onDuplicateCheck}
           />
           {nicknameStatus === "available" && (
