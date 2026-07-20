@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import { Skeleton } from "@/components/ui/skeleton"
 import { uploadImage } from "@/features/question/api/question-file-api"
 import { QuestionDetailCard } from "@/features/question/components/question-detail-card"
 import { QuestionDetailSheet } from "@/features/question/components/question-detail-sheet"
@@ -100,7 +101,7 @@ function QuestionDetailContainer({
         summary ? (
           <QuestionDetailCard question={summary} active={active} {...cardProps} />
         ) : (
-          <div className="h-56 w-full animate-pulse rounded-2xl bg-gray-100" />
+          <Skeleton className="h-56 w-full rounded-2xl" />
         )
       ) : (
         <QuestionDetailSheet

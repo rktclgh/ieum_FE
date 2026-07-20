@@ -9,6 +9,7 @@ import { Circle } from "@/components/ui/circle"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
+import { ChatListSkeleton } from "@/features/chat/components/chat-list-skeleton"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { useFlipReorder } from "@/lib/hooks/use-flip-reorder"
@@ -228,6 +229,7 @@ function ChatListPageContent() {
           </p>
         )}
         <div ref={listRef} className="flex flex-col">
+          {isLoading && <ChatListSkeleton />}
           {filteredChats.map((chat) => (
             <ChatRow
               key={chat.roomId}

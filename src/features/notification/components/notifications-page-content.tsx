@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { NotificationDeleteBar } from "@/features/notification/components/notification-delete-bar"
 import { NotificationItem } from "@/features/notification/components/notification-item"
 import { NotificationListAppBar } from "@/features/notification/components/notification-list-app-bar"
+import { NotificationListSkeleton } from "@/features/notification/components/notification-list-skeleton"
 import { useNotifications } from "@/features/notification/hooks/use-notification-queries"
 import {
   useDeleteAllNotifications,
@@ -103,7 +104,9 @@ function NotificationsPageContent() {
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.notification.loadError}
             </p>
-          ) : entries.length === 0 && !query.isLoading ? (
+          ) : query.isLoading ? (
+            <NotificationListSkeleton />
+          ) : entries.length === 0 ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.notification.empty}
             </p>

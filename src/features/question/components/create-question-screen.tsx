@@ -24,7 +24,8 @@ import { MeetupLocationPicker } from "@/features/meetup/components/meetup-locati
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
-const TITLE_MAX_LENGTH = 200
+// 서버 한도는 200자지만, 모임 제목과 같은 15자 규칙을 따른다(#387).
+const TITLE_MAX_LENGTH = 15
 const CONTENT_MAX_LENGTH = 5000
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
@@ -248,11 +249,12 @@ function CreateQuestionForm({
       />
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pt-3 pb-4">
-        {/* 제목 */}
+        {/* 제목 — 모임과 동일하게 15자까지, 포커스 시 카운터 표시 */}
         <Input
           value={title}
-          onChange={(event) => setTitle(event.target.value.slice(0, TITLE_MAX_LENGTH))}
+          onValueChange={setTitle}
           maxLength={TITLE_MAX_LENGTH}
+          showCounter
           placeholder={t.titlePlaceholder}
           className="shrink-0"
         />
@@ -271,7 +273,7 @@ function CreateQuestionForm({
         {/* 내용 + 사진 첨부 */}
         <Textarea
           value={content}
-          onChange={(event) => setContent(event.target.value.slice(0, CONTENT_MAX_LENGTH))}
+          onValueChange={setContent}
           maxLength={CONTENT_MAX_LENGTH}
           placeholder={t.contentPlaceholder}
           className="h-[18.75rem] shrink-0"
@@ -301,7 +303,7 @@ function CreateQuestionForm({
           onClick={handleSubmit}
           className={cn(
             "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            canSubmit ? "bg-primary" : "bg-gray-200"
+            canSubmit ? "bg-gray-900" : "bg-gray-200"
           )}
         >
           {submitting ? t.submittingButton : mode === "edit" ? t.updateButton : t.submitButton}

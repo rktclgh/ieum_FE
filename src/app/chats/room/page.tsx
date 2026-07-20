@@ -5,6 +5,7 @@ import * as React from "react"
 
 import { RoutePageState } from "@/components/ui/route-page-state"
 import { ChatRoomPageContent } from "@/features/chat/components/chat-room-page-content"
+import { ChatRoomSkeleton } from "@/features/chat/components/chat-room-skeleton"
 import { parsePositiveInteger } from "@/lib/navigation/routes"
 
 function ChatRoomRoute() {
@@ -18,7 +19,7 @@ function ChatRoomRoute() {
 
 export default function ChatRoomPage() {
   return (
-    <React.Suspense fallback={<RoutePageState kind="loading" />}>
+    <React.Suspense fallback={<ChatRoomSkeleton />}>
       <ChatRoomRoute />
     </React.Suspense>
   )

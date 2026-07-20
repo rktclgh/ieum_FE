@@ -20,7 +20,7 @@ interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   name: string
   /** 이름 중 이 문자열과 일치하는 부분을 강조 표시 (친구 검색 화면) */
   highlightQuery?: string
-  /** 국적(검색 결과에만 존재). 친구/요청 목록 응답에는 없으므로 선택값이다. */
+  /** 국적. 국가 코드 매칭에 실패하면 국기를 생략하므로 선택값이다. */
   flagSrc?: string
   nation?: string
   variant: FriendRequestVariant

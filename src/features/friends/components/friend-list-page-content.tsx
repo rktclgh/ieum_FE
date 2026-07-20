@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { SearchBox } from "@/components/ui/search-box"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { FriendListAppBar } from "@/features/friends/components/friend-list-app-bar"
+import { FriendListSkeleton } from "@/features/friends/components/friend-list-skeleton"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { FriendRequestItem } from "@/features/friends/components/friend-request-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
@@ -242,6 +243,8 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
                       key={request.userId}
                       name={request.nickname}
                       avatarSrc={request.avatarSrc}
+                      flagSrc={request.flagSrc}
+                      nation={nationOf(request)}
                       variant="sent"
                       onCancel={() => handleCancelRequest(request)}
                     />
@@ -255,7 +258,9 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
                   <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
                     {messages.friends.loadError}
                   </p>
-                ) : friends.length === 0 && !friendsQuery.isPending ? (
+                ) : friendsQuery.isPending ? (
+                  <FriendListSkeleton />
+                ) : friends.length === 0 ? (
                   <p className="w-full pt-6 text-center text-body-regular-14 text-gray-400">
                     {messages.friends.emptyFriends}
                   </p>

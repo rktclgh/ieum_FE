@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import { Skeleton } from "@/components/ui/skeleton"
 import { MeetupDetailCard } from "@/features/meetup/components/meetup-detail-card"
 import { MeetupDetailSheet } from "@/features/meetup/components/meetup-detail-sheet"
 import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
@@ -84,7 +85,7 @@ function MeetupDetailContainer({
 
   if (variant === "card") {
     // 로딩 중에도 슬라이드 높이를 유지해, 캐러셀 스크롤이 도착 후 튀지 않게 한다.
-    if (!detail) return <div className="h-56 w-full animate-pulse rounded-2xl bg-gray-100" />
+    if (!detail) return <Skeleton className="h-56 w-full rounded-2xl" />
     return (
       <MeetupDetailCard
         detail={detail}
