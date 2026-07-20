@@ -321,6 +321,14 @@ async function syncSubscriptionChange(event) {
 // 요청을 가로채지 않고 네트워크로 통과시키는 no-op(오프라인 캐싱 없음).
 self.addEventListener("fetch", () => {})
 
+self.addEventListener("install", (event) => {
+  event.waitUntil(self.skipWaiting())
+})
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim())
+})
+
 self.addEventListener("push", (event) => {
   event.waitUntil(showPushNotification(event))
 })

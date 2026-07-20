@@ -231,7 +231,13 @@ test("detects Web Push only when every required browser primitive exists", () =>
 
 test("registers the root service worker with root scope", async () => {
   const calls: unknown[][] = []
+  let updateCalls = 0
   const installingRegistration = { pushManager: {} } as ServiceWorkerRegistration
+  Object.defineProperty(installingRegistration, "update", {
+    value: async () => {
+      updateCalls += 1
+    },
+  })
   const activeRegistration = { pushManager: {} } as ServiceWorkerRegistration
   const restoreNavigator = replaceGlobal("navigator", {
     serviceWorker: {
@@ -245,7 +251,8 @@ test("registers the root service worker with root scope", async () => {
 
   try {
     assert.equal(await registerWebPushServiceWorker(), activeRegistration)
-    assert.deepEqual(calls, [["/sw.js", { scope: "/" }]])
+    assert.deepEqual(calls, [["/sw.js", { scope: "/", updateViaCache: "none" }]])
+    assert.equal(updateCalls, 1)
   } finally {
     restoreNavigator()
   }
