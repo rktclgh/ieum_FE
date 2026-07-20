@@ -50,6 +50,7 @@
 | `/admin/` | `/admin/index.html` |
 | `/admin/inquiries/` | `/admin/inquiries/index.html` |
 | `/admin/knowledge/` | `/admin/knowledge/index.html` |
+| `/admin/knowledge/graph/` | `/admin/knowledge/graph/index.html` |
 | `/admin/login/` | `/admin/login/index.html` |
 | `/admin/reports/` | `/admin/reports/index.html` |
 | `/admin/reports/detail/` | `/admin/reports/detail/index.html` |
