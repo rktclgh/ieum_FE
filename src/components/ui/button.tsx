@@ -19,6 +19,9 @@ const buttonVariants = cva(
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
         primary: "rounded-full bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200",
+        // Figma의 기본 CTA 필 버튼(Primary/400 #fc7045 = --primary 토큰).
+        // 이름이 primary가 아닌 이유: 위 primary variant가 이미 다크 필로 15곳에서 쓰이고 있다.
+        accent: "rounded-full bg-primary text-primary-foreground hover:bg-primary/90",
         social:
           "rounded-full border-gray-100 bg-gray-50 text-gray-900 hover:bg-gray-100",
       },

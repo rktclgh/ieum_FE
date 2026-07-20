@@ -6,6 +6,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
+import { SCREEN_BOTTOM_GAP } from "@/lib/constants/layout"
 import { TAB_ITEMS } from "@/features/navigation/constants/tab-items"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -78,9 +79,10 @@ function TabBarNav({
     <div
       data-slot="tab-bar"
       className={cn(
-        // issue #279: 하단 홈 인디케이터 위로 pill을 띄운다. 기준선이 바뀌므로
-        // `FAB_BOTTOM_WITH_TABBAR`(lib/constants/layout.ts)도 같은 양만큼 함께 올라간다.
-        "fixed inset-x-0 bottom-0 z-10 app-column flex min-w-80 flex-col items-center justify-end gap-2 px-4 pt-2 pb-[calc(0.5rem+var(--safe-area-bottom))]",
+        // issue #279: 하단 홈 인디케이터 위로 pill을 띄운다. 바닥 여백은 바텀시트와
+        // 같은 기준선(SCREEN_BOTTOM_GAP)을 쓰고, `FAB_BOTTOM_WITH_TABBAR`가 여기서 파생된다.
+        "fixed inset-x-0 bottom-0 z-10 app-column flex min-w-80 flex-col items-center justify-end gap-2 px-4 pt-2",
+        SCREEN_BOTTOM_GAP,
         className
       )}
       {...props}
