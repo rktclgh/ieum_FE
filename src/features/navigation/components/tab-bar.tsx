@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { SCREEN_BOTTOM_GAP } from "@/lib/constants/layout"
-import { TAB_ITEMS } from "@/features/navigation/constants/tab-items"
+import { TAB_ITEMS, findTabIndex } from "@/features/navigation/constants/tab-items"
 import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { useHasScreenOverlay } from "@/lib/overlay/screen-overlay"
@@ -23,13 +23,6 @@ const ICON_VARIANTS = [
  * 여백만 바꿨을 때 pill이 조용히 어긋나는 일을 막는다.
  */
 const CONTAINER_PADDING = "0.25rem"
-
-/**
- * trailing slash 유무로 일치가 깨지면 하이라이트만 빠지는 게 아니라 탭바가 통째로
- * 사라지므로 양쪽을 정규화해 비교한다. 여전히 완전 일치라 `/my/edit`은 `/my`와
- * 매칭되지 않는다 — 하위 경로에 탭바가 새로 생기면 안 된다.
- */
-const normalizePath = (path: string) => path.replace(/\/$/, "") || "/"
 
 /**
  * 하단 고정 탭바. 루트 layout에서 한 번만 렌더하며(issue #280), 라우트 전환 중에도
@@ -52,9 +45,9 @@ function TabBar(props: React.ComponentProps<"div">) {
   const pathname = usePathname()
   const hasScreenOverlay = useHasScreenOverlay()
 
-  const activeIndex = TAB_ITEMS.findIndex(
-    (item) => normalizePath(item.href) === normalizePath(pathname)
-  )
+  // 경로 판정은 `Screen`의 하단 클리어런스와 같은 함수를 쓴다 (issue #419).
+  // 여기서만 판정하면 탭바 높이와 페이지가 비우는 공간이 조용히 어긋난다.
+  const activeIndex = findTabIndex(pathname)
   if (activeIndex === -1 || hasScreenOverlay) return null
 
   return <TabBarNav activeIndex={activeIndex} {...props} />
