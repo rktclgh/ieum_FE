@@ -49,11 +49,17 @@ function handleMapError(event: MaplibreErrorEvent) {
 
 // 기존 Leaflet 지도 위에 OpenFreeMap 벡터 타일 레이어를 얹고, 지형 카테고리별로 색을 덮어쓴다.
 // 렌더 출력은 없다. 마커·실시간 위치·재중심 등 다른 Leaflet 로직과 독립적으로 동작한다.
-function VectorTileLayer() {
+function VectorTileLayer({ onReady }: { onReady?: () => void }) {
   const map = useMap()
   const language = useLanguageStore((state) => state.language)
 
   const [glMap, setGlMap] = React.useState<MaplibreMap | null>(null)
+
+  // 부모가 매 렌더 새 함수를 넘겨도 아래 effect가 재실행되지 않도록 ref에 담는다.
+  const onReadyRef = React.useRef(onReady)
+  React.useEffect(() => {
+    onReadyRef.current = onReady
+  }, [onReady])
 
   React.useEffect(() => {
     let layer: L.Layer | null = null
@@ -102,6 +108,25 @@ function VectorTileLayer() {
       }
     }
   }, [map])
+
+  // 첫 타일이 실제로 그려진 시점을 부모에 알린다. 이 신호가 오기 전까지 스켈레톤을 유지해야
+  // 스타일·타일을 받는 동안 빈 회색 배경이 그대로 노출되지 않는다.
+  React.useEffect(() => {
+    if (!glMap) return
+
+    const notifyReady = () => onReadyRef.current?.()
+
+    // 스타일이 이미 로드된 뒤에 이 effect가 붙으면 load 이벤트를 놓치므로 즉시 알린다.
+    if (glMap.loaded()) {
+      notifyReady()
+      return
+    }
+
+    glMap.on("load", notifyReady)
+    return () => {
+      glMap.off("load", notifyReady)
+    }
+  }, [glMap])
 
   React.useEffect(() => {
     if (!glMap) return
