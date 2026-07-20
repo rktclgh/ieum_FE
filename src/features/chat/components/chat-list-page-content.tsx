@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation"
 
 import { SearchBox } from "@/components/ui/search-box"
 import { Circle } from "@/components/ui/circle"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { useLongPress } from "@/lib/hooks/use-long-press"
-import { useChatRoomsView } from "@/features/chat/hooks/use-chat-queries"
+import { useChatRoomsView, usePinnedRoomId } from "@/features/chat/hooks/use-chat-queries"
 import {
   useLeaveChatRoom,
   useSetNotify,
@@ -87,8 +88,12 @@ function ChatListPageContent() {
   const [category, setCategory] = React.useState<ChatFilterCategory>("all")
   const [openMenuRoomId, setOpenMenuRoomId] = React.useState<number | null>(null)
   const [leaveError, setLeaveError] = React.useState<string | null>(null)
+  const [pinError, setPinError] = React.useState<string | null>(null)
+  // 다른 방이 이미 고정된 상태에서 고정을 누르면, 교체 확인을 받을 대상 방
+  const [pinReplaceTarget, setPinReplaceTarget] = React.useState<ChatListEntry | null>(null)
 
   const { entries, isLoading } = useChatRoomsView()
+  const pinnedRoomId = usePinnedRoomId()
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
   const leaveChatRoomMutation = useLeaveChatRoom()
@@ -101,16 +106,38 @@ function ChatListPageContent() {
       .sort((a, b) => Number(b.pinned) - Number(a.pinned))
   }, [entries, query, category])
 
+  const runSetPinned = (chat: ChatListEntry, pinned: boolean, replacingRoomId?: number) => {
+    setPinError(null)
+    setPinnedMutation.mutate(
+      { roomId: chat.roomId, pinned, replacingRoomId },
+      { onError: () => setPinError(messages.chat.pinFailed) }
+    )
+  }
+
   const menuItemsFor = (chat: ChatListEntry): ChatContextMenuItem[] => {
     const canPinRoom = chat.category !== "question"
+    // 다른 방이 이미 고정돼 있으면 바로 고정하지 않고 교체 확인을 먼저 받는다
+    const needsPinReplaceConfirm =
+      !chat.pinned && pinnedRoomId !== undefined && pinnedRoomId !== chat.roomId
 
     return [
       ...(canPinRoom ? [{
-        icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
-        label: messages.chat.pinAction,
+        icon: (
+          <Image
+            src={chat.pinned ? "/icons/chat/pin-off.svg" : "/icons/chat/pin-line.svg"}
+            alt=""
+            width={24}
+            height={24}
+          />
+        ),
+        label: chat.pinned ? messages.chat.unpinAction : messages.chat.pinAction,
         disabled: setPinnedMutation.isPending,
         onClick: () => {
-          setPinnedMutation.mutate({ roomId: chat.roomId, pinned: !chat.pinned })
+          if (needsPinReplaceConfirm) {
+            setPinReplaceTarget(chat)
+          } else {
+            runSetPinned(chat, !chat.pinned)
+          }
           setOpenMenuRoomId(null)
         },
       }] : []),
@@ -182,6 +209,11 @@ function ChatListPageContent() {
             {leaveError}
           </p>
         )}
+        {pinError && (
+          <p role="alert" className="px-1 text-body-regular-12 text-red">
+            {pinError}
+          </p>
+        )}
         <div className="flex flex-col">
           {filteredChats.map((chat) => (
             <ChatRow
@@ -202,6 +234,22 @@ function ChatListPageContent() {
           )}
         </div>
       </main>
+
+      {pinReplaceTarget && (
+        <ConfirmDialog
+          open
+          onOpenChange={(open) => !open && setPinReplaceTarget(null)}
+          title={messages.chat.pinReplaceConfirmTitle}
+          description={messages.chat.pinReplaceConfirmDescription}
+          cancelLabel={messages.chat.cancelButton}
+          confirmLabel={messages.chat.pinReplaceConfirmButton}
+          confirmDisabled={setPinnedMutation.isPending}
+          onConfirm={() => {
+            runSetPinned(pinReplaceTarget, true, pinnedRoomId)
+            setPinReplaceTarget(null)
+          }}
+        />
+      )}
     </>
   )
 }

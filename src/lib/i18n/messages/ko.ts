@@ -368,6 +368,11 @@ export interface Messages {
     addFriendButton: string
     requestedButton: string
     pinAction: string
+    unpinAction: string
+    pinReplaceConfirmTitle: string
+    pinReplaceConfirmDescription: string
+    pinReplaceConfirmButton: string
+    pinFailed: string
     enableNotificationAction: string
     disableNotificationAction: string
     deleteAction: string
@@ -892,6 +897,11 @@ export const ko: Messages = {
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
     pinAction: "고정",
+    unpinAction: "고정 취소",
+    pinReplaceConfirmTitle: "고정 채팅방을 변경하시겠습니까?",
+    pinReplaceConfirmDescription: "고정은 채팅방 1개만 설정할 수 있어요",
+    pinReplaceConfirmButton: "변경",
+    pinFailed: "고정 설정에 실패했어요",
     enableNotificationAction: "알림 켜기",
     disableNotificationAction: "알림 끄기",
     deleteAction: "삭제",

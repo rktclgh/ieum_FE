@@ -45,6 +45,7 @@ import {
   useChatMessages,
   useChatRoom,
   useChatSessionAccess,
+  usePinnedRoomId,
 } from "@/features/chat/hooks/use-chat-queries"
 import {
   useDisbandMeeting,
@@ -343,6 +344,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   }, [])
 
   const markReadMutation = useMarkRead()
+  const pinnedRoomId = usePinnedRoomId()
+  const [confirmPinReplaceOpen, setConfirmPinReplaceOpen] = React.useState(false)
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
   const leaveChatRoomMutation = useLeaveChatRoom()
@@ -942,7 +945,15 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                 pinned={roomPinned}
                 onTogglePin={() => {
                   if (!session.authenticated || !canPinRoom || setPinnedMutation.isPending) return
-                  setPinnedMutation.mutate({ roomId, pinned: !roomPinned })
+                  // 다른 방이 이미 고정돼 있으면 교체 확인을 먼저 받는다(고정은 전체 1개)
+                  if (!roomPinned && pinnedRoomId !== undefined && pinnedRoomId !== roomId) {
+                    setConfirmPinReplaceOpen(true)
+                    return
+                  }
+                  setPinnedMutation.mutate(
+                    { roomId, pinned: !roomPinned },
+                    { onError: () => setSocketError(messages.chat.pinFailed) }
+                  )
                 }}
               />
               <SidePanelContent className="items-center gap-3 px-4 pb-[calc(1.5rem+var(--safe-area-bottom))]">
@@ -1057,6 +1068,25 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
               )
             },
           })
+        }}
+      />
+      <ConfirmDialog
+        open={session.authenticated && confirmPinReplaceOpen}
+        onOpenChange={(open) => {
+          if (session.authenticated) setConfirmPinReplaceOpen(open)
+        }}
+        title={messages.chat.pinReplaceConfirmTitle}
+        description={messages.chat.pinReplaceConfirmDescription}
+        cancelLabel={messages.chat.cancelButton}
+        confirmLabel={messages.chat.pinReplaceConfirmButton}
+        confirmDisabled={setPinnedMutation.isPending}
+        onConfirm={() => {
+          if (!session.authenticated || setPinnedMutation.isPending) return
+          setPinnedMutation.mutate(
+            { roomId, pinned: true, replacingRoomId: pinnedRoomId },
+            { onError: () => setSocketError(messages.chat.pinFailed) }
+          )
+          setConfirmPinReplaceOpen(false)
         }}
       />
       <ConfirmDialog

@@ -167,6 +167,21 @@ function useChatRoomsView(type?: RoomType) {
   }
 }
 
+// 현재 고정된 방의 id. 고정은 전체에서 1개만 허용되므로 첫 번째 항목만 본다.
+// useChatRoomsView와 달리 방별 상세/도메인 쿼리를 띄우지 않는 가벼운 훅으로, 목록 요약
+// 캐시(chatKeys.rooms())를 목록 화면과 공유한다 → 목록에서 쓸 때 추가 요청이 없다.
+function usePinnedRoomId() {
+  const session = useChatSessionAccess()
+  const query = useQuery({
+    queryKey: chatKeys.rooms(),
+    queryFn: () => getRooms(),
+    enabled: session.authenticated,
+    staleTime: 0,
+  })
+
+  return query.data?.find((room) => room.pinned)?.roomId
+}
+
 function useChatRoom(roomId: number, session: ChatSessionAccess) {
   const query = useQuery({
     queryKey: chatKeys.room(roomId),
@@ -219,4 +234,5 @@ export {
   useChatRoom,
   useChatRoomsView,
   useChatSessionAccess,
+  usePinnedRoomId,
 }
