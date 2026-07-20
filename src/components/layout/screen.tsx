@@ -93,8 +93,10 @@ function Screen({
    * `fixed`는 화면 자체가 뷰포트에 갇혀 있어 탭바가 콘텐츠를 밀어낼 여지가 없다 —
    * 애초에 탭바가 뜨는 경로도 아니다(채팅방·일정·신고·공지는 전부 탭 경로가 아니다).
    */
+  // centered는 로딩·에러 등 상태 화면이다. 가운데 정렬 콘텐츠에 하단 클리어런스를 더하면
+  // 중심이 위로 밀리므로 제외한다(이 상태에서는 탭바도 대개 숨겨져 있어 충돌하지 않는다).
   const needsTabClearance =
-    kind === "scroll" && !noTabClearance && isTabRoute(pathname)
+    kind === "scroll" && !centered && !noTabClearance && isTabRoute(pathname)
 
   const Tag = as as React.ElementType
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Screen } from "@/components/layout/screen"
 import { Switch } from "@/components/ui/switch"
 import { useSettingsForm } from "@/features/my/hooks/use-settings-form"
 import type { UserSettings } from "@/features/session/api/session-api"
@@ -21,7 +22,7 @@ function PermissionsForm({ settings: serverSettings }: { settings: UserSettings 
   const { settings, patch, error } = useSettingsForm(serverSettings)
 
   return (
-    <main className="app-column flex min-h-dvh flex-col">
+    <Screen kind="scroll" as="main">
       <AppBar
         title={messages.my.permissions.title}
         trailingIcon={null}
@@ -47,7 +48,7 @@ function PermissionsForm({ settings: serverSettings }: { settings: UserSettings 
           </div>
         </div>
       )}
-    </main>
+    </Screen>
   )
 }
 

@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, Trash2 } from "lucide-react"
 
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
@@ -134,12 +135,11 @@ function QuestionsListPageContent() {
 
   return (
     <>
-      <main className="app-column flex min-h-dvh flex-col bg-white">
+      <Screen kind="scroll" as="main" className="bg-white">
         <AppBar title={messages.question.historyTitle} leadingIcon={null} trailingIcon={null} />
 
-        {/* 탭바 총높이(pill 60 + pt 8 + SCREEN_BOTTOM_GAP 28 = 96px) 위로 여유를 둔다.
-            여기는 스크롤 콘텐츠의 바닥 여백이라 safe-area를 그대로 더한다. */}
-        <div className="flex flex-1 flex-col px-4 pt-2 pb-[calc(7rem+var(--safe-area-bottom))]">
+        {/* 하단 탭바 클리어런스는 Screen이 외곽에 넣는다 (issue #419). 여기서는 콘텐츠 좌우/상단 여백만. */}
+        <div className="flex flex-1 flex-col px-4 pt-2">
           {/* 로드 실패를 "질문 없음"으로 오인하게 두지 않는다 — 알림 목록과 동일한 처리. */}
           {query.isError ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
@@ -168,7 +168,7 @@ function QuestionsListPageContent() {
           )}
           <div ref={sentinelRef} className="h-4" />
         </div>
-      </main>
+      </Screen>
 
       <CreateQuestionScreen
         open={editId != null}

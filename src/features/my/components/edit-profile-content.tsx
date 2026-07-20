@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { Button } from "@/components/ui/button"
 import { ChoicePill } from "@/components/ui/text-field/choice-pill"
@@ -170,7 +171,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="app-column flex min-h-dvh flex-col">
+    <Screen kind="scroll" as="form" onSubmit={handleSubmit}>
       <AppBar
         title={messages.my.edit.title}
         trailingIcon={null}
@@ -293,7 +294,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
         </Button>
         <span className="h-1 w-[135px] rounded-full bg-gray-900" />
       </div>
-    </form>
+    </Screen>
   )
 }
 

@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import { Screen } from "@/components/layout/screen"
 import { SearchBox } from "@/components/ui/search-box"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { FriendListAppBar } from "@/features/friends/components/friend-list-app-bar"
@@ -192,7 +193,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
 
   return (
     <>
-      <main className="app-column flex flex-col">
+      <Screen kind="scroll" as="main">
         <FriendListAppBar onBack={() => router.back()} />
         <div className="flex flex-col gap-2 px-4 pb-[calc(2.5rem+var(--safe-area-bottom))]">
           <SearchBox
@@ -313,7 +314,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
             </div>
           )}
         </div>
-      </main>
+      </Screen>
 
       {actionError && (
         <div className="fixed inset-x-0 bottom-[calc(1.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">

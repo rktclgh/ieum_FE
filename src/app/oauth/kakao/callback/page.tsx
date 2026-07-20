@@ -1,6 +1,8 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
+
+import { Screen } from "@/components/layout/screen"
 import * as React from "react"
 
 import { useStartSocial } from "@/features/social-login/hooks/use-social-mutations"
@@ -63,12 +65,12 @@ function KakaoCallbackContent() {
   }, [router, searchParams, startSocialMutation])
 
   return (
-    <main className="app-column flex min-h-dvh items-center justify-center px-4">
+    <Screen kind="scroll" as="main" centered className="px-4">
       <div className="flex flex-col items-center gap-3 text-center">
         <span className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary" />
         <p className="text-body-medium-16 text-gray-900">{messages.social.loading}</p>
       </div>
-    </main>
+    </Screen>
   )
 }
 

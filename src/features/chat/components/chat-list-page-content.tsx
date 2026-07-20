@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
+import { Screen } from "@/components/layout/screen"
 import { SearchBox } from "@/components/ui/search-box"
 import { Circle } from "@/components/ui/circle"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -200,7 +201,7 @@ function ChatListPageContent() {
 
   return (
     <>
-      <main className="app-column flex flex-col gap-2 px-4 pt-[calc(1rem+var(--safe-area-top))] pb-[calc(7rem+var(--safe-area-bottom))]">
+      <Screen kind="scroll" as="main" className="gap-2 px-4 pt-[calc(1rem+var(--safe-area-top))]">
         {/* 검색바 상단 여백은 홈(home-map-screen)과 동일하게 컨테이너 p-4(16px)만 사용한다. */}
         <div className="flex items-center gap-2">
           <SearchBox
@@ -248,7 +249,7 @@ function ChatListPageContent() {
             </p>
           )}
         </div>
-      </main>
+      </Screen>
 
       {pinReplaceTarget && (
         <ConfirmDialog

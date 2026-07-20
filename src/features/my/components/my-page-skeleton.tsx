@@ -1,3 +1,4 @@
+import { Screen } from "@/components/layout/screen"
 import { Skeleton } from "@/components/ui/skeleton"
 
 // MyPageContent와 같은 골격 — 프로필(아바타 96 + 닉네임 + 국기) + 메뉴 카드 + 계정 카드.
@@ -22,10 +23,7 @@ function MenuRowSkeleton({ labelWidth }: { labelWidth: string }) {
 
 function MyPageSkeleton() {
   return (
-    <main
-      aria-busy="true"
-      className="app-column flex min-h-dvh flex-col items-center px-4 pb-[calc(7rem+var(--safe-area-bottom))]"
-    >
+    <Screen kind="scroll" as="main" aria-busy="true" className="items-center px-4">
       <div className="flex flex-col items-center gap-3 pt-[calc(2rem+var(--safe-area-top))] pb-6">
         <Skeleton className="size-24 rounded-full" />
         {/* 닉네임 + 연필 아이콘 */}
@@ -52,7 +50,7 @@ function MyPageSkeleton() {
           ))}
         </div>
       </div>
-    </main>
+    </Screen>
   )
 }
 
