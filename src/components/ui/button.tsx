@@ -18,11 +18,17 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
-        primary: "rounded-full bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200",
-        grayscale: "rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200",
+        // CTA 필 버튼 3종은 Figma의 비활성 = Gray/200 단색(#d0d6d7)을 따르므로
+        // base의 disabled:opacity-50(반투명)을 disabled:opacity-100으로 취소한다.
+        // cva는 base 뒤에 variant를 붙이고 cn()이 tailwind-merge를 돌리므로 여기가 이긴다.
+        primary:
+          "rounded-full bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-200 disabled:text-white disabled:opacity-100 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:disabled:bg-gray-200 dark:disabled:text-white",
+        grayscale:
+          "rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-white disabled:opacity-100",
         // Figma의 기본 CTA 필 버튼(Primary/400 #fc7045 = --primary 토큰).
         // 이름이 primary가 아닌 이유: 위 primary variant가 이미 다크 필로 15곳에서 쓰이고 있다.
-        accent: "rounded-full bg-primary text-primary-foreground hover:bg-primary/90",
+        accent:
+          "rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-gray-200 disabled:text-white disabled:opacity-100",
         social:
           "rounded-full border-gray-100 bg-gray-50 text-gray-900 hover:bg-gray-100",
       },

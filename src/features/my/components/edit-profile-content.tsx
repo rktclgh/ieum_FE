@@ -288,7 +288,6 @@ function EditProfileForm({ user }: { user: MeUser }) {
           variant="primary"
           size="block"
           disabled={!canSave}
-          className={cn(!canSave && "bg-gray-200 text-white hover:bg-gray-200")}
         >
           {messages.my.edit.saveButton}
         </Button>
