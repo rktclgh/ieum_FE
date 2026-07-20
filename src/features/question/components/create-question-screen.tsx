@@ -162,8 +162,7 @@ function CreateQuestionForm({
   const [locationPickerOpen, setLocationPickerOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  const cameraInputRef = React.useRef<HTMLInputElement>(null)
-  const albumInputRef = React.useRef<HTMLInputElement>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // 비슷한 질문 제안: 백엔드 API 생기기 전까지 stub(빈 목록) → 섹션은 자동으로 숨겨진다.
   const { items: similarQuestions } = useSimilarQuestions(title)
@@ -279,8 +278,7 @@ function CreateQuestionForm({
           bottomSlot={
             <MeetupImagePicker
               image={image?.preview ?? existingImageUrl}
-              onTakePhoto={() => cameraInputRef.current?.click()}
-              onChooseAlbum={() => albumInputRef.current?.click()}
+              onPick={() => fileInputRef.current?.click()}
               onRemove={() => {
                 if (existingImageUrl && !image) setImageCleared(true)
                 setImage(null)
@@ -310,17 +308,9 @@ function CreateQuestionForm({
         </button>
       </div>
 
-      {/* 숨긴 파일 입력 (사진 찍기 / 앨범에서 고르기) */}
+      {/* 숨긴 파일 입력 (OS 시트에서 사진 보관함/사진 찍기 선택) */}
       <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      <input
-        ref={albumInputRef}
+        ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
