@@ -24,6 +24,13 @@ import {
 /** 지도가 멈춘 뒤 중심 좌표를 방출하기까지의 지연(ms). 드래그 중 재조회를 막는다. */
 const CENTER_SETTLE_DEBOUNCE_MS = 400
 
+/**
+ * 컨테이너 크기가 더는 바뀌지 않는다고 판단하기까지의 디바운스(ms).
+ * 탭 전환 슬라이드(app/template.tsx, --motion-duration-base: 300ms)가 끝나며 나는
+ * resize 한 번을 "최종 크기"로 확정하는 용도라, 애니메이션 길이보다 약간만 크면 된다.
+ */
+const SIZE_SETTLE_DEBOUNCE_MS = 150
+
 interface MapCanvasProps {
   /** 재중심 시 이동할 좌표. 실시간 위치 갱신은 여기에 반영되어도 뷰를 움직이지 않는다(recenterKey로만 이동). */
   center: Coordinates | null
@@ -62,6 +69,13 @@ interface MapCanvasProps {
   onUserGesture?: () => void
   /** 베이스맵 스타일 로드가 끝나 지도가 실제로 그려진 시점. 로딩 스켈레톤을 걷는 신호로 쓴다 */
   onReady?: () => void
+  /**
+   * 컨테이너의 실제 크기가 더 이상 바뀌지 않는다고 확정된 시점(디바운스).
+   * 탭 전환 애니메이션 중에는 지도 조상이 fixed 자식의 containing block이 되어 크기가
+   * 일시적으로 뒤틀리므로(issue #355), 이 신호 이전에 스켈레톤을 걷으면 잘못된 크기의
+   * 지도가 잠깐 보였다가 애니메이션이 끝난 뒤 툭 튀는(스냅) 것처럼 보인다.
+   */
+  onSizeSettle?: () => void
 }
 
 const LIVE_ACCENT = PIN_ACCENT
@@ -406,6 +420,49 @@ function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBoun
   return null
 }
 
+// 홈 탭 재진입 시 탭 전환 슬라이드 애니메이션(app/template.tsx)이 지도 조상 요소에
+// transform을 거는 동안, transform이 없는 요소가 아닌 이상 그 조상이 하위 fixed 요소의
+// containing block이 된다(CSS 스펙). 지도 루트가 fixed라 이 구간에 Leaflet이 마운트되면
+// 컨테이너 크기를 잘못 측정하고, 애니메이션이 끝나 레이아웃이 정상으로 돌아와도
+// Leaflet은 스스로 재측정하지 않아 그 잘못된 크기로 굳어버린다(issue #355).
+// 컨테이너의 실제 박스 크기가 바뀔 때마다 invalidateSize()로 자가 교정하고,
+// 크기가 잠잠해지면(디바운스) onSizeSettle로 "이제 최종 크기다"를 알린다 — 부모가 이 신호로
+// 스켈레톤을 걷으면, 잘못된 크기가 잠깐 노출됐다가 애니메이션 종료 후 툭 튀는 스냅 없이
+// 최종 크기로 자리잡은 지도만 크로스페이드로 드러난다.
+function MapSizeObserver({ onSizeSettle }: { onSizeSettle?: () => void }) {
+  const map = useMap()
+  const onSizeSettleRef = React.useRef(onSizeSettle)
+  React.useEffect(() => {
+    onSizeSettleRef.current = onSizeSettle
+  }, [onSizeSettle])
+
+  React.useEffect(() => {
+    if (!isLeafletMapActive(map)) return
+
+    const container = map.getContainer()
+    let settleTimer: ReturnType<typeof setTimeout> | null = null
+
+    const observer = new ResizeObserver(() => {
+      if (!isLeafletMapActive(map)) return
+      map.invalidateSize()
+
+      if (settleTimer) clearTimeout(settleTimer)
+      settleTimer = setTimeout(() => {
+        settleTimer = null
+        onSizeSettleRef.current?.()
+      }, SIZE_SETTLE_DEBOUNCE_MS)
+    })
+    observer.observe(container)
+
+    return () => {
+      observer.disconnect()
+      if (settleTimer) clearTimeout(settleTimer)
+    }
+  }, [map])
+
+  return null
+}
+
 function MapCanvas({
   center,
   recenterKey,
@@ -427,6 +484,7 @@ function MapCanvas({
   alignCenterToVisibleArea,
   onUserGesture,
   onReady,
+  onSizeSettle,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
   // React refresh/조건부 재마운트에서 이전 Leaflet map의 remove가 늦더라도 새 map은 다른 DOM 컨테이너를 쓴다.
@@ -444,6 +502,7 @@ function MapCanvas({
       className={className}
     >
       <VectorTileLayer onReady={onReady} />
+      <MapSizeObserver onSizeSettle={onSizeSettle} />
       <MapCenterUpdater
         center={center}
         recenterKey={recenterKey ?? 0}

@@ -21,11 +21,12 @@ const scheduleKeys = {
 
 // 기간(월)별 캘린더 조회. 응답 항목을 UI 모델(ScheduleEntry)로 변환한다.
 function useCalendar(range: CalendarRange) {
-  const { language } = useTranslation()
+  const { language, messages } = useTranslation()
+  const timeUndecidedLabel = messages.createMeetup.timeUndecidedLabel
   // 인라인 select는 매 렌더마다 참조가 바뀌어 셀렉터가 재실행되므로 language 기준으로 메모이즈한다.
   const select = React.useCallback(
-    (items: CalendarItem[]) => items.map((item) => adaptCalendarItem(item, language)),
-    [language]
+    (items: CalendarItem[]) => items.map((item) => adaptCalendarItem(item, language, timeUndecidedLabel)),
+    [language, timeUndecidedLabel]
   )
   return useQuery({
     queryKey: scheduleKeys.calendar(range),

@@ -109,6 +109,7 @@ function CreateMeetupScreenContent({
       date: form.date,
       time: form.time,
       isDateUndecided: form.isDateUndecided,
+      isTimeUndecided: form.isTimeUndecided,
     })
 
     // 이미지 업로드 실패와 모임 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
@@ -153,7 +154,10 @@ function CreateMeetupScreenContent({
         className="shrink-0"
       />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3">
+      {/* 필드 컬럼에 스크롤을 허용하지 않으면, 키보드가 열려 남는 공간이 부족해질 때
+          내용 박스의 min-h-40 하한선 때문에 컬럼 전체가 클리핑 없이 넘쳐버려
+          사진 첨부 버튼(내용 박스 우하단 기준 absolute)이 화면 밖 키보드 경계까지 밀려난다. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pt-3">
         {/* 제목 — 15자(공백 포함)까지만 입력 가능, 포커스 시 카운터 표시 */}
         <Input
           value={form.title}
@@ -188,7 +192,7 @@ function CreateMeetupScreenContent({
             iconSrc="/icons/write/clock-200.svg"
             selectedIconSrc="/icons/write/clock-700.svg"
             placeholder={t.timePlaceholder}
-            value={timeValue}
+            value={form.isTimeUndecided ? t.timeUndecidedLabel : timeValue}
             active={timePickerOpen}
             disabled={form.isDateUndecided}
             onClick={() => setTimePickerOpen(true)}
@@ -258,7 +262,8 @@ function CreateMeetupScreenContent({
         open={timePickerOpen}
         onOpenChange={setTimePickerOpen}
         value={form.time}
-        onConfirm={form.setTime}
+        isTimeUndecided={form.isTimeUndecided}
+        onConfirm={form.setTimeSelection}
       />
       <MeetupLocationPicker
         open={locationPickerOpen}

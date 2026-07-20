@@ -27,7 +27,7 @@ function MeetupPin({ imageSrc, imageAlt = "", className }: MeetupPinProps) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageSrc} alt={imageAlt} className="size-full object-cover" />
         ) : (
-          <Image src={NO_IMAGE_SRC} alt="" width={24} height={24} className="size-6" />
+          <Image src={NO_IMAGE_SRC} alt="" width={28} height={28} className="size-7" />
         )}
       </div>
     </div>

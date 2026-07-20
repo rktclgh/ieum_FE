@@ -11,11 +11,12 @@ interface ScheduleCardEntry {
   status: ScheduleStatus
   /** KST 기준 YYYY-MM-DD */
   date: string
-  /** 시작 시각까지 남은/지난 상대 라벨 (ex. "2시간 후") */
+  /** 시작 시각까지 남은/지난 상대 라벨 (ex. "2시간 후", 시간 미정이면 일 단위) */
   relativeLabel: string
   title: string
-  /** KST 기준 시각 라벨 (ex. "오전 7:00") */
+  /** 시간 미정이면 timeUndecidedLabel, 아니면 KST 기준 시각 라벨 (ex. "오전 7:00") */
   timeLabel: string
+  timeUndecided: boolean
   locationLabel: string
 }
 
@@ -66,17 +67,26 @@ function formatRelative(locale: string, iso: string): string {
   return rtf.format(Math.round(diffMs / day), "day")
 }
 
-function adaptCalendarItem(item: CalendarItem, locale: string): ScheduleEntry {
+// 시간 미정 항목은 파생 startsAt이 KST 자정에 앵커링돼 있어 시:분 단위로 상대 시간을 재면 어긋난다.
+// 오늘(KST) 대비 날짜 차이만 일 단위로 표현한다.
+function formatRelativeByDate(locale: string, dateKey: string): string {
+  const diffDays = Math.round((Date.parse(dateKey) - Date.parse(getKstDateKey())) / 86_400_000)
+  return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(diffDays, "day")
+}
+
+function adaptCalendarItem(item: CalendarItem, locale: string, timeUndecidedLabel: string): ScheduleEntry {
+  const dateKey = item.date ?? getKstDateKey(item.startsAt)
   return {
     scheduleId: item.scheduleId,
     meetingId: item.meetingId,
     roomId: item.roomId,
     isHost: item.isHost,
     status: item.status,
-    date: getKstDateKey(item.startsAt),
-    relativeLabel: formatRelative(locale, item.startsAt),
+    date: dateKey,
+    timeUndecided: item.timeUndecided,
+    relativeLabel: item.timeUndecided ? formatRelativeByDate(locale, dateKey) : formatRelative(locale, item.startsAt),
     title: item.title ?? "",
-    timeLabel: formatKstTime(locale, item.startsAt),
+    timeLabel: item.timeUndecided ? timeUndecidedLabel : formatKstTime(locale, item.startsAt),
     locationLabel: item.location.label ?? item.location.address,
   }
 }
@@ -84,8 +94,10 @@ function adaptCalendarItem(item: CalendarItem, locale: string): ScheduleEntry {
 function adaptMeetingScheduleItem(
   item: MeetingScheduleItem,
   meetingId: number,
-  locale: string
+  locale: string,
+  timeUndecidedLabel: string
 ): MeetingScheduleEntry {
+  const dateKey = item.date ?? getKstDateKey(item.startsAt)
   return {
     scheduleId: item.scheduleId,
     meetingId,
@@ -96,10 +108,11 @@ function adaptMeetingScheduleItem(
     canDelete: item.canDelete,
     canReport: item.canReport,
     status: item.status,
-    date: getKstDateKey(item.startsAt),
-    relativeLabel: formatRelative(locale, item.startsAt),
+    date: dateKey,
+    timeUndecided: item.timeUndecided,
+    relativeLabel: item.timeUndecided ? formatRelativeByDate(locale, dateKey) : formatRelative(locale, item.startsAt),
     title: item.title ?? "",
-    timeLabel: formatKstTime(locale, item.startsAt),
+    timeLabel: item.timeUndecided ? timeUndecidedLabel : formatKstTime(locale, item.startsAt),
     locationLabel: item.locationName ?? "",
   }
 }

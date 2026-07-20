@@ -682,7 +682,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastMessageId])
 
-  // 키보드가 열리면 app-viewport-height가 셸을 줄이고 이 스크롤 영역도 함께 압축된다.
+  // 키보드가 열리면 main의 padding-bottom(--keyboard-inset)이 늘어나 이 스크롤 영역도 함께 압축된다.
   // 하단을 보고 있었다면 그대로 두면 최신 메시지가 화면 밖으로 밀리므로, 크기 변화에 맞춰 다시 내린다.
   // (scrollToBottom은 프로그램적 스크롤 무시 창을 열어 스크롤바·날짜 뱃지가 깜빡이지 않게 한다 — #277)
   React.useEffect(() => {
@@ -773,7 +773,13 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
 
   return (
     <>
-      <main className="app-column app-viewport-height flex flex-col">
+      {/* app-viewport-height(height: 100dvh - keyboard-inset) 대신 fixed + padding-bottom을
+          쓴다. iOS 키보드 위 입력 액세서리 바는 visualViewport 리사이즈에 잡히지 않아
+          --keyboard-inset이 항상 그 높이만큼 부족한데(full-screen-overlay.tsx 참고, issue #328),
+          박스 자체 높이를 줄이는 방식은 그 부족분이 입력창과 키보드 사이 빈 틈으로 그대로
+          노출된다. 박스를 화면 전체에 고정하고 padding-bottom만 줄이면 배경이 끝까지 채워져
+          같은 부족분이 여백으로 드러나지 않는다. */}
+      <main className="fixed inset-0 app-column flex flex-col bg-white pb-[var(--keyboard-inset,0px)]">
         <AppBar
           title={roomTitle}
           onLeadingClick={() => router.back()}
