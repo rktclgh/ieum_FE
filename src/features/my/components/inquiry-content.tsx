@@ -76,7 +76,7 @@ function InquiryContent() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex flex-1 items-center justify-center rounded-full border border-primary px-4 py-3 text-body-medium-14 text-primary"
+            className="flex flex-1 items-center justify-center rounded-full bg-gray-100 px-4 py-3 text-body-medium-14 text-gray-900"
           >
             {messages.my.inquiry.cancel}
           </button>
@@ -86,7 +86,7 @@ function InquiryContent() {
             disabled={!canSubmit}
             className={cn(
               "flex flex-1 items-center justify-center rounded-full px-4 py-3 text-body-medium-14 text-white transition-colors",
-              canSubmit ? "bg-primary" : "bg-gray-200"
+              canSubmit ? "bg-gray-900" : "bg-gray-200"
             )}
           >
             {messages.my.inquiry.submit}
