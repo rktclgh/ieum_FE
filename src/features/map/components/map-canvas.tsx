@@ -95,17 +95,29 @@ const selectedLocationIcon = L.divIcon({
 const USER_LOCATION_Z_OFFSET = 10000
 const SELECTED_LOCATION_Z_OFFSET = 20000
 
+// Figma MyLocation (node 1716:11478): 44x44 컨테이너 = 헤일로 원 + 정중앙 점.
+// 헤일로 에셋(Ellipse 400)은 44px 원(primary 20%)에 1px 가우시안 블러라, 블러가 사방 2px
+// 번져 48x48로 그려진다. 그래서 컨테이너는 44인데 svg만 -2px 오프셋의 48x48이다.
+const USER_LOCATION_SIZE = 44
+const USER_LOCATION_HALO_SIZE = 48
+const USER_LOCATION_HALO_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_HALO_SIZE) / 2
+
+// 중심 점은 주황 코어 12px + 흰 테두리 3px = 바깥지름 18px.
+// 테두리를 outline이 아닌 border로 그리는 것이 핵심이다. outline은 박스 바깥에 그려져
+// box-shadow의 기준 박스가 코어(12px)로 남는 탓에, 주황 글로우가 흰 테두리와 같은 자리에서
+// 피어올라 테두리 바깥 대비를 죽인다. border면 기준 박스가 18px이라 글로우가 테두리
+// '바깥'에서 시작해, 흰 테두리가 헤일로 위에 또렷하게 얹힌다.
 const userLocationIcon = L.divIcon({
-  html: `<div style="position:relative;width:48px;height:48px">
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" style="position:absolute;inset:0">
+  html: `<div style="position:relative;width:${USER_LOCATION_SIZE}px;height:${USER_LOCATION_SIZE}px">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${USER_LOCATION_HALO_SIZE}" height="${USER_LOCATION_HALO_SIZE}" viewBox="0 0 48 48" fill="none" style="position:absolute;left:${USER_LOCATION_HALO_OFFSET}px;top:${USER_LOCATION_HALO_OFFSET}px">
       <g filter="url(#user_loc_halo_blur)"><circle cx="24" cy="24" r="22" fill="${LIVE_ACCENT}" fill-opacity="0.2"/></g>
       <defs><filter id="user_loc_halo_blur" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/></filter></defs>
     </svg>
-    <div style="position:absolute;left:18px;top:18px;width:12px;height:12px;border-radius:9999px;background:${LIVE_ACCENT};outline:3px solid #ffffff;box-shadow:0 0 8px 0 rgba(252,112,69,0.6),0 0 4px 0 rgba(0,0,0,0.25)"></div>
+    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:18px;height:18px;border-radius:999px;background:${LIVE_ACCENT};border:3px solid #ffffff;box-shadow:0 0 4px 0 rgba(0,0,0,0.25),0 0 8px 0 rgba(252,112,69,0.6)"></div>
   </div>`,
   className: "",
-  iconSize: [48, 48],
-  iconAnchor: [24, 24], 
+  iconSize: [USER_LOCATION_SIZE, USER_LOCATION_SIZE],
+  iconAnchor: [USER_LOCATION_SIZE / 2, USER_LOCATION_SIZE / 2],
 })
 
 // react-leaflet Marker는 map이 해제되는 중(StrictMode 재마운트·HMR)에 마운트되면 mapPane이 없어
