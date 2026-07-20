@@ -2,7 +2,7 @@
 
 import L from "leaflet"
 import * as React from "react"
-import { MapContainer, Marker, useMap, useMapEvents } from "react-leaflet"
+import { MapContainer, Marker, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
@@ -45,7 +45,6 @@ interface MapCanvasProps {
   /** 하단 오버레이(시트 등)에 가려지는 높이(px). 보이는 영역 정중앙 계산에 사용 */
   bottomInset?: number
   className?: string
-  onMapClick?: (position: Coordinates) => void
   onBoundsChange?: (bounds: MapBounds) => void
   pins?: MapPin[]
   onPinClick?: (pin: MapPin) => void
@@ -374,16 +373,6 @@ function MapCenterWatcher({
   return null
 }
 
-function MapClickListener({ onMapClick }: { onMapClick: (position: Coordinates) => void }) {
-  useMapEvents({
-    click(event) {
-      onMapClick({ lat: event.latlng.lat, lng: event.latlng.lng })
-    },
-  })
-
-  return null
-}
-
 // 지도 영역(bbox)을 부모에 알린다. moveend/zoomend를 debounce로 합쳐 과도한 재조회를 막고,
 // 최초 mount 시 1회 즉시 방출한다. onBoundsChange를 ref에 담아 effect 재실행/무한 루프를 피한다.
 function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) {
@@ -483,7 +472,6 @@ function MapCanvas({
   topInset,
   bottomInset,
   className,
-  onMapClick,
   onBoundsChange,
   pins,
   onPinClick,
@@ -536,7 +524,6 @@ function MapCanvas({
         />
       )}
       {onUserGesture && <MapUserGestureWatcher onUserGesture={onUserGesture} moveGate={moveGate} />}
-      {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
       {pins && pins.length > 0 && (
         <ClusteredPins
