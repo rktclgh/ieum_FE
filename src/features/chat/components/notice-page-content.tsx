@@ -147,7 +147,7 @@ function NoticePageContent() {
 
   return (
     // 라우트 화면이라 항상 열려 있다 — 마운트 시 아래에서 올라오는 진입 모션만 쓴다.
-    <FullScreenOverlay open className="mx-auto flex w-full max-w-sm flex-col overflow-hidden bg-white">
+    <FullScreenOverlay open className="app-column flex flex-col overflow-hidden bg-white">
       <AppBar
         title={messages.chat.noticeLabel}
         trailingVariant="close"

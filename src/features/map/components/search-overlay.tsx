@@ -29,7 +29,7 @@ function SearchOverlay({ open, ...props }: SearchOverlayProps) {
   return (
     <FullScreenOverlay
       open={open}
-      className="z-40 mx-auto flex w-full max-w-sm flex-col bg-white"
+      className="z-40 app-column flex flex-col bg-white"
     >
       <SearchOverlayContent {...props} />
     </FullScreenOverlay>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { QueryProvider } from "@/lib/query/query-provider";
 import { I18nProvider } from "@/lib/i18n/i18n-provider";
+import { KeyboardInsetProvider } from "@/lib/viewport/keyboard-inset-provider";
 import { TabBar } from "@/features/navigation/components/tab-bar";
 import "./globals.css";
 
@@ -43,6 +44,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${pretendard.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        <KeyboardInsetProvider />
         <I18nProvider>
           <QueryProvider>
             {children}

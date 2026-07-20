@@ -33,7 +33,7 @@ function LoginContent() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center justify-center gap-4 px-4 py-6 sm:gap-5 [@media(max-height:620px)]:gap-3 [@media(max-height:620px)]:py-3">
+    <main className="app-column flex min-h-dvh flex-col items-center justify-center gap-4 px-4 py-6 sm:gap-5 [@media(max-height:620px)]:gap-3 [@media(max-height:620px)]:py-3">
       <LanguageToggle />
 
       {/* Figma 1774:11266 — 로고 영역 120px(상하 패딩 32 + 로고 56).

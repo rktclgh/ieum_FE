@@ -20,17 +20,22 @@ function BottomSheet({ children, className, ...props }: BottomSheetProps) {
     <DrawerPrimitive.Root data-slot="bottom-sheet" {...props}>
       <DrawerPrimitive.Portal>
         <DrawerPrimitive.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/20 opacity-[calc(1_-_var(--drawer-swipe-progress))] transition-opacity duration-base ease-base data-ending-style:opacity-0 data-starting-style:opacity-0" />
-        <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_env(safe-area-inset-bottom,0px))]">
-          <DrawerPrimitive.Popup
-            data-slot="bottom-sheet-popup"
-            className={cn(
-              "flex w-full max-w-[345px] flex-col items-center gap-4 rounded-3xl bg-white px-4 pt-6 pb-5 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)] outline-none [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-base ease-base data-ending-style:translate-y-[calc(100%_+_2rem)] data-starting-style:translate-y-[calc(100%_+_2rem)]",
-              className
-            )}
-          >
-            {children}
-          </DrawerPrimitive.Popup>
-        </DrawerPrimitive.Viewport>
+        {/* 시트 안에 텍스트 입력이 있는 소비자(예: 질문 답변창)를 위해 base-ui의 내장
+            키보드 회피(visualViewport 추적 + 포커스 스크롤)를 켠다. 포커스 가능한
+            입력 요소가 없는 소비자에게는 이벤트가 아예 발생하지 않아 동작이 그대로다. */}
+        <DrawerPrimitive.VirtualKeyboardProvider>
+          <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_env(safe-area-inset-bottom,0px))]">
+            <DrawerPrimitive.Popup
+              data-slot="bottom-sheet-popup"
+              className={cn(
+                "flex w-full max-w-[345px] flex-col items-center gap-4 rounded-3xl bg-white px-4 pt-6 pb-5 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)] outline-none [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-base ease-base data-ending-style:translate-y-[calc(100%_+_2rem)] data-starting-style:translate-y-[calc(100%_+_2rem)]",
+                className
+              )}
+            >
+              {children}
+            </DrawerPrimitive.Popup>
+          </DrawerPrimitive.Viewport>
+        </DrawerPrimitive.VirtualKeyboardProvider>
       </DrawerPrimitive.Portal>
     </DrawerPrimitive.Root>
   )

@@ -37,7 +37,7 @@ export default function SocialJoinPage() {
 
   if (!hasCheckedStorage || !payload) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center px-4">
+      <main className="app-column flex min-h-dvh items-center justify-center px-4">
         <div className="flex flex-col items-center gap-3 text-center">
           <span className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary" />
           <p className="text-body-medium-16 text-gray-900">{messages.social.loading}</p>
@@ -47,7 +47,7 @@ export default function SocialJoinPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center">
+    <main className="app-column flex min-h-dvh flex-col items-center">
       <AppBar
         title={messages.join.infoAppBarTitle}
         trailingVariant="close"

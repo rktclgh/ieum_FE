@@ -69,7 +69,7 @@ function TabBarNav({
     <div
       data-slot="tab-bar"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-sm min-w-80 flex-col items-center justify-end gap-2 px-4 py-2",
+        "fixed inset-x-0 bottom-0 z-10 app-column flex min-w-80 flex-col items-center justify-end gap-2 px-4 py-2",
         className
       )}
       {...props}

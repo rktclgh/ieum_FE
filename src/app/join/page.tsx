@@ -18,7 +18,7 @@ function JoinContent() {
   })
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center">
+    <main className="app-column flex min-h-dvh flex-col items-center">
       <AppBar
         title={flow.step === "credentials" ? messages.join.appBarTitle : messages.join.infoAppBarTitle}
         trailingVariant="close"
