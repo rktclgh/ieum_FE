@@ -29,15 +29,18 @@ const KIND_CLASSES: Record<ScreenKind, string> = {
   scroll: "app-column flex min-h-dvh flex-col",
 
   /*
-   * `fixed inset-0`이 아니라 높이로 잡는 이유: 탭 전환 애니메이션에 `fill-mode`를 주지 않는
-   * 이유가 "남은 transform이 fixed의 컨테이닝 블록이 된다"는 것이다(globals.css).
-   * 페이지 높이를 `fixed`에 걸면 그 지뢰를 계속 안고 간다.
+   * `fixed inset-0`으로 화면 전체를 덮고, 키보드 높이만큼 `padding-bottom`만 줄인다.
    *
-   * 키보드가 올라오면 그만큼 줄어든다. `--keyboard-inset`은 `visualViewport`에서 실측한
-   * 값이며(`lib/viewport/use-keyboard-inset.ts`), iOS 키보드 액세서리 바 높이만큼 항상
-   * 모자란다는 알려진 한계가 있다(#328·#361). 이 컴포넌트가 그 문제를 해결하지는 않는다.
+   * **높이를 줄이는 방식(`h: 100dvh - keyboard-inset`)이 아니라 fixed+padding을 쓰는 이유**는
+   * chat-room이 실기기에서 배운 것이다(issue #328). iOS 키보드 위 입력 액세서리 바(완료/이전
+   * 다음)는 `visualViewport` 리사이즈에 잡히지 않아 `--keyboard-inset`이 항상 그 바 높이만큼
+   * 모자라다. 박스 높이를 줄이면 그 부족분이 입력창과 키보드 사이 빈 틈으로 노출되지만,
+   * 화면 전체에 고정하고 padding만 줄이면 배경이 끝까지 채워져 부족분이 여백으로 드러나지 않는다.
+   *
+   * fixed 의존의 알려진 함정 — 탭 전환 애니메이션에 남은 transform이 fixed의 컨테이닝 블록이
+   * 되는 것 — 은 그 애니메이션에 `fill-mode`를 주지 않는 것으로 이미 막혀 있다(globals.css).
    */
-  fixed: "app-column flex flex-col overflow-hidden h-[calc(100dvh-var(--keyboard-inset,0px))]",
+  fixed: "fixed inset-0 app-column flex flex-col overflow-hidden pb-[var(--keyboard-inset,0px)]",
 
   /*
    * 지도 전용. 스크롤 개념이 없고 문서 흐름에서 빠지는 것이 정상이다.

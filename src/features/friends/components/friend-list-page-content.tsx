@@ -5,9 +5,9 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { Screen } from "@/components/layout/screen"
+import { AppBar } from "@/components/ui/app-bar"
 import { SearchBox } from "@/components/ui/search-box"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { FriendListAppBar } from "@/features/friends/components/friend-list-app-bar"
 import { FriendListSkeleton } from "@/features/friends/components/friend-list-skeleton"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { FriendRequestItem } from "@/features/friends/components/friend-request-item"
@@ -194,7 +194,11 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
   return (
     <>
       <Screen kind="scroll" as="main">
-        <FriendListAppBar onBack={() => router.back()} />
+        <AppBar
+          title={messages.chat.myFriendsTitle}
+          trailingIcon={null}
+          onLeadingClick={() => router.back()}
+        />
         <div className="flex flex-col gap-2 px-4 pb-[calc(2.5rem+var(--safe-area-bottom))]">
           <SearchBox
             placeholder={messages.chat.friendSearchPlaceholder}

@@ -352,37 +352,18 @@
   }
 }
 
-/* 키보드가 열리면 셸 높이를 그만큼 줄인다. flex-1 스크롤 영역이 압축되면서
-   하단 입력창이 키보드 바로 위에 붙고, Safari가 페이지를 밀어 올릴 이유가 사라진다. */
-@utility app-viewport-height {
-  height: calc(100dvh - var(--keyboard-inset, 0px));
-}
-
 /*
- * issue #419 — ICB 부족분 보정(#395·#409)을 제거했다.
+ * 화면 바닥에 고정되는 바 — 탭바(`tab-bar.tsx`)와 각 화면의 하단 CTA/입력 바가 공유한다.
  *
- * 두 가지가 실기기에서 확인됐다(`docs/viewport-behavior.md`):
+ * issue #419에서 화면 높이 계약은 `Screen` 컴포넌트로 옮겼고, ICB 부족분 보정(#395·#409)과
+ * 화면 셸 유틸(`app-screen-fixed`·`app-viewport-height`)은 제거했다. 실기기 계측 결과
+ * (`docs/viewport-behavior.md`) 보정할 부족분이 애초에 상수가 아니었고
+ * (`black-translucent`에서 뷰포트가 812↔874로 흔들린다), 보정을 감싸던
+ * `@media (display-mode: standalone)`은 iOS에서 매칭조차 되지 않았다.
  *
- * 1. **`@media (display-mode: standalone)`은 iOS에서 매칭되지 않는다.** standalone으로
- *    실행 중인데도 `false`다(`navigator.standalone`만 `true`). 즉 이 보정은 정작 필요한
- *    환경에서 한 번도 발동한 적이 없다.
- * 2. 애초에 보정할 부족분이 상수가 아니었다. `black-translucent`에서 뷰포트는
- *    812↔874로 흔들리고 `fixed`는 그걸 따라간다. 고정값을 빼는 방식으로는 맞출 수 없다.
- *
- * 그래서 `statusBarStyle`을 `default`로 되돌려(`app/layout.tsx`) 뷰포트를 안정시켰다.
- * 아래 두 유틸리티는 이제 평범한 `fixed`와 같다.
- *
- * 이름을 남겨두는 이유: 소비자가 8개 파일에 흩어져 있어 지금 지우면 이 PR이 커진다.
- * `Screen` 컴포넌트로 옮기는 단계(#419 2~4단계)에서 소비자가 사라진 뒤 함께 제거한다.
+ * 이 유틸리티만 남긴 것은 화면 루트가 아닌 "바닥 고정 바"라는 별개 패턴이고 소비자가
+ * 여럿(탭바·가입 폼·문의·프로필 편집)이기 때문이다. 지금은 평범한 `fixed`와 같다.
  */
-
-/** @deprecated `Screen` 컴포넌트로 대체 예정 (#419). */
-@utility app-screen-fixed {
-  position: fixed;
-  inset: 0;
-}
-
-/** @deprecated `Screen` 컴포넌트로 대체 예정 (#419). */
 @utility app-bottom-fixed {
   position: fixed;
   left: 0;
