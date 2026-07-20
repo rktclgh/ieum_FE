@@ -4,13 +4,14 @@ import { InstallPromptDialog } from "@/features/pwa/components/install-prompt-di
 import { useInstallPrompt } from "@/features/pwa/hooks/use-install-prompt"
 
 function InstallPrompt() {
-  const { method, isOpen, onInstall, onClose } = useInstallPrompt()
+  const { method, flow, isOpen, onInstall, onClose } = useInstallPrompt()
 
   if (method === "unavailable") return null
 
   return (
     <InstallPromptDialog
       method={method}
+      flow={flow}
       open={isOpen}
       onOpenChange={(next) => {
         if (!next) onClose()
