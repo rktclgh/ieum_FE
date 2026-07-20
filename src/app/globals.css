@@ -317,6 +317,23 @@
 }
 
 /*
+ * 지도 원형 마커 히트 영역 — issue #302.
+ * Leaflet이 만드는 `.leaflet-marker-icon` 루트는 border-radius 없는 44x44 정사각형이라,
+ * 원 밖 네 모서리(박스의 약 21%)까지 클릭을 가로챈다. 마커가 겹치면 눈에는 클러스터만
+ * 보이는 지점을 눌러도 옆 핀의 투명한 모서리가 이벤트를 먹는다.
+ * 루트를 히트 대상에서 빼고 내부 원(border-radius:9999px)만 클릭을 받게 하면,
+ * 브라우저가 border-radius를 반영해 히트 테스트하므로 클릭 영역이 시각 영역과 일치한다.
+ * (pointer-events:none은 루트를 히트 대상에서만 제외할 뿐, 자식에서 올라온 이벤트는
+ *  그대로 버블링되어 Leaflet이 루트에 건 클릭 리스너가 정상 동작한다.)
+ */
+.map-circle-marker {
+  pointer-events: none;
+}
+.map-circle-marker > * {
+  pointer-events: auto;
+}
+
+/*
  * 접근성 — issue #280.
  * `duration-base` 유틸리티가 `var(--motion-duration-base)`를 참조하므로,
  * 토큰 하나만 재정의하면 이번에 추가/변경한 상태 전환 모션만 정확히 무력화된다.
