@@ -131,6 +131,8 @@ export const en: Messages = {
     meetupMarkerLabel: "Meetup",
     questionMarkerLabel: "Question",
     clusterMarkerLabel: (count) => `${count} nearby`,
+    pinStackMarkerLabel: (count) => `${count} at this spot`,
+    pinStackIndexLabel: (current, total) => `${current} / ${total}`,
     attributionButtonLabel: "Map attribution",
     pinsTruncatedNotice: "Many pins here. Zoom in to see them all",
     categoryPlace: "Place",

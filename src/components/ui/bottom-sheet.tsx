@@ -13,10 +13,15 @@ import { cn } from "@/lib/utils"
  */
 interface BottomSheetProps extends Omit<DrawerPrimitive.Root.Props, "children"> {
   className?: string
+  /**
+   * Viewport(팝업을 감싸는 영역) 클래스 확장.
+   * 기본 좌우 여백(px-4)을 지워 화면 끝까지 쓰는 콘텐츠(가로 캐러셀 등)에 쓴다.
+   */
+  viewportClassName?: string
   children?: React.ReactNode
 }
 
-function BottomSheet({ children, className, ...props }: BottomSheetProps) {
+function BottomSheet({ children, className, viewportClassName, ...props }: BottomSheetProps) {
   return (
     <DrawerPrimitive.Root data-slot="bottom-sheet" {...props}>
       <DrawerPrimitive.Portal>
@@ -29,7 +34,12 @@ function BottomSheet({ children, className, ...props }: BottomSheetProps) {
             키보드 회피(visualViewport 추적 + 포커스 스크롤)를 켠다. 포커스 가능한
             입력 요소가 없는 소비자에게는 이벤트가 아예 발생하지 않아 동작이 그대로다. */}
         <DrawerPrimitive.VirtualKeyboardProvider>
-          <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_var(--safe-area-bottom))]">
+          <DrawerPrimitive.Viewport
+            className={cn(
+              "fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_var(--safe-area-bottom))]",
+              viewportClassName
+            )}
+          >
             <DrawerPrimitive.Popup
               data-slot="bottom-sheet-popup"
               className={cn(

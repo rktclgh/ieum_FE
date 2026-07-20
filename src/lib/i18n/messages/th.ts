@@ -130,6 +130,8 @@ export const th: Messages = {
     meetupMarkerLabel: "พบปะ",
     questionMarkerLabel: "คำถาม",
     clusterMarkerLabel: (count) => `${count} รายการในพื้นที่นี้`,
+    pinStackMarkerLabel: (count) => `${count} รายการที่ตำแหน่งนี้`,
+    pinStackIndexLabel: (current, total) => `${current} / ${total}`,
     attributionButtonLabel: "ข้อมูลลิขสิทธิ์แผนที่",
     pinsTruncatedNotice: "บริเวณนี้มีหมุดจำนวนมาก ซูมเข้าเพื่อดูทั้งหมด",
     categoryPlace: "สถานที่",

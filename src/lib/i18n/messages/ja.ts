@@ -130,6 +130,8 @@ export const ja: Messages = {
     meetupMarkerLabel: "集まり",
     questionMarkerLabel: "質問",
     clusterMarkerLabel: (count) => `この地域に${count}件`,
+    pinStackMarkerLabel: (count) => `同じ場所に${count}件`,
+    pinStackIndexLabel: (current, total) => `${current} / ${total}`,
     attributionButtonLabel: "地図の著作権情報",
     pinsTruncatedNotice: "このエリアはピンが多いです。拡大してご覧ください",
     categoryPlace: "場所",

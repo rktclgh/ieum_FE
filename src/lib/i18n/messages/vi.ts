@@ -131,6 +131,8 @@ export const vi: Messages = {
     meetupMarkerLabel: "Gặp mặt",
     questionMarkerLabel: "Câu hỏi",
     clusterMarkerLabel: (count) => `${count} ở khu vực này`,
+    pinStackMarkerLabel: (count) => `${count} tại vị trí này`,
+    pinStackIndexLabel: (current, total) => `${current} / ${total}`,
     attributionButtonLabel: "Bản quyền bản đồ",
     pinsTruncatedNotice: "Khu vực này có nhiều ghim. Phóng to để xem tất cả",
     categoryPlace: "Địa điểm",

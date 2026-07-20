@@ -131,6 +131,8 @@ export const ru: Messages = {
     meetupMarkerLabel: "Встреча",
     questionMarkerLabel: "Вопрос",
     clusterMarkerLabel: (count) => `${count} рядом`,
+    pinStackMarkerLabel: (count) => `${count} в этой точке`,
+    pinStackIndexLabel: (current, total) => `${current} / ${total}`,
     attributionButtonLabel: "Атрибуция карты",
     pinsTruncatedNotice: "Здесь много меток. Увеличьте масштаб, чтобы увидеть все",
     categoryPlace: "Место",

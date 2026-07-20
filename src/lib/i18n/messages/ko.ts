@@ -115,6 +115,8 @@ export interface Messages {
     meetupMarkerLabel: string
     questionMarkerLabel: string
     clusterMarkerLabel: (count: number) => string
+    pinStackMarkerLabel: (count: number) => string
+    pinStackIndexLabel: (current: number, total: number) => string
     attributionButtonLabel: string
     pinsTruncatedNotice: string
     categoryPlace: string
@@ -642,6 +644,8 @@ export const ko: Messages = {
     meetupMarkerLabel: "모임",
     questionMarkerLabel: "질문",
     clusterMarkerLabel: (count) => `이 지역 ${count}개`,
+    pinStackMarkerLabel: (count) => `같은 위치 ${count}개`,
+    pinStackIndexLabel: (current, total) => `${current} / ${total}`,
     attributionButtonLabel: "지도 저작권 정보",
     pinsTruncatedNotice: "이 지역에 핀이 많아요. 확대해서 보세요",
     categoryPlace: "장소",

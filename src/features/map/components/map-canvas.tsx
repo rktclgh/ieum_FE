@@ -42,6 +42,8 @@ interface MapCanvasProps {
   onBoundsChange?: (bounds: MapBounds) => void
   pins?: MapPin[]
   onPinClick?: (pin: MapPin) => void
+  /** 좌표가 겹쳐 확대해도 분리되지 않는 핀 더미를 탭했을 때 — 가로 캐러셀로 연다 */
+  onPinStackClick?: (pins: MapPin[]) => void
   livePosition?: Coordinates | null
   /** 사용자가 지도에서 고른 지점 — Figma Location/XL 핀으로 표시 */
   selectedPosition?: Coordinates | null
@@ -408,6 +410,7 @@ function MapCanvas({
   onBoundsChange,
   pins,
   onPinClick,
+  onPinStackClick,
   livePosition,
   selectedPosition,
   onSelectedPositionClick,
@@ -459,6 +462,7 @@ function MapCanvas({
         <ClusteredPins
           pins={pins}
           onPinClick={onPinClick}
+          onPinStackClick={onPinStackClick}
           topInset={topInset}
           bottomInset={bottomInset}
         />

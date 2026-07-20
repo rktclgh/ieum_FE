@@ -10,6 +10,7 @@ import { MapControls } from "@/features/map/components/map-controls"
 import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton"
 import { MapSearchBar } from "@/features/map/components/map-search-bar"
 import { PinListOverlay } from "@/features/map/components/pin-list-overlay"
+import { PinStackSheet } from "@/features/map/components/pin-stack-sheet"
 import { SearchOverlay } from "@/features/map/components/search-overlay"
 import {
   DEFAULT_MAP_CENTER,
@@ -68,6 +69,8 @@ function HomeMapScreen() {
   const [createMeetupOpen, setCreateMeetupOpen] = React.useState(false)
   const [createQuestionOpen, setCreateQuestionOpen] = React.useState(false)
   const [selectedMeetingId, setSelectedMeetingId] = React.useState<number | null>(null)
+  // 좌표가 겹쳐 지도에서 분리할 수 없는 핀 더미 — 가로 캐러셀로 연다.
+  const [stackedPins, setStackedPins] = React.useState<MapPin[] | null>(null)
   const [selectedQuestionId, setSelectedQuestionId] = React.useState<number | null>(null)
   const [category, setCategory] = React.useState<Category>("all")
   const [bounds, setBounds] = React.useState<MapBounds | null>(null)
@@ -185,6 +188,7 @@ function HomeMapScreen() {
           onBoundsChange={setBounds}
           pins={pins}
           onPinClick={handlePinClick}
+          onPinStackClick={setStackedPins}
           livePosition={position}
           selectedPosition={selectedLocation}
           onSelectedPositionClick={() => setSelectedLocation(null)}
@@ -278,6 +282,10 @@ function HomeMapScreen() {
         currentPosition={position}
         onClose={() => setCreateQuestionOpen(false)}
       />
+
+      {stackedPins !== null ? (
+        <PinStackSheet pins={stackedPins} onClose={() => setStackedPins(null)} />
+      ) : null}
 
       {selectedMeetingId !== null ? (
         <MeetupDetailContainer
