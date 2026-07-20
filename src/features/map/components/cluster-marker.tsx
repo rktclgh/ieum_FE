@@ -18,7 +18,7 @@ function buildClusterIcon(count: number, label: string): L.DivIcon {
 
   return L.divIcon({
     html: `<div role="img" aria-label="${escapeAttr(label)}" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:9999px;background:${GRAY_900};box-shadow:0 2px 4px 0 rgba(0,0,0,0.25)"><span style="font-size:15px;line-height:1.4;font-weight:600;color:#ffffff">${escapeAttr(text)}</span></div>`,
-    className: "",
+    className: "map-circle-marker", // 원 밖 모서리가 클릭을 가로채지 않게(#302)
     iconSize: [44, 44],
     iconAnchor: [22, 22], // 원 중심을 클러스터 좌표에 고정
   })
@@ -44,7 +44,11 @@ function ClusterMarker({ count, lat, lng, label, onClick }: ClusterMarkerProps) 
   })
   const eventHandlers = React.useMemo(() => ({ click: () => onClickRef.current() }), [])
 
-  return <Marker position={[lat, lng]} icon={icon} eventHandlers={eventHandlers} />
+  // Leaflet은 마커 z-index를 `아이콘 좌상단 y + zIndexOffset`으로 자동 계산한다.
+  // 오프셋이 없으면 순수 위도순이라, 클러스터보다 남쪽(화면상 아래)에 있는 개별 핀이
+  // 클러스터 원을 덮으면서 동시에 위로 올라와 탭을 가로챈다(#302).
+  // 클러스터는 여러 핀을 대표하므로 항상 개별 핀 위에 오도록 고정한다.
+  return <Marker position={[lat, lng]} icon={icon} eventHandlers={eventHandlers} zIndexOffset={1000} />
 }
 
 export { ClusterMarker }

@@ -163,6 +163,25 @@
     "Courier New", monospace;
   /* issue #280 — `--transition-duration-base`가 참조하는 실제 값 */
   --motion-duration-base: 300ms;
+
+  /*
+   * Safe area — issue #279.
+   * `layout.tsx`의 `viewportFit: "cover"`와 한 쌍이다. cover가 켜져야 아래 env()가
+   * 0px이 아닌 실제 노치·홈 인디케이터 높이로 해석된다.
+   *
+   * **이 네 줄이 저장소 전체의 단일 출처다.** 컴포넌트에서 `env(safe-area-inset-*)`를
+   * 직접 쓰지 말고 항상 이 변수를 참조한다. 기본 여백과 합쳐야 할 때는 calc로 더한다:
+   *   `pt-[calc(1rem+var(--safe-area-top))]`, `pb-[calc(0.5rem+var(--safe-area-bottom))]`
+   *
+   * 이름 붙인 Tailwind 유틸리티(`pt-safe` 등) 대신 임의값 문법을 쓰는 이유:
+   * `@utility`로 만든 커스텀 클래스는 tailwind-merge가 `p-4`/`py-2` 같은 기존
+   * 패딩과의 충돌을 인식하지 못해, `cn()`으로 병합되는 지점에서 조용히 둘 다 남는다.
+   * `pt-[...]`는 tailwind-merge와 Tailwind 정렬 규칙 양쪽에서 결정적으로 동작한다.
+   */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -242,6 +261,26 @@
   html {
     @apply font-sans;
   }
+
+  /*
+   * 롱프레스 대상(useLongPress 가 data-long-press 를 붙인다)에서 OS 기본 반응을 끈다.
+   * iOS 는 롱프레스 시 텍스트 선택 핸들과 편집 메뉴(Copy·Look Up·Translate)를 contextmenu 와
+   * 별개 경로로 띄워 JS 의 preventDefault 로 막히지 않고, Android 도 롱프레스를 텍스트 선택으로
+   * 받는다. 둘 다 앱 롱프레스 메뉴를 가리므로 CSS 로 억제한다.
+   * base 레이어라 개별 화면이 유틸리티 클래스로 되돌릴 수 있다.
+   */
+  [data-long-press] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 입력 요소는 커서·선택이 살아 있어야 한다. */
+  [data-long-press] :is(input, textarea, [contenteditable="true"]) {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
 }
 
 /* 답장 인용 클릭 등으로 특정 메시지 위치로 스크롤했을 때, 어떤 말풍선인지 눈에 띄도록 주는 1회성 강조 애니메이션 */
@@ -295,6 +334,61 @@
    하단 입력창이 키보드 바로 위에 붙고, Safari가 페이지를 밀어 올릴 이유가 사라진다. */
 @utility app-viewport-height {
   height: calc(100dvh - var(--keyboard-inset, 0px));
+}
+
+/*
+ * 지도 원형 마커 히트 영역 — issue #302.
+ * Leaflet이 만드는 `.leaflet-marker-icon` 루트는 border-radius 없는 44x44 정사각형이라,
+ * 원 밖 네 모서리(박스의 약 21%)까지 클릭을 가로챈다. 마커가 겹치면 눈에는 클러스터만
+ * 보이는 지점을 눌러도 옆 핀의 투명한 모서리가 이벤트를 먹는다.
+ * 루트를 히트 대상에서 빼고 내부 원(border-radius:9999px)만 클릭을 받게 하면,
+ * 브라우저가 border-radius를 반영해 히트 테스트하므로 클릭 영역이 시각 영역과 일치한다.
+ * (pointer-events:none은 루트를 히트 대상에서만 제외할 뿐, 자식에서 올라온 이벤트는
+ *  그대로 버블링되어 Leaflet이 루트에 건 클릭 리스너가 정상 동작한다.)
+ */
+.map-circle-marker {
+  pointer-events: none;
+}
+.map-circle-marker > * {
+  pointer-events: auto;
+}
+
+/*
+ * 탭 전환 슬라이딩 — issue #303.
+ *
+ * 이동 방향(app/template.tsx)에 따라 들어오는 화면을 반대편에서 밀어 넣는다.
+ * 마이 → 홈처럼 왼쪽 탭으로 가면 새 화면이 왼쪽에서 들어온다.
+ *
+ * 이동 거리를 화면 폭이 아니라 2rem으로 잡은 이유: 나가는 화면이 즉시 사라지기 때문에
+ * 풀 슬라이드를 주면 그 자리가 빈 공간으로 드러난다. 짧은 방향 이동 + 페이드가
+ * 방향감은 남기면서 빈 화면은 보이지 않는 지점이다.
+ *
+ * duration은 시트류와 같은 `--motion-duration-base`를 참조하므로 아래 reduced-motion
+ * 블록 하나로 함께 무력화된다.
+ */
+@keyframes tab-slide-in-forward {
+  from {
+    opacity: 0;
+    transform: translate3d(2rem, 0, 0);
+  }
+}
+@keyframes tab-slide-in-backward {
+  from {
+    opacity: 0;
+    transform: translate3d(-2rem, 0, 0);
+  }
+}
+
+/*
+ * fill-mode를 쓰지 않는다. 애니메이션이 끝난 뒤 transform이 남으면 이 요소가
+ * position:fixed 자식의 컨테이닝 블록이 되어(홈 지도·오버레이가 전부 fixed다)
+ * 화면이 조용히 어긋난다. 끝나면 transform이 완전히 사라져야 한다.
+ */
+[data-tab-transition="forward"] {
+  animation: tab-slide-in-forward var(--motion-duration-base) var(--ease-base);
+}
+[data-tab-transition="backward"] {
+  animation: tab-slide-in-backward var(--motion-duration-base) var(--ease-base);
 }
 
 /*

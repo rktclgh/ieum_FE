@@ -3,6 +3,7 @@ import type { CountryCode } from "@/lib/constants/countries"
 
 import { adminKo } from "./admin"
 import type { AdminMessages } from "./admin"
+import type { InstallGuideStep } from "./install-guide-step"
 
 export interface Messages {
   admin: AdminMessages
@@ -13,6 +14,8 @@ export interface Messages {
     close: string
     more: string
     retry: string
+    saveImage: string
+    saveImageFailed: string
   }
   route: {
     invalidLink: string
@@ -26,8 +29,12 @@ export interface Messages {
     description: string
     later: string
     install: string
-    iosDescription: string
     confirm: string
+    iosSteps: {
+      modern: InstallGuideStep[]
+      legacy: InstallGuideStep[]
+      unknown: InstallGuideStep[]
+    }
   }
   login: {
     logoText: string
@@ -190,7 +197,6 @@ export interface Messages {
     doneButton: string
     currentLocationLabel: string
     loadingAddress: string
-    locationUnavailable: string
     searchEmpty: string
     clearLabel: string
   }
@@ -363,8 +369,14 @@ export interface Messages {
     addFriendButton: string
     requestedButton: string
     pinAction: string
+    unpinAction: string
+    pinReplaceConfirmTitle: string
+    pinReplaceConfirmDescription: string
+    pinReplaceConfirmButton: string
+    pinFailed: string
     enableNotificationAction: string
     disableNotificationAction: string
+    notificationOffBadge: string
     deleteAction: string
     replyAction: string
     replyToLabel: (targetName: string) => string
@@ -513,6 +525,8 @@ export const ko: Messages = {
     close: "닫기",
     more: "더보기",
     retry: "다시 시도",
+    saveImage: "사진 저장",
+    saveImageFailed: "사진을 저장하지 못했어요",
   },
   route: {
     invalidLink: "유효하지 않은 링크입니다.",
@@ -522,12 +536,35 @@ export const ko: Messages = {
     backendUnavailable: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   pwa: {
-    title: "이음 앱 설치",
+    title: "Ieum을 홈 화면에 추가해보세요",
     description: "홈 화면에 추가하고 더 편하게 이용하세요.",
     later: "나중에",
     install: "설치",
-    iosDescription: "공유 버튼을 누르고 '홈 화면에 추가'를 선택하세요.",
     confirm: "확인",
+    iosSteps: {
+      modern: [
+        ["하단 더보기(", { icon: "ellipsis" }, ") 버튼을 탭하세요."],
+        ["메뉴에서 ", { icon: "share" }, ' "공유"를 누르세요.'],
+        [{ icon: "square-plus" }, ' "홈 화면에 추가"를 찾아 누르세요.'],
+        ['오른쪽 위 "추가"를 누르면 끝!'],
+      ],
+      legacy: [
+        ["하단 공유(", { icon: "share" }, ") 버튼을 탭하세요."],
+        ["메뉴에서 ", { icon: "square-plus" }, ' "홈 화면에 추가"를 찾아 눌러주세요.'],
+        ['오른쪽 위 "추가"를 누르면 끝!'],
+      ],
+      unknown: [
+        [
+          "하단의 공유(",
+          { icon: "share" },
+          ") 또는 더보기(",
+          { icon: "ellipsis" },
+          ") 버튼을 탭하세요.",
+        ],
+        ["메뉴에서 ", { icon: "square-plus" }, ' "홈 화면에 추가"를 찾아 눌러주세요.'],
+        ['오른쪽 위 "추가"를 누르면 끝!'],
+      ],
+    },
   },
   login: {
     logoText: "이음",
@@ -690,7 +727,6 @@ export const ko: Messages = {
     doneButton: "완료",
     currentLocationLabel: "내 위치",
     loadingAddress: "주소를 불러오는 중…",
-    locationUnavailable: "현재 위치를 찾지 못해 서울 시청 주변을 표시합니다.",
     searchEmpty: "검색 결과가 없어요.",
     clearLabel: "지우기",
   },
@@ -864,8 +900,14 @@ export const ko: Messages = {
     addFriendButton: "친구 요청",
     requestedButton: "요청됨",
     pinAction: "고정",
+    unpinAction: "고정 취소",
+    pinReplaceConfirmTitle: "고정 채팅방을 변경하시겠습니까?",
+    pinReplaceConfirmDescription: "고정은 채팅방 1개만 설정할 수 있어요",
+    pinReplaceConfirmButton: "변경",
+    pinFailed: "고정 설정에 실패했어요",
     enableNotificationAction: "알림 켜기",
     disableNotificationAction: "알림 끄기",
+    notificationOffBadge: "알림 꺼짐",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     replyToLabel: (targetName) => `${targetName}님에게 답장`,

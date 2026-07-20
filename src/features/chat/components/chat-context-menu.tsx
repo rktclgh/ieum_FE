@@ -3,7 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { LONG_PRESS_TRANSITION } from "@/lib/long-press-styles"
+import { LONG_PRESS_TARGET_PROPS, LONG_PRESS_TRANSITION } from "@/lib/long-press-styles"
 
 interface ChatContextMenuItem {
   icon: React.ReactNode
@@ -77,6 +77,8 @@ function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, .
           className
         )}
         style={style}
+        // 메뉴 항목 텍스트도 길게 누르면 선택되어 앱 메뉴 위에 OS 편집 메뉴가 겹친다.
+        {...LONG_PRESS_TARGET_PROPS}
         {...props}
       >
         {items.map((item, index) => (

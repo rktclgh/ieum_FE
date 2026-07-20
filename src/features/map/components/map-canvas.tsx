@@ -7,10 +7,22 @@ import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
 import { ClusteredPins } from "@/features/map/components/clustered-pins"
+import { PIN_ACCENT, PIN_COMBINED_SVG } from "@/features/map/components/map-center-pin"
 import { VectorTileLayer } from "@/features/map/components/vector-tile-layer"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
 import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
+import {
+  createProgrammaticMoveGate,
+  type ProgrammaticMoveGate,
+} from "@/features/map/lib/locate-following"
+import {
+  resolveVisibleCenterOffsetY,
+  resolveVisibleCenterPoint,
+} from "@/features/map/lib/visible-center"
+
+/** 지도가 멈춘 뒤 중심 좌표를 방출하기까지의 지연(ms). 드래그 중 재조회를 막는다. */
+const CENTER_SETTLE_DEBOUNCE_MS = 400
 
 interface MapCanvasProps {
   /** 재중심 시 이동할 좌표. 실시간 위치 갱신은 여기에 반영되어도 뷰를 움직이지 않는다(recenterKey로만 이동). */
@@ -35,21 +47,37 @@ interface MapCanvasProps {
   selectedPosition?: Coordinates | null
   /** 선택 핀 마커를 클릭했을 때 (핀 토글 제거용). 미지정이면 마커 클릭 무반응 */
   onSelectedPositionClick?: () => void
+  /** 지도가 움직이기 시작했을 때 — 화면 고정 핀 화면에서 "이동 중" 표시에 쓴다 */
+  onCenterMoveStart?: () => void
+  /** 지도가 멈춘 뒤(디바운스) 보이는 영역 중심의 좌표 */
+  onCenterSettle?: (position: Coordinates) => void
+  /**
+   * 인셋이 바뀔 때 보이는 영역 중심에 있던 좌표를 새 중심으로 옮겨 유지한다.
+   * 마운트 시에는 지도의 기하 중심(= center)을 보이는 영역 중심으로 정렬하는 효과.
+   */
+  alignCenterToVisibleArea?: boolean
+  /** 사용자가 직접 지도를 움직였을 때. 코드가 일으킨 재중심에서는 호출되지 않는다 */
+  onUserGesture?: () => void
+  /** 베이스맵 스타일 로드가 끝나 지도가 실제로 그려진 시점. 로딩 스켈레톤을 걷는 신호로 쓴다 */
+  onReady?: () => void
 }
 
-const LIVE_ACCENT = "#FC7045"
+const LIVE_ACCENT = PIN_ACCENT
 
 // Figma Location/XL (node 1716:12220): primary 색 물방울 핀 + 흰 구멍 + 회색 그림자 타원. 팁이 좌표를 가리킨다.
+// 마크업은 화면 고정 핀(MapCenterPin)과 같은 path 데이터를 공유한다.
 const selectedLocationIcon = L.divIcon({
-  html: `<svg width="40" height="47" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="12" cy="24.3" rx="4.5" ry="1.5" fill="#9AA5A8" fill-opacity="0.5"/>
-    <path d="M12 1.5C7.03 1.5 3 5.53 3 10.5c0 6.02 6.44 12.02 8.28 13.62.41.36 1.03.36 1.44 0C14.56 22.52 21 16.52 21 10.5 21 5.53 16.97 1.5 12 1.5Z" fill="${LIVE_ACCENT}"/>
-    <circle cx="12" cy="10.5" r="3.25" fill="#ffffff"/>
-  </svg>`,
+  html: PIN_COMBINED_SVG,
   className: "",
   iconSize: [40, 47],
   iconAnchor: [20, 41],
 })
+
+// Leaflet은 같은 pane의 마커를 화면 y좌표 순으로 쌓아, 남쪽(아래) 마커가 위로 온다.
+// 겹침 순서를 좌표가 아닌 역할로 고정하기 위해, 뷰포트 높이(px)보다 훨씬 큰 오프셋을 준다.
+// 장소 선택 핀 > 내 위치 > 모임/질문 핀(오프셋 0).
+const USER_LOCATION_Z_OFFSET = 10000
+const SELECTED_LOCATION_Z_OFFSET = 20000
 
 const userLocationIcon = L.divIcon({
   html: `<div style="position:relative;width:48px;height:48px">
@@ -79,6 +107,7 @@ function MapCenterUpdater({
   animate,
   topInset = 0,
   bottomInset = 0,
+  moveGate,
 }: {
   center: Coordinates | null
   recenterKey: number
@@ -86,6 +115,7 @@ function MapCenterUpdater({
   animate?: boolean
   topInset?: number
   bottomInset?: number
+  moveGate: ProgrammaticMoveGate
 }) {
   const map = useMap()
   // 최초 마운트 시점의 key를 "이미 적용됨"으로 두어, 마운트만으로는 재중심하지 않는다.
@@ -101,6 +131,10 @@ function MapCenterUpdater({
     const targetZoom = zoom ?? map.getZoom()
     appliedKeyRef.current = recenterKey
 
+    // 이 이동이 만들어낼 movestart/zoomstart를 사용자 제스처로 오인하지 않도록 구간을 연다.
+    // 구간은 아래 moveend 리스너가 닫는다.
+    moveGate.begin()
+
     // 헤더·하단 시트가 지도를 가리면 그만큼 패딩을 줘, 보이는 영역의 정중앙에 오도록 flyToBounds로 이동.
     if (topInset > 0 || bottomInset > 0) {
       map.flyToBounds(L.latLngBounds([center.lat, center.lng], [center.lat, center.lng]), {
@@ -113,7 +147,201 @@ function MapCenterUpdater({
     } else {
       map.setView([center.lat, center.lng], targetZoom)
     }
-  }, [center, recenterKey, zoom, animate, topInset, bottomInset, map])
+  }, [center, recenterKey, zoom, animate, topInset, bottomInset, map, moveGate])
+
+  // 이동이 끝나면 구간을 닫는다. 목적지가 현재 뷰와 같아 moveend가 아예 오지 않을 수도 있으므로
+  // 언마운트 시 reset으로 남은 구간을 정리한다.
+  React.useEffect(() => {
+    const closeGate = () => moveGate.end()
+    map.on("moveend", closeGate)
+    return () => {
+      map.off("moveend", closeGate)
+      moveGate.reset()
+    }
+  }, [map, moveGate])
+
+  return null
+}
+
+/**
+ * 사용자가 직접 지도를 움직였을 때만 알린다.
+ *
+ * dragstart는 사용자 드래그에서만 발생하지만 zoomstart는 flyTo에서도 발생하므로,
+ * 프로그래매틱 이동 구간에서는 무시한다.
+ */
+function MapUserGestureWatcher({
+  onUserGesture,
+  moveGate,
+}: {
+  onUserGesture: () => void
+  moveGate: ProgrammaticMoveGate
+}) {
+  const map = useMap()
+  const onUserGestureRef = React.useRef(onUserGesture)
+
+  React.useEffect(() => {
+    onUserGestureRef.current = onUserGesture
+  }, [onUserGesture])
+
+  React.useEffect(() => {
+    const handle = () => {
+      if (moveGate.isProgrammatic()) return
+      onUserGestureRef.current()
+    }
+
+    map.on("dragstart", handle)
+    map.on("zoomstart", handle)
+
+    return () => {
+      map.off("dragstart", handle)
+      map.off("zoomstart", handle)
+    }
+  }, [map, moveGate])
+
+  return null
+}
+
+/**
+ * 인셋이 바뀌어도 "보이는 영역 중심에 있던 좌표"가 그대로 중심에 남도록 지도를 픽셀 단위로 보정한다.
+ *
+ * 하단 시트는 주변 장소가 로드되면 높이가 자란다. 보정하지 않으면 화면 고정 핀의 위치가 밀리면서
+ * 사용자가 고른 지점이 목록 로드만으로 바뀌어 버린다. 좌표가 아니라 픽셀 델타로 옮기므로
+ * 핀 아래 좌표는 정의상 불변이고, 따라서 재조회도 일어나지 않는다.
+ *
+ * 최초 실행 시 이전 인셋은 0 — 즉 지도의 기하 중심이므로, 마운트 center(내 위치)를
+ * 보이는 영역 정중앙으로 끌어내리는 초기 정렬이 같은 계산으로 처리된다.
+ */
+function VisibleCenterAligner({
+  topInset = 0,
+  bottomInset = 0,
+}: {
+  topInset?: number
+  bottomInset?: number
+}) {
+  const map = useMap()
+  const appliedInsetsRef = React.useRef({ topInset: 0, bottomInset: 0 })
+
+  React.useEffect(() => {
+    const align = () => {
+      // whenReady는 map이 아직 준비되지 않았으면 콜백을 큐에 넣으므로 언마운트 뒤에 불릴 수 있다.
+      if (!isLeafletMapActive(map)) return
+
+      const size = map.getSize()
+      if (size.x <= 0 || size.y <= 0) return
+
+      const applied = appliedInsetsRef.current
+      const previousOffset = resolveVisibleCenterOffsetY({
+        width: size.x,
+        height: size.y,
+        topInset: applied.topInset,
+        bottomInset: applied.bottomInset,
+      })
+      const nextOffset = resolveVisibleCenterOffsetY({
+        width: size.x,
+        height: size.y,
+        topInset,
+        bottomInset,
+      })
+
+      appliedInsetsRef.current = { topInset, bottomInset }
+
+      const delta = nextOffset - previousOffset
+      if (Math.abs(delta) < 1) return
+
+      // 콘텐츠를 아래로 delta만큼 내리려면 뷰포트는 그 반대로 이동한다.
+      map.panBy([0, -delta], { animate: false })
+    }
+
+    // 크기가 아직 0이면 위에서 그냥 빠져나가는데, 인셋은 이 컴포넌트가 붙기 전에 이미
+    // 확정되는 경우가 많아(지도는 next/dynamic으로 늦게 마운트된다) effect가 다시 돌 계기가 없다.
+    // resize를 재시도 경로로 둬서 초기 정렬이 영영 유실되지 않게 한다.
+    map.whenReady(align)
+    map.on("resize", align)
+
+    return () => {
+      map.off("resize", align)
+    }
+  }, [topInset, bottomInset, map])
+
+  return null
+}
+
+/**
+ * 보이는 영역 중심의 좌표를 부모에 알린다. 드래그·줌 중에는 방출하지 않고,
+ * 멈춘 뒤 디바운스로 한 번만 방출해 역지오코딩 호출을 억제한다.
+ */
+function MapCenterWatcher({
+  topInset = 0,
+  bottomInset = 0,
+  onMoveStart,
+  onSettle,
+}: {
+  topInset?: number
+  bottomInset?: number
+  onMoveStart?: () => void
+  onSettle: (position: Coordinates) => void
+}) {
+  const map = useMap()
+  const onMoveStartRef = React.useRef(onMoveStart)
+  const onSettleRef = React.useRef(onSettle)
+  const insetsRef = React.useRef({ topInset, bottomInset })
+
+  React.useEffect(() => {
+    onMoveStartRef.current = onMoveStart
+    onSettleRef.current = onSettle
+    insetsRef.current = { topInset, bottomInset }
+  }, [onMoveStart, onSettle, topInset, bottomInset])
+
+  React.useEffect(() => {
+    let disposed = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    const emit = () => {
+      if (disposed || !isLeafletMapActive(map)) return
+
+      const size = map.getSize()
+      if (size.x <= 0 || size.y <= 0) return
+
+      const point = resolveVisibleCenterPoint({
+        width: size.x,
+        height: size.y,
+        ...insetsRef.current,
+      })
+      const latlng = map.containerPointToLatLng([point.x, point.y])
+      onSettleRef.current({ lat: latlng.lat, lng: latlng.lng })
+    }
+
+    const scheduleEmit = () => {
+      if (disposed) return
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => {
+        timer = null
+        emit()
+      }, CENTER_SETTLE_DEBOUNCE_MS)
+    }
+
+    const handleMoveStart = () => {
+      if (disposed) return
+      onMoveStartRef.current?.()
+    }
+
+    // 최초 좌표도 디바운스를 거친다. 마운트 직후의 인셋 정렬 이동이 같은 창에 흡수되어
+    // 정렬 전의 잘못된 중심으로 조회가 나가지 않는다.
+    map.whenReady(scheduleEmit)
+    map.on("movestart", handleMoveStart)
+    map.on("zoomstart", handleMoveStart)
+    map.on("moveend", scheduleEmit)
+    map.on("zoomend", scheduleEmit)
+
+    return () => {
+      disposed = true
+      if (timer) clearTimeout(timer)
+      map.off("movestart", handleMoveStart)
+      map.off("zoomstart", handleMoveStart)
+      map.off("moveend", scheduleEmit)
+      map.off("zoomend", scheduleEmit)
+    }
+  }, [map])
 
   return null
 }
@@ -191,10 +419,17 @@ function MapCanvas({
   livePosition,
   selectedPosition,
   onSelectedPositionClick,
+  onCenterMoveStart,
+  onCenterSettle,
+  alignCenterToVisibleArea,
+  onUserGesture,
+  onReady,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
   // React refresh/조건부 재마운트에서 이전 Leaflet map의 remove가 늦더라도 새 map은 다른 DOM 컨테이너를 쓴다.
   const [mapContainerKey] = React.useState(() => crypto.randomUUID())
+  // 재중심을 일으키는 쪽(MapCenterUpdater)과 제스처를 판정하는 쪽(MapUserGestureWatcher)이 공유한다.
+  const [moveGate] = React.useState(createProgrammaticMoveGate)
 
   return (
     <MapContainer
@@ -205,7 +440,7 @@ function MapCanvas({
       attributionControl={false}
       className={className}
     >
-      <VectorTileLayer />
+      <VectorTileLayer onReady={onReady} />
       <MapCenterUpdater
         center={center}
         recenterKey={recenterKey ?? 0}
@@ -213,7 +448,20 @@ function MapCanvas({
         animate={animateCenter}
         topInset={topInset}
         bottomInset={bottomInset}
+        moveGate={moveGate}
       />
+      {alignCenterToVisibleArea && (
+        <VisibleCenterAligner topInset={topInset} bottomInset={bottomInset} />
+      )}
+      {onCenterSettle && (
+        <MapCenterWatcher
+          topInset={topInset}
+          bottomInset={bottomInset}
+          onMoveStart={onCenterMoveStart}
+          onSettle={onCenterSettle}
+        />
+      )}
+      {onUserGesture && <MapUserGestureWatcher onUserGesture={onUserGesture} moveGate={moveGate} />}
       {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
       {pins && pins.length > 0 && (
@@ -228,11 +476,19 @@ function MapCanvas({
         <ActiveMarker
           position={[selectedPosition.lat, selectedPosition.lng]}
           icon={selectedLocationIcon}
+          zIndexOffset={SELECTED_LOCATION_Z_OFFSET}
           eventHandlers={onSelectedPositionClick ? { click: onSelectedPositionClick } : undefined}
         />
       )}
       {livePosition && (
-        <ActiveMarker position={[livePosition.lat, livePosition.lng]} icon={userLocationIcon} />
+        <ActiveMarker
+          position={[livePosition.lat, livePosition.lng]}
+          icon={userLocationIcon}
+          zIndexOffset={USER_LOCATION_Z_OFFSET}
+          // 시각적으로는 맨 위지만 클릭은 통과시킨다(leaflet.css: .leaflet-interactive가 없으면 pointer-events:none).
+          // 아래에 겹친 모임/질문 핀이 선택되도록.
+          interactive={false}
+        />
       )}
     </MapContainer>
   )

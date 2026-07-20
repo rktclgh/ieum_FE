@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 
+import { ScreenOverlayMarker } from "@/lib/overlay/screen-overlay"
 import { cn } from "@/lib/utils"
 
 /**
@@ -19,12 +20,16 @@ function BottomSheet({ children, className, ...props }: BottomSheetProps) {
   return (
     <DrawerPrimitive.Root data-slot="bottom-sheet" {...props}>
       <DrawerPrimitive.Portal>
+        {/* Portal 안쪽은 시트가 열려 있는 동안에만(퇴장 모션 포함) 마운트되므로, 여기서 등록하면
+            controlled/uncontrolled 어느 쪽으로 열리든 노출 수명과 정확히 겹친다.
+            backdrop이 `bg-black/20` 반투명이라 z-index만으로는 아래의 탭바를 가리지 못한다. */}
+        <ScreenOverlayMarker />
         <DrawerPrimitive.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/20 opacity-[calc(1_-_var(--drawer-swipe-progress))] transition-opacity duration-base ease-base data-ending-style:opacity-0 data-starting-style:opacity-0" />
         {/* 시트 안에 텍스트 입력이 있는 소비자(예: 질문 답변창)를 위해 base-ui의 내장
             키보드 회피(visualViewport 추적 + 포커스 스크롤)를 켠다. 포커스 가능한
             입력 요소가 없는 소비자에게는 이벤트가 아예 발생하지 않아 동작이 그대로다. */}
         <DrawerPrimitive.VirtualKeyboardProvider>
-          <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_env(safe-area-inset-bottom,0px))]">
+          <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_var(--safe-area-bottom))]">
             <DrawerPrimitive.Popup
               data-slot="bottom-sheet-popup"
               className={cn(

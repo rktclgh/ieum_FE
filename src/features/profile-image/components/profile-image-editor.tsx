@@ -80,7 +80,7 @@ function ProfileImageEditorContent({ imageSrc, onClose, onCropped }: ProfileImag
           onCropComplete={handleCropComplete}
         />
       </div>
-      <div className="flex items-center justify-between gap-3 bg-black px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+      <div className="flex items-center justify-between gap-3 bg-black px-4 py-4 pb-[calc(1rem+var(--safe-area-bottom))]">
         <Button variant="ghost" onClick={onClose} className="flex-1 text-white">
           {t.cropCancel}
         </Button>

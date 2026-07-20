@@ -11,7 +11,12 @@ import {
   resolveInstallMethod,
   type InstallMethod,
 } from "@/features/pwa/lib/install-availability"
-import { isIOSSafari, isStandalone } from "@/features/pwa/lib/platform"
+import {
+  isIOSSafari,
+  isStandalone,
+  readIosInstallFlow,
+  type IosInstallFlow,
+} from "@/features/pwa/lib/platform"
 import { registerServiceWorker } from "@/features/pwa/lib/register-service-worker"
 
 function useInstallPrompt() {
@@ -47,6 +52,9 @@ function useInstallPrompt() {
       })
     : "unavailable"
 
+  // method와 같은 마운트 게이트 뒤에서 읽어야 하이드레이션 불일치가 없다.
+  const flow: IosInstallFlow = isMounted ? readIosInstallFlow() : "unknown"
+
   // 노출 가능해지는 순간 열고 즉시 플래그 기록 → 무엇을 누르든 다시 안 뜸.
   React.useEffect(() => {
     if (method === "unavailable") return
@@ -61,7 +69,7 @@ function useInstallPrompt() {
     setOpen(false)
   }, [promptInstall])
 
-  return { method, isOpen, onInstall, onClose }
+  return { method, flow, isOpen, onInstall, onClose }
 }
 
 export { useInstallPrompt }

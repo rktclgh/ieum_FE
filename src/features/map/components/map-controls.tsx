@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 
 interface MapControlsProps {
   onRecenter: () => void
+  /** 지도가 내 위치에 맞춰진 상태 — 위치 아이콘을 primary 색으로 보여준다 */
+  isLocateActive?: boolean
   onCreateMeetup?: () => void
   onCreateQuestion?: () => void
   onListView?: () => void
@@ -15,6 +17,7 @@ interface MapControlsProps {
 
 function MapControls({
   onRecenter,
+  isLocateActive,
   onCreateMeetup,
   onCreateQuestion,
   onListView,
@@ -26,6 +29,8 @@ function MapControls({
     <div className={cn("flex flex-col gap-2", className)}>
       <Circle
         iconSrc="/icons/circle/location.svg"
+        activeIconSrc="/icons/circle/location-primary.svg"
+        active={isLocateActive}
         aria-label={messages.home.locateMeLabel}
         onClick={onRecenter}
       />

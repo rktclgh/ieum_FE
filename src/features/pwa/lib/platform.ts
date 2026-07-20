@@ -30,4 +30,31 @@ function isIOSSafari(): boolean {
   return isIOSUserAgent(ua, hasTouch) && !isInAppBrowserUserAgent(ua)
 }
 
-export { isStandalone, isIOSSafari, isIOSUserAgent, isInAppBrowserUserAgent }
+// iOS 26에서 Safari 하단 바가 바뀌었다. 공유 버튼이 바에서 빠지고 원형 더보기(⋯)
+// 메뉴 안으로 들어가, 그 이전 버전과 설치 경로의 첫 단계가 다르다.
+type IosInstallFlow = "modern" | "legacy" | "unknown"
+
+const IOS_MODERN_BAR_MAJOR = 26
+
+// iPhone은 "CPU iPhone OS 26_0", iPad는 "CPU OS 18_0" 형태로 버전을 싣는다.
+// iPadOS 데스크톱 모드(Macintosh 위장)는 버전을 싣지 않아 매치되지 않는다.
+function detectIosInstallFlow(userAgent: string): IosInstallFlow {
+  const match = /(?:iPhone|CPU) OS (\d+)_/.exec(userAgent)
+  if (match === null) return "unknown"
+  return Number(match[1]) >= IOS_MODERN_BAR_MAJOR ? "modern" : "legacy"
+}
+
+function readIosInstallFlow(): IosInstallFlow {
+  if (typeof window === "undefined") return "unknown"
+  return detectIosInstallFlow(window.navigator.userAgent)
+}
+
+export {
+  isStandalone,
+  isIOSSafari,
+  isIOSUserAgent,
+  isInAppBrowserUserAgent,
+  detectIosInstallFlow,
+  readIosInstallFlow,
+}
+export type { IosInstallFlow }

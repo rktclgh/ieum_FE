@@ -90,9 +90,12 @@ function useChatRoomsView(type?: RoomType) {
   // 상세 설계: docs/superpowers/specs/2026-07-15-chat-list-realtime-design.md
   const onRoomEvent = useCallback(
     (event: WsRoomEvent) => {
+      // remove는 명시적으로만 매칭한다. else로 받으면 서버가 보내는 알 수 없는 이벤트
+      // (알림/고정 변경 알림 등)가 전부 삭제로 해석돼 방이 목록에서 사라졌다가,
+      // mutation의 무효화 리페치로 다시 나타나는 깜빡임이 생긴다.
       if (event.type === "upsert") {
         upsertRoomInCaches(queryClient, event.room)
-      } else {
+      } else if (event.type === "remove") {
         removeRoomFromAllLoadedListCaches(queryClient, roomsListKey, event.roomId)
       }
     },
@@ -167,6 +170,28 @@ function useChatRoomsView(type?: RoomType) {
   }
 }
 
+// 현재 고정된 방의 id. 고정은 전체에서 1개만 허용되므로 첫 번째 항목만 본다.
+// useChatRoomsView와 달리 방별 상세/도메인 쿼리를 띄우지 않는 가벼운 훅으로, 목록 요약
+// 캐시(chatKeys.rooms())를 목록 화면과 공유한다 → 목록에서 쓸 때 추가 요청이 없다.
+//
+// 목록이 아직 도착하지 않았을 때도 pinnedRoomId는 undefined다("고정된 방 없음"과 구분되지
+// 않는다). 방 상세처럼 이 쿼리와 무관하게 렌더되는 화면에서 그대로 쓰면 교체 확인을 건너뛰고
+// 중복 고정될 수 있으므로 isLoading을 함께 돌려주고, 호출부가 로딩 중 고정을 막는다.
+function usePinnedRoomId() {
+  const session = useChatSessionAccess()
+  const query = useQuery({
+    queryKey: chatKeys.rooms(),
+    queryFn: () => getRooms(),
+    enabled: session.authenticated,
+    staleTime: 0,
+  })
+
+  return {
+    pinnedRoomId: query.data?.find((room) => room.pinned)?.roomId,
+    isLoading: query.isLoading,
+  }
+}
+
 function useChatRoom(roomId: number, session: ChatSessionAccess) {
   const query = useQuery({
     queryKey: chatKeys.room(roomId),
@@ -219,4 +244,5 @@ export {
   useChatRoom,
   useChatRoomsView,
   useChatSessionAccess,
+  usePinnedRoomId,
 }

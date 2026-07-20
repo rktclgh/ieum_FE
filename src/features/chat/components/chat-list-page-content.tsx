@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation"
 
 import { SearchBox } from "@/components/ui/search-box"
 import { Circle } from "@/components/ui/circle"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
+import { useFlipReorder } from "@/lib/hooks/use-flip-reorder"
 import { useLongPress } from "@/lib/hooks/use-long-press"
-import { useChatRoomsView } from "@/features/chat/hooks/use-chat-queries"
+import { useChatRoomsView, usePinnedRoomId } from "@/features/chat/hooks/use-chat-queries"
 import {
   useLeaveChatRoom,
   useSetNotify,
@@ -52,7 +54,7 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
   const longPress = useLongPress({ onLongPress: handleOpenMenu })
 
   return (
-    <div ref={rowRef} className="relative">
+    <div ref={rowRef} data-flip-key={chat.roomId} className="relative">
       <ChatListItem
         title={chat.title}
         avatarSrc={chat.avatarSrc}
@@ -63,6 +65,7 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
         time={chat.time}
         unreadCount={chat.unreadCount}
         pinned={chat.pinned}
+        notifyEnabled={chat.notifyEnabled}
         highlightQuery={highlightQuery}
         active={menuOpen}
         onClick={onNavigate}
@@ -87,8 +90,14 @@ function ChatListPageContent() {
   const [category, setCategory] = React.useState<ChatFilterCategory>("all")
   const [openMenuRoomId, setOpenMenuRoomId] = React.useState<number | null>(null)
   const [leaveError, setLeaveError] = React.useState<string | null>(null)
+  const [pinError, setPinError] = React.useState<string | null>(null)
+  // 다른 방이 이미 고정된 상태에서 고정을 누르면, 교체 확인을 받을 대상 방
+  const [pinReplaceTarget, setPinReplaceTarget] = React.useState<ChatListEntry | null>(null)
 
   const { entries, isLoading } = useChatRoomsView()
+  // 목록은 usePinnedRoomId와 같은 쿼리 키를 공유해 함께 resolve된다. 로딩 중에는 entries가
+  // 비어 롱프레스할 행 자체가 없으므로 상세 화면과 달리 로딩 가드가 필요 없다.
+  const { pinnedRoomId } = usePinnedRoomId()
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
   const leaveChatRoomMutation = useLeaveChatRoom()
@@ -101,23 +110,55 @@ function ChatListPageContent() {
       .sort((a, b) => Number(b.pinned) - Number(a.pinned))
   }, [entries, query, category])
 
+  // 고정 토글로 순서가 바뀌면 자리가 옮겨진 방을 이전 위치에서 새 위치로 트윈한다.
+  // 목록 순서를 바꾸는 건 고정뿐이므로 "어느 방이 고정됐는지"를 애니메이션 키로 삼고,
+  // 검색·필터로 목록 구성이 바뀔 때는 트윈 없이 기준 위치만 다시 잰다.
+  const listRef = React.useRef<HTMLDivElement>(null)
+  useFlipReorder(
+    listRef,
+    String(pinnedRoomId ?? "none"),
+    filteredChats.map((chat) => chat.roomId).join(",")
+  )
+
+  const runSetPinned = (chat: ChatListEntry, pinned: boolean, replacingRoomId?: number) => {
+    setPinError(null)
+    setPinnedMutation.mutate(
+      { roomId: chat.roomId, pinned, replacingRoomId },
+      { onError: () => setPinError(messages.chat.pinFailed) }
+    )
+  }
+
   const menuItemsFor = (chat: ChatListEntry): ChatContextMenuItem[] => {
     const canPinRoom = chat.category !== "question"
+    // 다른 방이 이미 고정돼 있으면 바로 고정하지 않고 교체 확인을 먼저 받는다
+    const needsPinReplaceConfirm =
+      !chat.pinned && pinnedRoomId !== undefined && pinnedRoomId !== chat.roomId
 
     return [
       ...(canPinRoom ? [{
-        icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
-        label: messages.chat.pinAction,
+        icon: (
+          <Image
+            src={chat.pinned ? "/icons/chat/pin-off.svg" : "/icons/chat/pin-line.svg"}
+            alt=""
+            width={24}
+            height={24}
+          />
+        ),
+        label: chat.pinned ? messages.chat.unpinAction : messages.chat.pinAction,
         disabled: setPinnedMutation.isPending,
         onClick: () => {
-          setPinnedMutation.mutate({ roomId: chat.roomId, pinned: !chat.pinned })
+          if (needsPinReplaceConfirm) {
+            setPinReplaceTarget(chat)
+          } else {
+            runSetPinned(chat, !chat.pinned)
+          }
           setOpenMenuRoomId(null)
         },
       }] : []),
     {
       icon: (
         <Image
-          src={chat.notifyEnabled ? "/icons/chat/alarm-off.svg" : "/icons/chat/alarm-on.svg"}
+          src={chat.notifyEnabled ? "/icons/chat/alarm-off.svg" : "/icons/chat/alarm-on-line.svg"}
           alt=""
           width={24}
           height={24}
@@ -159,8 +200,9 @@ function ChatListPageContent() {
 
   return (
     <>
-      <main className="app-column flex flex-col gap-2 p-4 pb-28">
-        <div className="flex items-center gap-2 py-2">
+      <main className="app-column flex flex-col gap-2 px-4 pt-[calc(1rem+var(--safe-area-top))] pb-[calc(7rem+var(--safe-area-bottom))]">
+        {/* 검색바 상단 여백은 홈(home-map-screen)과 동일하게 컨테이너 p-4(16px)만 사용한다. */}
+        <div className="flex items-center gap-2">
           <SearchBox
             placeholder={messages.chat.listSearchPlaceholder}
             className="flex-1"
@@ -181,7 +223,12 @@ function ChatListPageContent() {
             {leaveError}
           </p>
         )}
-        <div className="flex flex-col">
+        {pinError && (
+          <p role="alert" className="px-1 text-body-regular-12 text-red">
+            {pinError}
+          </p>
+        )}
+        <div ref={listRef} className="flex flex-col">
           {filteredChats.map((chat) => (
             <ChatRow
               key={chat.roomId}
@@ -201,6 +248,22 @@ function ChatListPageContent() {
           )}
         </div>
       </main>
+
+      {pinReplaceTarget && (
+        <ConfirmDialog
+          open
+          onOpenChange={(open) => !open && setPinReplaceTarget(null)}
+          title={messages.chat.pinReplaceConfirmTitle}
+          description={messages.chat.pinReplaceConfirmDescription}
+          cancelLabel={messages.chat.cancelButton}
+          confirmLabel={messages.chat.pinReplaceConfirmButton}
+          confirmDisabled={setPinnedMutation.isPending}
+          onConfirm={() => {
+            runSetPinned(pinReplaceTarget, true, pinnedRoomId)
+            setPinReplaceTarget(null)
+          }}
+        />
+      )}
     </>
   )
 }

@@ -4,10 +4,11 @@ import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
-import { Globe } from "lucide-react"
+import { Download, Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Toast } from "@/components/ui/toast"
 import {
   SidePanel,
   SidePanelBackdrop,
@@ -35,6 +36,7 @@ import { ChatRoomMemberItem } from "@/features/chat/components/chat-room-member-
 import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-danger-actions"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { useLongPress } from "@/lib/hooks/use-long-press"
+import { useSaveImage } from "@/lib/hooks/use-save-image"
 import {
   LONG_PRESS_INACTIVE,
   LONG_PRESS_LIFT_ACTIVE,
@@ -45,6 +47,7 @@ import {
   useChatMessages,
   useChatRoom,
   useChatSessionAccess,
+  usePinnedRoomId,
 } from "@/features/chat/hooks/use-chat-queries"
 import {
   useDisbandMeeting,
@@ -264,6 +267,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const queryClient = useQueryClient()
   const { messages } = useTranslation()
   const myUserId = session.userId ?? -1
+  const saveImageAction = useSaveImage()
 
   const { data: room } = useChatRoom(roomId, session)
   const {
@@ -343,6 +347,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   }, [])
 
   const markReadMutation = useMarkRead()
+  const { pinnedRoomId, isLoading: isPinnedRoomLoading } = usePinnedRoomId()
+  const [confirmPinReplaceOpen, setConfirmPinReplaceOpen] = React.useState(false)
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
   const leaveChatRoomMutation = useLeaveChatRoom()
@@ -734,6 +740,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         },
       })
     }
+    // 업로드 중인 낙관적 말풍선은 blob: 미리보기라 저장 대상이 아니다.
+    if (message.imageUrl && !message.imageUploading) {
+      const imageUrl = message.imageUrl
+      items.push({
+        icon: <Download className="size-6 text-gray-900" />,
+        label: messages.common.saveImage,
+        onClick: () => {
+          setActiveMessageId(null)
+          void saveImageAction.save(imageUrl)
+        },
+      })
+    }
     items.push(
       {
         icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
@@ -871,7 +889,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             {activeDateBadgeText && <ChatScrollDateBadge text={activeDateBadgeText} />}
           </div>
         </div>
-        <div className="relative px-4 pt-2 pb-4">
+        <div className="relative px-4 pt-2 pb-[calc(1rem+var(--safe-area-bottom))]">
           <input
             ref={cameraInputRef}
             type="file"
@@ -933,7 +951,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                 showNotificationAction={canConfigureRoomNotification}
                 showPinAction={canPinRoom}
                 notificationPending={setNotifyMutation.isPending}
-                pinPending={setPinnedMutation.isPending}
+                pinPending={setPinnedMutation.isPending || isPinnedRoomLoading}
                 notificationOn={notificationOn}
                 onToggleNotification={() => {
                   if (!session.authenticated || !canConfigureRoomNotification || setNotifyMutation.isPending) return
@@ -942,10 +960,21 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                 pinned={roomPinned}
                 onTogglePin={() => {
                   if (!session.authenticated || !canPinRoom || setPinnedMutation.isPending) return
-                  setPinnedMutation.mutate({ roomId, pinned: !roomPinned })
+                  // 방 목록이 아직 없으면 기존 고정 방을 알 수 없다. 그대로 진행하면 교체 확인을
+                  // 건너뛰고 두 방이 고정되므로, 목록이 도착할 때까지 고정을 막는다.
+                  if (isPinnedRoomLoading) return
+                  // 다른 방이 이미 고정돼 있으면 교체 확인을 먼저 받는다(고정은 전체 1개)
+                  if (!roomPinned && pinnedRoomId !== undefined && pinnedRoomId !== roomId) {
+                    setConfirmPinReplaceOpen(true)
+                    return
+                  }
+                  setPinnedMutation.mutate(
+                    { roomId, pinned: !roomPinned },
+                    { onError: () => setSocketError(messages.chat.pinFailed) }
+                  )
                 }}
               />
-              <SidePanelContent className="items-center gap-3 px-4 pb-6">
+              <SidePanelContent className="items-center gap-3 px-4 pb-[calc(1.5rem+var(--safe-area-bottom))]">
                 <ChatRoomProfile
                   title={roomTitle}
                   avatarSrc={roomAvatars.avatarSrc}
@@ -1060,6 +1089,25 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         }}
       />
       <ConfirmDialog
+        open={session.authenticated && confirmPinReplaceOpen}
+        onOpenChange={(open) => {
+          if (session.authenticated) setConfirmPinReplaceOpen(open)
+        }}
+        title={messages.chat.pinReplaceConfirmTitle}
+        description={messages.chat.pinReplaceConfirmDescription}
+        cancelLabel={messages.chat.cancelButton}
+        confirmLabel={messages.chat.pinReplaceConfirmButton}
+        confirmDisabled={setPinnedMutation.isPending}
+        onConfirm={() => {
+          if (!session.authenticated || setPinnedMutation.isPending) return
+          setPinnedMutation.mutate(
+            { roomId, pinned: true, replacingRoomId: pinnedRoomId },
+            { onError: () => setSocketError(messages.chat.pinFailed) }
+          )
+          setConfirmPinReplaceOpen(false)
+        }}
+      />
+      <ConfirmDialog
         open={session.authenticated && confirmDisbandOpen}
         onOpenChange={(open) => {
           if (session.authenticated) setConfirmDisbandOpen(open)
@@ -1099,6 +1147,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           })
         }}
       />
+      <Toast open={saveImageAction.failed} message={messages.common.saveImageFailed} />
     </>
   )
 }

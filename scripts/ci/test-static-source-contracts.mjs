@@ -15,6 +15,7 @@ const fixedStaticRoutes = [
   "admin",
   "admin/inquiries",
   "admin/knowledge",
+  "admin/knowledge/graph",
   "admin/login",
   "admin/reports",
   "admin/reports/detail",
@@ -45,6 +46,7 @@ const fixedAdminRoutes = [
   "admin",
   "admin/inquiries",
   "admin/knowledge",
+  "admin/knowledge/graph",
   "admin/login",
   "admin/reports",
   "admin/reports/detail",
@@ -162,7 +164,7 @@ function documentedRoutes(section) {
   ].sort((left, right) => left.localeCompare(right, "en"))
 }
 
-test("app tree exposes exactly the root and 27 fixed static routes", async () => {
+test("app tree exposes exactly the root and 28 fixed static routes", async () => {
   const routes = await discoverStaticAppRoutes(path.join(repoRoot, "src/app"))
 
   assert.deepEqual(routes, fixedStaticRoutes)
@@ -181,7 +183,7 @@ test("admin pages use fixed paths and stay inside the desktop boundary", async (
   assert.deepEqual(dynamicDirectories, [], "admin routes must not use runtime ID directories")
   assert.deepEqual(
     await discoverStaticAppRoutes(path.join(adminRoot, "(protected)")),
-    ["", "inquiries", "knowledge", "reports", "reports/detail", "users", "users/detail"],
+    ["", "inquiries", "knowledge", "knowledge/graph", "reports", "reports/detail", "users", "users/detail"],
   )
 
   const boundaryFile = parse(
@@ -732,9 +734,12 @@ test("chat room controls wait for canonical state and never act before room type
   assert.ok(roomPage.includes("constcanConfigureRoomNotification=room!==undefined"))
   assert.ok(roomPage.includes("showPinAction={canPinRoom}"))
   assert.ok(roomPage.includes("showNotificationAction={canConfigureRoomNotification}"))
-  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending}"))
+  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending||isPinnedRoomLoading}"))
   assert.ok(roomPage.includes("if(!session.authenticated||!canConfigureRoomNotification||setNotifyMutation.isPending)return"))
   assert.ok(roomPage.includes("if(!session.authenticated||!canPinRoom||setPinnedMutation.isPending)return"))
+  // 방 목록이 도착하기 전에는 기존 고정 방을 알 수 없다. 그대로 고정하면 교체 확인을 건너뛰고
+  // 두 방이 고정되므로, 상세 화면은 목록 로딩 중 고정을 막아야 한다(고정은 전체 1개).
+  assert.ok(roomPage.includes("if(isPinnedRoomLoading)return"))
   assert.ok(moreHeader.includes("pinPending?:boolean"))
   assert.ok(moreHeader.includes("aria-busy={pinPending}"))
   assert.ok(moreHeader.includes("disabled={pinPending}"))
@@ -742,9 +747,20 @@ test("chat room controls wait for canonical state and never act before room type
   assert.ok(listPage.includes("...(canPinRoom?[{") )
   assert.ok(listPage.includes("disabled:setPinnedMutation.isPending"))
   assert.ok(listPage.includes("disabled:leaveChatRoomMutation.isPending"))
+  // 알림 토글은 요청이 끝나기 전에 낙관적으로 반영한다. 목록 요약과 방 상세를 함께
+  // 패치해야 사이드패널 헤더(상세를 읽음)가 리페치 도착 전까지 이전 상태로 남지 않는다.
+  // 실패 시엔 스냅샷으로 되돌리고, onSettled의 무효화가 서버 상태로 수렴시킨다.
   assert.match(
     mutations,
-    /functionuseSetNotify\(\).*?onSuccess:\(_data,\{roomId\}\)=>Promise\.all\(/s,
+    /functionuseSetNotify\(\).*?onMutate:async\(\{roomId,enabled\}\)=>\{.*?patchRoomsInLoadedListCaches\(.*?patchRoomDetails\(/s,
+  )
+  assert.match(
+    mutations,
+    /functionuseSetNotify\(\).*?onError:.*?restoreRoomsListCaches\(.*?restoreRoomDetails\(/s,
+  )
+  assert.match(
+    mutations,
+    /functionuseSetNotify\(\).*?onSettled:\(_data,_error,\{roomId\}\)=>\{queryClient\.invalidateQueries/s,
   )
 })
 

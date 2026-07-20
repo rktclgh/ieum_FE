@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Toast } from "@/components/ui/toast"
 import { useSubmitInquiry } from "@/features/my/hooks/use-my-mutations"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -51,7 +52,7 @@ function InquiryContent() {
         onLeadingClick={() => router.back()}
       />
 
-      <div className="flex w-full flex-col gap-6 px-4 pt-3 pb-32">
+      <div className="flex w-full flex-col gap-6 px-4 pt-3 pb-[calc(8rem+var(--safe-area-bottom))]">
         <textarea
           value={content}
           onChange={(event) => setContent(event.target.value)}
@@ -69,7 +70,7 @@ function InquiryContent() {
         </ul>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-2">
+      <div className="fixed inset-x-0 bottom-0 z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))]">
         <div className="flex w-full items-center gap-2">
           <button
             type="button"
@@ -93,21 +94,8 @@ function InquiryContent() {
         <span className="h-1 w-[135px] rounded-full bg-gray-900" />
       </div>
 
-      {submitted && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+var(--keyboard-inset,0px))] z-50 app-column flex justify-center px-4">
-          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
-            {messages.my.inquiry.success}
-          </div>
-        </div>
-      )}
-
-      {submitInquiry.isError && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+var(--keyboard-inset,0px))] z-50 app-column flex justify-center px-4">
-          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
-            {messages.my.inquiry.error}
-          </div>
-        </div>
-      )}
+      <Toast open={submitted} message={messages.my.inquiry.success} />
+      <Toast open={submitInquiry.isError} message={messages.my.inquiry.error} />
     </main>
   )
 }

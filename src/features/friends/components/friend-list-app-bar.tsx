@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
+import { APP_BAR_SAFE_TOP } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface FriendListAppBarProps extends React.ComponentProps<"div"> {
@@ -16,7 +17,12 @@ function FriendListAppBar({ className, onBack, ...props }: FriendListAppBarProps
   return (
     <div
       data-slot="friend-list-app-bar"
-      className={cn("relative flex h-[62px] w-full items-center justify-between p-4", className)}
+      // issue #279: safe-area 패딩이 붙으면 고정 높이는 내용물을 눌러버리므로 min-h로 바꿔 아래로 자란다.
+      className={cn(
+        "relative flex min-h-[62px] w-full items-center justify-between px-4 pb-4",
+        APP_BAR_SAFE_TOP,
+        className
+      )}
       {...props}
     >
       <button

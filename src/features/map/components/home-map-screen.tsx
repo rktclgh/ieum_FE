@@ -15,6 +15,7 @@ import {
   DEFAULT_MAP_CENTER,
   MAP_BOTTOM_INSET,
   MAP_LOCATION_WAIT_MS,
+  MAP_READY_MAX_WAIT_MS,
   MAP_TOP_INSET,
 } from "@/features/map/constants/map"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
@@ -26,6 +27,10 @@ import {
   isSamePosition,
   isWithinLocationSyncThreshold,
 } from "@/features/map/lib/last-known-location-sync"
+import {
+  isLocateFollowingVisible,
+  reduceLocateFollowing,
+} from "@/features/map/lib/locate-following"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
@@ -35,7 +40,7 @@ import { CreateQuestionScreen } from "@/features/question/components/create-ques
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
 import { useMe } from "@/features/session/hooks/use-me"
-import { FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
+import { APP_BAR_SAFE_TOP, FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -46,6 +51,13 @@ const MapCanvas = dynamic(
   () => import("@/features/map/components/map-canvas").then((mod) => mod.MapCanvas),
   { ssr: false, loading: () => <div className="absolute inset-0 bg-gray-100" /> }
 )
+
+// dynamic()은 컴포넌트가 실제로 렌더될 때 청크를 받기 시작한다. 지도는 GPS를 확보한 뒤에야
+// 렌더되므로, 그대로 두면 "측위 대기 → 그제서야 maplibre 청크 내려받기"가 직렬로 이어진다.
+// 마운트 즉시 같은 모듈을 import해 두 작업을 병렬로 돌린다(번들러가 dynamic과 같은 청크로 합쳐 중복 요청은 없다).
+function preloadMapCanvas() {
+  void import("@/features/map/components/map-canvas")
+}
 
 // UI 카테고리("meetup") → 핀 API type("meeting") 매핑. "all"은 필터 없음(undefined).
 function toPinType(category: Category): PinType | undefined {
@@ -78,6 +90,10 @@ function HomeMapScreen() {
   const [bounds, setBounds] = React.useState<MapBounds | null>(null)
   const [isSearchOpen, setSearchOpen] = React.useState(false)
   const [isListOpen, setListOpen] = React.useState(false)
+  // 위치 버튼으로 지도를 내 위치에 맞춘 상태인지. 아이콘 색으로만 드러난다.
+  // 내 위치를 잃은 동안은 표시할 근거가 없어 좌표 유무와 함께 파생시킨다.
+  const [followRequested, setFollowRequested] = React.useState(false)
+  const isFollowingMe = isLocateFollowingVisible(followRequested, position)
 
   // 검색으로 고른 핀은 이미 label/address를 가지므로 역지오코딩하지 않는다.
   // 좌표만 있는(지도 클릭) 핀에만 역지오코딩해 검색바 라벨과 프리필용 주소를 얻는다.
@@ -202,16 +218,29 @@ function HomeMapScreen() {
     return () => clearTimeout(timer)
   }, [status])
 
+  // 측위를 기다리는 동안 지도 청크를 미리 받아 둔다(위 preloadMapCanvas 참고).
+  React.useEffect(preloadMapCanvas, [])
+
   const canShowMap = isMounted && (status !== "loading" || waitedForLocation)
 
-  // 지도가 마운트되면 스켈레톤을 즉시 걷어내지 않고, 지도 위에 겹친 채 페이드아웃한 뒤 언마운트한다.
+  // 베이스맵이 실제로 그려졌는지. 이 신호 전에 스켈레톤을 걷으면 스타일·타일을 받는 동안
+  // 도로망도 없는 빈 회색 배경(dynamic import 폴백)이 그대로 드러난다.
+  // 스타일 요청이 실패하면 onReady가 영영 오지 않으므로 상한을 두고 강제로 진행시킨다.
+  const [isMapReady, setMapReady] = React.useState(false)
+  React.useEffect(() => {
+    if (!canShowMap || isMapReady) return
+    const timer = setTimeout(() => setMapReady(true), MAP_READY_MAX_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [canShowMap, isMapReady])
+
+  // 지도가 준비되면 스켈레톤을 즉시 걷어내지 않고, 지도 위에 겹친 채 페이드아웃한 뒤 언마운트한다.
   // 스켈레톤→지도로 뚝 끊기지 않고 부드럽게 크로스페이드된다.
   const [showSkeleton, setShowSkeleton] = React.useState(true)
   React.useEffect(() => {
-    if (!canShowMap) return
+    if (!isMapReady) return
     const timer = setTimeout(() => setShowSkeleton(false), SKELETON_FADE_MS)
     return () => clearTimeout(timer)
-  }, [canShowMap])
+  }, [isMapReady])
 
   // 최초 위치 확보 1회: 내 위치로 자동 중심. 지도는 canShowMap 시점의 최선 좌표(내 위치 또는 기본 좌표)로
   // 마운트되므로, 정상 경로(위치를 알고 마운트)에선 같은 좌표라 이동이 없고,
@@ -223,9 +252,11 @@ function HomeMapScreen() {
     recenterTo(position)
   }, [position, recenterTo])
 
-  // 위치 버튼: 현재 내 위치를 화면 정중앙으로.
+  // 위치 버튼: 현재 내 위치를 화면 정중앙으로. 좌표가 없으면 아무 일도 하지 않으므로 상태도 켜지 않는다.
   const handleRecenter = React.useCallback(() => {
-    if (position) recenterTo(position)
+    if (!position) return
+    recenterTo(position)
+    setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-to-me" }))
   }, [position, recenterTo])
 
   return (
@@ -238,8 +269,16 @@ function HomeMapScreen() {
           topInset={MAP_TOP_INSET}
           bottomInset={MAP_BOTTOM_INSET}
           className="absolute inset-0 z-0 size-full"
-          onMapClick={(position) => setSelectedLocation({ lat: position.lat, lng: position.lng })}
+          onMapClick={(position) => {
+            // 다른 지점을 골랐으므로 더는 "내 위치 기준"이 아니다.
+            setSelectedLocation({ lat: position.lat, lng: position.lng })
+            setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-elsewhere" }))
+          }}
+          onUserGesture={() =>
+            setFollowRequested((state) => reduceLocateFollowing(state, { type: "user-gesture" }))
+          }
           onBoundsChange={setBounds}
+          onReady={() => setMapReady(true)}
           pins={pins}
           onPinClick={handlePinClick}
           livePosition={position}
@@ -252,12 +291,13 @@ function HomeMapScreen() {
         <MapLoadingSkeleton
           className={cn(
             "z-[1] transition-opacity duration-500 ease-out",
-            canShowMap ? "opacity-0" : "opacity-100"
+            isMapReady ? "opacity-0" : "opacity-100"
           )}
         />
       ) : null}
 
-      <div className="relative z-10 app-column flex flex-col gap-2 p-4">
+      {/* 홈 지도는 AppBar 없이 툴바를 직접 그린다 — 상단 safe-area도 직접 받는다 (issue #279). */}
+      <div className={`relative z-10 app-column flex flex-col gap-2 px-4 pb-4 ${APP_BAR_SAFE_TOP}`}>
         <div className="flex items-center gap-2">
           <MapSearchBar
             onFocus={() => setSearchOpen(true)}
@@ -281,13 +321,14 @@ function HomeMapScreen() {
         {/* 모임 만들기·질문하기 모두 상태 기반 풀스크린 오버레이로 연결한다. */}
         <MapControls
           onRecenter={handleRecenter}
+          isLocateActive={isFollowingMe}
           onCreateMeetup={() => setCreateMeetupOpen(true)}
           onCreateQuestion={() => setCreateQuestionOpen(true)}
           onListView={() => setListOpen(true)}
           className={`pointer-events-auto absolute right-4 ${FAB_BOTTOM_WITH_TABBAR} flex flex-col gap-2`}
         />
 
-        <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-3" />
+        <MapAttribution className="pointer-events-auto absolute bottom-[calc(5rem+var(--safe-area-bottom))] left-3" />
       </div>
 
       <SearchOverlay
@@ -301,7 +342,9 @@ function HomeMapScreen() {
             label: place.name,
             address: place.address,
           })
+          // 검색 결과는 내 위치가 아니므로 팔로잉 표시를 끈다.
           recenterTo({ lat: place.lat, lng: place.lng })
+          setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-elsewhere" }))
           setSearchOpen(false)
         }}
         onOpenMeetup={(id) => setSelectedMeetingId(id)}

@@ -53,7 +53,7 @@ function buildPinIcon(pin: MapPin): L.DivIcon {
 
   return L.divIcon({
     html: `<div style="${OUTER}">${inner}</div>`,
-    className: "",
+    className: "map-circle-marker", // 원 밖 모서리가 클릭을 가로채지 않게(#302)
     iconSize: [44, 44],
     iconAnchor: [22, 22], // 꼬리가 없으므로 원의 중심을 좌표에 고정
     popupAnchor: [0, -22],

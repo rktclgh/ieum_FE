@@ -160,11 +160,13 @@ function EditProfileForm({ user }: { user: MeUser }) {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     if (!canSave) return
+    // 저장 후에도 화면을 떠나지 않는다. 갱신된 me 캐시로 payload 가 비어
+    // 저장 버튼이 자동으로 비활성화되는 것이 완료 피드백 역할을 한다.
     if (!hasTextChanges) {
-      router.back()
+      setHasProfileImageChange(false)
       return
     }
-    updateMe.mutate(payload, { onSuccess: () => router.back() })
+    updateMe.mutate(payload, { onSuccess: () => setHasProfileImageChange(false) })
   }
 
   return (
@@ -175,7 +177,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
         onLeadingClick={() => router.back()}
       />
 
-      <div className="flex w-full flex-col gap-3 px-4 pb-32 [&>[data-slot=explanation]]:-mt-3">
+      <div className="flex w-full flex-col gap-3 px-4 pb-[calc(8rem+var(--safe-area-bottom))] [&>[data-slot=explanation]]:-mt-3">
         <div className="flex w-full flex-col items-center py-4">
           <ProfileAvatarButton
             previewUrl={resolveFileUrl(user.profileImageUrl) ?? null}
@@ -280,7 +282,7 @@ function EditProfileForm({ user }: { user: MeUser }) {
         {errorCode && <Explanation variant="error" text={errorCode} />}
       </div>
 
-      <div className="fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-2">
+      <div className="fixed inset-x-0 bottom-0 z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))]">
         <Button
           type="submit"
           variant="primary"

@@ -36,7 +36,7 @@ function ChatRoomMoreHeader({
   return (
     <div
       data-slot="chat-room-more-header"
-      className={cn("flex w-full shrink-0 items-center justify-between border-b border-gray-50 p-4", className)}
+      className={cn("flex w-full shrink-0 items-center justify-between border-b border-gray-50 px-4 pb-4 pt-[calc(1rem+var(--safe-area-top))]", className)}
       {...props}
     >
       <button
@@ -75,7 +75,7 @@ function ChatRoomMoreHeader({
           {showPinAction && (
             <button
               type="button"
-              aria-label={messages.chat.pinAction}
+              aria-label={pinned ? messages.chat.unpinAction : messages.chat.pinAction}
               aria-pressed={pinned}
               aria-busy={pinPending}
               disabled={pinPending}
