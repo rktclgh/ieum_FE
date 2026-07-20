@@ -65,6 +65,24 @@ export const viewport: Viewport = {
   // issue #279 — 상태바·홈 인디케이터 영역까지 앱이 그려지는 edge-to-edge.
   // 이게 있어야 globals.css의 `--safe-area-*`(env(safe-area-inset-*))가 0px이 아닌 실제 값이 된다.
   viewportFit: "cover",
+  /*
+   * 가상 키보드가 뜨면 **레이아웃 뷰포트 자체를 키보드 위로 줄인다**(기본값 resizes-visual이 아니라).
+   *
+   * 기본 resizes-visual에서는 키보드가 visual viewport만 줄이고 layout viewport(=`position: fixed`
+   * 기준)는 그대로다. 그러면 iOS는 포커스된 입력창을 보이려 문서를 강제 스크롤하는데, 키보드가
+   * 열린 동안 iOS는 `fixed`를 문서와 함께 끌어올려 화면 상단 고정 요소가 위로 사라진다.
+   * 증상 두 가지가 같은 뿌리였다: 채팅방 상단 AppBar가 키보드만큼 밀려 올라가고(카카오톡은 고정),
+   * 홈 지도 위 질문 바텀시트가 키보드 아래로 숨는다.
+   *
+   * resizes-content는 키보드가 layout viewport를 줄이므로 `fixed inset-0` 셸과 `fixed bottom` 시트가
+   * 키보드 위 영역으로 함께 축소된다 — AppBar는 최상단에 고정되고 시트는 키보드 바로 위에 뜬다.
+   *
+   * `--keyboard-inset`(use-keyboard-inset.ts)과 base-ui의 `--drawer-keyboard-inset`은
+   * "layout − visual" 간격을 재는데, resizes-content가 그 간격을 0으로 만들어 관련 `pb-[...]`
+   * 보정이 자연히 무해한 0으로 degrade한다(이중 보정 없음). interactive-widget 미지원 브라우저는
+   * 이 값을 무시하고 종전 resizes-visual 경로를 그대로 타므로 점진적 개선이다.
+   */
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
