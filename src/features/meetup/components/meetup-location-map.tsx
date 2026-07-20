@@ -5,6 +5,7 @@ import * as React from "react"
 import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { CrossfadeIcon } from "@/components/ui/crossfade-icon"
 import type { Place } from "@/features/map/api/place-search-api"
 import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton"
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
@@ -15,6 +16,10 @@ import {
 } from "@/features/map/lib/initial-map-center"
 import { usePlaceSearch } from "@/features/map/hooks/use-place-search"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
+import {
+  isLocateFollowingVisible,
+  reduceLocateFollowing,
+} from "@/features/map/lib/locate-following"
 import { LocationListItem } from "@/features/meetup/components/location-list-item"
 import { FAB_BOTTOM_FLOOR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
@@ -58,6 +63,9 @@ function MeetupLocationMap({
   // 첫 GPS terminal 결과가 error면 늦게 도착한 좌표가 fallback viewport와 다른 장소를
   // 자동 선택하지 않게 한다. 사용자가 GPS 버튼을 누를 때만 현재 위치 입력을 다시 허용한다.
   const [hasExplicitRecenter, setHasExplicitRecenter] = React.useState(false)
+  // GPS 버튼으로 지도를 내 위치에 맞춘 상태인지. 아이콘 색으로만 드러난다.
+  // 내 위치를 잃은 동안은 표시할 근거가 없어 좌표 유무와 함께 파생시킨다.
+  const [followRequested, setFollowRequested] = React.useState(false)
   // 지도 뷰 이동은 recenterKey(nonce)로만 구동한다. position은 실시간 갱신되어도 뷰를 움직이지 않는다.
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
@@ -84,7 +92,10 @@ function MeetupLocationMap({
     if (!position) return
     setHasExplicitRecenter(true)
     recenterTo(position)
+    setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-to-me" }))
   }
+
+  const isFollowingMe = isLocateFollowingVisible(followRequested, position)
 
   const { data: reverseGeocoded } = useReverseGeocode(target)
   const currentAddress = reverseGeocoded?.fullAddress ?? reverseGeocoded?.shortLabel ?? null
@@ -125,7 +136,14 @@ function MeetupLocationMap({
           topInset={topInset}
           bottomInset={bottomInset}
           className="absolute inset-0 z-0 size-full"
-          onMapClick={setClicked}
+          onMapClick={(next) => {
+            // 다른 지점을 골랐으므로 더는 "내 위치 기준"이 아니다.
+            setClicked(next)
+            setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-elsewhere" }))
+          }}
+          onUserGesture={() =>
+            setFollowRequested((state) => reduceLocateFollowing(state, { type: "user-gesture" }))
+          }
           livePosition={position}
           selectedPosition={clicked}
         />
@@ -167,11 +185,16 @@ function MeetupLocationMap({
           <button
             type="button"
             aria-label={t.currentLocationLabel}
+            aria-pressed={isFollowingMe}
             onClick={handleGps}
             disabled={!position}
             className={`pointer-events-auto absolute ${FAB_BOTTOM_FLOOR} right-4 flex size-[46px] items-center justify-center rounded-full bg-white shadow-[0px_2px_2px_0px_rgba(0,0,0,0.1)] disabled:cursor-not-allowed disabled:opacity-40`}
           >
-            <Image src="/icons/circle/location.svg" alt="" width={24} height={24} className="size-6" />
+            <CrossfadeIcon
+              baseSrc="/icons/circle/location.svg"
+              activeSrc="/icons/circle/location-primary.svg"
+              active={isFollowingMe}
+            />
           </button>
         </div>
 
