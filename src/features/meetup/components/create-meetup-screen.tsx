@@ -73,8 +73,7 @@ function CreateMeetupScreenContent({
   const [titleFocused, setTitleFocused] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  const cameraInputRef = React.useRef<HTMLInputElement>(null)
-  const albumInputRef = React.useRef<HTMLInputElement>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -216,8 +215,7 @@ function CreateMeetupScreenContent({
           />
           <MeetupImagePicker
             image={form.image?.preview ?? null}
-            onTakePhoto={() => cameraInputRef.current?.click()}
-            onChooseAlbum={() => albumInputRef.current?.click()}
+            onPick={() => fileInputRef.current?.click()}
             onRemove={() => form.setImage(null)}
             className="absolute bottom-[15px] left-[15px]"
           />
@@ -240,17 +238,9 @@ function CreateMeetupScreenContent({
         </button>
       </div>
 
-      {/* 숨긴 파일 입력 (사진 찍기 / 앨범에서 고르기) */}
+      {/* 숨긴 파일 입력 (OS 시트에서 사진 보관함/사진 찍기 선택) */}
       <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      <input
-        ref={albumInputRef}
+        ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
