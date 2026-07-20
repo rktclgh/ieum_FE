@@ -17,8 +17,10 @@ pnpm exec tsc \
   --rootDir . \
   --outDir "$tmp_dir" \
   scripts/ci/test-initial-map-center.ts \
-  scripts/ci/test-geolocation-initial-status.ts
+  scripts/ci/test-geolocation-initial-status.ts \
+  scripts/ci/test-visible-center.ts
 
 node --test "$tmp_dir/scripts/ci/test-initial-map-center.js"
 node --test "$tmp_dir/scripts/ci/test-geolocation-initial-status.js"
+node --test "$tmp_dir/scripts/ci/test-visible-center.js"
 node --test scripts/ci/test-map-source-contracts.mjs
