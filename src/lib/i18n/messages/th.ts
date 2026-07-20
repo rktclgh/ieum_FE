@@ -390,7 +390,6 @@ export const th: Messages = {
     pinFailed: "ตั้งค่าปักหมุดไม่สำเร็จ",
     enableNotificationAction: "เปิดการแจ้งเตือน",
     disableNotificationAction: "ปิดการแจ้งเตือน",
-    notificationOffBadge: "ปิดการแจ้งเตือนอยู่",
     deleteAction: "ลบ",
     replyAction: "ตอบกลับ",
     replyToLabel: (targetName) => `ตอบกลับ ${targetName}`,

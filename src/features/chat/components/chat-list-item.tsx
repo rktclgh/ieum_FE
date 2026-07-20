@@ -4,7 +4,6 @@ import * as React from "react"
 import Image from "next/image"
 
 import { cn } from "@/lib/utils"
-import { useTranslation } from "@/lib/i18n/use-translation"
 import {
   LONG_PRESS_INACTIVE,
   LONG_PRESS_SURFACE_ACTIVE,
@@ -26,8 +25,6 @@ interface ChatListItemProps extends React.ComponentProps<"button"> {
   time?: string
   unreadCount?: number
   pinned?: boolean
-  /** false면 제목 우측에 알림 꺼짐 표식을 노출 */
-  notifyEnabled?: boolean
   /** 롱프레스 메뉴가 열려 있는 동안 딤 오버레이 위로 떠 보이도록 강조 */
   active?: boolean
 }
@@ -45,11 +42,9 @@ function ChatListItem({
   time,
   unreadCount,
   pinned,
-  notifyEnabled,
   active,
   ...props
 }: ChatListItemProps) {
-  const { messages } = useTranslation()
   const hasUnread = Boolean(unreadCount && unreadCount > 0)
   const titleRef = React.useRef<HTMLSpanElement>(null)
   const [titleTruncated, setTitleTruncated] = React.useState(false)
@@ -102,15 +97,6 @@ function ChatListItem({
             >
               <HighlightedText text={title} query={highlightQuery} />
             </span>
-            {notifyEnabled === false && (
-              <Image
-                src="/icons/chat/alarm-off.svg"
-                alt={messages.chat.notificationOffBadge}
-                width={20}
-                height={20}
-                className="size-5 shrink-0"
-              />
-            )}
           </div>
           {memberCount !== undefined && (
             <span

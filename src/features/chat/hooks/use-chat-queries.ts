@@ -43,7 +43,10 @@ const roomsListKey = [...chatKeys.all, "rooms"] as const
 // WS 델타는 이미 로드된 캐시만 패치한다. 아직 초기 fetch 중(data===undefined)인 쿼리에
 // setQueryData로 [room]/[]를 채우면 로딩 상태를 건너뛰고 불완전한 목록이 잠깐 노출된다
 // → getQueryData로 기존 데이터가 있는 캐시만 갱신하고, 없으면 진행 중/다음 fetch에 맡긴다.
-// upsert: 필터(type)에 속하는 캐시에는 기존 항목 제거 후 최상단에 삽입(활동 있는 방을 위로),
+// upsert는 새 메시지뿐 아니라 알림/고정 등 방 요약이 바뀔 때도 온다. lastMessage(메시지
+// 활동)가 그대로인 upsert까지 최상단으로 옮기면, 알림 토글 직후 방이 맨 위로 튀었다가
+// mutation의 무효화 리페치로 원래 자리로 되돌아오는 깜빡임이 생긴다(#351).
+// → 실제 새 메시지가 온 경우에만 최상단으로 옮기고, 플래그만 바뀐 경우는 제자리 patch한다.
 // 속하지 않는 캐시에서는(방 유형 변경 등 예외) 제거만 한다.
 function upsertRoomInCaches(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -55,11 +58,26 @@ function upsertRoomInCaches(
 
     const keyType = query.queryKey[2] as RoomType | "all" | undefined
     const belongs = keyType === "all" || keyType === room.roomType
+    if (!belongs) {
+      queryClient.setQueryData<ChatRoomSummaryResponse[]>(
+        query.queryKey,
+        oldData.filter((r) => r.roomId !== room.roomId)
+      )
+      continue
+    }
+
+    const existing = oldData.find((r) => r.roomId === room.roomId)
+    const hasNewActivity = existing?.lastMessage?.messageId !== room.lastMessage?.messageId
+    if (existing && !hasNewActivity) {
+      queryClient.setQueryData<ChatRoomSummaryResponse[]>(
+        query.queryKey,
+        oldData.map((r) => (r.roomId === room.roomId ? room : r))
+      )
+      continue
+    }
+
     const without = oldData.filter((r) => r.roomId !== room.roomId)
-    queryClient.setQueryData<ChatRoomSummaryResponse[]>(
-      query.queryKey,
-      belongs ? [room, ...without] : without
-    )
+    queryClient.setQueryData<ChatRoomSummaryResponse[]>(query.queryKey, [room, ...without])
   }
 }
 
