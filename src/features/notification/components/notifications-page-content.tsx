@@ -41,9 +41,13 @@ function NotificationsPageContent() {
   const [deleteMode, setDeleteMode] = React.useState(false)
   const [confirmDeleteAll, setConfirmDeleteAll] = React.useState(false)
 
+  // messages 를 의존성에 넣어야 언어를 바꿨을 때 이미 받아둔 알림 문구까지 다시 렌더된다.
   const entries = React.useMemo(
-    () => (query.data?.pages.flatMap((page) => page.items) ?? []).map(adaptNotification),
-    [query.data]
+    () =>
+      (query.data?.pages.flatMap((page) => page.items) ?? []).map((item) =>
+        adaptNotification(item, messages)
+      ),
+    [query.data, messages]
   )
 
   // 무한스크롤 센티널 — 화면 하단에 노출되면 다음 페이지를 가져온다.

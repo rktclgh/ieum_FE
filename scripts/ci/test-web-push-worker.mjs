@@ -13,6 +13,7 @@ function loadWorker(windowClients = [], options = {}) {
     cookieStoreAvailable = true,
     existingSubscription = null,
     resubscribeResult = null,
+    transformWorkerSource = (source) => source,
   } = options
 
   const listeners = new Map()
@@ -58,8 +59,12 @@ function loadWorker(windowClients = [], options = {}) {
     }
   }
 
-  vm.runInNewContext(
+  const source = transformWorkerSource(
     fs.readFileSync(path.join(repoRoot, "public/sw.js"), "utf8"),
+  )
+
+  vm.runInNewContext(
+    source,
     { self, URL },
     { filename: "public/sw.js" },
   )
@@ -280,6 +285,70 @@ test("deep-links a friend-request durable notification to the friends page", asy
   })
 
   assert.equal(worker.shown[0].options.data.url, "/friends/?highlightUserId=77")
+})
+
+test("substitutes parameters in a localized notification title", async () => {
+  const worker = loadWorker([], {
+    transformWorkerSource(source) {
+      const original = '"notification.answer.created": ["새 답변", "회원님의 질문에 답변이 달렸어요"],'
+      const replacement = '"notification.answer.created": ["{nickname}님의 새 답변", "회원님의 질문에 답변이 달렸어요"],'
+      assert.ok(source.includes(original), "테스트용 제목 템플릿 치환 대상이 없다")
+      return source.replace(original, replacement)
+    },
+  })
+
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 50,
+    type: "question",
+    title: "서버 제목",
+    body: "서버 본문",
+    messageKey: "notification.answer.created",
+    messageParams: { nickname: "민지" },
+    refId: 9,
+    answerIsAi: false,
+  })
+
+  assert.equal(worker.shown[0].title, "민지님의 새 답변")
+})
+
+test("uses the server fallback when a friend request has no nickname", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 48,
+    type: "friend",
+    title: "친구 요청",
+    body: "누군가 친구 요청을 보냈어요",
+    messageKey: "notification.friend.request",
+    messageParams: {},
+    refId: 77,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].title, "친구 요청")
+  assert.equal(worker.shown[0].options.body, "누군가 친구 요청을 보냈어요")
+})
+
+test("uses the server fallback when a nearby question has no subject", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 49,
+    type: "question",
+    title: "주변 새 질문",
+    body: "오늘 저녁 뭐 먹을까요?",
+    messageKey: "notification.radius.question",
+    messageParams: {},
+    refId: 9,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].title, "주변 새 질문")
+  assert.equal(worker.shown[0].options.body, "오늘 저녁 뭐 먹을까요?")
 })
 
 test("opens the friends page without a highlight when a friend notification lacks a refId", async () => {

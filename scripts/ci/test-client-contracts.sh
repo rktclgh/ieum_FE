@@ -8,6 +8,7 @@ bash scripts/ci/test-transport-contracts.sh
 bash scripts/ci/test-chat-avatar-contracts.sh
 bash scripts/ci/test-web-push-contracts.sh
 node --test scripts/ci/test-web-push-worker.mjs
+node --test scripts/ci/test-notification-copy-contracts.mjs
 bash scripts/ci/test-admin-contracts.sh
 bash scripts/ci/test-map-contracts.sh
 bash scripts/ci/test-meetup-contracts.sh
@@ -39,6 +40,7 @@ node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/chat/lib/context-menu-geometry.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/question/lib/question-adapter.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/question/lib/answer-acceptance.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/notification/lib/notification-adapter.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/notification/lib/notification-link.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/navigation/lib/tab-transition.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/lib/files/save-image.test.ts

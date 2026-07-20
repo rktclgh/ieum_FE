@@ -517,6 +517,33 @@ export const th: Messages = {
     unreadBadgeLabel: (count) => `การแจ้งเตือนที่ยังไม่อ่าน ${count} รายการ`,
     aiAnswerSourceLabel: "คำตอบจาก AI",
     humanAnswerSourceLabel: "คำตอบจากผู้ใช้",
+    copy: {
+      "notification.answer.created": {
+        title: "คำตอบใหม่",
+        body: () => "มีคนตอบคำถามของคุณแล้ว",
+      },
+      "notification.answer.accepted": {
+        title: "คำตอบได้รับเลือก",
+        body: () => "คำตอบของคุณได้รับเลือกแล้ว",
+      },
+      "notification.friend.request": {
+        title: "คำขอเป็นเพื่อน",
+        body: (params) => `${params.nickname ?? ""} ส่งคำขอเป็นเพื่อนถึงคุณ`,
+      },
+      // subject คือหัวข้อคำถาม/นัดพบที่ผู้ใช้เขียนเอง ส่งผ่านตามเดิมโดยไม่แปล
+      "notification.radius.question": {
+        title: "คำถามใหม่ใกล้คุณ",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.radius.meeting": {
+        title: "นัดพบใหม่ใกล้คุณ",
+        body: (params) => params.subject ?? "",
+      },
+      "notification.chat.message": {
+        title: "ข้อความใหม่",
+        body: () => "คุณมีข้อความแชทใหม่",
+      },
+    },
   },
   translate: {
     menuLabel: "แปล",
