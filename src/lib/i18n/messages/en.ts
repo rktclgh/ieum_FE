@@ -230,6 +230,8 @@ export const en: Messages = {
     acceptedLabel: "Accepted",
     openChatWithAuthor: (nickname: string) => `Open private chat with ${nickname}`,
     acceptedDialogTitle: "Answer accepted",
+    chatPromptDialogTitle: (nickname: string) =>
+      `Start a private chat with ${nickname}?`,
     acceptedDialogDescription: (nickname: string) =>
       `If you have more questions for ${nickname}, you can keep asking in a private chat.`,
     acceptedDialogClose: "Close",
