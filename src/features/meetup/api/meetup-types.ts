@@ -19,6 +19,8 @@ type MeetingMyStatus = "host" | "joined" | "left" | "kicked" | "none"
 interface MeetingScheduleInput {
   startsAt: string
   endsAt?: string
+  // 날짜만 정해진 모임. 서버가 아직 모르면 무시되고 startsAt 만 저장된다 (ieum_BE#201).
+  isTimeUndecided?: boolean
 }
 
 type RecurrenceFrequency = "daily" | "weekly" | "monthly"

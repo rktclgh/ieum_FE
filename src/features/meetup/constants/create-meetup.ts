@@ -34,6 +34,15 @@ export interface MeetupTimeValue {
   minute: number
 }
 
+/** 시간 선택의 명시적 결과. 시간 미정일 때는 실제 시각을 함께 보낼 수 없다. */
+export type MeetupTimeSelection =
+  | { time: null; isTimeUndecided: true }
+  | { time: MeetupTimeValue | null; isTimeUndecided: false }
+
+// 시간 미정 모임도 startsAt 은 미래여야 서버가 받는다. 자정을 쓰면 오늘 날짜를 고른 순간
+// 과거가 되어 VALIDATION_FAILED 가 나므로, 하루의 끝을 대표 시각으로 보낸다.
+export const TIME_UNDECIDED_PLACEHOLDER: MeetupTimeValue = { period: "pm", hour: 11, minute: 59 }
+
 /** 해당 연·월의 마지막 날 (28~31) */
 export function daysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate()

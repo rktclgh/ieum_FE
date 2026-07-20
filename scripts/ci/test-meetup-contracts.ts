@@ -15,20 +15,86 @@ const date = { year: 2026, month: 7, day: 16 }
 const time = { period: "pm" as const, hour: 7, minute: 0 }
 
 test("날짜 미정 모임은 schedule을 만들지 않는다", () => {
-  assert.equal(buildMeetupSchedule({ date: null, time: null, isDateUndecided: true }), undefined)
-  assert.equal(hasCompleteMeetupSchedule({ date: null, time: null, isDateUndecided: true }), true)
+  assert.equal(
+    buildMeetupSchedule({ date: null, time: null, isDateUndecided: true, isTimeUndecided: false }),
+    undefined
+  )
+  assert.equal(
+    hasCompleteMeetupSchedule({ date: null, time: null, isDateUndecided: true, isTimeUndecided: false }),
+    true
+  )
 })
 
 test("실제 날짜와 시간은 KST schedule을 만든다", () => {
-  assert.deepEqual(buildMeetupSchedule({ date, time, isDateUndecided: false }), {
+  assert.deepEqual(buildMeetupSchedule({ date, time, isDateUndecided: false, isTimeUndecided: false }), {
     startsAt: "2026-07-16T19:00:00+09:00",
   })
-  assert.equal(hasCompleteMeetupSchedule({ date, time, isDateUndecided: false }), true)
+  assert.equal(
+    hasCompleteMeetupSchedule({ date, time, isDateUndecided: false, isTimeUndecided: false }),
+    true
+  )
 })
 
 test("명시적 날짜 미정 없이 날짜 또는 시간이 빠지면 일정 조건이 불완전하다", () => {
-  assert.equal(hasCompleteMeetupSchedule({ date, time: null, isDateUndecided: false }), false)
-  assert.equal(buildMeetupSchedule({ date: null, time, isDateUndecided: false }), undefined)
+  assert.equal(
+    hasCompleteMeetupSchedule({ date, time: null, isDateUndecided: false, isTimeUndecided: false }),
+    false
+  )
+  assert.equal(
+    buildMeetupSchedule({ date: null, time, isDateUndecided: false, isTimeUndecided: false }),
+    undefined
+  )
+})
+
+test("시간 미정 모임은 선택한 날짜의 23:59와 플래그를 함께 보낸다", () => {
+  assert.deepEqual(
+    buildMeetupSchedule({ date, time: null, isDateUndecided: false, isTimeUndecided: true }),
+    { startsAt: "2026-07-16T23:59:00+09:00", isTimeUndecided: true }
+  )
+  assert.equal(
+    hasCompleteMeetupSchedule({ date, time: null, isDateUndecided: false, isTimeUndecided: true }),
+    true
+  )
+})
+
+test("날짜 미정이 시간 미정보다 우선해 schedule을 생략한다", () => {
+  assert.equal(
+    buildMeetupSchedule({ date: null, time: null, isDateUndecided: true, isTimeUndecided: true }),
+    undefined
+  )
+})
+
+test("시간 미정은 날짜 없이 성립하지 않는다", () => {
+  assert.equal(
+    hasCompleteMeetupSchedule({ date: null, time: null, isDateUndecided: false, isTimeUndecided: true }),
+    false
+  )
+  assert.equal(
+    buildMeetupSchedule({ date: null, time: null, isDateUndecided: false, isTimeUndecided: true }),
+    undefined
+  )
+})
+
+test("실제 시각이 있으면 시간 미정 플래그를 싣지 않는다", () => {
+  assert.deepEqual(buildMeetupSchedule({ date, time, isDateUndecided: false, isTimeUndecided: false }), {
+    startsAt: "2026-07-16T19:00:00+09:00",
+  })
+})
+
+test("시간 미정 요청은 schedule에 플래그를 포함한다", () => {
+  const request: CreateMeetingRequest = {
+    title: "시간 미정 모임",
+    type: "one_time",
+    location: {
+      lat: 37.5665,
+      lng: 126.978,
+      address: "서울특별시 중구 세종대로 110",
+    },
+    maxMembers: 99,
+    schedule: { startsAt: "2026-07-16T23:59:00+09:00", isTimeUndecided: true },
+  }
+
+  assert.equal(request.schedule?.isTimeUndecided, true)
 })
 
 test("날짜 미정 요청은 schedule 없이 만들고 null 일정 응답을 받는다", () => {
