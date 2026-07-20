@@ -23,9 +23,7 @@ import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import {
-  createLastKnownLocationPayload,
-  isSamePosition,
-  isWithinLocationSyncThreshold,
+  createLastKnownLocationSyncCoordinator,
 } from "@/features/map/lib/last-known-location-sync"
 import {
   isLocateFollowingVisible,
@@ -123,69 +121,31 @@ function HomeMapScreen() {
   const pins = pinData?.pins
 
   const lastLocationSyncUserIdRef = React.useRef<number | null>(null)
-  const lastSyncedPositionRef = React.useRef<Coordinates | null>(null)
-  const inFlightPositionRef = React.useRef<Coordinates | null>(null)
-  const queuedPositionRef = React.useRef<Coordinates | null>(null)
-  // 계정 전환 뒤 이전 계정 요청의 completion이 새 계정 좌표 상태를 건드리지 못하게 막는다.
-  const locationSyncGenerationRef = React.useRef(0)
-  const sendLastKnownLocation = React.useCallback(function sendLastKnownLocation(
-    nextPosition: Coordinates,
-    syncGeneration: number
-  ) {
-    if (syncGeneration !== locationSyncGenerationRef.current) return
-
-    const payload = createLastKnownLocationPayload({
-      isAuthenticated: true,
-      position: nextPosition,
-      lastSyncedPosition: lastSyncedPositionRef.current,
-    })
-
-    if (!payload) return
-
-    inFlightPositionRef.current = nextPosition
-    updateLocation(payload, {
-      onSuccess: () => {
-        if (syncGeneration !== locationSyncGenerationRef.current) return
-        if (!queuedPositionRef.current && isSamePosition(nextPosition, inFlightPositionRef.current)) {
-          lastSyncedPositionRef.current = nextPosition
-        }
-      },
-      onSettled: () => {
-        if (syncGeneration !== locationSyncGenerationRef.current) return
-        if (isSamePosition(nextPosition, inFlightPositionRef.current)) {
-          inFlightPositionRef.current = null
-        }
-
-        const queuedPosition = queuedPositionRef.current
-        queuedPositionRef.current = null
-        if (queuedPosition) {
-          sendLastKnownLocation(queuedPosition, syncGeneration)
-        }
-      },
-    })
-  }, [updateLocation])
+  const updateLocationRef = React.useRef(updateLocation)
+  const locationSyncCoordinatorRef = React.useRef<ReturnType<
+    typeof createLastKnownLocationSyncCoordinator
+  > | null>(null)
 
   React.useEffect(() => {
+    updateLocationRef.current = updateLocation
+    const locationSyncCoordinator =
+      locationSyncCoordinatorRef.current ??
+      (locationSyncCoordinatorRef.current = createLastKnownLocationSyncCoordinator(
+        (payload, callbacks) => {
+          updateLocationRef.current(payload, callbacks)
+        }
+      ))
+
     const userId = me?.userId ?? null
     if (lastLocationSyncUserIdRef.current !== userId) {
       lastLocationSyncUserIdRef.current = userId
-      lastSyncedPositionRef.current = null
-      inFlightPositionRef.current = null
-      queuedPositionRef.current = null
-      locationSyncGenerationRef.current += 1
+      locationSyncCoordinator.reset()
     }
 
     if (!me || !position) return
 
-    if (inFlightPositionRef.current) {
-      if (!isWithinLocationSyncThreshold(position, inFlightPositionRef.current)) {
-        queuedPositionRef.current = position
-      }
-      return
-    }
-
-    sendLastKnownLocation(position, locationSyncGenerationRef.current)
-  }, [me, position, sendLastKnownLocation])
+    locationSyncCoordinator.sync(position, true)
+  }, [me, position, updateLocation])
 
   const handlePinClick = React.useCallback((pin: MapPin) => {
     // 핀 종류별로 그 대상(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.

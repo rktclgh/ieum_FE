@@ -14,6 +14,16 @@ interface LastKnownLocationPayloadInput {
   lastSyncedPosition: LocationSyncCoordinates | null
 }
 
+interface LastKnownLocationSyncCallbacks {
+  onSuccess: () => void
+  onSettled: () => void
+}
+
+type LastKnownLocationSyncDispatch = (
+  payload: LastKnownLocationRequest,
+  callbacks: LastKnownLocationSyncCallbacks
+) => void
+
 const LOCATION_SYNC_DISTANCE_THRESHOLD_METERS = 100
 const EARTH_RADIUS_METERS = 6_371_000
 
@@ -67,9 +77,68 @@ function createLastKnownLocationPayload({
   }
 }
 
+function createLastKnownLocationSyncCoordinator(dispatch: LastKnownLocationSyncDispatch) {
+  let lastSyncedPosition: LocationSyncCoordinates | null = null
+  let inFlightPosition: LocationSyncCoordinates | null = null
+  let queuedPosition: LocationSyncCoordinates | null = null
+  let generation = 0
+
+  function send(nextPosition: LocationSyncCoordinates, syncGeneration: number) {
+    if (syncGeneration !== generation) return
+
+    const payload = createLastKnownLocationPayload({
+      isAuthenticated: true,
+      position: nextPosition,
+      lastSyncedPosition,
+    })
+
+    if (!payload) return
+
+    inFlightPosition = nextPosition
+    dispatch(payload, {
+      onSuccess: () => {
+        if (syncGeneration !== generation || !isSamePosition(nextPosition, inFlightPosition)) return
+        lastSyncedPosition = nextPosition
+      },
+      onSettled: () => {
+        if (syncGeneration !== generation) return
+        if (isSamePosition(nextPosition, inFlightPosition)) {
+          inFlightPosition = null
+        }
+
+        const nextQueuedPosition = queuedPosition
+        queuedPosition = null
+        if (nextQueuedPosition) {
+          send(nextQueuedPosition, syncGeneration)
+        }
+      },
+    })
+  }
+
+  return {
+    reset() {
+      lastSyncedPosition = null
+      inFlightPosition = null
+      queuedPosition = null
+      generation += 1
+    },
+    sync(position: LocationSyncCoordinates | null, isAuthenticated: boolean) {
+      if (!isAuthenticated || !position) return
+
+      if (inFlightPosition) {
+        queuedPosition = position
+        return
+      }
+
+      send(position, generation)
+    },
+  }
+}
+
 export {
   LOCATION_SYNC_DISTANCE_THRESHOLD_METERS,
   createLastKnownLocationPayload,
+  createLastKnownLocationSyncCoordinator,
   isSamePosition,
   isWithinLocationSyncThreshold,
 }

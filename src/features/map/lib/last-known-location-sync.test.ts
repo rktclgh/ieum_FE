@@ -2,7 +2,23 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import { createLastKnownLocationPayload } from "./last-known-location-sync.ts"
+import { createLastKnownLocationPayload, createLastKnownLocationSyncCoordinator } from "./last-known-location-sync.ts"
+
+function createSyncRecorder() {
+  const requests: Array<{
+    payload: { longitude: number; latitude: number }
+    callbacks: {
+      onSuccess: () => void
+      onSettled: () => void
+    }
+  }> = []
+
+  const coordinator = createLastKnownLocationSyncCoordinator((payload, callbacks) => {
+    requests.push({ payload, callbacks })
+  })
+
+  return { coordinator, requests }
+}
 
 test("creates the users/me/location payload for an authenticated GPS position", () => {
   assert.deepEqual(
@@ -71,4 +87,52 @@ test("creates a payload when GPS moves beyond the last synced location threshold
       longitude: 126.978,
     }
   )
+})
+
+test("records the successful in-flight coordinate even when a newer coordinate is queued", () => {
+  const { coordinator, requests } = createSyncRecorder()
+
+  coordinator.sync({ lat: 37.5665, lng: 126.978 }, true)
+  coordinator.sync({ lat: 37.5683, lng: 126.978 }, true)
+
+  assert.equal(requests.length, 1)
+  requests[0].callbacks.onSuccess()
+  requests[0].callbacks.onSettled()
+  assert.equal(requests.length, 2)
+
+  requests[1].callbacks.onSettled()
+  coordinator.sync({ lat: 37.5665, lng: 126.978 }, true)
+
+  assert.equal(requests.length, 2)
+})
+
+test("replaces the queued in-flight coordinate with the latest point and applies threshold after settling", () => {
+  const { coordinator, requests } = createSyncRecorder()
+
+  coordinator.sync({ lat: 37.5665, lng: 126.978 }, true)
+  coordinator.sync({ lat: 37.5683, lng: 126.978 }, true)
+  coordinator.sync({ lat: 37.56695, lng: 126.978 }, true)
+
+  assert.equal(requests.length, 1)
+  requests[0].callbacks.onSuccess()
+  requests[0].callbacks.onSettled()
+
+  assert.equal(requests.length, 1)
+})
+
+test("reset ignores stale callbacks and clears the old queued coordinate", () => {
+  const { coordinator, requests } = createSyncRecorder()
+
+  coordinator.sync({ lat: 37.5665, lng: 126.978 }, true)
+  coordinator.sync({ lat: 37.5683, lng: 126.978 }, true)
+
+  assert.equal(requests.length, 1)
+  coordinator.reset()
+  requests[0].callbacks.onSuccess()
+  requests[0].callbacks.onSettled()
+
+  assert.equal(requests.length, 1)
+
+  coordinator.sync({ lat: 37.5665, lng: 126.978 }, true)
+  assert.equal(requests.length, 2)
 })
