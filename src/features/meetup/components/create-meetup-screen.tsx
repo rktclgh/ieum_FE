@@ -160,7 +160,7 @@ function CreateMeetupScreenContent({
         {/* 제목 — 15자(공백 포함)까지만 입력 가능, 포커스 시 카운터 표시 */}
         <Input
           value={form.title}
-          onChange={(event) => form.setTitle(event.target.value)}
+          onValueChange={form.setTitle}
           maxLength={TITLE_MAX_LENGTH}
           showCounter
           placeholder={t.titlePlaceholder}

@@ -13,6 +13,15 @@ interface InputProps extends React.ComponentProps<"input"> {
    * 포커스가 없으면 평소처럼 지우기 버튼이 나온다.
    */
   showCounter?: boolean
+  /**
+   * 값만 받는 변경 콜백. maxLength가 있으면 그 길이로 잘라서 넘긴다.
+   *
+   * 브라우저 maxLength는 한글(IME) 조합 중에는 걸리지 않아 상한을 넘긴 글자가 새어 들어오는데,
+   * 그 방어를 호출부마다 `value.slice(0, max)`로 반복하지 않도록 여기로 모았다.
+   * DOM 값을 직접 고치면 React가 커밋 때 해주는 커서 위치 복원이 깨져 편집 중 커서가 맨 뒤로
+   * 튀므로, 자른 값은 상태 갱신 경로로만 흘려보낸다.
+   */
+  onValueChange?: (value: string) => void
 }
 
 function Input({
@@ -25,6 +34,7 @@ function Input({
   disabled,
   maxLength,
   onChange,
+  onValueChange,
   onFocus,
   onBlur,
   ...props
@@ -53,13 +63,10 @@ function Input({
         value={value}
         maxLength={maxLength}
         onChange={(event) => {
-          // 브라우저 maxLength는 한글(IME) 조합 중에는 걸리지 않아 상한을 넘긴 글자가 새어 들어온다.
-          // 호출부마다 slice하지 않아도 되도록 여기서 잘라 넘긴다.
-          if (maxLength != null && event.target.value.length > maxLength) {
-            event.target.value = event.target.value.slice(0, maxLength)
-          }
-          if (!isControlled) setUncontrolledLength(event.target.value.length)
+          const next = event.target.value
+          if (!isControlled) setUncontrolledLength(Math.min(next.length, maxLength ?? next.length))
           onChange?.(event)
+          onValueChange?.(maxLength != null ? next.slice(0, maxLength) : next)
         }}
         onFocus={(event) => {
           setFocused(true)

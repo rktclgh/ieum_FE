@@ -13,6 +13,8 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
   bottomSlot?: React.ReactNode
   /** 래퍼가 아닌 textarea 자체에 붙일 클래스 (높이는 래퍼 className으로 준다) */
   textareaClassName?: string
+  /** 값만 받는 변경 콜백. maxLength가 있으면 그 길이로 잘라서 넘긴다 — Input.onValueChange와 동일. */
+  onValueChange?: (value: string) => void
 }
 
 /**
@@ -28,6 +30,7 @@ function Textarea({
   bottomSlot,
   maxLength,
   onChange,
+  onValueChange,
   ...props
 }: TextareaProps) {
   return (
@@ -48,11 +51,9 @@ function Textarea({
         )}
         maxLength={maxLength}
         onChange={(event) => {
-          // Input과 같은 이유 — 한글(IME) 조합 중에는 브라우저 maxLength가 걸리지 않는다.
-          if (maxLength != null && event.target.value.length > maxLength) {
-            event.target.value = event.target.value.slice(0, maxLength)
-          }
+          const next = event.target.value
           onChange?.(event)
+          onValueChange?.(maxLength != null ? next.slice(0, maxLength) : next)
         }}
         {...props}
       />

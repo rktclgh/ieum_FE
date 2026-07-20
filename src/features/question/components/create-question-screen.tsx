@@ -252,7 +252,7 @@ function CreateQuestionForm({
         {/* 제목 — 모임과 동일하게 15자까지, 포커스 시 카운터 표시 */}
         <Input
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onValueChange={setTitle}
           maxLength={TITLE_MAX_LENGTH}
           showCounter
           placeholder={t.titlePlaceholder}
@@ -273,7 +273,7 @@ function CreateQuestionForm({
         {/* 내용 + 사진 첨부 */}
         <Textarea
           value={content}
-          onChange={(event) => setContent(event.target.value)}
+          onValueChange={setContent}
           maxLength={CONTENT_MAX_LENGTH}
           placeholder={t.contentPlaceholder}
           className="h-[18.75rem] shrink-0"
