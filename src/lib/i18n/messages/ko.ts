@@ -14,6 +14,8 @@ export interface Messages {
     close: string
     more: string
     retry: string
+    saveImage: string
+    saveImageFailed: string
   }
   route: {
     invalidLink: string
@@ -376,6 +378,7 @@ export interface Messages {
     pinFailed: string
     enableNotificationAction: string
     disableNotificationAction: string
+    notificationOffBadge: string
     deleteAction: string
     replyAction: string
     replyToLabel: (targetName: string) => string
@@ -524,6 +527,8 @@ export const ko: Messages = {
     close: "닫기",
     more: "더보기",
     retry: "다시 시도",
+    saveImage: "사진 저장",
+    saveImageFailed: "사진을 저장하지 못했어요",
   },
   route: {
     invalidLink: "유효하지 않은 링크입니다.",
@@ -906,6 +911,7 @@ export const ko: Messages = {
     pinFailed: "고정 설정에 실패했어요",
     enableNotificationAction: "알림 켜기",
     disableNotificationAction: "알림 끄기",
+    notificationOffBadge: "알림 꺼짐",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     replyToLabel: (targetName) => `${targetName}님에게 답장`,

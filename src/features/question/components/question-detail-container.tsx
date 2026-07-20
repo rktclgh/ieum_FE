@@ -23,6 +23,8 @@ interface QuestionDetailContainerProps {
    * - "card": 본문만 렌더한다. 겹친 핀 캐러셀처럼 바깥에 이미 BottomSheet 이 있을 때 쓴다.
    */
   variant?: "sheet" | "card"
+  /** card 모드에서 이 카드가 노출 중인지(캐러셀의 활성 슬라이드 여부). 카드로 그대로 전달한다. */
+  active?: boolean
 }
 
 /**
@@ -33,6 +35,7 @@ function QuestionDetailContainer({
   questionId,
   onClose,
   variant = "sheet",
+  active,
 }: QuestionDetailContainerProps) {
   const router = useRouter()
   const { messages } = useTranslation()
@@ -95,7 +98,7 @@ function QuestionDetailContainer({
       {variant === "card" ? (
         // 로딩 중에도 슬라이드 높이를 유지해, 캐러셀 스크롤이 도착 후 튀지 않게 한다.
         summary ? (
-          <QuestionDetailCard question={summary} {...cardProps} />
+          <QuestionDetailCard question={summary} active={active} {...cardProps} />
         ) : (
           <div className="h-56 w-full animate-pulse rounded-2xl bg-gray-100" />
         )

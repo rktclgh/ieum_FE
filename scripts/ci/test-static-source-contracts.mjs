@@ -747,9 +747,20 @@ test("chat room controls wait for canonical state and never act before room type
   assert.ok(listPage.includes("...(canPinRoom?[{") )
   assert.ok(listPage.includes("disabled:setPinnedMutation.isPending"))
   assert.ok(listPage.includes("disabled:leaveChatRoomMutation.isPending"))
+  // 알림 토글은 요청이 끝나기 전에 낙관적으로 반영한다. 목록 요약과 방 상세를 함께
+  // 패치해야 사이드패널 헤더(상세를 읽음)가 리페치 도착 전까지 이전 상태로 남지 않는다.
+  // 실패 시엔 스냅샷으로 되돌리고, onSettled의 무효화가 서버 상태로 수렴시킨다.
   assert.match(
     mutations,
-    /functionuseSetNotify\(\).*?onSuccess:\(_data,\{roomId\}\)=>Promise\.all\(/s,
+    /functionuseSetNotify\(\).*?onMutate:async\(\{roomId,enabled\}\)=>\{.*?patchRoomsInLoadedListCaches\(.*?patchRoomDetails\(/s,
+  )
+  assert.match(
+    mutations,
+    /functionuseSetNotify\(\).*?onError:.*?restoreRoomsListCaches\(.*?restoreRoomDetails\(/s,
+  )
+  assert.match(
+    mutations,
+    /functionuseSetNotify\(\).*?onSettled:\(_data,_error,\{roomId\}\)=>\{queryClient\.invalidateQueries/s,
   )
 })
 

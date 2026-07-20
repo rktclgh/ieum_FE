@@ -129,12 +129,24 @@ function getCoincidentClusterPins(index: PinClusterIndex, clusterId: number): Ma
   const pins = getClusterLeaves(index, clusterId)
   if (pins.length === 0) return null
 
-  const lats = pins.map((pin) => pin.location.lat)
-  const lngs = pins.map((pin) => pin.location.lng)
-  const latSpan = Math.max(...lats) - Math.min(...lats)
-  const lngSpan = Math.max(...lngs) - Math.min(...lngs)
+  // 한 번의 순회로 min/max를 구한다. Math.max(...array)는 클러스터가 커지면(수만 개)
+  // 인자 개수 제한에 걸려 RangeError로 터지고, map으로 중간 배열도 두 개 만들게 된다.
+  let minLat = Number.POSITIVE_INFINITY
+  let maxLat = Number.NEGATIVE_INFINITY
+  let minLng = Number.POSITIVE_INFINITY
+  let maxLng = Number.NEGATIVE_INFINITY
 
-  if (latSpan > COINCIDENT_EPSILON_DEG || lngSpan > COINCIDENT_EPSILON_DEG) return null
+  for (const pin of pins) {
+    const { lat, lng } = pin.location
+    if (lat < minLat) minLat = lat
+    if (lat > maxLat) maxLat = lat
+    if (lng < minLng) minLng = lng
+    if (lng > maxLng) maxLng = lng
+  }
+
+  if (maxLat - minLat > COINCIDENT_EPSILON_DEG || maxLng - minLng > COINCIDENT_EPSILON_DEG) {
+    return null
+  }
   return pins
 }
 

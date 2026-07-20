@@ -10,6 +10,8 @@ export const vi: Messages = {
     close: "Đóng",
     more: "Thêm",
     retry: "Thử lại",
+    saveImage: "Lưu ảnh",
+    saveImageFailed: "Không thể lưu ảnh",
   },
   route: {
     invalidLink: "Liên kết này không hợp lệ.",
@@ -393,6 +395,7 @@ export const vi: Messages = {
     pinFailed: "Không thể cập nhật ghim.",
     enableNotificationAction: "Bật thông báo",
     disableNotificationAction: "Tắt thông báo",
+    notificationOffBadge: "Đã tắt thông báo",
     deleteAction: "Xóa",
     replyAction: "Trả lời",
     replyToLabel: (targetName) => `Trả lời ${targetName}`,

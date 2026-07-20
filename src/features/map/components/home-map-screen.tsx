@@ -16,6 +16,7 @@ import {
   DEFAULT_MAP_CENTER,
   MAP_BOTTOM_INSET,
   MAP_LOCATION_WAIT_MS,
+  MAP_READY_MAX_WAIT_MS,
   MAP_TOP_INSET,
 } from "@/features/map/constants/map"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
@@ -44,6 +45,13 @@ const MapCanvas = dynamic(
   () => import("@/features/map/components/map-canvas").then((mod) => mod.MapCanvas),
   { ssr: false, loading: () => <div className="absolute inset-0 bg-gray-100" /> }
 )
+
+// dynamic()은 컴포넌트가 실제로 렌더될 때 청크를 받기 시작한다. 지도는 GPS를 확보한 뒤에야
+// 렌더되므로, 그대로 두면 "측위 대기 → 그제서야 maplibre 청크 내려받기"가 직렬로 이어진다.
+// 마운트 즉시 같은 모듈을 import해 두 작업을 병렬로 돌린다(번들러가 dynamic과 같은 청크로 합쳐 중복 요청은 없다).
+function preloadMapCanvas() {
+  void import("@/features/map/components/map-canvas")
+}
 
 // UI 카테고리("meetup") → 핀 API type("meeting") 매핑. "all"은 필터 없음(undefined).
 function toPinType(category: Category): PinType | undefined {
@@ -139,16 +147,29 @@ function HomeMapScreen() {
     return () => clearTimeout(timer)
   }, [status])
 
+  // 측위를 기다리는 동안 지도 청크를 미리 받아 둔다(위 preloadMapCanvas 참고).
+  React.useEffect(preloadMapCanvas, [])
+
   const canShowMap = isMounted && (status !== "loading" || waitedForLocation)
 
-  // 지도가 마운트되면 스켈레톤을 즉시 걷어내지 않고, 지도 위에 겹친 채 페이드아웃한 뒤 언마운트한다.
+  // 베이스맵이 실제로 그려졌는지. 이 신호 전에 스켈레톤을 걷으면 스타일·타일을 받는 동안
+  // 도로망도 없는 빈 회색 배경(dynamic import 폴백)이 그대로 드러난다.
+  // 스타일 요청이 실패하면 onReady가 영영 오지 않으므로 상한을 두고 강제로 진행시킨다.
+  const [isMapReady, setMapReady] = React.useState(false)
+  React.useEffect(() => {
+    if (!canShowMap || isMapReady) return
+    const timer = setTimeout(() => setMapReady(true), MAP_READY_MAX_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [canShowMap, isMapReady])
+
+  // 지도가 준비되면 스켈레톤을 즉시 걷어내지 않고, 지도 위에 겹친 채 페이드아웃한 뒤 언마운트한다.
   // 스켈레톤→지도로 뚝 끊기지 않고 부드럽게 크로스페이드된다.
   const [showSkeleton, setShowSkeleton] = React.useState(true)
   React.useEffect(() => {
-    if (!canShowMap) return
+    if (!isMapReady) return
     const timer = setTimeout(() => setShowSkeleton(false), SKELETON_FADE_MS)
     return () => clearTimeout(timer)
-  }, [canShowMap])
+  }, [isMapReady])
 
   // 최초 위치 확보 1회: 내 위치로 자동 중심. 지도는 canShowMap 시점의 최선 좌표(내 위치 또는 기본 좌표)로
   // 마운트되므로, 정상 경로(위치를 알고 마운트)에선 같은 좌표라 이동이 없고,
@@ -186,6 +207,7 @@ function HomeMapScreen() {
             setFollowRequested((state) => reduceLocateFollowing(state, { type: "user-gesture" }))
           }
           onBoundsChange={setBounds}
+          onReady={() => setMapReady(true)}
           pins={pins}
           onPinClick={handlePinClick}
           onPinStackClick={setStackedPins}
@@ -199,7 +221,7 @@ function HomeMapScreen() {
         <MapLoadingSkeleton
           className={cn(
             "z-[1] transition-opacity duration-500 ease-out",
-            canShowMap ? "opacity-0" : "opacity-100"
+            isMapReady ? "opacity-0" : "opacity-100"
           )}
         />
       ) : null}

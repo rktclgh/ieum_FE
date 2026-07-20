@@ -10,6 +10,8 @@ export const ja: Messages = {
     close: "閉じる",
     more: "その他",
     retry: "再試行",
+    saveImage: "写真を保存",
+    saveImageFailed: "写真を保存できませんでした",
   },
   route: {
     invalidLink: "このリンクは無効です。",
@@ -392,6 +394,7 @@ export const ja: Messages = {
     pinFailed: "固定の設定に失敗しました",
     enableNotificationAction: "通知をオンにする",
     disableNotificationAction: "通知をオフにする",
+    notificationOffBadge: "通知オフ",
     deleteAction: "削除",
     replyAction: "返信",
     replyToLabel: (targetName) => `${targetName}さんに返信`,

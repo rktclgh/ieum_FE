@@ -10,6 +10,8 @@ export const en: Messages = {
     close: "Close",
     more: "More",
     retry: "Retry",
+    saveImage: "Save photo",
+    saveImageFailed: "Couldn't save the photo",
   },
   route: {
     invalidLink: "This link is invalid.",
@@ -393,6 +395,7 @@ export const en: Messages = {
     pinFailed: "Couldn't update the pin.",
     enableNotificationAction: "Turn on notifications",
     disableNotificationAction: "Turn off notifications",
+    notificationOffBadge: "Notifications off",
     deleteAction: "Delete",
     replyAction: "Reply",
     replyToLabel: (targetName) => `Replying to ${targetName}`,

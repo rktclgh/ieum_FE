@@ -10,6 +10,8 @@ export const zh: Messages = {
     close: "关闭",
     more: "更多",
     retry: "重试",
+    saveImage: "保存照片",
+    saveImageFailed: "无法保存照片",
   },
   route: {
     invalidLink: "此链接无效。",
@@ -386,6 +388,7 @@ export const zh: Messages = {
     pinFailed: "置顶设置失败",
     enableNotificationAction: "开启通知",
     disableNotificationAction: "关闭通知",
+    notificationOffBadge: "通知已关闭",
     deleteAction: "删除",
     replyAction: "回复",
     replyToLabel: (targetName) => `回复 ${targetName}`,

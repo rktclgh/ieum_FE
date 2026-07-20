@@ -46,26 +46,44 @@ function PinStackSheet({ pins, onClose }: PinStackSheetProps) {
   const trackRef = React.useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = React.useState(0)
 
-  // 스크롤 위치에서 화면 중앙에 가장 가까운 슬라이드를 활성으로 삼는다.
+  // 한 번이라도 창에 들어온 슬라이드는 계속 마운트해 둔다(지연 마운트).
+  // 언마운트하면 질문 카드에 입력하던 답변 텍스트와 첨부 사진이 스와이프만으로 날아간다.
+  // 조회는 마운트될 때 한 번 나가고 폴링이 없으므로, 계속 두어도 요청이 늘지 않는다.
+  //
+  // 방문 이력을 Set이 아니라 [min, max] 범위로 들고 있는 이유: 스와이프는 연속이라 방문 구간이
+  // 항상 이어져 있고, 범위는 상태로 두면 렌더 중 ref를 건드리지 않아도 된다(react-hooks/refs).
+  const [mountedRange, setMountedRange] = React.useState(() => ({
+    min: 0,
+    max: Math.min(RENDER_WINDOW, pins.length - 1),
+  }))
+
+  // 스크롤 위치에서 활성 슬라이드를 구한다.
+  //
+  // 앞쪽 스페이서 폭이 정확히 (트랙폭 - 슬라이드폭)/2 이므로, i번 슬라이드가 중앙에 설 때
+  // scrollLeft는 정확히 i * 슬라이드폭이 된다(스페이서가 상쇄된다). 따라서 나눗셈 한 번이면
+  // 되고, 슬라이드를 전부 훑으며 offsetLeft를 읽지 않아도 된다 — 스크롤 이벤트는 매우 잦아
+  // 슬라이드 수만큼 레이아웃을 강제로 읽으면 저사양 기기에서 버벅인다.
   // snap이 끝나기 전에도 인덱스 표시가 따라오도록 스크롤마다 계산하되, 값이 바뀔 때만 렌더한다.
   const handleScroll = () => {
     const track = trackRef.current
     if (!track) return
 
-    const trackCenter = track.scrollLeft + track.clientWidth / 2
-    const slides = track.querySelectorAll<HTMLElement>("[data-pin-stack-slide]")
+    const firstSlide = track.querySelector<HTMLElement>("[data-pin-stack-slide]")
+    const slideWidth = firstSlide?.offsetWidth ?? 0
+    if (slideWidth <= 0) return
 
-    let nearest = 0
-    let nearestDistance = Number.POSITIVE_INFINITY
-    slides.forEach((slide, index) => {
-      const distance = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - trackCenter)
-      if (distance < nearestDistance) {
-        nearestDistance = distance
-        nearest = index
-      }
-    })
+    const nearest = Math.min(
+      pins.length - 1,
+      Math.max(0, Math.round(track.scrollLeft / slideWidth))
+    )
 
     setActiveIndex((current) => (current === nearest ? current : nearest))
+    setMountedRange((range) => {
+      const min = Math.max(0, nearest - RENDER_WINDOW)
+      const max = Math.min(pins.length - 1, nearest + RENDER_WINDOW)
+      if (min >= range.min && max <= range.max) return range
+      return { min: Math.min(range.min, min), max: Math.max(range.max, max) }
+    })
   }
 
   return (
@@ -100,11 +118,19 @@ function PinStackSheet({ pins, onClose }: PinStackSheetProps) {
               className="w-[var(--pin-stack-slide)] shrink-0 snap-center px-1.5"
             >
               <div className="flex w-full flex-col items-center gap-4 rounded-3xl bg-white px-4 pt-6 pb-5 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]">
-                {Math.abs(index - activeIndex) <= RENDER_WINDOW ? (
+                {index >= mountedRange.min && index <= mountedRange.max ? (
                   pin.pinType === "meeting" ? (
-                    <MeetupDetailContainer variant="card" meetingId={pin.targetId} />
+                    <MeetupDetailContainer
+                      variant="card"
+                      meetingId={pin.targetId}
+                      active={index === activeIndex}
+                    />
                   ) : (
-                    <QuestionDetailContainer variant="card" questionId={pin.targetId} />
+                    <QuestionDetailContainer
+                      variant="card"
+                      questionId={pin.targetId}
+                      active={index === activeIndex}
+                    />
                   )
                 ) : (
                   <div className="h-56 w-full" />

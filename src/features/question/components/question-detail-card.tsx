@@ -2,14 +2,25 @@
 
 import * as React from "react"
 import Image from "next/image"
+import { Download } from "lucide-react"
 
 import { BottomSheetClose } from "@/components/ui/bottom-sheet"
 import { Button } from "@/components/ui/button"
 import { NoImageProfile } from "@/components/ui/no-image"
 import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
+import { Toast } from "@/components/ui/toast"
+import { ChatContextMenu } from "@/features/chat/components/chat-context-menu"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
 import type { QuestionSummary } from "@/features/question/types"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { useLongPress } from "@/lib/hooks/use-long-press"
+import { useSaveImage } from "@/lib/hooks/use-save-image"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_LIFT_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
+import { cn } from "@/lib/utils"
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
@@ -31,6 +42,12 @@ interface QuestionDetailCardProps {
   onViewAnswers?: () => void
   /** 첨부 이미지가 최대 크기를 초과했을 때(안내는 부모 토스트에서 처리). */
   onImageTooLarge?: () => void
+  /**
+   * 이 카드가 화면에 노출 중인지. false면 롱프레스 메뉴를 닫는다.
+   * 시트는 닫힘 여부를, 캐러셀은 활성 슬라이드 여부를 넘긴다 — 메뉴의 dim 오버레이가
+   * 안 보이는 카드에 남아 화면을 덮는 것을 막는다.
+   */
+  active?: boolean
 }
 
 /**
@@ -45,6 +62,7 @@ function QuestionDetailCard({
   onSend,
   onViewAnswers,
   onImageTooLarge,
+  active = true,
 }: QuestionDetailCardProps) {
   const { messages } = useTranslation()
   const t = messages.question
@@ -52,6 +70,12 @@ function QuestionDetailCard({
   // 미리보기는 base64로 담아 object URL 수명관리(effect setState) 없이 렌더한다.
   const [image, setImage] = React.useState<{ preview: string; file: File } | null>(null)
   const cameraInputRef = React.useRef<HTMLInputElement>(null)
+  const [imageMenuOpen, setImageMenuOpen] = React.useState(false)
+  const saveImageAction = useSaveImage()
+  const imageLongPress = useLongPress({ onLongPress: () => setImageMenuOpen(true) })
+
+  // 렌더 중 상태 조정(React 권장 패턴) — 카드가 가려지면 effect 없이 즉시 메뉴를 닫는다.
+  if (!active && imageMenuOpen) setImageMenuOpen(false)
 
   const handlePickImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -74,22 +98,50 @@ function QuestionDetailCard({
     setImage(null)
   }
 
-  const hasImage = Boolean(question.imageUrl)
+  const imageUrl = question.imageUrl
+  const hasImage = Boolean(imageUrl)
   const timeLabel = formatRelativeTime(question.createdAt, t)
   const location = question.location
 
   return (
     <>
       {hasImage ? (
-        <div className="relative h-40 w-full overflow-hidden rounded-3xl bg-gray-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={question.imageUrl} alt={t.imageAlt} className="size-full object-cover" />
-          <BottomSheetClose
-            aria-label={t.closeLabel}
-            className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-black/50"
-          >
-            <Image src="/icons/circle/close-white.svg" alt="" width={16} height={16} className="size-4" />
-          </BottomSheetClose>
+        // 메뉴가 top-full 로 앵커되므로 클리핑(overflow-hidden)은 안쪽 컨테이너에만 남긴다.
+        <div
+          className={cn(
+            "relative w-full",
+            LONG_PRESS_TRANSITION,
+            imageMenuOpen ? LONG_PRESS_LIFT_ACTIVE : LONG_PRESS_INACTIVE
+          )}
+          {...imageLongPress}
+        >
+          <div className="relative h-40 w-full overflow-hidden rounded-3xl bg-gray-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt={t.imageAlt} className="size-full object-cover" />
+            <BottomSheetClose
+              aria-label={t.closeLabel}
+              className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-black/50"
+            >
+              <Image src="/icons/circle/close-white.svg" alt="" width={16} height={16} className="size-4" />
+            </BottomSheetClose>
+          </div>
+          {imageMenuOpen && imageUrl ? (
+            <ChatContextMenu
+              items={[
+                {
+                  icon: <Download className="size-6 text-gray-900" />,
+                  label: messages.common.saveImage,
+                  onClick: () => {
+                    setImageMenuOpen(false)
+                    void saveImageAction.save(imageUrl)
+                  },
+                },
+              ]}
+              dimmed
+              onDismiss={() => setImageMenuOpen(false)}
+              className="top-full left-1/2 mt-3 -translate-x-1/2"
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -194,6 +246,8 @@ function QuestionDetailCard({
           {t.answeredLabel}
         </Button>
       ) : null}
+
+      <Toast open={saveImageAction.failed} message={messages.common.saveImageFailed} />
     </>
   )
 }

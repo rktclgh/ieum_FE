@@ -16,13 +16,18 @@ interface MeetupDetailSheetProps {
   onEnterRoom: () => void
 }
 
-/** 모임 상세 단일 바텀시트. 본문은 MeetupDetailCard(겹친 핀 캐러셀과 공유)가 그린다. */
+/**
+ * 모임 상세 단일 바텀시트. 본문은 MeetupDetailCard(겹친 핀 캐러셀과 공유)가 그린다.
+ *
+ * 히어로 이미지 롱프레스 메뉴(#331)는 카드가 소유하므로, 시트가 닫히면 카드에 `active=false`로
+ * 알려 메뉴를 함께 닫는다 — 다음에 열었을 때 메뉴가 떠 있으면 안 된다.
+ */
 function MeetupDetailSheet({ open, onOpenChange, detail, ...cardProps }: MeetupDetailSheetProps) {
   if (!detail) return null
 
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <MeetupDetailCard detail={detail} {...cardProps} />
+      <MeetupDetailCard detail={detail} active={open} {...cardProps} />
     </BottomSheet>
   )
 }

@@ -22,6 +22,8 @@ interface MeetupDetailContainerProps {
    * - "card": 본문만 렌더한다. 겹친 핀 캐러셀처럼 바깥에 이미 BottomSheet 이 있을 때 쓴다.
    */
   variant?: "sheet" | "card"
+  /** card 모드에서 이 카드가 노출 중인지(캐러셀의 활성 슬라이드 여부). 카드로 그대로 전달한다. */
+  active?: boolean
 }
 
 /**
@@ -32,6 +34,7 @@ function MeetupDetailContainer({
   meetingId,
   onClose,
   variant = "sheet",
+  active,
 }: MeetupDetailContainerProps) {
   const router = useRouter()
   const { messages, language } = useTranslation()
@@ -83,6 +86,7 @@ function MeetupDetailContainer({
     return (
       <MeetupDetailCard
         detail={detail}
+        active={active}
         pending={pending}
         error={error}
         onJoin={handleJoin}

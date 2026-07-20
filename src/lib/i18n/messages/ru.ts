@@ -10,6 +10,8 @@ export const ru: Messages = {
     close: "Закрыть",
     more: "Ещё",
     retry: "Повторить",
+    saveImage: "Сохранить фото",
+    saveImageFailed: "Не удалось сохранить фото",
   },
   route: {
     invalidLink: "Эта ссылка недействительна.",
@@ -393,6 +395,7 @@ export const ru: Messages = {
     pinFailed: "Не удалось изменить закрепление.",
     enableNotificationAction: "Включить уведомления",
     disableNotificationAction: "Выключить уведомления",
+    notificationOffBadge: "Уведомления выключены",
     deleteAction: "Удалить",
     replyAction: "Ответить",
     replyToLabel: (targetName) => `Ответ ${targetName}`,

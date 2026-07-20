@@ -12,7 +12,13 @@ import {
 import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
 import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
 import { executeLeaveChatRoom } from "@/features/chat/lib/chat-leave"
-import { executeSetPinned, type PinRequest } from "@/features/chat/lib/chat-pin"
+import { executeSetPinned, resolvePinOperations, type PinRequest } from "@/features/chat/lib/chat-pin"
+import {
+  patchRoomDetails,
+  patchRoomsInLoadedListCaches,
+  restoreRoomDetails,
+  restoreRoomsListCaches,
+} from "@/features/chat/lib/chat-room-cache"
 import { deleteMeeting, leaveMeeting } from "@/features/meetup/api/meetup-api"
 import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
 
@@ -43,6 +49,24 @@ function useSetPinned() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (request: PinRequest) => executeSetPinned(request, { setPinned }),
+    // 고정 순서를 서버 왕복 전에 반영한다. 정렬이 즉시 바뀌어야 목록의 재정렬
+    // 애니메이션(useFlipReorder)이 지연 없이 시작된다.
+    onMutate: async (request) => {
+      const patches = resolvePinOperations(request).map(({ roomId, pinned }) => ({
+        roomId,
+        patch: { pinned },
+      }))
+      await queryClient.cancelQueries({ queryKey: roomsListKey })
+      return {
+        rooms: patchRoomsInLoadedListCaches(queryClient, roomsListKey, patches),
+        details: patchRoomDetails(queryClient, chatKeys.room, patches),
+      }
+    },
+    onError: (_error, _request, snapshot) => {
+      if (!snapshot) return
+      restoreRoomsListCaches(queryClient, snapshot.rooms)
+      restoreRoomDetails(queryClient, snapshot.details)
+    },
     // 고정 여부는 목록(정렬/플래그)과 해당 방 상세에 반영 → 메시지는 불필요.
     // 실패해도 서버 상태로 수렴시켜야 하므로 onSettled에서 무효화한다.
     onSettled: (_data, _error, { roomId, replacingRoomId }) => {
@@ -59,12 +83,26 @@ function useSetNotify() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ roomId, enabled }: { roomId: number; enabled: boolean }) => setNotify(roomId, enabled),
+    // 뮤트 표시를 서버 왕복 전에 목록과 방 상세 양쪽에 반영한다. 왕복 동안 목록이 흔들리지
+    // 않고, 실패 시 스냅샷으로 되돌린 뒤 onSettled의 무효화가 서버 상태로 수렴시킨다.
+    onMutate: async ({ roomId, enabled }) => {
+      const patches = [{ roomId, patch: { notifyEnabled: enabled } }]
+      await queryClient.cancelQueries({ queryKey: roomsListKey })
+      return {
+        rooms: patchRoomsInLoadedListCaches(queryClient, roomsListKey, patches),
+        details: patchRoomDetails(queryClient, chatKeys.room, patches),
+      }
+    },
+    onError: (_error, _variables, snapshot) => {
+      if (!snapshot) return
+      restoreRoomsListCaches(queryClient, snapshot.rooms)
+      restoreRoomDetails(queryClient, snapshot.details)
+    },
     // 알림 설정은 목록(뮤트 표시)과 해당 방 상세에 반영 → 메시지는 불필요
-    onSuccess: (_data, { roomId }) =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: roomsListKey }),
-        queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) }),
-      ]),
+    onSettled: (_data, _error, { roomId }) => {
+      queryClient.invalidateQueries({ queryKey: roomsListKey })
+      queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
+    },
   })
 }
 

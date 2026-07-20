@@ -10,6 +10,8 @@ export const th: Messages = {
     close: "ปิด",
     more: "เพิ่มเติม",
     retry: "ลองอีกครั้ง",
+    saveImage: "บันทึกรูปภาพ",
+    saveImageFailed: "บันทึกรูปภาพไม่สำเร็จ",
   },
   route: {
     invalidLink: "ลิงก์นี้ไม่ถูกต้อง",
@@ -392,6 +394,7 @@ export const th: Messages = {
     pinFailed: "ตั้งค่าปักหมุดไม่สำเร็จ",
     enableNotificationAction: "เปิดการแจ้งเตือน",
     disableNotificationAction: "ปิดการแจ้งเตือน",
+    notificationOffBadge: "ปิดการแจ้งเตือนอยู่",
     deleteAction: "ลบ",
     replyAction: "ตอบกลับ",
     replyToLabel: (targetName) => `ตอบกลับ ${targetName}`,
