@@ -93,7 +93,9 @@ function ChatListPageContent() {
   const [pinReplaceTarget, setPinReplaceTarget] = React.useState<ChatListEntry | null>(null)
 
   const { entries, isLoading } = useChatRoomsView()
-  const pinnedRoomId = usePinnedRoomId()
+  // 목록은 usePinnedRoomId와 같은 쿼리 키를 공유해 함께 resolve된다. 로딩 중에는 entries가
+  // 비어 롱프레스할 행 자체가 없으므로 상세 화면과 달리 로딩 가드가 필요 없다.
+  const { pinnedRoomId } = usePinnedRoomId()
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
   const leaveChatRoomMutation = useLeaveChatRoom()

@@ -170,6 +170,10 @@ function useChatRoomsView(type?: RoomType) {
 // 현재 고정된 방의 id. 고정은 전체에서 1개만 허용되므로 첫 번째 항목만 본다.
 // useChatRoomsView와 달리 방별 상세/도메인 쿼리를 띄우지 않는 가벼운 훅으로, 목록 요약
 // 캐시(chatKeys.rooms())를 목록 화면과 공유한다 → 목록에서 쓸 때 추가 요청이 없다.
+//
+// 목록이 아직 도착하지 않았을 때도 pinnedRoomId는 undefined다("고정된 방 없음"과 구분되지
+// 않는다). 방 상세처럼 이 쿼리와 무관하게 렌더되는 화면에서 그대로 쓰면 교체 확인을 건너뛰고
+// 중복 고정될 수 있으므로 isLoading을 함께 돌려주고, 호출부가 로딩 중 고정을 막는다.
 function usePinnedRoomId() {
   const session = useChatSessionAccess()
   const query = useQuery({
@@ -179,7 +183,10 @@ function usePinnedRoomId() {
     staleTime: 0,
   })
 
-  return query.data?.find((room) => room.pinned)?.roomId
+  return {
+    pinnedRoomId: query.data?.find((room) => room.pinned)?.roomId,
+    isLoading: query.isLoading,
+  }
 }
 
 function useChatRoom(roomId: number, session: ChatSessionAccess) {

@@ -344,7 +344,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   }, [])
 
   const markReadMutation = useMarkRead()
-  const pinnedRoomId = usePinnedRoomId()
+  const { pinnedRoomId, isLoading: isPinnedRoomLoading } = usePinnedRoomId()
   const [confirmPinReplaceOpen, setConfirmPinReplaceOpen] = React.useState(false)
   const setPinnedMutation = useSetPinned()
   const setNotifyMutation = useSetNotify()
@@ -936,7 +936,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                 showNotificationAction={canConfigureRoomNotification}
                 showPinAction={canPinRoom}
                 notificationPending={setNotifyMutation.isPending}
-                pinPending={setPinnedMutation.isPending}
+                pinPending={setPinnedMutation.isPending || isPinnedRoomLoading}
                 notificationOn={notificationOn}
                 onToggleNotification={() => {
                   if (!session.authenticated || !canConfigureRoomNotification || setNotifyMutation.isPending) return
@@ -945,6 +945,9 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                 pinned={roomPinned}
                 onTogglePin={() => {
                   if (!session.authenticated || !canPinRoom || setPinnedMutation.isPending) return
+                  // 방 목록이 아직 없으면 기존 고정 방을 알 수 없다. 그대로 진행하면 교체 확인을
+                  // 건너뛰고 두 방이 고정되므로, 목록이 도착할 때까지 고정을 막는다.
+                  if (isPinnedRoomLoading) return
                   // 다른 방이 이미 고정돼 있으면 교체 확인을 먼저 받는다(고정은 전체 1개)
                   if (!roomPinned && pinnedRoomId !== undefined && pinnedRoomId !== roomId) {
                     setConfirmPinReplaceOpen(true)
