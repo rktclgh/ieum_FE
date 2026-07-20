@@ -61,6 +61,12 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
     name: string
     userId: number | null
   } | null>(null)
+  // 이미 채택된 답변을 탭했을 때 뜨는 "개인채팅 하시겠습니까?" 확인 다이얼로그 대상.
+  // 채택 직후 acceptedAuthor 다이얼로그와 설명·버튼은 같고 제목만 다르다.
+  const [chatPromptAuthor, setChatPromptAuthor] = React.useState<{
+    name: string
+    userId: number | null
+  } | null>(null)
   const [openMenuAnswerId, setOpenMenuAnswerId] = React.useState<number | null>(null)
 
   React.useEffect(() => {
@@ -111,6 +117,12 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
   const handleStartChatFromDialog = () => {
     const targetUserId = acceptedAuthor?.userId ?? null
     setAcceptedAuthor(null)
+    startChatWith(targetUserId)
+  }
+
+  const handleStartChatFromPrompt = () => {
+    const targetUserId = chatPromptAuthor?.userId ?? null
+    setChatPromptAuthor(null)
     startChatWith(targetUserId)
   }
 
@@ -186,10 +198,15 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
                       setOpenMenuAnswerId(null)
                       setPendingReportId(answer.answerId)
                     }}
-                    // 채택된 답변은 카드를 탭해 꼬리질문 채팅방으로 다시 들어갈 수 있다.
+                    // 채택된 답변 카드를 탭하면 개인채팅 진입 확인 다이얼로그를 먼저 띄운다 —
+                    // 확인 후에야 꼬리질문 채팅방으로 들어간다.
                     onOpenChat={
                       answer.isAccepted && answer.authorUserId != null
-                        ? () => startChatWith(answer.authorUserId)
+                        ? () =>
+                            setChatPromptAuthor({
+                              name: answer.authorName,
+                              userId: answer.authorUserId,
+                            })
                         : undefined
                     }
                   />
@@ -203,7 +220,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
       </Screen>
 
       {actionError && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
+        <div className="bottom-anchor-auto fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {actionError}
           </div>
@@ -219,6 +236,17 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
         confirmLabel={messages.question.acceptedDialogStartChat}
         confirmDisabled={acceptedAuthor?.userId == null}
         onConfirm={handleStartChatFromDialog}
+      />
+
+      <ConfirmDialog
+        open={chatPromptAuthor != null}
+        onOpenChange={(open) => !open && setChatPromptAuthor(null)}
+        title={messages.question.chatPromptDialogTitle(chatPromptAuthor?.name ?? "")}
+        description={messages.question.acceptedDialogDescription(chatPromptAuthor?.name ?? "")}
+        cancelLabel={messages.question.acceptedDialogClose}
+        confirmLabel={messages.question.acceptedDialogStartChat}
+        confirmDisabled={chatPromptAuthor?.userId == null}
+        onConfirm={handleStartChatFromPrompt}
       />
 
       <ConfirmDialog

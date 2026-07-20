@@ -215,6 +215,7 @@ export interface Messages {
     acceptedLabel: string
     openChatWithAuthor: (nickname: string) => string
     acceptedDialogTitle: string
+    chatPromptDialogTitle: (nickname: string) => string
     acceptedDialogDescription: (nickname: string) => string
     acceptedDialogClose: string
     acceptedDialogStartChat: string
@@ -743,6 +744,8 @@ export const ko: Messages = {
     acceptedLabel: "채택 완료",
     openChatWithAuthor: (nickname: string) => `${nickname}님과 개인 채팅 열기`,
     acceptedDialogTitle: "답변을 채택했습니다",
+    chatPromptDialogTitle: (nickname: string) =>
+      `${nickname}님과 개인채팅을 하시겠습니까?`,
     acceptedDialogDescription: (nickname: string) =>
       `${nickname}님에게 더 궁금한 점이 있다면, 개인 채팅으로 이어서 물어볼 수 있어요.`,
     acceptedDialogClose: "닫기",
