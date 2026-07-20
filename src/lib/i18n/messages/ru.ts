@@ -391,6 +391,7 @@ export const ru: Messages = {
     pinFailed: "Не удалось изменить закрепление.",
     enableNotificationAction: "Включить уведомления",
     disableNotificationAction: "Выключить уведомления",
+    notificationOffBadge: "Уведомления выключены",
     deleteAction: "Удалить",
     replyAction: "Ответить",
     replyToLabel: (targetName) => `Ответ ${targetName}`,

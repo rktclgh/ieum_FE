@@ -374,6 +374,7 @@ export interface Messages {
     pinFailed: string
     enableNotificationAction: string
     disableNotificationAction: string
+    notificationOffBadge: string
     deleteAction: string
     replyAction: string
     replyToLabel: (targetName: string) => string
@@ -902,6 +903,7 @@ export const ko: Messages = {
     pinFailed: "고정 설정에 실패했어요",
     enableNotificationAction: "알림 켜기",
     disableNotificationAction: "알림 끄기",
+    notificationOffBadge: "알림 꺼짐",
     deleteAction: "삭제",
     replyAction: "답글 달기",
     replyToLabel: (targetName) => `${targetName}님에게 답장`,

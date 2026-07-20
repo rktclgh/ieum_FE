@@ -391,6 +391,7 @@ export const en: Messages = {
     pinFailed: "Couldn't update the pin.",
     enableNotificationAction: "Turn on notifications",
     disableNotificationAction: "Turn off notifications",
+    notificationOffBadge: "Notifications off",
     deleteAction: "Delete",
     replyAction: "Reply",
     replyToLabel: (targetName) => `Replying to ${targetName}`,
