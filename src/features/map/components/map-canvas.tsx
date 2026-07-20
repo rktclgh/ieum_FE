@@ -153,32 +153,45 @@ function VisibleCenterAligner({
   const appliedInsetsRef = React.useRef({ topInset: 0, bottomInset: 0 })
 
   React.useEffect(() => {
-    if (!isLeafletMapActive(map)) return
+    const align = () => {
+      // whenReady는 map이 아직 준비되지 않았으면 콜백을 큐에 넣으므로 언마운트 뒤에 불릴 수 있다.
+      if (!isLeafletMapActive(map)) return
 
-    const size = map.getSize()
-    if (size.x <= 0 || size.y <= 0) return
+      const size = map.getSize()
+      if (size.x <= 0 || size.y <= 0) return
 
-    const applied = appliedInsetsRef.current
-    const previousOffset = resolveVisibleCenterOffsetY({
-      width: size.x,
-      height: size.y,
-      topInset: applied.topInset,
-      bottomInset: applied.bottomInset,
-    })
-    const nextOffset = resolveVisibleCenterOffsetY({
-      width: size.x,
-      height: size.y,
-      topInset,
-      bottomInset,
-    })
+      const applied = appliedInsetsRef.current
+      const previousOffset = resolveVisibleCenterOffsetY({
+        width: size.x,
+        height: size.y,
+        topInset: applied.topInset,
+        bottomInset: applied.bottomInset,
+      })
+      const nextOffset = resolveVisibleCenterOffsetY({
+        width: size.x,
+        height: size.y,
+        topInset,
+        bottomInset,
+      })
 
-    appliedInsetsRef.current = { topInset, bottomInset }
+      appliedInsetsRef.current = { topInset, bottomInset }
 
-    const delta = nextOffset - previousOffset
-    if (Math.abs(delta) < 1) return
+      const delta = nextOffset - previousOffset
+      if (Math.abs(delta) < 1) return
 
-    // 콘텐츠를 아래로 delta만큼 내리려면 뷰포트는 그 반대로 이동한다.
-    map.panBy([0, -delta], { animate: false })
+      // 콘텐츠를 아래로 delta만큼 내리려면 뷰포트는 그 반대로 이동한다.
+      map.panBy([0, -delta], { animate: false })
+    }
+
+    // 크기가 아직 0이면 위에서 그냥 빠져나가는데, 인셋은 이 컴포넌트가 붙기 전에 이미
+    // 확정되는 경우가 많아(지도는 next/dynamic으로 늦게 마운트된다) effect가 다시 돌 계기가 없다.
+    // resize를 재시도 경로로 둬서 초기 정렬이 영영 유실되지 않게 한다.
+    map.whenReady(align)
+    map.on("resize", align)
+
+    return () => {
+      map.off("resize", align)
+    }
   }, [topInset, bottomInset, map])
 
   return null
