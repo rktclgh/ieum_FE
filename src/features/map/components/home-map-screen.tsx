@@ -24,16 +24,22 @@ import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import {
+  createLastKnownLocationSyncCoordinator,
+} from "@/features/map/lib/last-known-location-sync"
+import {
   isLocateFollowingVisible,
   reduceLocateFollowing,
 } from "@/features/map/lib/locate-following"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
+import { useUpdateLocation } from "@/features/my/hooks/use-my-mutations"
+import { useTabTransition } from "@/features/navigation/hooks/use-tab-transition"
 import { InstallPrompt } from "@/features/pwa/components/install-prompt"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
+import { useMe } from "@/features/session/hooks/use-me"
 import { APP_BAR_SAFE_TOP, FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -70,7 +76,9 @@ interface SelectedLocation {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
+  const { data: me } = useMe()
   const { position, status } = useGeolocation()
+  const { mutate: updateLocation } = useUpdateLocation()
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
   const [selectedLocation, setSelectedLocation] = React.useState<SelectedLocation | null>(null)
@@ -116,6 +124,33 @@ function HomeMapScreen() {
   const { data: pinData } = useMapPins(bounds, toPinType(category))
   const pins = pinData?.pins
 
+  const lastLocationSyncUserIdRef = React.useRef<number | null>(null)
+  const updateLocationRef = React.useRef(updateLocation)
+  const locationSyncCoordinatorRef = React.useRef<ReturnType<
+    typeof createLastKnownLocationSyncCoordinator
+  > | null>(null)
+
+  React.useEffect(() => {
+    updateLocationRef.current = updateLocation
+    const locationSyncCoordinator =
+      locationSyncCoordinatorRef.current ??
+      (locationSyncCoordinatorRef.current = createLastKnownLocationSyncCoordinator(
+        (payload, callbacks) => {
+          updateLocationRef.current(payload, callbacks)
+        }
+      ))
+
+    const userId = me?.userId ?? null
+    if (lastLocationSyncUserIdRef.current !== userId) {
+      lastLocationSyncUserIdRef.current = userId
+      locationSyncCoordinator.reset()
+    }
+
+    if (!me || !position) return
+
+    locationSyncCoordinator.sync(position, true)
+  }, [me, position, updateLocation])
+
   const handlePinClick = React.useCallback((pin: MapPin) => {
     // 핀 종류별로 그 대상(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.
     if (pin.pinType === "meeting") setSelectedMeetingId(pin.targetId)
@@ -152,13 +187,27 @@ function HomeMapScreen() {
 
   const canShowMap = isMounted && (status !== "loading" || waitedForLocation)
 
+  // 이 마운트가 탭 전환 슬라이드 애니메이션과 함께 일어났는지. 첫 렌더 값만 의미가 있으므로
+  // (콜드 로드는 애니메이션이 없다) state 초기화 함수로 한 번만 캡처해 이후 재렌더에 흔들리지 않게 한다.
+  const transitionDirection = useTabTransition()
+  const [hadEntranceAnimation] = React.useState(() => transitionDirection !== null)
+
   // 베이스맵이 실제로 그려졌는지. 이 신호 전에 스켈레톤을 걷으면 스타일·타일을 받는 동안
   // 도로망도 없는 빈 회색 배경(dynamic import 폴백)이 그대로 드러난다.
   // 스타일 요청이 실패하면 onReady가 영영 오지 않으므로 상한을 두고 강제로 진행시킨다.
-  const [isMapReady, setMapReady] = React.useState(false)
+  const [tilesReady, setTilesReady] = React.useState(false)
+  // 탭 전환 애니메이션이 걸린 마운트에서만 의미가 있다 — 애니메이션 중엔 지도 조상이 fixed
+  // 자식의 containing block이 되어 컨테이너 크기가 일시적으로 뒤틀린다(issue #355). 크기가
+  // 최종값으로 자리잡기 전에 스켈레톤을 걷으면, 잘못된 크기의 지도가 잠깐 보였다가 애니메이션이
+  // 끝난 뒤 툭 튀는 스냅이 생긴다. 애니메이션이 없는 콜드 로드는 처음부터 크기가 옳으므로 바로 true.
+  const [sizeSettled, setSizeSettled] = React.useState(!hadEntranceAnimation)
+  const isMapReady = tilesReady && sizeSettled
   React.useEffect(() => {
     if (!canShowMap || isMapReady) return
-    const timer = setTimeout(() => setMapReady(true), MAP_READY_MAX_WAIT_MS)
+    const timer = setTimeout(() => {
+      setTilesReady(true)
+      setSizeSettled(true)
+    }, MAP_READY_MAX_WAIT_MS)
     return () => clearTimeout(timer)
   }, [canShowMap, isMapReady])
 
@@ -207,7 +256,8 @@ function HomeMapScreen() {
             setFollowRequested((state) => reduceLocateFollowing(state, { type: "user-gesture" }))
           }
           onBoundsChange={setBounds}
-          onReady={() => setMapReady(true)}
+          onReady={() => setTilesReady(true)}
+          onSizeSettle={() => setSizeSettled(true)}
           pins={pins}
           onPinClick={handlePinClick}
           onPinStackClick={setStackedPins}
@@ -230,7 +280,7 @@ function HomeMapScreen() {
       <div className={`relative z-10 app-column flex flex-col gap-2 px-4 pb-4 ${APP_BAR_SAFE_TOP}`}>
         <div className="flex items-center gap-2">
           <MapSearchBar
-            onFocus={() => setSearchOpen(true)}
+            onOpenSearch={() => setSearchOpen(true)}
             selectedLocationLabel={selectedLocationLabel}
             onClearSelectedLocation={() => setSelectedLocation(null)}
           />

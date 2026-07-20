@@ -65,7 +65,6 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
         time={chat.time}
         unreadCount={chat.unreadCount}
         pinned={chat.pinned}
-        notifyEnabled={chat.notifyEnabled}
         highlightQuery={highlightQuery}
         active={menuOpen}
         onClick={onNavigate}
