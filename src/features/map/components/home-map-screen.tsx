@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic"
 import * as React from "react"
 
+import { useKeyboardPrimer } from "@/components/ui/keyboard-primer"
 import type { MapBounds, MapPin, PinType } from "@/features/map/api/pin-types"
 import { CategoryChipGroup, type Category } from "@/features/map/components/category-chip-group"
 import { MapAttribution } from "@/features/map/components/map-attribution"
@@ -76,6 +77,7 @@ interface SelectedLocation {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
+  const { prime: primeKeyboard } = useKeyboardPrimer()
   const { data: me } = useMe()
   const { position, status } = useGeolocation()
   const { mutate: updateLocation } = useUpdateLocation()
@@ -280,7 +282,12 @@ function HomeMapScreen() {
       <div className={`relative z-10 app-column flex flex-col gap-2 px-4 pb-4 ${APP_BAR_SAFE_TOP}`}>
         <div className="flex items-center gap-2">
           <MapSearchBar
-            onOpenSearch={() => setSearchOpen(true)}
+            // 오버레이가 열리기 전에, 아직 탭 제스처 안에 있는 이 시점에 키보드를 띄운다.
+            // 실제 검색 입력창은 진입 모션이 끝난 뒤 포커스를 넘겨받는다 (issue #384).
+            onOpenSearch={() => {
+              primeKeyboard()
+              setSearchOpen(true)
+            }}
             selectedLocationLabel={selectedLocationLabel}
             onClearSelectedLocation={() => setSelectedLocation(null)}
           />

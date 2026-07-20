@@ -19,9 +19,20 @@ function SearchBox({
   onFocus,
   onBlur,
   tone = "elevated",
+  ref,
   ...props
 }: SearchBoxProps) {
+  // 내부 inputRef는 ClearButton이 쓰므로 항상 살아 있어야 한다.
+  // 호출부가 넘긴 ref는 여기에 덧붙여 채운다(스프레드로 덮어쓰면 ClearButton이 깨진다).
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const attachRef = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node
+      if (typeof ref === "function") ref(node)
+      else if (ref) ref.current = node
+    },
+    [ref]
+  )
   const isControlled = value !== undefined
   const [uncontrolledHasValue, setUncontrolledHasValue] = React.useState(Boolean(defaultValue ?? ""))
   const hasValue = isControlled ? String(value ?? "").length > 0 : uncontrolledHasValue
@@ -40,7 +51,7 @@ function SearchBox({
     >
       <Image src="/icons/search-bar/search.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
       <input
-        ref={inputRef}
+        ref={attachRef}
         defaultValue={defaultValue}
         value={value}
         onChange={(event) => {

@@ -126,9 +126,41 @@ function FullScreenOverlay({ open, className, children, ...props }: FullScreenOv
       {/* 마운트되어 있는 동안(=퇴장 모션이 끝날 때까지) 전역 크롬에 "화면이 덮여 있음"을 알린다.
           `phase === "closed"`면 위에서 이미 언마운트되므로 등록 수명이 노출 수명과 정확히 겹친다. */}
       <ScreenOverlayMarker />
-      {renderedChildren}
+      <OverlaySettledContext.Provider value={phase === "open"}>
+        {renderedChildren}
+      </OverlaySettledContext.Provider>
     </div>
   )
 }
 
-export { FullScreenOverlay }
+/**
+ * 오버레이가 제자리에 놓였는지(진입 모션 완료) 자식에게 알린다.
+ * 오버레이 밖에서 쓰는 컴포넌트는 항상 "제자리"로 본다.
+ */
+const OverlaySettledContext = React.createContext(true)
+
+/**
+ * 오버레이가 제자리에 놓인 뒤에 포커스를 주는 ref.
+ *
+ * 마운트 시점에 그냥 `autoFocus`를 걸면 안 된다(issue #384). 진입 모션 때문에 그때
+ * 오버레이는 아직 `translate-y-full` — 입력창이 뷰포트 한 화면 아래에 있다. 브라우저는
+ * 포커스된 입력창을 보이게 하려고 스크롤을 시도하는데, 키보드가 하단을 차지하고 있어
+ * 확보되는 오프셋이 정확히 키보드 높이가 되고, 그 오프셋이 모션이 끝난 뒤에도 남아
+ * `position: fixed` 오버레이 전체가 키보드 높이만큼 올라간 것처럼 보인다.
+ *
+ * `preventScroll`은 오버레이가 제자리에 온 뒤에도 브라우저가 scroll-into-view를 시도하지
+ * 않게 하는 2차 방어선이다(입력창이 이미 보이므로 스크롤할 이유가 없다).
+ */
+function useFocusOnOverlaySettled<T extends HTMLElement>() {
+  const ref = React.useRef<T>(null)
+  const settled = React.useContext(OverlaySettledContext)
+
+  React.useEffect(() => {
+    if (!settled) return
+    ref.current?.focus({ preventScroll: true })
+  }, [settled])
+
+  return ref
+}
+
+export { FullScreenOverlay, useFocusOnOverlaySettled }
