@@ -133,14 +133,14 @@ function MeetupTimePickerContent({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-full border border-primary px-4 py-3 text-center text-body-medium-14 text-primary"
+          className="flex-1 rounded-full bg-gray-100 px-4 py-3 text-center text-body-medium-14 text-gray-900"
         >
           {t.cancelButton}
         </button>
         <button
           type="button"
           onClick={handleConfirm}
-          className="flex-1 rounded-full bg-primary px-4 py-3 text-center text-body-medium-14 text-white"
+          className="flex-1 rounded-full bg-gray-900 px-4 py-3 text-center text-body-medium-14 text-white"
         >
           {t.confirmButton}
         </button>

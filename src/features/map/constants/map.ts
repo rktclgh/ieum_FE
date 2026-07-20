@@ -10,6 +10,10 @@ const DEFAULT_MAP_ZOOM = 16
 // 초과하면 기본 좌표로 먼저 띄우고, 이후 위치가 잡히면 조용히 재중심한다.
 const MAP_LOCATION_WAIT_MS = 3500
 
+// 지도 스타일 로드 완료(onReady)를 이 시간까지 기다렸다가 스켈레톤을 걷는다.
+// 스타일 요청이 실패하면 load 이벤트가 영영 오지 않으므로, 스켈레톤이 갇히지 않도록 상한을 둔다.
+const MAP_READY_MAX_WAIT_MS = 8000
+
 // 홈 지도에서 오버레이가 지도를 가리는 높이(px). flyToBounds 패딩에 써서 재중심·클러스터 확대 시
 // 핀이 "보이는" 영역(헤더/탭바 제외) 정중앙에 오도록 한다. 대략치이며 실기기 확인 후 조정 가능.
 const MAP_TOP_INSET = 120 // 검색바 + 카테고리 칩 (상단 p-4 포함)
@@ -109,6 +113,7 @@ export {
   MAP_TOP_INSET,
   MAP_BOTTOM_INSET,
   MAP_LOCATION_WAIT_MS,
+  MAP_READY_MAX_WAIT_MS,
   MAP_STYLE_URL,
   MAP_CATEGORY_COLORS,
   MAP_HIDDEN_LAYER_IDS,

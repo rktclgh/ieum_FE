@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Textarea } from "@/components/ui/text-field/textarea"
 import { REPORT_REASON_KEYS, type ReportReasonKey } from "@/features/report/constants/report-reasons"
 import { ReportReasonOption } from "@/features/report/components/report-reason-option"
 import { useSubmitReport } from "@/features/report/hooks/use-report-mutation"
@@ -72,12 +73,12 @@ function ReportPageContent({ target }: ReportPageContentProps) {
           </div>
         </div>
 
-        <textarea
+        <Textarea
           value={detail}
           onChange={(event) => setDetail(event.target.value.slice(0, MAX_DETAIL_LENGTH))}
           maxLength={MAX_DETAIL_LENGTH}
           placeholder={messages.report.detailPlaceholder}
-          className="h-40 w-full resize-none rounded-lg border border-gray-100 px-[15px] py-[11px] text-body-regular-12 text-gray-900 outline-none placeholder:text-gray-200"
+          className="h-40 shrink-0"
         />
 
         <ul className="flex flex-col gap-2">

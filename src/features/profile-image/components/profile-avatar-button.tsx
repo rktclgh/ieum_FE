@@ -4,7 +4,6 @@ import * as React from "react"
 import Image from "next/image"
 
 import { NoImageProfile } from "@/components/ui/no-image"
-import { ChatContextMenu } from "@/features/chat/components/chat-context-menu"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -14,13 +13,11 @@ interface ProfileAvatarButtonProps {
   className?: string
 }
 
-// Figma: 원형 아바타 + 우하단 카메라 배지. 탭 → "사진 찍기 / 앨범에서 고르기" 메뉴.
+// Figma: 원형 아바타 + 우하단 카메라 배지. 탭 → OS 파일 선택 시트(사진 보관함/사진 찍기).
 function ProfileAvatarButton({ previewUrl, onFileSelected, className }: ProfileAvatarButtonProps) {
   const { messages } = useTranslation()
   const t = messages.profileImage
-  const [menuOpen, setMenuOpen] = React.useState(false)
-  const cameraInputRef = React.useRef<HTMLInputElement>(null)
-  const albumInputRef = React.useRef<HTMLInputElement>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -40,49 +37,15 @@ function ProfileAvatarButton({ previewUrl, onFileSelected, className }: ProfileA
         <button
           type="button"
           aria-label={t.editLabel}
-          onClick={() => setMenuOpen(true)}
+          onClick={() => fileInputRef.current?.click()}
           className="absolute right-0 bottom-0 flex aspect-square size-8 items-center justify-center rounded-full border-[3px] border-white bg-gray-400"
         >
           <Image src="/icons/chat/camera-line.svg" alt="" width={16} height={16} className="size-4 invert" />
         </button>
       </div>
 
-      {menuOpen && (
-        <ChatContextMenu
-          dimmed
-          onDismiss={() => setMenuOpen(false)}
-          className="top-[calc(100%+8px)] left-1/2 -translate-x-1/2"
-          items={[
-            {
-              icon: <Image src="/icons/chat/camera-line.svg" alt="" width={24} height={24} />,
-              label: t.takePhoto,
-              onClick: () => {
-                setMenuOpen(false)
-                cameraInputRef.current?.click()
-              },
-            },
-            {
-              icon: <Image src="/icons/chat/image.svg" alt="" width={24} height={24} />,
-              label: t.chooseAlbum,
-              onClick: () => {
-                setMenuOpen(false)
-                albumInputRef.current?.click()
-              },
-            },
-          ]}
-        />
-      )}
-
       <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="user"
-        onChange={handleChange}
-        className="hidden"
-      />
-      <input
-        ref={albumInputRef}
+        ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleChange}

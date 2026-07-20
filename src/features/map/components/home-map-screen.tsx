@@ -10,11 +10,13 @@ import { MapControls } from "@/features/map/components/map-controls"
 import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton"
 import { MapSearchBar } from "@/features/map/components/map-search-bar"
 import { PinListOverlay } from "@/features/map/components/pin-list-overlay"
+import { PinStackSheet } from "@/features/map/components/pin-stack-sheet"
 import { SearchOverlay } from "@/features/map/components/search-overlay"
 import {
   DEFAULT_MAP_CENTER,
   MAP_BOTTOM_INSET,
   MAP_LOCATION_WAIT_MS,
+  MAP_READY_MAX_WAIT_MS,
   MAP_TOP_INSET,
 } from "@/features/map/constants/map"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
@@ -22,16 +24,22 @@ import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
 import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import {
+  createLastKnownLocationSyncCoordinator,
+} from "@/features/map/lib/last-known-location-sync"
+import {
   isLocateFollowingVisible,
   reduceLocateFollowing,
 } from "@/features/map/lib/locate-following"
 import { CreateMeetupScreen } from "@/features/meetup/components/create-meetup-screen"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup"
+import { useUpdateLocation } from "@/features/my/hooks/use-my-mutations"
+import { useTabTransition } from "@/features/navigation/hooks/use-tab-transition"
 import { InstallPrompt } from "@/features/pwa/components/install-prompt"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
 import { SessionAlarmButton } from "@/features/session/components/session-alarm-button"
+import { useMe } from "@/features/session/hooks/use-me"
 import { APP_BAR_SAFE_TOP, FAB_BOTTOM_WITH_TABBAR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -43,6 +51,13 @@ const MapCanvas = dynamic(
   () => import("@/features/map/components/map-canvas").then((mod) => mod.MapCanvas),
   { ssr: false, loading: () => <div className="absolute inset-0 bg-gray-100" /> }
 )
+
+// dynamic()은 컴포넌트가 실제로 렌더될 때 청크를 받기 시작한다. 지도는 GPS를 확보한 뒤에야
+// 렌더되므로, 그대로 두면 "측위 대기 → 그제서야 maplibre 청크 내려받기"가 직렬로 이어진다.
+// 마운트 즉시 같은 모듈을 import해 두 작업을 병렬로 돌린다(번들러가 dynamic과 같은 청크로 합쳐 중복 요청은 없다).
+function preloadMapCanvas() {
+  void import("@/features/map/components/map-canvas")
+}
 
 // UI 카테고리("meetup") → 핀 API type("meeting") 매핑. "all"은 필터 없음(undefined).
 function toPinType(category: Category): PinType | undefined {
@@ -61,13 +76,17 @@ interface SelectedLocation {
 
 function HomeMapScreen() {
   const { messages } = useTranslation()
+  const { data: me } = useMe()
   const { position, status } = useGeolocation()
+  const { mutate: updateLocation } = useUpdateLocation()
   const [recenterTarget, setRecenterTarget] = React.useState<Coordinates | null>(null)
   const [recenterKey, setRecenterKey] = React.useState(0)
   const [selectedLocation, setSelectedLocation] = React.useState<SelectedLocation | null>(null)
   const [createMeetupOpen, setCreateMeetupOpen] = React.useState(false)
   const [createQuestionOpen, setCreateQuestionOpen] = React.useState(false)
   const [selectedMeetingId, setSelectedMeetingId] = React.useState<number | null>(null)
+  // 좌표가 겹쳐 지도에서 분리할 수 없는 핀 더미 — 가로 캐러셀로 연다.
+  const [stackedPins, setStackedPins] = React.useState<MapPin[] | null>(null)
   const [selectedQuestionId, setSelectedQuestionId] = React.useState<number | null>(null)
   const [category, setCategory] = React.useState<Category>("all")
   const [bounds, setBounds] = React.useState<MapBounds | null>(null)
@@ -105,6 +124,33 @@ function HomeMapScreen() {
   const { data: pinData } = useMapPins(bounds, toPinType(category))
   const pins = pinData?.pins
 
+  const lastLocationSyncUserIdRef = React.useRef<number | null>(null)
+  const updateLocationRef = React.useRef(updateLocation)
+  const locationSyncCoordinatorRef = React.useRef<ReturnType<
+    typeof createLastKnownLocationSyncCoordinator
+  > | null>(null)
+
+  React.useEffect(() => {
+    updateLocationRef.current = updateLocation
+    const locationSyncCoordinator =
+      locationSyncCoordinatorRef.current ??
+      (locationSyncCoordinatorRef.current = createLastKnownLocationSyncCoordinator(
+        (payload, callbacks) => {
+          updateLocationRef.current(payload, callbacks)
+        }
+      ))
+
+    const userId = me?.userId ?? null
+    if (lastLocationSyncUserIdRef.current !== userId) {
+      lastLocationSyncUserIdRef.current = userId
+      locationSyncCoordinator.reset()
+    }
+
+    if (!me || !position) return
+
+    locationSyncCoordinator.sync(position, true)
+  }, [me, position, updateLocation])
+
   const handlePinClick = React.useCallback((pin: MapPin) => {
     // 핀 종류별로 그 대상(targetId) 상세 바텀시트를 지도 위 오버레이로 연다.
     if (pin.pinType === "meeting") setSelectedMeetingId(pin.targetId)
@@ -136,16 +182,43 @@ function HomeMapScreen() {
     return () => clearTimeout(timer)
   }, [status])
 
+  // 측위를 기다리는 동안 지도 청크를 미리 받아 둔다(위 preloadMapCanvas 참고).
+  React.useEffect(preloadMapCanvas, [])
+
   const canShowMap = isMounted && (status !== "loading" || waitedForLocation)
 
-  // 지도가 마운트되면 스켈레톤을 즉시 걷어내지 않고, 지도 위에 겹친 채 페이드아웃한 뒤 언마운트한다.
+  // 이 마운트가 탭 전환 슬라이드 애니메이션과 함께 일어났는지. 첫 렌더 값만 의미가 있으므로
+  // (콜드 로드는 애니메이션이 없다) state 초기화 함수로 한 번만 캡처해 이후 재렌더에 흔들리지 않게 한다.
+  const transitionDirection = useTabTransition()
+  const [hadEntranceAnimation] = React.useState(() => transitionDirection !== null)
+
+  // 베이스맵이 실제로 그려졌는지. 이 신호 전에 스켈레톤을 걷으면 스타일·타일을 받는 동안
+  // 도로망도 없는 빈 회색 배경(dynamic import 폴백)이 그대로 드러난다.
+  // 스타일 요청이 실패하면 onReady가 영영 오지 않으므로 상한을 두고 강제로 진행시킨다.
+  const [tilesReady, setTilesReady] = React.useState(false)
+  // 탭 전환 애니메이션이 걸린 마운트에서만 의미가 있다 — 애니메이션 중엔 지도 조상이 fixed
+  // 자식의 containing block이 되어 컨테이너 크기가 일시적으로 뒤틀린다(issue #355). 크기가
+  // 최종값으로 자리잡기 전에 스켈레톤을 걷으면, 잘못된 크기의 지도가 잠깐 보였다가 애니메이션이
+  // 끝난 뒤 툭 튀는 스냅이 생긴다. 애니메이션이 없는 콜드 로드는 처음부터 크기가 옳으므로 바로 true.
+  const [sizeSettled, setSizeSettled] = React.useState(!hadEntranceAnimation)
+  const isMapReady = tilesReady && sizeSettled
+  React.useEffect(() => {
+    if (!canShowMap || isMapReady) return
+    const timer = setTimeout(() => {
+      setTilesReady(true)
+      setSizeSettled(true)
+    }, MAP_READY_MAX_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [canShowMap, isMapReady])
+
+  // 지도가 준비되면 스켈레톤을 즉시 걷어내지 않고, 지도 위에 겹친 채 페이드아웃한 뒤 언마운트한다.
   // 스켈레톤→지도로 뚝 끊기지 않고 부드럽게 크로스페이드된다.
   const [showSkeleton, setShowSkeleton] = React.useState(true)
   React.useEffect(() => {
-    if (!canShowMap) return
+    if (!isMapReady) return
     const timer = setTimeout(() => setShowSkeleton(false), SKELETON_FADE_MS)
     return () => clearTimeout(timer)
-  }, [canShowMap])
+  }, [isMapReady])
 
   // 최초 위치 확보 1회: 내 위치로 자동 중심. 지도는 canShowMap 시점의 최선 좌표(내 위치 또는 기본 좌표)로
   // 마운트되므로, 정상 경로(위치를 알고 마운트)에선 같은 좌표라 이동이 없고,
@@ -183,8 +256,11 @@ function HomeMapScreen() {
             setFollowRequested((state) => reduceLocateFollowing(state, { type: "user-gesture" }))
           }
           onBoundsChange={setBounds}
+          onReady={() => setTilesReady(true)}
+          onSizeSettle={() => setSizeSettled(true)}
           pins={pins}
           onPinClick={handlePinClick}
+          onPinStackClick={setStackedPins}
           livePosition={position}
           selectedPosition={selectedLocation}
           onSelectedPositionClick={() => setSelectedLocation(null)}
@@ -195,7 +271,7 @@ function HomeMapScreen() {
         <MapLoadingSkeleton
           className={cn(
             "z-[1] transition-opacity duration-500 ease-out",
-            canShowMap ? "opacity-0" : "opacity-100"
+            isMapReady ? "opacity-0" : "opacity-100"
           )}
         />
       ) : null}
@@ -278,6 +354,10 @@ function HomeMapScreen() {
         currentPosition={position}
         onClose={() => setCreateQuestionOpen(false)}
       />
+
+      {stackedPins !== null ? (
+        <PinStackSheet pins={stackedPins} onClose={() => setStackedPins(null)} />
+      ) : null}
 
       {selectedMeetingId !== null ? (
         <MeetupDetailContainer

@@ -4,10 +4,11 @@ import * as React from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
-import { Globe } from "lucide-react"
+import { Download, Globe } from "lucide-react"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Toast } from "@/components/ui/toast"
 import {
   SidePanel,
   SidePanelBackdrop,
@@ -35,6 +36,7 @@ import { ChatRoomMemberItem } from "@/features/chat/components/chat-room-member-
 import { ChatRoomDangerActions } from "@/features/chat/components/chat-room-danger-actions"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { useLongPress } from "@/lib/hooks/use-long-press"
+import { useSaveImage } from "@/lib/hooks/use-save-image"
 import {
   LONG_PRESS_INACTIVE,
   LONG_PRESS_LIFT_ACTIVE,
@@ -265,6 +267,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const queryClient = useQueryClient()
   const { messages } = useTranslation()
   const myUserId = session.userId ?? -1
+  const saveImageAction = useSaveImage()
 
   const { data: room } = useChatRoom(roomId, session)
   const {
@@ -288,7 +291,6 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const tempMessageIdRef = React.useRef(-1)
   const [notice, setNotice] = React.useState<string | null>(null)
   const [moreOpen, setMoreOpen] = React.useState(false)
-  const [cameraMenuOpen, setCameraMenuOpen] = React.useState(false)
   const [activeMessageId, setActiveMessageId] = React.useState<string | null>(null)
   const [selectedReply, setSelectedReply] = React.useState<ChatReplyPreview | null>(null)
   const [messageDraft, setMessageDraft] = React.useState("")
@@ -321,8 +323,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const bottomRef = React.useRef<HTMLDivElement>(null)
   const topRef = React.useRef<HTMLDivElement>(null)
   // 카메라 촬영(capture)·앨범 선택용 숨김 file input. 카메라 메뉴 항목이 각각 트리거한다.
-  const cameraInputRef = React.useRef<HTMLInputElement>(null)
-  const albumInputRef = React.useRef<HTMLInputElement>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
   const dateGroupRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
   // 사용자가 하단 근처를 보고 있는지. 새 메시지 도착 시 이 값이 true일 때만 자동으로 맨 아래로 내린다.
@@ -425,7 +426,6 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       queryClient.removeQueries({ queryKey: chatKeys.messages(roomId) })
       updateLiveMessages(() => [])
       setMoreOpen(false)
-      setCameraMenuOpen(false)
       setActiveMessageId(null)
       setSelectedReply(null)
       setConfirmLeaveOpen(false)
@@ -737,6 +737,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         },
       })
     }
+    // 업로드 중인 낙관적 말풍선은 blob: 미리보기라 저장 대상이 아니다.
+    if (message.imageUrl && !message.imageUploading) {
+      const imageUrl = message.imageUrl
+      items.push({
+        icon: <Download className="size-6 text-gray-900" />,
+        label: messages.common.saveImage,
+        onClick: () => {
+          setActiveMessageId(null)
+          void saveImageAction.save(imageUrl)
+        },
+      })
+    }
     items.push(
       {
         icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
@@ -758,25 +770,6 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     )
     return items
   }
-
-  const cameraMenuItems: ChatContextMenuItem[] = [
-    {
-      icon: <Image src="/icons/chat/camera-line.svg" alt="" width={24} height={24} />,
-      label: messages.chat.takePhotoAction,
-      onClick: () => {
-        setCameraMenuOpen(false)
-        cameraInputRef.current?.click()
-      },
-    },
-    {
-      icon: <Image src="/icons/chat/image.svg" alt="" width={24} height={24} />,
-      label: messages.chat.chooseAlbumAction,
-      onClick: () => {
-        setCameraMenuOpen(false)
-        albumInputRef.current?.click()
-      },
-    },
-  ]
 
   return (
     <>
@@ -876,36 +869,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         </div>
         <div className="relative px-4 pt-2 pb-[calc(1rem+var(--safe-area-bottom))]">
           <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(event) => handleImageSelected(event.currentTarget)}
-          />
-          <input
-            ref={albumInputRef}
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             className="hidden"
             onChange={(event) => handleImageSelected(event.currentTarget)}
           />
-          {cameraMenuOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setCameraMenuOpen(false)}
-                role="presentation"
-              />
-              <ChatContextMenu items={cameraMenuItems} className="bottom-full left-4 mb-2" />
-            </>
-          )}
           <ChatMessageInput
             disabled={!session.authenticated}
             value={messageDraft}
             onChange={setMessageDraft}
             onSend={handleSend}
-            onCameraClick={() => setCameraMenuOpen((prev) => !prev)}
+            onCameraClick={() => fileInputRef.current?.click()}
             replyPreview={
               selectedReply
                 ? {
@@ -1132,6 +1107,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           })
         }}
       />
+      <Toast open={saveImageAction.failed} message={messages.common.saveImageFailed} />
     </>
   )
 }
