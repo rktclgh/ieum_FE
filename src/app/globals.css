@@ -24,6 +24,9 @@
   /* Error/red — node 1064:3742 (TextField), not in the original style-guide export */
   --color-red: #f20808;
 
+  /* Green — node 1200:4141 (ChatProfile 접속중 배지). 스타일 가이드 export 에는 없다. */
+  --color-green: #63ca5a;
+
   /* Typography — node 732:2496, family: SF Pro */
   --text-title-bold-28: 28px;
   --text-title-bold-28--line-height: 1.3;
