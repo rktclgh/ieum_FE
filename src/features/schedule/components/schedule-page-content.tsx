@@ -16,6 +16,10 @@ import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { ScheduleCalendar } from "@/features/schedule/components/schedule-calendar"
 import { ScheduleEditor } from "@/features/schedule/components/schedule-editor"
 import { ScheduleListItem } from "@/features/schedule/components/schedule-list-item"
+import {
+  ScheduleListSkeleton,
+  SchedulePageSkeleton,
+} from "@/features/schedule/components/schedule-skeleton"
 import { MonthYearWheelPicker } from "@/features/schedule/components/month-year-wheel-picker"
 import {
   useCreateSchedule,
@@ -245,7 +249,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
   }
 
   if (roomQuery.isPending || (hasMeetingLink && meetingQuery.isPending)) {
-    return <RoutePageState kind="loading" />
+    return <SchedulePageSkeleton />
   }
 
   if (meetingAccessError) {
@@ -263,7 +267,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
   }
 
   const renderList = () => {
-    if (schedulesQuery.isPending) return null
+    if (schedulesQuery.isPending) return <ScheduleListSkeleton />
     if (schedulesQuery.isError) {
       return <p className="py-6 text-center text-body-regular-14 text-gray-400">{messages.schedule.loadError}</p>
     }

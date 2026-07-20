@@ -5,6 +5,7 @@ import * as React from "react"
 
 import { RoutePageState } from "@/components/ui/route-page-state"
 import { AnswerViewScreen } from "@/features/question/components/answer-view-screen"
+import { AnswerViewPageSkeleton } from "@/features/question/components/answer-view-skeleton"
 import { parsePositiveInteger } from "@/lib/navigation/routes"
 
 function QuestionDetailRoute() {
@@ -18,7 +19,7 @@ function QuestionDetailRoute() {
 
 export default function QuestionDetailPage() {
   return (
-    <React.Suspense fallback={<RoutePageState kind="loading" />}>
+    <React.Suspense fallback={<AnswerViewPageSkeleton />}>
       <QuestionDetailRoute />
     </React.Suspense>
   )

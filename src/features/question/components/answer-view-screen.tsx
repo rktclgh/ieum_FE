@@ -12,6 +12,7 @@ import {
 } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { AnswerCard } from "@/features/question/components/answer-card"
+import { AnswerViewSkeleton } from "@/features/question/components/answer-view-skeleton"
 import { QuestionAiAnswerCard } from "@/features/question/components/question-ai-answer-card"
 import {
   useAcceptAnswer,
@@ -196,7 +197,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
             )}
           </div>
         ) : (
-          <div className="flex-1" />
+          <AnswerViewSkeleton />
         )}
       </main>
 

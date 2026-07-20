@@ -13,6 +13,7 @@ import {
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { CreateQuestionScreen } from "@/features/question/components/create-question-screen"
 import { QuestionHistoryItem } from "@/features/question/components/question-history-item"
+import { QuestionsListSkeleton } from "@/features/question/components/questions-list-skeleton"
 import { useDeleteQuestion } from "@/features/question/hooks/use-question-mutations"
 import { useMyQuestions } from "@/features/question/hooks/use-question-queries"
 import { useMe } from "@/features/session/hooks/use-me"
@@ -144,7 +145,9 @@ function QuestionsListPageContent() {
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.question.loadError}
             </p>
-          ) : items.length === 0 && !query.isLoading ? (
+          ) : query.isLoading ? (
+            <QuestionsListSkeleton />
+          ) : items.length === 0 ? (
             <p className="w-full pt-16 text-center text-body-regular-14 text-gray-400">
               {messages.question.historyEmpty}
             </p>

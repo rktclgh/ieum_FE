@@ -10,6 +10,7 @@ import { NoImageProfile } from "@/components/ui/no-image"
 import { CountryFlag } from "@/features/chat/components/country-flag"
 import { LanguageSettingItem } from "@/features/my/components/language-setting-item"
 import { MyMenuRow } from "@/features/my/components/my-menu-row"
+import { MyPageSkeleton } from "@/features/my/components/my-page-skeleton"
 import { useWithdrawMe } from "@/features/my/hooks/use-my-mutations"
 import { fromIso2, flagFromIso2 } from "@/features/join/lib/nationality-map"
 import { useLogoutMutation } from "@/features/session/hooks/use-logout-mutation"
@@ -32,7 +33,9 @@ function MyPageContent() {
   const logout = useLogoutMutation()
   const withdraw = useWithdrawMe()
 
-  if (!user) return null
+  // useMe가 resolve될 때까지 같은 골격의 스켈레톤을 세워 둔다 — 예전엔 화면이 통째로
+  // 비어 있어 진입이 실패한 것처럼 보였다(issue #382).
+  if (!user) return <MyPageSkeleton />
 
   const countryCode = fromIso2(user.nationality)
   const flagSrc = flagFromIso2(user.nationality)
