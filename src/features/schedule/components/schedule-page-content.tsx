@@ -10,6 +10,7 @@ import { AppBar } from "@/components/ui/app-bar"
 import { Circle } from "@/components/ui/circle"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
+import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { useChatRoom, useChatSessionAccess } from "@/features/chat/hooks/use-chat-queries"
 import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
@@ -47,6 +48,12 @@ interface SchedulePageContentProps {
   roomId: number
 }
 
+/**
+ * 메뉴를 아래로 펼칠 때 화면 바닥에 남겨둘 여유(px). 일정 목록 하단에는 FAB(46px)과
+ * 그 아래 safe-area가 겹쳐 있어, 메뉴가 여기까지 내려오면 가려진다.
+ */
+const SCHEDULE_BOTTOM_SAFE_AREA = 96
+
 type ScheduleEditorState =
   | { mode: "create" }
   | { mode: "edit"; schedule: MeetingScheduleEntry }
@@ -69,6 +76,8 @@ function ScheduleRow({
   onCloseMenu,
 }: ScheduleRowProps) {
   const { messages } = useTranslation()
+  const moreAnchorRef = React.useRef<HTMLDivElement>(null)
+  const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const titleTranslate = useTranslateToggle({ text: event.title, isAuthenticated })
   const locationTranslate = useTranslateToggle({ text: event.locationLabel, isAuthenticated })
   const canTranslate = titleTranslate.canTranslate || locationTranslate.canTranslate
@@ -101,6 +110,19 @@ function ScheduleRow({
 
   const fullMenuItems = canTranslate ? [translateMenuItem, ...menuItems] : menuItems
 
+  // 목록 아래쪽 카드에서 아래로 펼치면 메뉴가 화면 밖으로 잘린다. 남은 공간이 부족하면
+  // 위로 뒤집는다 — 다른 롱프레스 메뉴(채팅 목록·질문·친구 등)와 같은 방식이다.
+  const handleOpenMenu = () => {
+    const rect = moreAnchorRef.current?.getBoundingClientRect()
+    if (rect) {
+      const spaceBelow = window.innerHeight - rect.bottom
+      setPlacement(
+        spaceBelow < contextMenuHeight(fullMenuItems.length) + SCHEDULE_BOTTOM_SAFE_AREA ? "top" : "bottom"
+      )
+    }
+    onOpenMenu()
+  }
+
   return (
     <div className="relative w-full">
       <ScheduleListItem
@@ -109,8 +131,9 @@ function ScheduleRow({
           translatedTitle: titleTranslate.displayText,
           translatedLocationLabel: locationTranslate.displayText,
         }}
-        onMoreClick={canTranslate || menuItems.length > 0 ? onOpenMenu : undefined}
+        onMoreClick={canTranslate || menuItems.length > 0 ? handleOpenMenu : undefined}
         moreAriaLabel={messages.common.more}
+        moreAnchorRef={moreAnchorRef}
         menuSlot={
           menuOpen && (
             <>
@@ -118,7 +141,7 @@ function ScheduleRow({
               <ChatContextMenu
                 items={fullMenuItems}
                 onDismiss={onCloseMenu}
-                className="top-full right-0 mt-2"
+                className={placement === "top" ? "bottom-full right-0 mb-2" : "top-full right-0 mt-2"}
               />
             </>
           )
