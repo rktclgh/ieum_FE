@@ -11,10 +11,18 @@ const circleVariants = cva("inline-flex size-[46px] shrink-0 items-center justif
       primary: "bg-primary",
     },
     tone: {
-      elevated: "shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)] outline outline-1 -outline-offset-1 outline-gray-50",
+      elevated: "shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)]",
       flat: "border border-gray-100",
     },
   },
+  compoundVariants: [
+    {
+      // 흰 배경 위에서 가장자리를 잡아주는 테두리. primary 배경에서는 흰 선으로 도드라져 보여 제외한다.
+      background: "white",
+      tone: "elevated",
+      className: "outline outline-1 -outline-offset-1 outline-gray-50",
+    },
+  ],
   defaultVariants: {
     background: "white",
     tone: "elevated",
