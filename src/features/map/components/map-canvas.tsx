@@ -58,6 +58,8 @@ interface MapCanvasProps {
   alignCenterToVisibleArea?: boolean
   /** 사용자가 직접 지도를 움직였을 때. 코드가 일으킨 재중심에서는 호출되지 않는다 */
   onUserGesture?: () => void
+  /** 베이스맵 스타일 로드가 끝나 지도가 실제로 그려진 시점. 로딩 스켈레톤을 걷는 신호로 쓴다 */
+  onReady?: () => void
 }
 
 const LIVE_ACCENT = PIN_ACCENT
@@ -421,6 +423,7 @@ function MapCanvas({
   onCenterSettle,
   alignCenterToVisibleArea,
   onUserGesture,
+  onReady,
 }: MapCanvasProps) {
   const initialCenter = center ?? DEFAULT_MAP_CENTER
   // React refresh/조건부 재마운트에서 이전 Leaflet map의 remove가 늦더라도 새 map은 다른 DOM 컨테이너를 쓴다.
@@ -437,7 +440,7 @@ function MapCanvas({
       attributionControl={false}
       className={className}
     >
-      <VectorTileLayer />
+      <VectorTileLayer onReady={onReady} />
       <MapCenterUpdater
         center={center}
         recenterKey={recenterKey ?? 0}
