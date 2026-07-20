@@ -65,9 +65,9 @@ function MyPageContent() {
 
   return (
     <>
-      <main className="app-column flex min-h-dvh flex-col items-center px-4 pb-28">
+      <main className="app-column flex min-h-dvh flex-col items-center px-4 pb-[calc(7rem+var(--safe-area-bottom))]">
         {/* 프로필 */}
-        <div className="flex flex-col items-center gap-3 pt-8 pb-6">
+        <div className="flex flex-col items-center gap-3 pt-[calc(2rem+var(--safe-area-top))] pb-6">
           <div className="size-24 overflow-hidden rounded-full border-4 border-gray-100 bg-gray-100">
             {user.profileImageUrl ? (
               // 백엔드 프로필 이미지 호스트가 next.config remotePatterns에 없어 일반 img로 렌더한다.
@@ -170,7 +170,7 @@ function MyPageContent() {
       />
 
       {withdrawError && (
-        <div className="fixed inset-x-0 bottom-24 z-50 app-column flex justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(6rem+var(--safe-area-bottom))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {messages.my.withdrawDialog.error}
           </div>

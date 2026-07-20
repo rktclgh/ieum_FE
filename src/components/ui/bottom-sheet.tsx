@@ -24,7 +24,7 @@ function BottomSheet({ children, className, ...props }: BottomSheetProps) {
             키보드 회피(visualViewport 추적 + 포커스 스크롤)를 켠다. 포커스 가능한
             입력 요소가 없는 소비자에게는 이벤트가 아예 발생하지 않아 동작이 그대로다. */}
         <DrawerPrimitive.VirtualKeyboardProvider>
-          <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_env(safe-area-inset-bottom,0px))]">
+          <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_var(--safe-area-bottom))]">
             <DrawerPrimitive.Popup
               data-slot="bottom-sheet-popup"
               className={cn(

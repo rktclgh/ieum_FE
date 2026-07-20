@@ -149,7 +149,7 @@ function ScheduleEditorContent({
         />
       </div>
 
-      <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+      <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+var(--safe-area-bottom))]">
         {formError ? <Explanation variant="error" text={formError} className="px-1 pb-1" /> : null}
         <button
           type="button"

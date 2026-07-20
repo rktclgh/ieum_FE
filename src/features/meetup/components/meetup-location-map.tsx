@@ -181,7 +181,7 @@ function MeetupLocationMap({
           ref={sheetRef}
           className="pointer-events-auto shrink-0 overflow-hidden rounded-t-2xl bg-white shadow-[0px_-2px_20px_0px_rgba(0,0,0,0.08)]"
         >
-          <div className="flex max-h-72 flex-col gap-4 overflow-y-auto px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+          <div className="flex max-h-72 flex-col gap-4 overflow-y-auto px-4 pt-6 pb-[calc(0.75rem+var(--safe-area-bottom))]">
             <LocationListItem
               iconSrc="/icons/write/location-plus.svg"
               title={t.createPlaceTitle}

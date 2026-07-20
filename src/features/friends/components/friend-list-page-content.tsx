@@ -193,7 +193,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
     <>
       <main className="app-column flex flex-col">
         <FriendListAppBar onBack={() => router.back()} />
-        <div className="flex flex-col gap-2 px-4 pb-10">
+        <div className="flex flex-col gap-2 px-4 pb-[calc(2.5rem+var(--safe-area-bottom))]">
           <SearchBox
             placeholder={messages.chat.friendSearchPlaceholder}
             tone="flat"
@@ -311,7 +311,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
       </main>
 
       {actionError && (
-        <div className="fixed inset-x-0 bottom-[calc(1.5rem+var(--keyboard-inset,0px))] z-50 app-column flex justify-center px-4">
+        <div className="fixed inset-x-0 bottom-[calc(1.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
           <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
             {actionError}
           </div>

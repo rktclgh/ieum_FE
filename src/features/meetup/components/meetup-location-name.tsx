@@ -59,7 +59,7 @@ function MeetupLocationName({ address, initialValue = "", onBack, onDone }: Meet
         </div>
       </div>
 
-      <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+      <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+var(--safe-area-bottom))]">
         <button
           type="button"
           disabled={!canSubmit}

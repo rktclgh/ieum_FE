@@ -871,7 +871,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             {activeDateBadgeText && <ChatScrollDateBadge text={activeDateBadgeText} />}
           </div>
         </div>
-        <div className="relative px-4 pt-2 pb-4">
+        <div className="relative px-4 pt-2 pb-[calc(1rem+var(--safe-area-bottom))]">
           <input
             ref={cameraInputRef}
             type="file"
@@ -945,7 +945,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                   setPinnedMutation.mutate({ roomId, pinned: !roomPinned })
                 }}
               />
-              <SidePanelContent className="items-center gap-3 px-4 pb-6">
+              <SidePanelContent className="items-center gap-3 px-4 pb-[calc(1.5rem+var(--safe-area-bottom))]">
                 <ChatRoomProfile
                   title={roomTitle}
                   avatarSrc={roomAvatars.avatarSrc}

@@ -86,7 +86,7 @@ function PinListOverlayContent({
         <CategoryChipGroup value={category} onChange={setCategory} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(6rem+var(--safe-area-bottom))]">
         {isLoading ? (
           <div className="mt-16 flex justify-center">
             <div className="size-6 animate-spin rounded-full border-2 border-gray-200 border-t-primary" />
