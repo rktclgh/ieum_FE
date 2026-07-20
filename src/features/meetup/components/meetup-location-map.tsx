@@ -17,6 +17,7 @@ import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import { LocationListItem } from "@/features/meetup/components/location-list-item"
 import { FAB_BOTTOM_FLOOR } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { cn } from "@/lib/utils"
 
 const MapCanvas = dynamic(
   () => import("@/features/map/components/map-canvas").then((mod) => mod.MapCanvas),
@@ -116,7 +117,10 @@ function MeetupLocationMap({
     )
 
   // 전용 "주변 장소" 엔드포인트가 없어, 역지오코딩된 지역명으로 검색해 근사한다. (백엔드 확정 시 교체 — #47)
-  const { data: nearbyPlaces } = usePlaceSearch(reverseGeocoded?.shortLabel ?? "", target)
+  const { data: nearbyPlaces, isFetching: isSearchingNearby } = usePlaceSearch(
+    reverseGeocoded?.shortLabel ?? "",
+    target
+  )
 
   // 헤더·하단 시트가 지도를 가리는 높이를 재서, GPS 재중심 시 "보이는 영역" 정중앙에 오도록 인셋으로 넘긴다.
   const headerRef = React.useRef<HTMLDivElement>(null)
@@ -203,12 +207,16 @@ function MeetupLocationMap({
         </div>
 
         {/* 하단 시트 — 바깥은 둥근 모서리로 클립(스크롤바가 drawer 밖으로 나가지 않게),
-            안쪽만 스크롤. 직접입력 진입 행 + 주변 장소가 함께 스크롤된다. */}
+            안쪽만 스크롤. 직접입력 진입 행 + 주변 장소가 함께 스크롤된다.
+
+            높이를 내용에 맞추지 않고 고정하는 이유: 지도를 팬할 때마다 주변 장소 개수와
+            주소 줄 수가 달라지는데, 그때마다 시트가 늘었다 줄면 화면이 출렁이고 인셋이
+            바뀌어 지도 보정까지 연쇄로 발동한다. 높이를 묶어 두면 내용만 교체된다. */}
         <div
           ref={sheetRef}
           className="pointer-events-auto shrink-0 overflow-hidden rounded-t-2xl bg-white shadow-[0px_-2px_20px_0px_rgba(0,0,0,0.08)]"
         >
-          <div className="flex max-h-72 flex-col gap-4 overflow-y-auto px-4 pt-6 pb-[calc(0.75rem+var(--safe-area-bottom))]">
+          <div className="flex h-72 flex-col gap-4 overflow-y-auto px-4 pt-6 pb-[calc(0.75rem+var(--safe-area-bottom))]">
             <LocationListItem
               iconSrc="/icons/write/location-plus.svg"
               title={t.createPlaceTitle}
@@ -219,16 +227,29 @@ function MeetupLocationMap({
               onAction={() => currentAddress && target && onCreateName(currentAddress, target)}
             />
 
-            {nearbyPlaces?.map((place) => (
-              <LocationListItem
-                key={place.id}
-                iconSrc="/icons/write/location-list.svg"
-                title={place.name}
-                subtitle={place.address}
-                actionLabel={t.selectButton}
-                onAction={() => onSelectPlace(place)}
-              />
-            ))}
+            {/* 새 좌표의 결과가 도착할 때까지 이전 목록을 그대로 두고 흐리게만 처리한다.
+                목록이 사라졌다 나타나지 않아야 팬 중에도 화면이 안정적이다. */}
+            <div
+              className={cn(
+                "flex flex-col gap-4 transition-opacity duration-base ease-base",
+                (isMoving || isSearchingNearby) && "opacity-40"
+              )}
+            >
+              {nearbyPlaces?.length === 0 ? (
+                <p className="py-2 text-body-regular-14 text-gray-500">{t.searchEmpty}</p>
+              ) : (
+                nearbyPlaces?.map((place) => (
+                  <LocationListItem
+                    key={place.id}
+                    iconSrc="/icons/write/location-list.svg"
+                    title={place.name}
+                    subtitle={place.address}
+                    actionLabel={t.selectButton}
+                    onAction={() => onSelectPlace(place)}
+                  />
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
