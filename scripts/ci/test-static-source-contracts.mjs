@@ -734,9 +734,12 @@ test("chat room controls wait for canonical state and never act before room type
   assert.ok(roomPage.includes("constcanConfigureRoomNotification=room!==undefined"))
   assert.ok(roomPage.includes("showPinAction={canPinRoom}"))
   assert.ok(roomPage.includes("showNotificationAction={canConfigureRoomNotification}"))
-  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending}"))
+  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending||isPinnedRoomLoading}"))
   assert.ok(roomPage.includes("if(!session.authenticated||!canConfigureRoomNotification||setNotifyMutation.isPending)return"))
   assert.ok(roomPage.includes("if(!session.authenticated||!canPinRoom||setPinnedMutation.isPending)return"))
+  // 방 목록이 도착하기 전에는 기존 고정 방을 알 수 없다. 그대로 고정하면 교체 확인을 건너뛰고
+  // 두 방이 고정되므로, 상세 화면은 목록 로딩 중 고정을 막아야 한다(고정은 전체 1개).
+  assert.ok(roomPage.includes("if(isPinnedRoomLoading)return"))
   assert.ok(moreHeader.includes("pinPending?:boolean"))
   assert.ok(moreHeader.includes("aria-busy={pinPending}"))
   assert.ok(moreHeader.includes("disabled={pinPending}"))
