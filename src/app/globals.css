@@ -187,21 +187,23 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
 
   /*
-   * ICB 부족분 — issue #395.
+   * 하단 탭바 기하 — issue #419.
    *
-   * `statusBarStyle: "black-translucent"`에서 iOS는 웹뷰를 상태바 뒤까지 끌어올리면서도
-   * 레이아웃 뷰포트(ICB) 높이는 상태바를 뺀 옛 값 그대로 둔다. `position: fixed`가 이 ICB를
-   * 기준으로 잡히므로, 화면을 꽉 채워야 할 요소들이 바닥에서 상태바 높이만큼 떠 버린다.
-   * (#304에서 이 문제로 #381에서 통째로 되돌렸던 지점이다.)
+   * **탭바의 높이는 여기서만 정의한다.** 탭바 자신이 이 값으로 그려지고, 탭바가 있는
+   * 화면이 이 값으로 하단을 비운다. 두 숫자가 어긋날 수 없게 만드는 것이 핵심이다.
    *
-   * 부족분은 곧 상태바 높이이고, black-translucent에서 그 값이 `--safe-area-top`으로 들어온다.
+   * 이전에는 탭바가 96px을 점유하는데 페이지는 `pb-[calc(7rem+var(--safe-area-bottom))]`
+   * (112px + safe-area)를 비웠다. 값이 다른 데다 한쪽만 safe-area를 더해서, 마지막 항목과
+   * 탭바 사이 간격이 기기별로 16~50px 사이에서 변했다. "핸드폰마다 다르게 보인다"의 정체다.
    *
-   * **`@media (display-mode: standalone)` 안에 두는 것이 이 규칙의 안전장치다.**
-   * 사파리 탭에서는 웹뷰가 상태바 뒤로 가지 않아 ICB가 부족하지 않은데, 노치 때문에
-   * `--safe-area-top`은 여전히 0이 아니다. 게이트 없이 적용하면 브라우저에서 탭바가
-   * 노치 높이만큼 화면 밖으로 밀린다.
+   * 내역: pt-2(8) + pill(링크 52 + 컨테이너 패딩 4×2 = 60) + 바닥 gap(28) = 96px.
+   * 여기에 `--safe-area-bottom`을 더해 홈 인디케이터 위로 올린다. 이전에는 Figma의 28px을
+   * 근거로 safe-area를 일부러 빼서 탭바가 홈 인디케이터를 덮고 있었다(실측 34px).
    */
-  --icb-shortfall: 0px;
+  --tab-bar-height: calc(96px + var(--safe-area-bottom));
+
+  /** FAB·바텀시트가 얹히는 기준선 — 뷰포트 바닥에서 pill 상단까지. */
+  --tab-bar-pill-top: calc(88px + var(--safe-area-bottom));
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -350,37 +352,23 @@
   }
 }
 
-/* 키보드가 열리면 셸 높이를 그만큼 줄인다. flex-1 스크롤 영역이 압축되면서
-   하단 입력창이 키보드 바로 위에 붙고, Safari가 페이지를 밀어 올릴 이유가 사라진다. */
-@utility app-viewport-height {
-  height: calc(100dvh - var(--keyboard-inset, 0px));
-}
-
 /*
- * ICB 부족분 보정 — issue #395. 설명은 `--icb-shortfall` 정의부 참고.
+ * 화면 바닥에 고정되는 바 — 탭바(`tab-bar.tsx`)와 각 화면의 하단 CTA/입력 바가 공유한다.
  *
- * standalone이 아닐 때 `--icb-shortfall`은 0px이라 두 유틸리티는 각각
- * `inset: 0` / `bottom: 0`과 완전히 같아진다 — 사파리·데스크톱 동작은 그대로다.
+ * issue #419에서 화면 높이 계약은 `Screen` 컴포넌트로 옮겼고, ICB 부족분 보정(#395·#409)과
+ * 화면 셸 유틸(`app-screen-fixed`·`app-viewport-height`)은 제거했다. 실기기 계측 결과
+ * (`docs/viewport-behavior.md`) 보정할 부족분이 애초에 상수가 아니었고
+ * (`black-translucent`에서 뷰포트가 812↔874로 흔들린다), 보정을 감싸던
+ * `@media (display-mode: standalone)`은 iOS에서 매칭조차 되지 않았다.
+ *
+ * 이 유틸리티만 남긴 것은 화면 루트가 아닌 "바닥 고정 바"라는 별개 패턴이고 소비자가
+ * 여럿(탭바·가입 폼·문의·프로필 편집)이기 때문이다. 지금은 평범한 `fixed`와 같다.
  */
-@media (display-mode: standalone) {
-  :root {
-    --icb-shortfall: var(--safe-area-top);
-  }
-}
-
-/** 화면을 꽉 채우는 셸 (`fixed inset-0` 대체). 바닥이 진짜 화면 바닥에 닿는다. */
-@utility app-screen-fixed {
-  position: fixed;
-  inset: 0;
-  bottom: calc(-1 * var(--icb-shortfall));
-}
-
-/** 화면 바닥에 고정되는 바 (`fixed inset-x-0 bottom-0` 대체). */
 @utility app-bottom-fixed {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(-1 * var(--icb-shortfall));
+  bottom: 0;
 }
 
 /*

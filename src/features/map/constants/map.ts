@@ -15,9 +15,31 @@ const MAP_LOCATION_WAIT_MS = 3500
 const MAP_READY_MAX_WAIT_MS = 8000
 
 // 홈 지도에서 오버레이가 지도를 가리는 높이(px). flyToBounds 패딩에 써서 재중심·클러스터 확대 시
-// 핀이 "보이는" 영역(헤더/탭바 제외) 정중앙에 오도록 한다. 대략치이며 실기기 확인 후 조정 가능.
-const MAP_TOP_INSET = 120 // 검색바 + 카테고리 칩 (상단 p-4 포함)
-const MAP_BOTTOM_INSET = 96 // 탭바 + FAB 영역
+// 핀이 "보이는" 영역(헤더/탭바 제외) 정중앙에 오도록 한다.
+//
+// 이 base 값에 실제 safe-area를 런타임에 더한다(`mapTopInset`/`mapBottomInset`). 상단 툴바는
+// `APP_BAR_SAFE_TOP`(1rem + safe-area-top)만큼, 하단 탭바는 `--tab-bar-height`(96px + safe-area-bottom)
+// 만큼 기기별로 커지므로, base만 쓰면 노치 기기에서 핀 센터링이 어긋난다.
+const MAP_TOP_INSET_BASE = 120 // 검색바 + 카테고리 칩 (상단 1rem 포함, safe-area 제외)
+const MAP_BOTTOM_INSET_BASE = 96 // 탭바 가시 영역 (safe-area 제외) — `--tab-bar-height` base와 같은 값
+
+/** `document`가 없거나 값이 없으면 0. env(safe-area-*)는 CSS 변수를 통해서만 JS로 읽힌다. */
+function readSafeAreaPx(name: "--safe-area-top" | "--safe-area-bottom"): number {
+  if (typeof document === "undefined") return 0
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(name)
+  const n = Number.parseFloat(raw)
+  return Number.isFinite(n) ? n : 0
+}
+
+/** 상단 툴바가 지도를 가리는 높이. base + safe-area-top. */
+function mapTopInset(): number {
+  return MAP_TOP_INSET_BASE + readSafeAreaPx("--safe-area-top")
+}
+
+/** 하단 탭바가 지도를 가리는 높이. base + safe-area-bottom = `--tab-bar-height`와 정합. */
+function mapBottomInset(): number {
+  return MAP_BOTTOM_INSET_BASE + readSafeAreaPx("--safe-area-bottom")
+}
 
 // OpenFreeMap Positron — 흰색/회색 톤의 미니멀 벡터 베이스맵 (API 키 불필요).
 // 벡터 타일이라 water/landcover/building/transportation을 레이어별로 색칠할 수 있다.
@@ -110,8 +132,8 @@ function getLabelTextField(language: LanguageCode): unknown {
 export {
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
-  MAP_TOP_INSET,
-  MAP_BOTTOM_INSET,
+  mapTopInset,
+  mapBottomInset,
   MAP_LOCATION_WAIT_MS,
   MAP_READY_MAX_WAIT_MS,
   MAP_STYLE_URL,

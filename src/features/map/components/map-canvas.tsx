@@ -2,7 +2,7 @@
 
 import L from "leaflet"
 import * as React from "react"
-import { MapContainer, Marker, useMap, useMapEvents } from "react-leaflet"
+import { MapContainer, Marker, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
@@ -45,7 +45,6 @@ interface MapCanvasProps {
   /** 하단 오버레이(시트 등)에 가려지는 높이(px). 보이는 영역 정중앙 계산에 사용 */
   bottomInset?: number
   className?: string
-  onMapClick?: (position: Coordinates) => void
   onBoundsChange?: (bounds: MapBounds) => void
   pins?: MapPin[]
   onPinClick?: (pin: MapPin) => void
@@ -103,17 +102,30 @@ const USER_LOCATION_HALO_SIZE = 48
 const USER_LOCATION_HALO_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_HALO_SIZE) / 2
 
 // 중심 점은 주황 코어 12px + 흰 테두리 3px = 바깥지름 18px.
-// 테두리를 outline이 아닌 border로 그리는 것이 핵심이다. outline은 박스 바깥에 그려져
-// box-shadow의 기준 박스가 코어(12px)로 남는 탓에, 주황 글로우가 흰 테두리와 같은 자리에서
-// 피어올라 테두리 바깥 대비를 죽인다. border면 기준 박스가 18px이라 글로우가 테두리
-// '바깥'에서 시작해, 흰 테두리가 헤일로 위에 또렷하게 얹힌다.
+//
+// issue #412 — 세 겹을 **명시적 z-index로** 쌓는다. 아래에서 위로:
+//   z-0 헤일로 → z-1 글로우(흰색 없음) → z-2 흰 테두리 + 코어(그림자 없음)
+//
+// 왜 z-index를 명시하는가: DOM 순서만으로도 이론상 같은 결과지만, 헤일로 `<svg>`가 `filter`를
+// 갖고 있어 자체 스택 컨텍스트를 만든다. 실기기에서 헤일로가 점 위로 보인다는 리포트가
+// 반복돼, 순서를 브라우저 해석에 맡기지 않고 못 박는다.
+//
+// 왜 글로우를 따로 떼는가: `box-shadow`는 박스 '바깥'에 그려진다. #397처럼 흰 테두리와 글로우를
+// 한 요소에 두면 박스가 18px이라 주황 글로우가 흰 테두리 **바로 바깥**을 감싼다. 흰 3px이
+// 안쪽 코어와 바깥 글로우 사이에 끼여, 맨 위에 그려져도 시각적으로 파묻힌다.
+// 글로우 레이어를 코어와 같은 12px로 두어야 글로우가 테두리 안쪽 경계에서 끝난다.
+const USER_LOCATION_DOT_SIZE = 18
+const USER_LOCATION_DOT_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_DOT_SIZE) / 2
+const USER_LOCATION_CORE_SIZE = 12
+const USER_LOCATION_CORE_OFFSET = (USER_LOCATION_SIZE - USER_LOCATION_CORE_SIZE) / 2
 const userLocationIcon = L.divIcon({
-  html: `<div style="position:relative;width:${USER_LOCATION_SIZE}px;height:${USER_LOCATION_SIZE}px">
-    <svg xmlns="http://www.w3.org/2000/svg" width="${USER_LOCATION_HALO_SIZE}" height="${USER_LOCATION_HALO_SIZE}" viewBox="0 0 48 48" fill="none" style="position:absolute;left:${USER_LOCATION_HALO_OFFSET}px;top:${USER_LOCATION_HALO_OFFSET}px">
+  html: `<div style="position:relative;width:${USER_LOCATION_SIZE}px;height:${USER_LOCATION_SIZE}px;isolation:isolate">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${USER_LOCATION_HALO_SIZE}" height="${USER_LOCATION_HALO_SIZE}" viewBox="0 0 48 48" fill="none" style="position:absolute;left:${USER_LOCATION_HALO_OFFSET}px;top:${USER_LOCATION_HALO_OFFSET}px;z-index:0">
       <g filter="url(#user_loc_halo_blur)"><circle cx="24" cy="24" r="22" fill="${LIVE_ACCENT}" fill-opacity="0.2"/></g>
       <defs><filter id="user_loc_halo_blur" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur stdDeviation="1" result="effect1_foregroundBlur"/></filter></defs>
     </svg>
-    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:18px;height:18px;border-radius:999px;background:${LIVE_ACCENT};border:3px solid #ffffff;box-shadow:0 0 4px 0 rgba(0,0,0,0.25),0 0 8px 0 rgba(252,112,69,0.6)"></div>
+    <div style="position:absolute;left:${USER_LOCATION_CORE_OFFSET}px;top:${USER_LOCATION_CORE_OFFSET}px;width:${USER_LOCATION_CORE_SIZE}px;height:${USER_LOCATION_CORE_SIZE}px;border-radius:999px;box-shadow:0 0 4px 0 rgba(0,0,0,0.25),0 0 8px 0 rgba(252,112,69,0.6);z-index:1"></div>
+    <div style="position:absolute;left:${USER_LOCATION_DOT_OFFSET}px;top:${USER_LOCATION_DOT_OFFSET}px;box-sizing:border-box;width:${USER_LOCATION_DOT_SIZE}px;height:${USER_LOCATION_DOT_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};border:3px solid #ffffff;z-index:2"></div>
   </div>`,
   className: "",
   iconSize: [USER_LOCATION_SIZE, USER_LOCATION_SIZE],
@@ -374,16 +386,6 @@ function MapCenterWatcher({
   return null
 }
 
-function MapClickListener({ onMapClick }: { onMapClick: (position: Coordinates) => void }) {
-  useMapEvents({
-    click(event) {
-      onMapClick({ lat: event.latlng.lat, lng: event.latlng.lng })
-    },
-  })
-
-  return null
-}
-
 // 지도 영역(bbox)을 부모에 알린다. moveend/zoomend를 debounce로 합쳐 과도한 재조회를 막고,
 // 최초 mount 시 1회 즉시 방출한다. onBoundsChange를 ref에 담아 effect 재실행/무한 루프를 피한다.
 function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) {
@@ -483,7 +485,6 @@ function MapCanvas({
   topInset,
   bottomInset,
   className,
-  onMapClick,
   onBoundsChange,
   pins,
   onPinClick,
@@ -536,7 +537,6 @@ function MapCanvas({
         />
       )}
       {onUserGesture && <MapUserGestureWatcher onUserGesture={onUserGesture} moveGate={moveGate} />}
-      {onMapClick && <MapClickListener onMapClick={onMapClick} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
       {pins && pins.length > 0 && (
         <ClusteredPins

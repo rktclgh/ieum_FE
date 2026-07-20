@@ -17,7 +17,8 @@ const KEYBOARD_RESIZE_THRESHOLD = 60
  * 통째로 밀어 올리면서 입력창과 키보드 사이에 공백이 생긴다.
  *
  * visualViewport로 실제 가려진 높이를 계산해 --keyboard-inset 으로 노출한다.
- * 소비 측은 app-viewport-height 유틸리티나 bottom: var(--keyboard-inset) 로 이 값을 반영한다.
+ * 소비 측은 `Screen kind="fixed"`(pb-[var(--keyboard-inset)]) 나 각 하단 고정 바의
+ * pb-[...] 에서 이 값을 반영한다(issue #419).
  */
 export function useKeyboardInset(): void {
   useEffect(() => {
@@ -45,7 +46,7 @@ export function useKeyboardInset(): void {
       }
 
       // offsetTop을 더하기 전, 순수 높이 감소분으로 먼저 "키보드가 맞는지"를 판단한다.
-      // 문턱값 이하면 브라우저 크롬 움직임으로 보고 0을 퍼블리시한다 — app-viewport-height의
+      // 문턱값 이하면 브라우저 크롬 움직임으로 보고 0을 퍼블리시한다 — Screen kind="fixed"의
       // 100dvh가 이미 크롬 상태를 반영하므로, 여기서까지 빼면 이중으로 줄어든다.
       const reducedHeight = window.innerHeight - viewport.height
       if (reducedHeight <= KEYBOARD_RESIZE_THRESHOLD) {

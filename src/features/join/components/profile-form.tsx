@@ -144,7 +144,6 @@ function ProfileForm({ className, flow }: ProfileFormProps) {
           variant="primary"
           size="block"
           disabled={!isNextEnabled || signupMutation.isPending}
-          className={cn(!isNextEnabled && "bg-gray-200 text-white hover:bg-gray-200")}
         >
           {messages.join.createAccountButton}
         </Button>

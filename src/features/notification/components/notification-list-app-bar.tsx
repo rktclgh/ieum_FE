@@ -3,11 +3,10 @@
 import * as React from "react"
 import Image from "next/image"
 
-import { cn } from "@/lib/utils"
-import { APP_BAR_SAFE_TOP } from "@/lib/constants/layout"
+import { AppBar } from "@/components/ui/app-bar"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
-interface NotificationListAppBarProps extends React.ComponentProps<"div"> {
+interface NotificationListAppBarProps extends React.ComponentProps<typeof AppBar> {
   onBack?: () => void
   onEnterDeleteMode?: () => void
   onOpenSettings?: () => void
@@ -15,9 +14,11 @@ interface NotificationListAppBarProps extends React.ComponentProps<"div"> {
 }
 
 // 알림센터 상단바 — 뒤로가기 + 가운데 제목 + 우측 쓰레기통·톱니.
+// 컨테이너·safe-area·뒤로가기 버튼·제목 중앙정렬은 공용 AppBar에 위임하고(issue #419),
+// 여기서는 이 화면 고유의 trailing 액션만 그린다. 우측 아이콘이 둘이라 제목이 밀리므로
+// AppBar의 centerTitle로 절대 중앙에 고정한다.
 // 쓰레기통은 삭제 모드 진입용이라 삭제 모드에서는 숨기고 톱니만 남긴다(시안 1835:11204).
 function NotificationListAppBar({
-  className,
   onBack,
   onEnterDeleteMode,
   onOpenSettings,
@@ -27,62 +28,34 @@ function NotificationListAppBar({
   const { messages } = useTranslation()
 
   return (
-    <div
-      data-slot="notification-list-app-bar"
-      // issue #279: safe-area 패딩이 붙으면 고정 높이는 내용물을 눌러버리므로 min-h로 바꿔 아래로 자란다.
-      className={cn(
-        "relative flex min-h-[57px] w-full items-center justify-between px-4 pb-4",
-        APP_BAR_SAFE_TOP,
-        className
-      )}
-      {...props}
-    >
-      <button
-        type="button"
-        aria-label={messages.common.back}
-        onClick={onBack}
-        className="flex size-6 shrink-0 items-center justify-center"
-      >
-        <Image src="/icons/arrow/left.svg" alt="" width={24} height={24} className="size-6" />
-      </button>
-
-      <p className="-translate-x-1/2 absolute left-1/2 text-title-semibold-18 text-gray-900">
-        {messages.notification.appBarTitle}
-      </p>
-
-      <div className="flex shrink-0 items-center gap-3">
-        {!deleteMode && (
+    <AppBar
+      title={messages.notification.appBarTitle}
+      centerTitle
+      onLeadingClick={onBack}
+      trailingSlot={
+        <div className="flex shrink-0 items-center gap-3">
+          {!deleteMode && (
+            <button
+              type="button"
+              aria-label={messages.notification.deleteModeLabel}
+              onClick={onEnterDeleteMode}
+              className="flex size-6 shrink-0 items-center justify-center"
+            >
+              <Image src="/icons/app-bar/trash.svg" alt="" width={24} height={24} className="size-6" />
+            </button>
+          )}
           <button
             type="button"
-            aria-label={messages.notification.deleteModeLabel}
-            onClick={onEnterDeleteMode}
+            aria-label={messages.notification.settingsLabel}
+            onClick={onOpenSettings}
             className="flex size-6 shrink-0 items-center justify-center"
           >
-            <Image
-              src="/icons/app-bar/trash.svg"
-              alt=""
-              width={24}
-              height={24}
-              className="size-6"
-            />
+            <Image src="/icons/app-bar/setting.svg" alt="" width={24} height={24} className="size-6" />
           </button>
-        )}
-        <button
-          type="button"
-          aria-label={messages.notification.settingsLabel}
-          onClick={onOpenSettings}
-          className="flex size-6 shrink-0 items-center justify-center"
-        >
-          <Image
-            src="/icons/app-bar/setting.svg"
-            alt=""
-            width={24}
-            height={24}
-            className="size-6"
-          />
-        </button>
-      </div>
-    </div>
+        </div>
+      }
+      {...props}
+    />
   )
 }
 

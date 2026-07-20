@@ -1,3 +1,4 @@
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -39,10 +40,10 @@ function AnswerViewSkeleton() {
 // AnswerViewScreen 본체와 같은 main 골격을 써서 fallback → 본체 전환 시 헤더가 튀지 않는다.
 function AnswerViewPageSkeleton() {
   return (
-    <main className="app-column flex min-h-dvh flex-col bg-white">
+    <Screen kind="scroll" as="main" className="bg-white">
       <AppBar leadingIcon={null} trailingIcon={null} center={<Skeleton className="h-6 w-40" />} />
       <AnswerViewSkeleton />
-    </main>
+    </Screen>
   )
 }
 

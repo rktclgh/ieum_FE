@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import * as React from "react"
 
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ProfileForm } from "@/features/join/components/profile-form"
 import { useSocialSignupFlow } from "@/features/social-login/hooks/use-social-signup-flow"
@@ -37,17 +38,17 @@ export default function SocialJoinPage() {
 
   if (!hasCheckedStorage || !payload) {
     return (
-      <main className="app-column flex min-h-dvh items-center justify-center px-4">
+      <Screen kind="scroll" as="main" centered className="px-4">
         <div className="flex flex-col items-center gap-3 text-center">
           <span className="size-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary" />
           <p className="text-body-medium-16 text-gray-900">{messages.social.loading}</p>
         </div>
-      </main>
+      </Screen>
     )
   }
 
   return (
-    <main className="app-column flex min-h-dvh flex-col items-center">
+    <Screen kind="scroll" as="main" className="items-center">
       <AppBar
         title={messages.join.infoAppBarTitle}
         trailingVariant="close"
@@ -56,6 +57,6 @@ export default function SocialJoinPage() {
         className="w-full"
       />
       <ProfileForm flow={flow.profile} />
-    </main>
+    </Screen>
   )
 }

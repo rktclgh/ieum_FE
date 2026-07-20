@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Screen } from "@/components/layout/screen"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { SelectInput } from "@/components/ui/text-field/select-input"
@@ -69,7 +70,7 @@ function NotificationsForm({ settings: serverSettings }: { settings: UserSetting
       : null
 
   return (
-    <main className="app-column flex min-h-dvh flex-col">
+    <Screen kind="scroll" as="main">
       <AppBar
         title={messages.my.notifications.title}
         trailingIcon={null}
@@ -125,7 +126,7 @@ function NotificationsForm({ settings: serverSettings }: { settings: UserSetting
           </div>
         </div>
       )}
-    </main>
+    </Screen>
   )
 }
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { Screen } from "@/components/layout/screen"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface RoutePageStateProps {
@@ -10,10 +11,7 @@ function RoutePageState({ kind }: RoutePageStateProps) {
   const { messages } = useTranslation()
 
   return (
-    <main
-      aria-busy={kind === "loading"}
-      className="app-column flex min-h-dvh items-center justify-center px-4"
-    >
+    <Screen kind="scroll" as="main" centered aria-busy={kind === "loading"} className="px-4">
       {kind === "loading" ? (
         <span
           aria-hidden="true"
@@ -24,7 +22,7 @@ function RoutePageState({ kind }: RoutePageStateProps) {
           {messages.route.invalidLink}
         </p>
       )}
-    </main>
+    </Screen>
   )
 }
 

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { CredentialsForm } from "@/features/join/components/credentials-form"
 import { ProfileForm } from "@/features/join/components/profile-form"
@@ -18,7 +19,7 @@ function JoinContent() {
   })
 
   return (
-    <main className="app-column flex min-h-dvh flex-col items-center">
+    <Screen kind="scroll" as="main" className="items-center">
       <AppBar
         title={flow.step === "credentials" ? messages.join.appBarTitle : messages.join.infoAppBarTitle}
         trailingVariant="close"
@@ -36,7 +37,7 @@ function JoinContent() {
         className={flow.step === "profile" ? undefined : "hidden"}
         flow={flow.profile}
       />
-    </main>
+    </Screen>
   )
 }
 

@@ -53,8 +53,10 @@ const scripts = packageJson.scripts ?? {}
 const expectedScripts = {
   typecheck: "next typegen && tsc --noEmit --incremental false",
   "test:contracts": "bash scripts/ci/test-client-contracts.sh",
+  "check:layout": "bash scripts/ci/check-layout-contract.sh",
   "verify:out": "bash scripts/ci/verify-static-export.sh",
-  verify: "pnpm test:contracts && pnpm lint && pnpm typecheck && pnpm build && pnpm verify:out",
+  verify:
+    "pnpm check:layout && pnpm test:contracts && pnpm lint && pnpm typecheck && pnpm build && pnpm verify:out",
 }
 
 assert.equal(Object.hasOwn(scripts, "start"), false, "the Next start script must be absent")

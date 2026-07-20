@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { NotificationDeleteBar } from "@/features/notification/components/notification-delete-bar"
 import { NotificationItem } from "@/features/notification/components/notification-item"
+import { Screen } from "@/components/layout/screen"
 import { NotificationListAppBar } from "@/features/notification/components/notification-list-app-bar"
 import { NotificationListSkeleton } from "@/features/notification/components/notification-list-skeleton"
 import { useNotifications } from "@/features/notification/hooks/use-notification-queries"
@@ -87,7 +88,7 @@ function NotificationsPageContent() {
 
   return (
     <>
-      <main className="app-column flex min-h-dvh flex-col bg-white">
+      <Screen kind="scroll" as="main" className="bg-white">
         <NotificationListAppBar
           deleteMode={showDeleteMode}
           onBack={() => (showDeleteMode ? setDeleteMode(false) : router.back())}
@@ -127,7 +128,7 @@ function NotificationsPageContent() {
           )}
           <div ref={sentinelRef} className="h-4" />
         </div>
-      </main>
+      </Screen>
 
       <ConfirmDialog
         open={confirmDeleteAll}

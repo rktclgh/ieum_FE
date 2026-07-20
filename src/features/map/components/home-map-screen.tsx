@@ -11,19 +11,19 @@ import { MapControls } from "@/features/map/components/map-controls"
 import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton"
 import { MapSearchBar } from "@/features/map/components/map-search-bar"
 import { PinListOverlay } from "@/features/map/components/pin-list-overlay"
+import { Screen } from "@/components/layout/screen"
 import { PinStackSheet } from "@/features/map/components/pin-stack-sheet"
 import { SearchOverlay } from "@/features/map/components/search-overlay"
 import {
   DEFAULT_MAP_CENTER,
-  MAP_BOTTOM_INSET,
+  mapBottomInset,
   MAP_LOCATION_WAIT_MS,
   MAP_READY_MAX_WAIT_MS,
-  MAP_TOP_INSET,
+  mapTopInset,
 } from "@/features/map/constants/map"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
 import { useMapPins } from "@/features/map/hooks/use-map-pins"
-import { useReverseGeocode } from "@/features/map/hooks/use-reverse-geocode"
 import {
   createLastKnownLocationSyncCoordinator,
 } from "@/features/map/lib/last-known-location-sync"
@@ -67,12 +67,12 @@ function toPinType(category: Category): PinType | undefined {
   return undefined
 }
 
-// 사용자가 홈 지도에 꽂은 단일 핀. 검색 출신은 label/address를 갖고, 지도 클릭 출신은 좌표만 갖는다.
+// 사용자가 홈 지도에 꽂은 단일 핀. 검색으로 고른 장소만 핀이 되므로 label/address가 항상 있다.
 interface SelectedLocation {
   lat: number
   lng: number
-  label?: string
-  address?: string
+  label: string
+  address: string
 }
 
 function HomeMapScreen() {
@@ -99,29 +99,18 @@ function HomeMapScreen() {
   const [followRequested, setFollowRequested] = React.useState(false)
   const isFollowingMe = isLocateFollowingVisible(followRequested, position)
 
-  // 검색으로 고른 핀은 이미 label/address를 가지므로 역지오코딩하지 않는다.
-  // 좌표만 있는(지도 클릭) 핀에만 역지오코딩해 검색바 라벨과 프리필용 주소를 얻는다.
-  const geoTarget = selectedLocation && !selectedLocation.label ? selectedLocation : null
-  const { data: reverseGeocoded } = useReverseGeocode(geoTarget)
-  const selectedLocationLabel = selectedLocation
-    ? (selectedLocation.label ?? reverseGeocoded?.shortLabel ?? reverseGeocoded?.fullAddress ?? null)
-    : null
+  // 핀은 검색으로 고른 장소에서만 오므로 label/address가 이미 채워져 있다 — 역지오코딩할 게 없다.
+  const selectedLocationLabel = selectedLocation?.label ?? null
 
-  // 만들기 화면 프리필용 값. 검색 핀은 label/address를 바로 갖고,
-  // 지도 클릭 핀은 역지오코딩이 끝나야 채워진다(그 전에는 null → 프리필 안 함).
-  const selectedPlaceLabel =
-    selectedLocation?.label ?? reverseGeocoded?.shortLabel ?? reverseGeocoded?.fullAddress
-  const selectedPlaceAddress =
-    selectedLocation?.address ?? reverseGeocoded?.fullAddress ?? reverseGeocoded?.shortLabel
-  const selectedPlace: MeetupPlaceValue | null =
-    selectedLocation && selectedPlaceLabel && selectedPlaceAddress
-      ? {
-          lat: selectedLocation.lat,
-          lng: selectedLocation.lng,
-          address: selectedPlaceAddress,
-          label: selectedPlaceLabel,
-        }
-      : null
+  // 만들기 화면 프리필용 값.
+  const selectedPlace: MeetupPlaceValue | null = selectedLocation
+    ? {
+        lat: selectedLocation.lat,
+        lng: selectedLocation.lng,
+        address: selectedLocation.address,
+        label: selectedLocation.label,
+      }
+    : null
 
   const { data: pinData } = useMapPins(bounds, toPinType(category))
   const pins = pinData?.pins
@@ -240,20 +229,15 @@ function HomeMapScreen() {
   }, [position, recenterTo])
 
   return (
-    <div className="app-screen-fixed flex w-full flex-col overflow-hidden">
+    <Screen kind="bleed">
       {canShowMap ? (
         <MapCanvas
           center={recenterTarget ?? position ?? DEFAULT_MAP_CENTER}
           recenterKey={recenterKey}
           animateCenter
-          topInset={MAP_TOP_INSET}
-          bottomInset={MAP_BOTTOM_INSET}
+          topInset={mapTopInset()}
+          bottomInset={mapBottomInset()}
           className="absolute inset-0 z-0 size-full"
-          onMapClick={(position) => {
-            // 다른 지점을 골랐으므로 더는 "내 위치 기준"이 아니다.
-            setSelectedLocation({ lat: position.lat, lng: position.lng })
-            setFollowRequested((state) => reduceLocateFollowing(state, { type: "recenter-elsewhere" }))
-          }}
           onUserGesture={() =>
             setFollowRequested((state) => reduceLocateFollowing(state, { type: "user-gesture" }))
           }
@@ -382,7 +366,7 @@ function HomeMapScreen() {
       ) : null}
 
       <InstallPrompt />
-    </div>
+    </Screen>
   )
 }
 

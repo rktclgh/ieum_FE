@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Textarea } from "@/components/ui/text-field/textarea"
@@ -50,7 +51,7 @@ function ReportPageContent({ target }: ReportPageContentProps) {
   }
 
   return (
-    <main className="app-column app-viewport-height flex flex-col bg-white">
+    <Screen kind="fixed" as="main" className="bg-white">
       <AppBar
         title={messages.report.title}
         trailingVariant="close"
@@ -134,7 +135,7 @@ function ReportPageContent({ target }: ReportPageContentProps) {
         confirmLabel={messages.report.submitButton}
         onConfirm={handleSubmit}
       />
-    </main>
+    </Screen>
   )
 }
 

@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
+import { Screen } from "@/components/layout/screen"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { NoImageProfile } from "@/components/ui/no-image"
 import { CountryFlag } from "@/features/chat/components/country-flag"
@@ -68,7 +69,7 @@ function MyPageContent() {
 
   return (
     <>
-      <main className="app-column flex min-h-dvh flex-col items-center px-4 pb-[calc(7rem+var(--safe-area-bottom))]">
+      <Screen kind="scroll" as="main" className="items-center px-4">
         {/* 프로필 */}
         <div className="flex flex-col items-center gap-3 pt-[calc(2rem+var(--safe-area-top))] pb-6">
           <div className="size-24 overflow-hidden rounded-full bg-gray-100">
@@ -150,7 +151,7 @@ function MyPageContent() {
             </button>
           </div>
         </div>
-      </main>
+      </Screen>
 
       <ConfirmDialog
         open={logoutOpen}

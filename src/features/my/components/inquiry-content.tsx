@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Screen } from "@/components/layout/screen"
 import { Textarea } from "@/components/ui/text-field/textarea"
 import { Toast } from "@/components/ui/toast"
 import { useSubmitInquiry } from "@/features/my/hooks/use-my-mutations"
@@ -46,7 +47,7 @@ function InquiryContent() {
   }
 
   return (
-    <main className="app-column flex min-h-dvh flex-col">
+    <Screen kind="scroll" as="main">
       <AppBar
         title={messages.my.inquiry.title}
         trailingIcon={null}
@@ -97,7 +98,7 @@ function InquiryContent() {
 
       <Toast open={submitted} message={messages.my.inquiry.success} />
       <Toast open={submitInquiry.isError} message={messages.my.inquiry.error} />
-    </main>
+    </Screen>
   )
 }
 

@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Flag, Globe } from "lucide-react"
 
+import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
@@ -133,7 +134,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
 
   return (
     <>
-      <main className="app-column flex min-h-dvh flex-col bg-white">
+      <Screen kind="scroll" as="main" className="bg-white">
         <AppBar
           center={
             <span className="min-w-0 flex-1 truncate text-center text-title-semibold-18 text-gray-900">
@@ -199,7 +200,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
         ) : (
           <AnswerViewSkeleton />
         )}
-      </main>
+      </Screen>
 
       {actionError && (
         <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
