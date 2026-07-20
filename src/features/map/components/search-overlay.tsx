@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 
-import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
+import { FullScreenOverlay, useFocusOnOverlaySettled } from "@/components/ui/full-screen-overlay"
 import { SearchBox } from "@/components/ui/search-box"
 import type { MapBounds } from "@/features/map/api/pin-types"
 import type { Place } from "@/features/map/api/place-search-api"
@@ -59,6 +59,7 @@ function SearchOverlayContent({
   onOpenQuestion,
 }: SearchOverlayContentProps) {
   const { messages } = useTranslation()
+  const searchInputRef = useFocusOnOverlaySettled<HTMLInputElement>()
   // 롱프레스 번역 메뉴는 로그인 사용자에게만 뜬다(useTranslateToggle.canTranslate).
   // users/me 는 홈 화면에서 이미 채워져 있어 오버레이가 새로 요청하지 않는다.
   const { data: me } = useMe()
@@ -111,7 +112,8 @@ function SearchOverlayContent({
           <Image src="/icons/arrow/left.svg" alt="" width={24} height={24} className="size-6" />
         </button>
         <SearchBox
-          autoFocus
+          // autoFocus 금지 — 진입 모션이 끝난 뒤에 포커스를 준다 (issue #384).
+          ref={searchInputRef}
           tone="flat"
           placeholder={messages.home.searchPlaceholder}
           value={query}
