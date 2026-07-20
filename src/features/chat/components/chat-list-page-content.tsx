@@ -11,6 +11,7 @@ import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/compon
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
+import { useFlipReorder } from "@/lib/hooks/use-flip-reorder"
 import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useChatRoomsView, usePinnedRoomId } from "@/features/chat/hooks/use-chat-queries"
 import {
@@ -53,7 +54,7 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
   const longPress = useLongPress({ onLongPress: handleOpenMenu })
 
   return (
-    <div ref={rowRef} className="relative">
+    <div ref={rowRef} data-flip-key={chat.roomId} className="relative">
       <ChatListItem
         title={chat.title}
         avatarSrc={chat.avatarSrc}
@@ -64,6 +65,7 @@ function ChatRow({ chat, highlightQuery, menuOpen, menuItems, onOpenMenu, onClos
         time={chat.time}
         unreadCount={chat.unreadCount}
         pinned={chat.pinned}
+        notifyEnabled={chat.notifyEnabled}
         highlightQuery={highlightQuery}
         active={menuOpen}
         onClick={onNavigate}
@@ -108,6 +110,16 @@ function ChatListPageContent() {
       .sort((a, b) => Number(b.pinned) - Number(a.pinned))
   }, [entries, query, category])
 
+  // 고정 토글로 순서가 바뀌면 자리가 옮겨진 방을 이전 위치에서 새 위치로 트윈한다.
+  // 목록 순서를 바꾸는 건 고정뿐이므로 "어느 방이 고정됐는지"를 애니메이션 키로 삼고,
+  // 검색·필터로 목록 구성이 바뀔 때는 트윈 없이 기준 위치만 다시 잰다.
+  const listRef = React.useRef<HTMLDivElement>(null)
+  useFlipReorder(
+    listRef,
+    String(pinnedRoomId ?? "none"),
+    filteredChats.map((chat) => chat.roomId).join(",")
+  )
+
   const runSetPinned = (chat: ChatListEntry, pinned: boolean, replacingRoomId?: number) => {
     setPinError(null)
     setPinnedMutation.mutate(
@@ -146,7 +158,7 @@ function ChatListPageContent() {
     {
       icon: (
         <Image
-          src={chat.notifyEnabled ? "/icons/chat/alarm-off.svg" : "/icons/chat/alarm-on.svg"}
+          src={chat.notifyEnabled ? "/icons/chat/alarm-off.svg" : "/icons/chat/alarm-on-line.svg"}
           alt=""
           width={24}
           height={24}
@@ -216,7 +228,7 @@ function ChatListPageContent() {
             {pinError}
           </p>
         )}
-        <div className="flex flex-col">
+        <div ref={listRef} className="flex flex-col">
           {filteredChats.map((chat) => (
             <ChatRow
               key={chat.roomId}

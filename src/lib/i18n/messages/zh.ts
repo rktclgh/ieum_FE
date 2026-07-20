@@ -386,6 +386,7 @@ export const zh: Messages = {
     pinFailed: "置顶设置失败",
     enableNotificationAction: "开启通知",
     disableNotificationAction: "关闭通知",
+    notificationOffBadge: "通知已关闭",
     deleteAction: "删除",
     replyAction: "回复",
     replyToLabel: (targetName) => `回复 ${targetName}`,
