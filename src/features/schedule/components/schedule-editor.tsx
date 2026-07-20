@@ -6,8 +6,9 @@ import Image from "next/image"
 import { AppBar } from "@/components/ui/app-bar"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
-import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
+import { Input } from "@/components/ui/text-field/input"
 import { SelectField } from "@/components/ui/text-field/select-field"
+import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
 import { MeetupTimePicker } from "@/features/meetup/components/meetup-time-picker"
 import {
   formatDateValue,
@@ -115,20 +116,18 @@ function ScheduleEditorContent({
       />
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3">
-        <div className="flex h-[3.375rem] w-full items-center gap-1 rounded-xl border border-gray-100 p-4">
+        {/* 날짜는 캘린더에서 이미 고른 값이라 읽기 전용 — 생김새만 다른 필드와 맞춘다 */}
+        <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-2xl border border-gray-100 p-4">
           <Image src="/icons/write/calendar-700.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
-          <span className="text-body-regular-16 text-gray-900">{formatDateValue(dateValue)}</span>
+          <span className="text-body-medium-16 text-gray-900">{formatDateValue(dateValue)}</span>
           <span className="ml-auto text-body-regular-12 text-gray-400">{t.dateLabel}</span>
         </div>
 
-        <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-xl border border-gray-100 p-4 transition-colors focus-within:border-primary">
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder={t.titlePlaceholder}
-            className="w-full min-w-0 bg-transparent text-body-regular-16 text-gray-900 caret-primary outline-none placeholder:text-gray-400"
-          />
-        </div>
+        <Input
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder={t.titlePlaceholder}
+        />
 
         <SelectField
           iconSrc="/icons/write/clock-200.svg"
@@ -150,7 +149,7 @@ function ScheduleEditorContent({
       </div>
 
       <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+var(--safe-area-bottom))]">
-        {formError ? <Explanation variant="error" text={formError} className="px-1 pb-1" /> : null}
+        {formError ? <Explanation variant="error" text={formError} /> : null}
         <button
           type="button"
           disabled={isPending}
