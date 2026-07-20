@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 
 import { BottomSheetClose } from "@/components/ui/bottom-sheet"
+import { Button } from "@/components/ui/button"
 import { NoImageProfile } from "@/components/ui/no-image"
 import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
@@ -179,17 +180,19 @@ function QuestionDetailCard({
           />
         </>
       ) : bottomVariant === "view-answers" ? (
-        <button
-          type="button"
-          onClick={onViewAnswers}
-          className="flex w-full items-center justify-center rounded-full bg-primary px-4 py-3 text-body-medium-14 text-white"
-        >
+        <Button variant="accent" size="block" onClick={onViewAnswers}>
           {t.viewAnswersLabel}
-        </button>
+        </Button>
       ) : bottomVariant === "answered" ? (
-        <div className="flex w-full items-center justify-center rounded-full bg-gray-200 px-4 py-3 text-body-medium-14 text-white">
+        // Figma의 답변 완료 상태는 Gray/200 채움 + 흰 글씨라, 기본 disabled(반투명)를 덮어쓴다.
+        <Button
+          variant="accent"
+          size="block"
+          disabled
+          className="disabled:bg-gray-200 disabled:opacity-100"
+        >
           {t.answeredLabel}
-        </div>
+        </Button>
       ) : null}
     </>
   )

@@ -92,11 +92,11 @@ function MeetupDetailCard({ detail, pending, error, onJoin, onEnterRoom }: Meetu
       {/* 액션: 참여(방장·멤버) 여부에 따라 분기. 나가기는 채팅방 더보기에서만 처리한다. */}
       <div className="flex w-full flex-col gap-2">
         {isJoined ? (
-          <Button variant="primary" size="block" disabled={pending} onClick={onEnterRoom}>
+          <Button variant="accent" size="block" disabled={pending} onClick={onEnterRoom}>
             {t.enterRoomButton}
           </Button>
         ) : (
-          <Button variant="primary" size="block" disabled={pending || !isOpen} onClick={onJoin}>
+          <Button variant="accent" size="block" disabled={pending || !isOpen} onClick={onJoin}>
             {isOpen ? t.joinButton : closedLabel}
           </Button>
         )}
