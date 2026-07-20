@@ -160,11 +160,13 @@ function EditProfileForm({ user }: { user: MeUser }) {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     if (!canSave) return
+    // 저장 후에도 화면을 떠나지 않는다. 갱신된 me 캐시로 payload 가 비어
+    // 저장 버튼이 자동으로 비활성화되는 것이 완료 피드백 역할을 한다.
     if (!hasTextChanges) {
-      router.back()
+      setHasProfileImageChange(false)
       return
     }
-    updateMe.mutate(payload, { onSuccess: () => router.back() })
+    updateMe.mutate(payload, { onSuccess: () => setHasProfileImageChange(false) })
   }
 
   return (
