@@ -58,7 +58,7 @@ function NoticeBanner({ className, text, isAuthenticated = false, onClose, ...pr
         {...props}
       >
         <div className="flex min-w-0 flex-1 items-center gap-2" {...(translate.canTranslate ? longPress : {})}>
-          <Image src="/icons/chat/notification.svg" alt="" width={18} height={20} className="h-5 w-[18px]" />
+          <Image src="/icons/chat/notification.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
           <p className="min-w-0 break-words text-body-regular-14 text-gray-900">{translate.displayText}</p>
         </div>
         <button
