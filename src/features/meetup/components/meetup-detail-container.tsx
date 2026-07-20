@@ -40,7 +40,9 @@ function MeetupDetailContainer({
   const { messages, language } = useTranslation()
 
   const meetingQuery = useMeeting(meetingId)
-  const detail = meetingQuery.data ? adaptMeetingDetail(meetingQuery.data, language) : null
+  const detail = meetingQuery.data
+    ? adaptMeetingDetail(meetingQuery.data, language, messages.createMeetup.timeUndecidedLabel)
+    : null
 
   const join = useJoinMeeting(meetingId)
 
