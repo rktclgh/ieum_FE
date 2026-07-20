@@ -2,6 +2,7 @@ import * as React from "react"
 import Image from "next/image"
 import { cva, type VariantProps } from "class-variance-authority"
 
+import { CrossfadeIcon } from "@/components/ui/crossfade-icon"
 import { cn } from "@/lib/utils"
 
 const circleVariants = cva("inline-flex size-[46px] shrink-0 items-center justify-center rounded-full", {
@@ -36,6 +37,10 @@ interface CircleProps
   iconAlt?: string
   /** 내부 아이콘 이미지에 추가할 CSS 클래스명 (예: 회전/트랜지션 애니메이션은 호출부에서 주입) */
   iconClassName?: string
+  /** 켜짐 상태에서 보여줄 아이콘. 주면 iconSrc와 크로스페이드되고 aria-pressed가 붙는다 */
+  activeIconSrc?: string
+  /** activeIconSrc가 있을 때만 의미가 있다 */
+  active?: boolean
 }
 
 function Circle({
@@ -45,16 +50,28 @@ function Circle({
   iconSrc,
   iconAlt = "",
   iconClassName,
+  activeIconSrc,
+  active,
   ...props
 }: CircleProps) {
   return (
     <button
       type="button"
       data-slot="circle"
+      aria-pressed={activeIconSrc ? Boolean(active) : undefined}
       className={cn(circleVariants({ background, tone, className }))}
       {...props}
     >
-      <Image src={iconSrc} alt={iconAlt} width={24} height={24} className={cn("size-6", iconClassName)} />
+      {activeIconSrc ? (
+        <CrossfadeIcon
+          baseSrc={iconSrc}
+          activeSrc={activeIconSrc}
+          active={Boolean(active)}
+          className={iconClassName}
+        />
+      ) : (
+        <Image src={iconSrc} alt={iconAlt} width={24} height={24} className={cn("size-6", iconClassName)} />
+      )}
     </button>
   )
 }
