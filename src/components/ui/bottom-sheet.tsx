@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 
+import { SCREEN_BOTTOM_GAP } from "@/lib/constants/layout"
 import { ScreenOverlayMarker } from "@/lib/overlay/screen-overlay"
 import { cn } from "@/lib/utils"
 
@@ -36,7 +37,9 @@ function BottomSheet({ children, className, viewportClassName, ...props }: Botto
         <DrawerPrimitive.VirtualKeyboardProvider>
           <DrawerPrimitive.Viewport
             className={cn(
-              "fixed inset-0 z-50 flex items-end justify-center px-4 pb-[calc(1.25rem_+_var(--safe-area-bottom))]",
+              "fixed inset-0 z-50 flex items-end justify-center px-4",
+              // 탭바와 같은 기준선에서 뜬다 — 시트가 탭바를 덮으므로 값이 어긋나면 모서리가 삐져나온다.
+              SCREEN_BOTTOM_GAP,
               viewportClassName
             )}
           >
