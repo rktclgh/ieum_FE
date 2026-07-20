@@ -117,7 +117,7 @@ function VectorTileLayer({ onReady }: { onReady?: () => void }) {
     const notifyReady = () => onReadyRef.current?.()
 
     // 스타일이 이미 로드된 뒤에 이 effect가 붙으면 load 이벤트를 놓치므로 즉시 알린다.
-    if (glMap.loaded()) {
+    if (glMap.isStyleLoaded()) {
       notifyReady()
       return
     }
