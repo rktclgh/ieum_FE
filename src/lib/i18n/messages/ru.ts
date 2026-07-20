@@ -10,6 +10,8 @@ export const ru: Messages = {
     close: "Закрыть",
     more: "Ещё",
     retry: "Повторить",
+    saveImage: "Сохранить фото",
+    saveImageFailed: "Не удалось сохранить фото",
   },
   route: {
     invalidLink: "Эта ссылка недействительна.",

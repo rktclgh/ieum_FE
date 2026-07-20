@@ -2,13 +2,24 @@
 
 import * as React from "react"
 import Image from "next/image"
+import { Download } from "lucide-react"
 
 import { BottomSheet, BottomSheetClose } from "@/components/ui/bottom-sheet"
 import { NoImageProfile } from "@/components/ui/no-image"
 import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
+import { Toast } from "@/components/ui/toast"
+import { ChatContextMenu } from "@/features/chat/components/chat-context-menu"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
 import type { QuestionSummary } from "@/features/question/types"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import { useLongPress } from "@/lib/hooks/use-long-press"
+import { useSaveImage } from "@/lib/hooks/use-save-image"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_LIFT_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
+import { cn } from "@/lib/utils"
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
@@ -47,6 +58,9 @@ function QuestionDetailSheet({
   // 미리보기는 base64로 담아 object URL 수명관리(effect setState) 없이 렌더한다.
   const [image, setImage] = React.useState<{ preview: string; file: File } | null>(null)
   const cameraInputRef = React.useRef<HTMLInputElement>(null)
+  const [imageMenuOpen, setImageMenuOpen] = React.useState(false)
+  const saveImageAction = useSaveImage()
+  const imageLongPress = useLongPress({ onLongPress: () => setImageMenuOpen(true) })
 
   // 닫힘 애니메이션 중 부모가 question을 null로 먼저 비워도 마지막 내용을 유지해 렌더링한다.
   // 렌더 중 상태 조정(React 권장 패턴) — question이 바뀌면 즉시 반영해 effect 없이 동기화한다.
@@ -75,23 +89,57 @@ function QuestionDetailSheet({
     setImage(null)
   }
 
+  // 시트가 닫히면 롱프레스 메뉴도 함께 닫는다(다음에 열 때 메뉴가 떠 있으면 안 된다).
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setImageMenuOpen(false)
+    onOpenChange(next)
+  }
+
   if (!display) return null
-  const hasImage = Boolean(display.imageUrl)
+  const imageUrl = display.imageUrl
+  const hasImage = Boolean(imageUrl)
   const timeLabel = formatRelativeTime(display.createdAt, t)
   const location = display.location
 
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange}>
+    <BottomSheet open={open} onOpenChange={handleOpenChange}>
       {hasImage ? (
-        <div className="relative h-40 w-full overflow-hidden rounded-3xl bg-gray-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={display.imageUrl} alt={t.imageAlt} className="size-full object-cover" />
-          <BottomSheetClose
-            aria-label={t.closeLabel}
-            className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-black/50"
-          >
-            <Image src="/icons/circle/close-white.svg" alt="" width={16} height={16} className="size-4" />
-          </BottomSheetClose>
+        // 메뉴가 top-full 로 앵커되므로 클리핑(overflow-hidden)은 안쪽 컨테이너에만 남긴다.
+        <div
+          className={cn(
+            "relative w-full",
+            LONG_PRESS_TRANSITION,
+            imageMenuOpen ? LONG_PRESS_LIFT_ACTIVE : LONG_PRESS_INACTIVE
+          )}
+          {...imageLongPress}
+        >
+          <div className="relative h-40 w-full overflow-hidden rounded-3xl bg-gray-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt={t.imageAlt} className="size-full object-cover" />
+            <BottomSheetClose
+              aria-label={t.closeLabel}
+              className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-black/50"
+            >
+              <Image src="/icons/circle/close-white.svg" alt="" width={16} height={16} className="size-4" />
+            </BottomSheetClose>
+          </div>
+          {imageMenuOpen && imageUrl ? (
+            <ChatContextMenu
+              items={[
+                {
+                  icon: <Download className="size-6 text-gray-900" />,
+                  label: messages.common.saveImage,
+                  onClick: () => {
+                    setImageMenuOpen(false)
+                    void saveImageAction.save(imageUrl)
+                  },
+                },
+              ]}
+              dimmed
+              onDismiss={() => setImageMenuOpen(false)}
+              className="top-full left-1/2 mt-3 -translate-x-1/2"
+            />
+          ) : null}
         </div>
       ) : null}
 
@@ -199,6 +247,7 @@ function QuestionDetailSheet({
           {t.answeredLabel}
         </div>
       ) : null}
+      <Toast open={saveImageAction.failed} message={messages.common.saveImageFailed} />
     </BottomSheet>
   )
 }

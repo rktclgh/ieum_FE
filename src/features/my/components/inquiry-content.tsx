@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Toast } from "@/components/ui/toast"
 import { useSubmitInquiry } from "@/features/my/hooks/use-my-mutations"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -93,21 +94,8 @@ function InquiryContent() {
         <span className="h-1 w-[135px] rounded-full bg-gray-900" />
       </div>
 
-      {submitted && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
-          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
-            {messages.my.inquiry.success}
-          </div>
-        </div>
-      )}
-
-      {submitInquiry.isError && (
-        <div className="fixed inset-x-0 bottom-[calc(6rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))] z-50 app-column flex justify-center px-4">
-          <div className="rounded-xl bg-gray-900/90 px-4 py-2.5 text-body-regular-14 text-white">
-            {messages.my.inquiry.error}
-          </div>
-        </div>
-      )}
+      <Toast open={submitted} message={messages.my.inquiry.success} />
+      <Toast open={submitInquiry.isError} message={messages.my.inquiry.error} />
     </main>
   )
 }

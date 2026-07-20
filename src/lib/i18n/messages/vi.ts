@@ -10,6 +10,8 @@ export const vi: Messages = {
     close: "Đóng",
     more: "Thêm",
     retry: "Thử lại",
+    saveImage: "Lưu ảnh",
+    saveImageFailed: "Không thể lưu ảnh",
   },
   route: {
     invalidLink: "Liên kết này không hợp lệ.",
