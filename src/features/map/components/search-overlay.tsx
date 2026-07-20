@@ -80,7 +80,9 @@ function SearchOverlayContent({
 
   // 장소 탭은 쿼리가 있을 때만 존재한다. 쿼리가 지워지면 선택 상태를 되돌리는 대신
   // 파생값으로 전체 탭처럼 취급한다 — 다시 입력하면 고르던 장소 탭으로 돌아온다.
-  const activeTab: SearchTab = !hasQuery && tab === "place" ? "all" : tab
+  // 탭 노출(hidePlace)과 같은 기준으로 판단해야 한다 — 디바운스된 hasQuery를 쓰면 입력을 지운 뒤
+  // 300ms 동안 장소 탭은 사라졌는데 선택 상태는 place로 남아 아무 탭도 선택되지 않아 보인다.
+  const activeTab: SearchTab = !isTyping && tab === "place" ? "all" : tab
 
   const showMeetups = activeTab === "all" || activeTab === "meetup"
   const showQuestions = activeTab === "all" || activeTab === "question"

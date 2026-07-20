@@ -21,9 +21,11 @@ function haversineMeters(a: LatLng, b: LatLng): number {
 // 어느 경로로든 새 배열을 반환한다 — 입력이 React Query 캐시 배열이라 제자리 변형이 캐시를 오염시킨다.
 function sortByDistance<T extends { location: LatLng }>(items: T[], near: LatLng | null): T[] {
   if (!near) return [...items]
-  return [...items].sort(
-    (a, b) => haversineMeters(near, a.location) - haversineMeters(near, b.location)
-  )
+  // 비교마다 삼각함수를 다시 돌리지 않도록 거리를 한 번씩만 계산해 두고 정렬한다.
+  return items
+    .map((item) => ({ item, distance: haversineMeters(near, item.location) }))
+    .sort((a, b) => a.distance - b.distance)
+    .map(({ item }) => item)
 }
 
 export { haversineMeters, sortByDistance }
