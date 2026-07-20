@@ -65,7 +65,7 @@ function MeetupLocationName({ address, initialValue = "", onBack, onDone }: Meet
           onClick={handleDone}
           className={cn(
             "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            canSubmit ? "bg-primary" : "bg-gray-200"
+            canSubmit ? "bg-gray-900" : "bg-gray-200"
           )}
         >
           {t.doneButton}

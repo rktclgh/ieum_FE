@@ -236,13 +236,8 @@ function QuestionDetailCard({
           {t.viewAnswersLabel}
         </Button>
       ) : bottomVariant === "answered" ? (
-        // Figma의 답변 완료 상태는 Gray/200 채움 + 흰 글씨라, 기본 disabled(반투명)를 덮어쓴다.
-        <Button
-          variant="accent"
-          size="block"
-          disabled
-          className="disabled:bg-gray-200 disabled:opacity-100"
-        >
+        // 답변 완료 = Gray/200 채움 + 흰 글씨. accent variant의 disabled가 그대로 그 값이다.
+        <Button variant="accent" size="block" disabled>
           {t.answeredLabel}
         </Button>
       ) : null}

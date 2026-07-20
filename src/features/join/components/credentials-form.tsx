@@ -218,7 +218,6 @@ function CredentialsForm({ className, flow }: CredentialsFormProps) {
           variant="primary"
           size="block"
           disabled={!isNextEnabled}
-          className={cn(!isNextEnabled && "bg-gray-200 text-white hover:bg-gray-200")}
         >
           {messages.join.nextButton}
         </Button>
