@@ -12,6 +12,7 @@ import {
 import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
 import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
 import { executeLeaveChatRoom } from "@/features/chat/lib/chat-leave"
+import { executeSetPinned, type PinRequest } from "@/features/chat/lib/chat-pin"
 import { deleteMeeting, leaveMeeting } from "@/features/meetup/api/meetup-api"
 import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
 
@@ -41,11 +42,15 @@ function useMarkRead() {
 function useSetPinned() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ roomId, pinned }: { roomId: number; pinned: boolean }) => setPinned(roomId, pinned),
-    // 고정 여부는 목록(정렬/플래그)과 해당 방 상세에 반영 → 메시지는 불필요
-    onSuccess: (_data, { roomId }) => {
+    mutationFn: (request: PinRequest) => executeSetPinned(request, { setPinned }),
+    // 고정 여부는 목록(정렬/플래그)과 해당 방 상세에 반영 → 메시지는 불필요.
+    // 실패해도 서버 상태로 수렴시켜야 하므로 onSettled에서 무효화한다.
+    onSettled: (_data, _error, { roomId, replacingRoomId }) => {
       queryClient.invalidateQueries({ queryKey: roomsListKey })
       queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
+      if (replacingRoomId !== undefined && replacingRoomId !== roomId) {
+        queryClient.invalidateQueries({ queryKey: chatKeys.room(replacingRoomId) })
+      }
     },
   })
 }

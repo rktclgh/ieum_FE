@@ -75,7 +75,7 @@ function ChatRoomMoreHeader({
           {showPinAction && (
             <button
               type="button"
-              aria-label={messages.chat.pinAction}
+              aria-label={pinned ? messages.chat.unpinAction : messages.chat.pinAction}
               aria-pressed={pinned}
               aria-busy={pinPending}
               disabled={pinPending}

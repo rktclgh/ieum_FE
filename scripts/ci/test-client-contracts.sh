@@ -22,6 +22,7 @@ node --experimental-strip-types --test src/features/chat/lib/chat-room-message-s
 node --experimental-strip-types --test src/features/chat/lib/chat-reply.test.ts
 node --experimental-strip-types --test src/features/chat/components/chat-system-message.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-leave.test.ts
+node --experimental-strip-types --test src/features/chat/lib/chat-pin.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-member-management.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-room-event.test.ts
 node --experimental-strip-types --test src/features/schedule/lib/schedule-actions.test.ts
@@ -38,3 +39,4 @@ node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/question/lib/question-adapter.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/question/lib/answer-acceptance.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/notification/lib/notification-link.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/navigation/lib/tab-transition.test.ts

@@ -15,6 +15,7 @@ const fixedStaticRoutes = [
   "admin",
   "admin/inquiries",
   "admin/knowledge",
+  "admin/knowledge/graph",
   "admin/login",
   "admin/reports",
   "admin/reports/detail",
@@ -45,6 +46,7 @@ const fixedAdminRoutes = [
   "admin",
   "admin/inquiries",
   "admin/knowledge",
+  "admin/knowledge/graph",
   "admin/login",
   "admin/reports",
   "admin/reports/detail",
@@ -162,7 +164,7 @@ function documentedRoutes(section) {
   ].sort((left, right) => left.localeCompare(right, "en"))
 }
 
-test("app tree exposes exactly the root and 27 fixed static routes", async () => {
+test("app tree exposes exactly the root and 28 fixed static routes", async () => {
   const routes = await discoverStaticAppRoutes(path.join(repoRoot, "src/app"))
 
   assert.deepEqual(routes, fixedStaticRoutes)
@@ -181,7 +183,7 @@ test("admin pages use fixed paths and stay inside the desktop boundary", async (
   assert.deepEqual(dynamicDirectories, [], "admin routes must not use runtime ID directories")
   assert.deepEqual(
     await discoverStaticAppRoutes(path.join(adminRoot, "(protected)")),
-    ["", "inquiries", "knowledge", "reports", "reports/detail", "users", "users/detail"],
+    ["", "inquiries", "knowledge", "knowledge/graph", "reports", "reports/detail", "users", "users/detail"],
   )
 
   const boundaryFile = parse(
@@ -732,9 +734,12 @@ test("chat room controls wait for canonical state and never act before room type
   assert.ok(roomPage.includes("constcanConfigureRoomNotification=room!==undefined"))
   assert.ok(roomPage.includes("showPinAction={canPinRoom}"))
   assert.ok(roomPage.includes("showNotificationAction={canConfigureRoomNotification}"))
-  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending}"))
+  assert.ok(roomPage.includes("pinPending={setPinnedMutation.isPending||isPinnedRoomLoading}"))
   assert.ok(roomPage.includes("if(!session.authenticated||!canConfigureRoomNotification||setNotifyMutation.isPending)return"))
   assert.ok(roomPage.includes("if(!session.authenticated||!canPinRoom||setPinnedMutation.isPending)return"))
+  // 방 목록이 도착하기 전에는 기존 고정 방을 알 수 없다. 그대로 고정하면 교체 확인을 건너뛰고
+  // 두 방이 고정되므로, 상세 화면은 목록 로딩 중 고정을 막아야 한다(고정은 전체 1개).
+  assert.ok(roomPage.includes("if(isPinnedRoomLoading)return"))
   assert.ok(moreHeader.includes("pinPending?:boolean"))
   assert.ok(moreHeader.includes("aria-busy={pinPending}"))
   assert.ok(moreHeader.includes("disabled={pinPending}"))
