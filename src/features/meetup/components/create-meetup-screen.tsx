@@ -109,6 +109,7 @@ function CreateMeetupScreenContent({
       date: form.date,
       time: form.time,
       isDateUndecided: form.isDateUndecided,
+      isTimeUndecided: form.isTimeUndecided,
     })
 
     // 이미지 업로드 실패와 모임 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
@@ -191,7 +192,7 @@ function CreateMeetupScreenContent({
             iconSrc="/icons/write/clock-200.svg"
             selectedIconSrc="/icons/write/clock-700.svg"
             placeholder={t.timePlaceholder}
-            value={timeValue}
+            value={form.isTimeUndecided ? t.timeUndecidedLabel : timeValue}
             active={timePickerOpen}
             disabled={form.isDateUndecided}
             onClick={() => setTimePickerOpen(true)}
@@ -261,7 +262,8 @@ function CreateMeetupScreenContent({
         open={timePickerOpen}
         onOpenChange={setTimePickerOpen}
         value={form.time}
-        onConfirm={form.setTime}
+        isTimeUndecided={form.isTimeUndecided}
+        onConfirm={form.setTimeSelection}
       />
       <MeetupLocationPicker
         open={locationPickerOpen}

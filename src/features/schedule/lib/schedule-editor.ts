@@ -19,7 +19,8 @@ interface ScheduleEditorInput {
 interface ScheduleEditorRequest {
   title: string
   locationName: string
-  startsAt: string
+  date: string
+  startTime: string
 }
 
 function isValidDateKey(value: string): boolean {
@@ -51,10 +52,10 @@ function toTwentyFourHour({ period, hour }: ScheduleTimeValue): number {
   return hour === 12 ? 12 : hour + 12
 }
 
-function toKstScheduleIso(dateKey: string, time: ScheduleTimeValue): string {
+function toScheduleTimeKey(time: ScheduleTimeValue): string {
   const hour = String(toTwentyFourHour(time)).padStart(2, "0")
   const minute = String(time.minute).padStart(2, "0")
-  return `${dateKey}T${hour}:${minute}:00+09:00`
+  return `${hour}:${minute}`
 }
 
 /**
@@ -73,7 +74,8 @@ function buildScheduleEditorRequest(input: ScheduleEditorInput): ScheduleEditorR
   return {
     title,
     locationName,
-    startsAt: toKstScheduleIso(input.selectedDate, input.time),
+    date: input.selectedDate,
+    startTime: toScheduleTimeKey(input.time),
   }
 }
 
@@ -82,5 +84,5 @@ function isPastScheduleDate(selectedDate: string, todayDate: string): boolean {
   return isValidDateKey(selectedDate) && isValidDateKey(todayDate) && selectedDate < todayDate
 }
 
-export { buildScheduleEditorRequest, isPastScheduleDate, toKstScheduleIso }
+export { buildScheduleEditorRequest, isPastScheduleDate, toScheduleTimeKey }
 export type { ScheduleEditorInput, ScheduleEditorRequest, SchedulePlaceValue, ScheduleTimeValue }

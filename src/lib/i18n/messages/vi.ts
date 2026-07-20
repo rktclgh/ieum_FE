@@ -182,6 +182,7 @@ export const vi: Messages = {
     titleTooLongExplanation: (max) => `Vui lòng nhập tiêu đề trong ${max} ký tự.`,
     datePlaceholder: "Chọn ngày",
     dateUndecidedLabel: "Chưa chọn ngày",
+    timeUndecidedLabel: "Chưa chọn giờ",
     timePlaceholder: "Chọn giờ",
     addressPlaceholder: "Chọn địa điểm",
     descriptionPlaceholder: "Nhập nội dung buổi gặp mặt.",

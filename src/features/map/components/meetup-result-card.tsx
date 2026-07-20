@@ -30,7 +30,7 @@ interface MeetupResultCardProps {
 function MeetupResultCard({ pin, query, isAuthenticated = false, onClick }: MeetupResultCardProps) {
   const { messages, language } = useTranslation()
   const { data } = useMeeting(pin.targetId)
-  const detail = data ? adaptMeetingDetail(data, language) : null
+  const detail = data ? adaptMeetingDetail(data, language, messages.createMeetup.timeUndecidedLabel) : null
   const thumbnail = resolveFileUrl(pin.thumbnailUrl)
 
   return (

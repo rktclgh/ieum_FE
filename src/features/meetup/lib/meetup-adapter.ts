@@ -1,5 +1,5 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
-import { formatKstDateTimeLabel } from "@/lib/date/kst"
+import { formatKstDateOnlyLabel, formatKstDateTimeLabel } from "@/lib/date/kst"
 import type {
   MeetingDetailResponse,
   MeetingMyStatus,
@@ -32,13 +32,23 @@ interface MeetupParticipantView {
   isHost: boolean
 }
 
-function adaptMeetingDetail(detail: MeetingDetailResponse, locale: string): MeetupDetailView {
+function adaptMeetingDetail(
+  detail: MeetingDetailResponse,
+  locale: string,
+  timeUndecidedLabel?: string
+): MeetupDetailView {
   const startsAt = detail.nextSchedule?.startsAt ?? detail.meetingAt
+  const isTimeUndecided = Boolean(detail.nextSchedule?.timeUndecided) && timeUndecidedLabel !== undefined
+  const dateLabel = !startsAt
+    ? ""
+    : isTimeUndecided
+      ? `${formatKstDateOnlyLabel(startsAt)} ${timeUndecidedLabel}`
+      : formatKstDateTimeLabel(startsAt, locale)
   return {
     meetingId: detail.meetingId,
     roomId: detail.roomId,
     title: detail.title,
-    dateLabel: startsAt ? formatKstDateTimeLabel(startsAt, locale) : "",
+    dateLabel,
     locationLabel: detail.location.label || detail.location.address,
     participantCount: detail.participantCount,
     maxMembers: detail.maxMembers,

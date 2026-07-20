@@ -162,9 +162,9 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
   const entries = React.useMemo(
     () =>
       (schedulesQuery.data ?? []).map((schedule) =>
-        adaptMeetingScheduleItem(schedule, meetingId ?? 0, language)
+        adaptMeetingScheduleItem(schedule, meetingId ?? 0, language, messages.createMeetup.timeUndecidedLabel)
       ),
-    [schedulesQuery.data, meetingId, language]
+    [schedulesQuery.data, meetingId, language, messages.createMeetup.timeUndecidedLabel]
   )
   const eventDateKeys = React.useMemo(() => new Set(entries.map((event) => event.date)), [entries])
   const eventsForSelectedDate = React.useMemo(

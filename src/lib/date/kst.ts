@@ -53,6 +53,12 @@ function formatKstDateTimeLabel(input: Date | string | number, locale: string): 
   return `${year}.${month}.${day} ${time}`
 }
 
+/** 모임 상세용 날짜만 라벨: "2026.07.07" (시간 미정일 때 시각 없이 붙여 쓴다) */
+function formatKstDateOnlyLabel(input: Date | string | number): string {
+  const [year, month, day] = getKstDateKey(input).split("-")
+  return `${year}.${month}.${day}`
+}
+
 /**
  * 현재(또는 주어진) 시각을 KST 기준 12시간제 조각으로 반환한다: { period, hour(1–12), minute(0–59) }.
  * 기기 로컬 타임존과 무관하게 Asia/Seoul로 계산한다.
@@ -102,6 +108,7 @@ export {
   isKstToday,
   formatKstTime,
   formatKstDateTimeLabel,
+  formatKstDateOnlyLabel,
   getKstTimeParts,
   getKstMinuteKey,
 }
