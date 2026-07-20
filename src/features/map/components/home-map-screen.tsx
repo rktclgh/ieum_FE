@@ -11,14 +11,15 @@ import { MapControls } from "@/features/map/components/map-controls"
 import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton"
 import { MapSearchBar } from "@/features/map/components/map-search-bar"
 import { PinListOverlay } from "@/features/map/components/pin-list-overlay"
+import { Screen } from "@/components/layout/screen"
 import { PinStackSheet } from "@/features/map/components/pin-stack-sheet"
 import { SearchOverlay } from "@/features/map/components/search-overlay"
 import {
   DEFAULT_MAP_CENTER,
-  MAP_BOTTOM_INSET,
+  mapBottomInset,
   MAP_LOCATION_WAIT_MS,
   MAP_READY_MAX_WAIT_MS,
-  MAP_TOP_INSET,
+  mapTopInset,
 } from "@/features/map/constants/map"
 import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { useGeolocation } from "@/features/map/hooks/use-geolocation"
@@ -228,14 +229,14 @@ function HomeMapScreen() {
   }, [position, recenterTo])
 
   return (
-    <div className="app-screen-fixed flex w-full flex-col overflow-hidden">
+    <Screen kind="bleed">
       {canShowMap ? (
         <MapCanvas
           center={recenterTarget ?? position ?? DEFAULT_MAP_CENTER}
           recenterKey={recenterKey}
           animateCenter
-          topInset={MAP_TOP_INSET}
-          bottomInset={MAP_BOTTOM_INSET}
+          topInset={mapTopInset()}
+          bottomInset={mapBottomInset()}
           className="absolute inset-0 z-0 size-full"
           onUserGesture={() =>
             setFollowRequested((state) => reduceLocateFollowing(state, { type: "user-gesture" }))
@@ -365,7 +366,7 @@ function HomeMapScreen() {
       ) : null}
 
       <InstallPrompt />
-    </div>
+    </Screen>
   )
 }
 
