@@ -178,6 +178,7 @@ export const en: Messages = {
     titleTooLongExplanation: (max) => `Please keep the title within ${max} characters.`,
     datePlaceholder: "Select date",
     dateUndecidedLabel: "Date undecided",
+    timeUndecidedLabel: "Time undecided",
     timePlaceholder: "Select time",
     addressPlaceholder: "Select location",
     descriptionPlaceholder: "Enter the meetup details.",

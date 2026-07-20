@@ -178,6 +178,7 @@ export const ru: Messages = {
     titleTooLongExplanation: (max) => `Название должно быть не длиннее ${max} символов.`,
     datePlaceholder: "Выбрать дату",
     dateUndecidedLabel: "Дата не определена",
+    timeUndecidedLabel: "Время не определено",
     timePlaceholder: "Выбрать время",
     addressPlaceholder: "Выбрать место",
     descriptionPlaceholder: "Введите описание встречи.",

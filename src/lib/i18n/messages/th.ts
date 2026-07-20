@@ -177,6 +177,7 @@ export const th: Messages = {
     titleTooLongExplanation: (max) => `กรุณาตั้งชื่อไม่เกิน ${max} ตัวอักษร`,
     datePlaceholder: "เลือกวันที่",
     dateUndecidedLabel: "ยังไม่กำหนดวันที่",
+    timeUndecidedLabel: "ยังไม่กำหนดเวลา",
     timePlaceholder: "เลือกเวลา",
     addressPlaceholder: "เลือกสถานที่",
     descriptionPlaceholder: "กรอกรายละเอียดกลุ่มพบปะ",
