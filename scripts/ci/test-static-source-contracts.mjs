@@ -15,6 +15,7 @@ const fixedStaticRoutes = [
   "admin",
   "admin/inquiries",
   "admin/knowledge",
+  "admin/knowledge/graph",
   "admin/login",
   "admin/reports",
   "admin/reports/detail",
@@ -45,6 +46,7 @@ const fixedAdminRoutes = [
   "admin",
   "admin/inquiries",
   "admin/knowledge",
+  "admin/knowledge/graph",
   "admin/login",
   "admin/reports",
   "admin/reports/detail",
@@ -162,7 +164,7 @@ function documentedRoutes(section) {
   ].sort((left, right) => left.localeCompare(right, "en"))
 }
 
-test("app tree exposes exactly the root and 27 fixed static routes", async () => {
+test("app tree exposes exactly the root and 28 fixed static routes", async () => {
   const routes = await discoverStaticAppRoutes(path.join(repoRoot, "src/app"))
 
   assert.deepEqual(routes, fixedStaticRoutes)
@@ -181,7 +183,7 @@ test("admin pages use fixed paths and stay inside the desktop boundary", async (
   assert.deepEqual(dynamicDirectories, [], "admin routes must not use runtime ID directories")
   assert.deepEqual(
     await discoverStaticAppRoutes(path.join(adminRoot, "(protected)")),
-    ["", "inquiries", "knowledge", "reports", "reports/detail", "users", "users/detail"],
+    ["", "inquiries", "knowledge", "knowledge/graph", "reports", "reports/detail", "users", "users/detail"],
   )
 
   const boundaryFile = parse(

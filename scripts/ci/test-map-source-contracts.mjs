@@ -10,8 +10,9 @@ const read = (relativePath) => fs.readFileSync(path.join(repoRoot, relativePath)
 test("홈 지도 현재 위치는 정확도 반경 없이 마커 halo만 표시한다", () => {
   const canvas = read("src/features/map/components/map-canvas.tsx")
   const home = read("src/features/map/components/home-map-screen.tsx")
+  // #233: 해제 중인 map에 Marker가 마운트되면 터지므로 실시간 위치도 ActiveMarker 래퍼로만 그린다.
   const liveMarkerPattern = new RegExp(
-    String.raw`<Marker\b(?=[^>]*\bposition\s*=\s*\{\s*\[\s*livePosition\.lat\s*,\s*livePosition\.lng\s*\]\s*\})(?=[^>]*\bicon\s*=\s*\{\s*userLocationIcon\s*\})[^>]*\/?>`
+    String.raw`<ActiveMarker\b(?=[^>]*\bposition\s*=\s*\{\s*\[\s*livePosition\.lat\s*,\s*livePosition\.lng\s*\]\s*\})(?=[^>]*\bicon\s*=\s*\{\s*userLocationIcon\s*\})[^>]*\/?>`
   )
 
   assert.doesNotMatch(canvas, /liveAccuracy/)
@@ -96,21 +97,35 @@ test("모임 마커 썸네일은 파일 URL을 정규화한다", () => {
 
   assert.match(source, /import\s+\{\s*resolveFileUrl\s*\}\s+from\s+['"]@\/lib\/api\/file-url['"]/)
   assert.match(source, /const\s+thumbnailUrl\s*=\s*resolveFileUrl\(\s*pin\.thumbnailUrl\s*\)/)
-  assert.match(source, /escapeAttr\(\s*thumbnailUrl\s*\)/)
+  // prettier가 인자를 멀티라인 + trailing comma로 재포맷할 수 있어 둘 다 허용한다.
+  assert.match(source, /escapeAttr\(\s*thumbnailUrl\s*,?\s*\)/)
   assert.doesNotMatch(source, /escapeAttr\(\s*pin\.thumbnailUrl\s*\)/)
 })
 
 test("벡터 타일 레이어는 해제된 Leaflet map에 다시 붙지 않는다", () => {
   const source = read("src/features/map/components/vector-tile-layer.tsx")
-  const lifecycleGuardIndex = source.indexOf("if (!isLeafletMapActive(map)) return")
-  const layerCreationIndex = source.indexOf("const layer = L.maplibreGL({ style: MAP_STYLE_URL })")
-  const layerAddIndex = source.indexOf("layer.addTo(map)")
+  // 정확한 코드 모양(변수명·포맷)이 아니라 "guard → 생성 → 부착" 순서가 이 계약의 불변식이다.
+  const indexOfPattern = (pattern) => source.search(pattern)
 
-  assert.ok(lifecycleGuardIndex >= 0, "Leaflet map 생명주기 guard가 있어야 한다")
-  assert.ok(layerCreationIndex > lifecycleGuardIndex, "생명주기 guard 뒤에만 레이어를 생성해야 한다")
+  // effect 진입 시점 guard: 해제 중인 map이면 아예 시작하지 않는다.
+  const mountGuardIndex = indexOfPattern(/if \(!isLeafletMapActive\(map\)\)\s*return/)
+  // #209: 스타일 로드가 비동기라 그 사이 언마운트될 수 있어, 붙이기 직전에 다시 확인해야 한다.
+  const asyncGuardIndex = indexOfPattern(/if \(cancelled \|\| !isLeafletMapActive\(map\)\)\s*return/)
+  const layerCreationIndex = indexOfPattern(/const glLayer = L\.maplibreGL\(\{\s*style\s*,?\s*\}\)/)
+  // 생성된 레이어를 cleanup이 볼 수 있도록 effect 스코프 변수에 붙잡아 둔다.
+  const layerTrackIndex = indexOfPattern(/\blayer = glLayer\b/)
+  const layerAddIndex = indexOfPattern(/\bglLayer\.addTo\(map\)/)
+
+  assert.ok(mountGuardIndex >= 0, "Leaflet map 생명주기 guard가 있어야 한다")
+  assert.ok(
+    asyncGuardIndex > mountGuardIndex,
+    "비동기 스타일 로드 뒤에도 map 생명주기를 다시 확인해야 한다"
+  )
+  assert.ok(layerCreationIndex > asyncGuardIndex, "생명주기 guard 뒤에만 레이어를 생성해야 한다")
+  assert.ok(layerTrackIndex > layerCreationIndex, "생성된 레이어를 cleanup 대상으로 붙잡아야 한다")
   assert.ok(layerAddIndex > layerCreationIndex, "생성된 레이어만 map에 추가해야 한다")
   assert.match(
     source,
-    /if \(isLeafletMapActive\(map\) && map\.hasLayer\(layer\)\) \{\s*map\.removeLayer\(layer\)\s*\}/
+    /if \(layer && isLeafletMapActive\(map\) && map\.hasLayer\(layer\)\) \{\s*map\.removeLayer\(layer\)\s*\}/
   )
 })
