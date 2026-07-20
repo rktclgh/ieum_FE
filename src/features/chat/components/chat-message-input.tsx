@@ -70,7 +70,7 @@ function ChatMessageInput({
     >
       <button
         type="button"
-        aria-label={messages.chat.takePhotoAction}
+        aria-label={messages.chat.attachImageAction}
         onClick={onCameraClick}
         disabled={disabled}
         className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
