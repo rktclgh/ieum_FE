@@ -46,7 +46,7 @@ function buildPinIcon(pin: MapPin): L.DivIcon {
       ? `<div style="${INNER};background:${GRAY_100}"><img src="${escapeAttr(
           thumbnailUrl,
         )}" alt="" style="width:100%;height:100%;object-fit:cover" /></div>`
-      : `<div style="${INNER};background:${GRAY_100}"><img src="${NO_IMAGE_SRC}" alt="" style="width:24px;height:24px" /></div>`
+      : `<div style="${INNER};background:${GRAY_100}"><img src="${NO_IMAGE_SRC}" alt="" style="width:28px;height:28px" /></div>`
   } else {
     inner = `<div style="${INNER};background:#ffffff">${QUESTION_SVG}</div>`
   }
