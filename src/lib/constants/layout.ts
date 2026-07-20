@@ -23,13 +23,17 @@
 export const APP_BAR_SAFE_TOP = "pt-[calc(1rem+var(--safe-area-top))]"
 
 /**
- * 화면 하단에 떠 있는 요소의 바닥 여백 — 28px + 홈 인디케이터.
+ * 화면 하단에 떠 있는 요소의 바닥 여백 — 뷰포트 바닥에서 **무조건 28px**.
  *
  * 탭바와 바텀시트가 같은 기준선에서 뜨도록 한 곳에서 관리한다. 둘은 z축으로 겹치므로
  * (시트가 탭바 위를 덮는다) 값이 어긋나면 시트 아래로 탭바 모서리가 삐져나온다.
  * 이 값을 바꾸면 아래 `FAB_BOTTOM_WITH_TABBAR`의 기준선도 같이 움직인다.
+ *
+ * safe-area를 더하지 않는 것은 의도된 디자인 결정이다(Figma가 프레임 바닥 기준 28px).
+ * 저장소 기본 규칙은 하단 고정 요소에 `--safe-area-bottom`을 더하는 것이지만,
+ * 이 두 요소만 예외다 — 홈 인디케이터가 있는 기기에서는 그 위에 겹쳐 놓인다.
  */
-export const SCREEN_BOTTOM_GAP = "pb-[calc(1.75rem+var(--safe-area-bottom))]"
+export const SCREEN_BOTTOM_GAP = "pb-7"
 
 /**
  * 우측 하단 고정 원형 버튼(FAB)의 하단 위치 규칙.
@@ -43,12 +47,12 @@ export const SCREEN_BOTTOM_GAP = "pb-[calc(1.75rem+var(--safe-area-bottom))]"
  *   → 가시 pill 상단은 뷰포트 바닥에서 88px.
  *   → 탭바 기준 FAB 하단 = 88 + 12 = 100px.
  *
- * issue #279: 탭바 래퍼 하단 패딩에 `safe-area-inset-bottom`이 붙으므로
- * 두 기준선 모두 같은 양만큼 따라 올라가야 겹치지 않는다.
+ * 탭바가 safe-area를 더하지 않으므로(SCREEN_BOTTOM_GAP 참고) 여기서도 더하지 않는다.
+ * 둘 중 한쪽만 safe-area를 쓰면 홈 인디케이터가 있는 기기에서 FAB가 탭바에 겹친다.
  */
 
-/** 탭바가 있는 화면: 탭바 위 12px (뷰포트 바닥 기준 100px + 홈 인디케이터). */
-export const FAB_BOTTOM_WITH_TABBAR = "bottom-[calc(6.25rem+var(--safe-area-bottom))]"
+/** 탭바가 있는 화면: 탭바 위 12px (뷰포트 바닥 기준 100px). */
+export const FAB_BOTTOM_WITH_TABBAR = "bottom-[6.25rem]"
 
 /** 탭바가 없는 화면: 화면 바닥 위 12px + 홈 인디케이터. */
 export const FAB_BOTTOM_FLOOR = "bottom-[calc(0.75rem+var(--safe-area-bottom))]"

@@ -136,7 +136,8 @@ function QuestionsListPageContent() {
       <main className="app-column flex min-h-dvh flex-col bg-white">
         <AppBar title={messages.question.historyTitle} leadingIcon={null} trailingIcon={null} />
 
-        {/* 탭바 총높이(pill 60 + pt 8 + SCREEN_BOTTOM_GAP 28 = 96px) 위로 여유를 둔다. */}
+        {/* 탭바 총높이(pill 60 + pt 8 + SCREEN_BOTTOM_GAP 28 = 96px) 위로 여유를 둔다.
+            여기는 스크롤 콘텐츠의 바닥 여백이라 safe-area를 그대로 더한다. */}
         <div className="flex flex-1 flex-col px-4 pt-2 pb-[calc(7rem+var(--safe-area-bottom))]">
           {/* 로드 실패를 "질문 없음"으로 오인하게 두지 않는다 — 알림 목록과 동일한 처리. */}
           {query.isError ? (
