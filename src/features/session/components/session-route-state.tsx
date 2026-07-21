@@ -36,7 +36,7 @@ function SessionUnavailable({ onRetry }: { onRetry: () => void }) {
         <p role="alert" className="text-body-medium-16 text-gray-900">
           {messages.session.backendUnavailable}
         </p>
-        <Button type="button" variant="primary" onClick={onRetry}>
+        <Button type="button" variant="dark" onClick={onRetry}>
           {messages.common.retry}
         </Button>
       </div>

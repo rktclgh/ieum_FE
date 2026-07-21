@@ -90,14 +90,15 @@ function ProfileImageEditorContent({ imageSrc, onClose, onCropped }: ProfileImag
         />
       </div>
       <div className="flex items-center gap-2 bg-white px-4 py-4 pb-[calc(1rem+var(--safe-area-bottom))]">
-        <Button variant="grayscale" onClick={onClose} className="h-11 flex-1">
+        <Button variant="grayscale" size="md" onClick={onClose} className="flex-1">
           {t.cropCancel}
         </Button>
         <Button
-          variant="primary"
+          variant="accent"
+          size="md"
           onClick={handleConfirm}
           disabled={isProcessing || !areaPixels}
-          className="h-11 flex-1"
+          className="flex-1"
         >
           {t.cropConfirm}
         </Button>

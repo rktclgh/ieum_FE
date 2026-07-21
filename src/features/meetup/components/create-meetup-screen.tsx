@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Button } from "@/components/ui/button"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { Input } from "@/components/ui/text-field/input"
@@ -26,7 +27,6 @@ import { useCreateMeeting } from "@/features/meetup/hooks/use-meetup-mutations"
 import { buildMeetupSchedule } from "@/features/meetup/lib/create-meetup-schedule"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { cn } from "@/lib/utils"
 
 interface CreateMeetupScreenProps extends CreateMeetupScreenContentProps {
   open: boolean
@@ -218,17 +218,15 @@ function CreateMeetupScreenContent({
       {/* 제출 */}
       <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+var(--safe-area-bottom))]">
         {error ? <Explanation variant="error" text={error} /> : null}
-        <button
+        <Button
           type="button"
+          variant="accent"
+          size="block"
           disabled={!form.canSubmit || submitting}
           onClick={handleSubmit}
-          className={cn(
-            "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            form.canSubmit && !submitting ? "bg-gray-900" : "bg-gray-200"
-          )}
         >
           {submitting ? t.submittingButton : t.submitButton}
-        </button>
+        </Button>
       </div>
 
       {/* 숨긴 파일 입력 (OS 시트에서 사진 보관함/사진 찍기 선택) */}

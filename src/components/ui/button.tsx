@@ -21,12 +21,15 @@ const buttonVariants = cva(
         // CTA 필 버튼 3종은 Figma의 비활성 = Gray/200 단색(#d0d6d7)을 따르므로
         // base의 disabled:opacity-50(반투명)을 disabled:opacity-100으로 취소한다.
         // cva는 base 뒤에 variant를 붙이고 cn()이 tailwind-merge를 돌리므로 여기가 이긴다.
-        primary:
-          "rounded-full bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-200 disabled:text-white disabled:opacity-100 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:disabled:bg-gray-200 dark:disabled:text-white",
+        //
+        // 다크 필. Figma의 Primary/XS(#1f2324)와 같은 톤이지만 pill 형태다.
+        // 사용자 화면 CTA는 accent를 쓰고, 이쪽은 어드민 등 디자인 범위 밖 화면이 쓴다.
+        dark: "rounded-full bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-200 disabled:text-white disabled:opacity-100 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200 dark:disabled:bg-gray-200 dark:disabled:text-white",
         grayscale:
           "rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:bg-gray-200 disabled:text-white disabled:opacity-100",
-        // Figma의 기본 CTA 필 버튼(Primary/400 #fc7045 = --primary 토큰).
-        // 이름이 primary가 아닌 이유: 위 primary variant가 이미 다크 필로 15곳에서 쓰이고 있다.
+        // Figma의 CTA 필 버튼(Primary/400 #fc7045 = --primary 토큰). size는 block(XL) 또는 md(M).
+        // 사용자 화면의 주 CTA는 전부 이것을 쓴다. 이름이 primary가 아닌 이유는
+        // 승격 시 호출부 전체가 바뀌고 개명 중간 상태에서 색이 뒤바뀔 위험이 있어서다.
         accent:
           "rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-gray-200 disabled:text-white disabled:opacity-100",
         social:
@@ -38,6 +41,9 @@ const buttonVariants = cva(
         xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        // Figma Button/M — 2단으로 나란히 놓는 CTA. 폭은 호출부에서 flex-1 등으로 정한다.
+        md: "h-11 gap-2 px-4",
+        // Figma Button/XL — 풀폭 CTA.
         block: "h-12 w-full gap-3 px-4",
         icon: "size-8",
         "icon-xs":

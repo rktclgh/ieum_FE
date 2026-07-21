@@ -4,12 +4,12 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Button } from "@/components/ui/button"
 import { Screen } from "@/components/layout/screen"
 import { Textarea } from "@/components/ui/text-field/textarea"
 import { Toast } from "@/components/ui/toast"
 import { useSubmitInquiry } from "@/features/my/hooks/use-my-mutations"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { cn } from "@/lib/utils"
 
 const SUCCESS_DISMISS_MS = 1200
 
@@ -74,24 +74,25 @@ function InquiryContent() {
 
       <div className="app-bottom-fixed bottom-anchor-auto z-10 app-column flex flex-col items-center gap-2 bg-white px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom),var(--keyboard-inset,0px)))]">
         <div className="flex w-full items-center gap-2">
-          <button
+          <Button
             type="button"
+            variant="grayscale"
+            size="md"
             onClick={() => router.back()}
-            className="flex flex-1 items-center justify-center rounded-full bg-gray-100 px-4 py-3 text-body-medium-14 text-gray-900"
+            className="flex-1"
           >
             {messages.my.inquiry.cancel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="accent"
+            size="md"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className={cn(
-              "flex flex-1 items-center justify-center rounded-full px-4 py-3 text-body-medium-14 text-white transition-colors",
-              canSubmit ? "bg-gray-900" : "bg-gray-200"
-            )}
+            className="flex-1"
           >
             {messages.my.inquiry.submit}
-          </button>
+          </Button>
         </div>
         <span className="h-1 w-[135px] rounded-full bg-gray-900" />
       </div>

@@ -196,7 +196,7 @@ function AdminInquiryExpandedRow({
         />
         <Button
           type="submit"
-          variant="primary"
+          variant="dark"
           disabled={answerBusy || normalizedAnswer === null}
           aria-busy={answerBusy || undefined}
         >

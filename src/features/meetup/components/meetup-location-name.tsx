@@ -3,10 +3,10 @@
 import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/text-field/input"
 import { Title } from "@/components/ui/text-field/title"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { cn } from "@/lib/utils"
 
 interface MeetupLocationNameProps {
   /** 상단에 표기할 (역지오코딩된) 주소 */
@@ -59,17 +59,15 @@ function MeetupLocationName({ address, initialValue = "", onBack, onDone }: Meet
       </div>
 
       <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+var(--safe-area-bottom))]">
-        <button
+        <Button
           type="button"
+          variant="accent"
+          size="block"
           disabled={!canSubmit}
           onClick={handleDone}
-          className={cn(
-            "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            canSubmit ? "bg-gray-900" : "bg-gray-200"
-          )}
         >
           {t.doneButton}
-        </button>
+        </Button>
       </div>
     </div>
   )
