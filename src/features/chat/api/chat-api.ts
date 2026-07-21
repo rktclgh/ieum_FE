@@ -3,6 +3,8 @@ import { apiClient } from "@/lib/api/client"
 import type {
   ChatCursorPage,
   ChatMessageResponse,
+  ChatNoticePage,
+  ChatNoticeResponse,
   ChatRoomDetailResponse,
   ChatRoomResponse,
   ChatRoomSummaryResponse,
@@ -32,6 +34,14 @@ async function getMessages(roomId: number, cursor?: string, size?: number) {
   return data
 }
 
+async function getChatNotices(roomId: number, cursor?: string, size?: number) {
+  const { data } = await apiClient.get<ChatNoticePage>(
+    `/api/v1/chat/rooms/${roomId}/notices`,
+    { params: { cursor, size } }
+  )
+  return data
+}
+
 // 상태 변경 (CSRF 필요)
 
 async function createDirectRoom(friendId: number) {
@@ -43,6 +53,25 @@ async function createDirectRoom(friendId: number) {
 async function createQuestionRoom(body: QuestionRoomRequest) {
   const { data } = await apiClient.post<ChatRoomResponse>("/api/v1/chat/rooms/question", body)
   return data
+}
+
+async function registerChatNotice(roomId: number, messageId: number) {
+  const { data } = await apiClient.post<ChatNoticeResponse>(
+    `/api/v1/chat/rooms/${roomId}/notices`,
+    { messageId }
+  )
+  return data
+}
+
+async function setChatNoticePin(roomId: number, noticeId: number) {
+  const { data } = await apiClient.put<ChatNoticeResponse>(
+    `/api/v1/chat/rooms/${roomId}/notices/${noticeId}/pin`
+  )
+  return data
+}
+
+async function unsetChatNoticePin(roomId: number, noticeId: number) {
+  await apiClient.delete(`/api/v1/chat/rooms/${roomId}/notices/${noticeId}/pin`)
 }
 
 async function markRead(roomId: number) {
@@ -69,8 +98,12 @@ export {
   getRooms,
   getRoom,
   getMessages,
+  getChatNotices,
   createDirectRoom,
   createQuestionRoom,
+  registerChatNotice,
+  setChatNoticePin,
+  unsetChatNoticePin,
   markRead,
   setPinned,
   setNotify,

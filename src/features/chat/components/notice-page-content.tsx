@@ -5,36 +5,49 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Toast } from "@/components/ui/toast"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { NoticeListItem } from "@/features/chat/components/notice-list-item"
+import type { ChatNoticeResponse } from "@/features/chat/api/chat-types"
+import { useChatNotices, useChatSessionAccess } from "@/features/chat/hooks/use-chat-queries"
+import { useSetChatNoticePinned } from "@/features/chat/hooks/use-chat-mutations"
+import { mergePinnedNoticeForDisplay } from "@/features/chat/lib/chat-notice"
 import { useLongPress } from "@/lib/hooks/use-long-press"
-import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslateToggle } from "@/features/translate/hooks/use-translate-toggle"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { MOCK_NOTICES } from "@/features/chat/constants/mock-data"
+import { resolveFileUrl } from "@/lib/api/file-url"
+import { formatKstTime } from "@/lib/date/kst"
 import { cn } from "@/lib/utils"
 import { Globe } from "lucide-react"
-
-type Notice = (typeof MOCK_NOTICES)[number]
 
 const NOTICE_BOTTOM_SAFE_AREA = 96
 
 interface NoticeRowProps {
-  notice: Notice
+  notice: ChatNoticeResponse
   isAuthenticated: boolean
+  actionPending: boolean
   menuOpen: boolean
   menuItems: ChatContextMenuItem[]
   onOpenMenu: () => void
   onCloseMenu: () => void
 }
 
-function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, onCloseMenu }: NoticeRowProps) {
+function NoticeRow({
+  notice,
+  isAuthenticated,
+  actionPending,
+  menuOpen,
+  menuItems,
+  onOpenMenu,
+  onCloseMenu,
+}: NoticeRowProps) {
   const { messages } = useTranslation()
   const rowRef = React.useRef<HTMLDivElement>(null)
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
-  const translate = useTranslateToggle({ text: notice.title, isAuthenticated })
+  const title = notice.message.content?.trim() ?? ""
+  const translate = useTranslateToggle({ text: title, isAuthenticated })
 
   const translateMenuItem: ChatContextMenuItem = {
     icon: <Globe className="size-6 text-gray-900" />,
@@ -70,11 +83,11 @@ function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, o
     <div ref={rowRef} className="relative" {...longPress}>
       <NoticeListItem
         title={translate.displayText}
-        authorName={notice.authorName}
-        authorAvatarSrc={notice.authorAvatarSrc}
-        time={notice.time}
+        authorName={notice.message.senderNickname}
+        authorAvatarSrc={resolveFileUrl(notice.message.senderProfileImageUrl)}
+        time={formatKstTime(notice.createdAt)}
         pinned={notice.pinned}
-        active={menuOpen}
+        active={menuOpen || actionPending}
       />
       {translate.isError ? (
         <p className="ml-[52px] -mt-1 pb-2 text-body-regular-12 text-red">
@@ -97,51 +110,62 @@ function NoticeRow({ notice, isAuthenticated, menuOpen, menuItems, onOpenMenu, o
   )
 }
 
-function NoticePageContent() {
+interface NoticePageContentProps {
+  roomId: number
+}
+
+function NoticePageContent({ roomId }: NoticePageContentProps) {
   const router = useRouter()
   const { messages } = useTranslation()
-  const me = useMe()
-  const isAuthenticated = Boolean(me.data?.userId)
+  const session = useChatSessionAccess(roomId)
+  const noticesQuery = useChatNotices(roomId, session)
+  const setNoticePinnedMutation = useSetChatNoticePinned()
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = noticesQuery
 
-  const [notices, setNotices] = React.useState<Notice[]>(MOCK_NOTICES)
-  const [activeNoticeId, setActiveNoticeId] = React.useState<string | null>(null)
+  const [activeNoticeId, setActiveNoticeId] = React.useState<number | null>(null)
+  const [pinFailed, setPinFailed] = React.useState(false)
 
-  // 채팅방 공지로 고정된 항목을 최상단에, 나머지는 최신 등록 순으로 정렬
   const sortedNotices = React.useMemo(
-    () =>
-      [...notices].sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1
-        if (!a.pinned && b.pinned) return 1
-        return b.registeredAt - a.registeredAt
-      }),
-    [notices]
+    () => mergePinnedNoticeForDisplay(noticesQuery.notices, noticesQuery.pinnedNotice),
+    [noticesQuery.notices, noticesQuery.pinnedNotice]
   )
 
-  // 대상 공지만 고정하고 기존 고정 공지는 해제한다(동시에 한 개만 고정 → 교체)
-  const pinNotice = (id: string) => {
-    setNotices((prev) => prev.map((notice) => ({ ...notice, pinned: notice.id === id })))
-    setActiveNoticeId(null)
-  }
-
-  const unpinNotice = (id: string) => {
-    setNotices((prev) => prev.map((notice) => (notice.id === id ? { ...notice, pinned: false } : notice)))
-    setActiveNoticeId(null)
-  }
-
-  const menuItemsFor = (notice: Notice): ChatContextMenuItem[] =>
+  const menuItemsFor = (notice: ChatNoticeResponse): ChatContextMenuItem[] =>
     notice.pinned
       ? [
           {
             icon: <Image src="/icons/chat/pin-off.svg" alt="" width={24} height={24} />,
             label: messages.chat.unsetChatNoticeAction,
-            onClick: () => unpinNotice(notice.id),
+            disabled: setNoticePinnedMutation.isPending,
+            onClick: () => {
+              if (setNoticePinnedMutation.isPending) return
+              setPinFailed(false)
+              setNoticePinnedMutation.mutate(
+                { roomId, noticeId: notice.noticeId, pinned: false },
+                {
+                  onError: () => setPinFailed(true),
+                  onSettled: () => setActiveNoticeId(null),
+                }
+              )
+            },
           },
         ]
       : [
           {
             icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
             label: messages.chat.setChatNoticeAction,
-            onClick: () => pinNotice(notice.id),
+            disabled: setNoticePinnedMutation.isPending,
+            onClick: () => {
+              if (setNoticePinnedMutation.isPending) return
+              setPinFailed(false)
+              setNoticePinnedMutation.mutate(
+                { roomId, noticeId: notice.noticeId, pinned: true },
+                {
+                  onError: () => setPinFailed(true),
+                  onSettled: () => setActiveNoticeId(null),
+                }
+              )
+            },
           },
         ]
 
@@ -157,22 +181,48 @@ function NoticePageContent() {
       />
 
       <div className="flex-1 overflow-y-auto px-4 pb-6">
-        {sortedNotices.length === 0 ? (
+        {noticesQuery.isLoading ? (
+          <div className="flex justify-center py-16">
+            <span className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+          </div>
+        ) : noticesQuery.isError ? (
+          <p className="py-16 text-center text-body-regular-14 text-red-500">
+            {messages.chat.noticeLoadFailed}
+          </p>
+        ) : sortedNotices.length === 0 ? (
           <p className="py-16 text-center text-body-regular-14 text-gray-400">{messages.chat.noticeEmptyLabel}</p>
         ) : (
-          sortedNotices.map((notice) => (
-            <NoticeRow
-              key={notice.id}
-              notice={notice}
-              isAuthenticated={isAuthenticated}
-              menuOpen={activeNoticeId === notice.id}
-              menuItems={menuItemsFor(notice)}
-              onOpenMenu={() => setActiveNoticeId(notice.id)}
-              onCloseMenu={() => setActiveNoticeId(null)}
-            />
-          ))
+          <>
+            {sortedNotices.map((notice) => (
+              <NoticeRow
+                key={notice.noticeId}
+                notice={notice}
+                isAuthenticated={session.authenticated}
+                actionPending={setNoticePinnedMutation.isPending && activeNoticeId === notice.noticeId}
+                menuOpen={activeNoticeId === notice.noticeId}
+                menuItems={menuItemsFor(notice)}
+                onOpenMenu={() => setActiveNoticeId(notice.noticeId)}
+                onCloseMenu={() => setActiveNoticeId(null)}
+              />
+            ))}
+            {hasNextPage ? (
+              <button
+                type="button"
+                disabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+                className="mx-auto mt-3 flex min-h-10 items-center justify-center rounded-full px-5 text-body-medium-14 text-gray-700 disabled:opacity-50"
+              >
+                {isFetchingNextPage ? (
+                  <span className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+                ) : (
+                  messages.chat.noticeLoadMoreLabel
+                )}
+              </button>
+            ) : null}
+          </>
         )}
       </div>
+      <Toast open={pinFailed} message={messages.chat.noticePinFailed} />
     </FullScreenOverlay>
   )
 }
