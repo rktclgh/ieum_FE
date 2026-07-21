@@ -9,7 +9,7 @@ import { Download, Globe } from "lucide-react"
 import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { Toast } from "@/components/ui/toast"
+import { Toast, ToastPill } from "@/components/ui/toast"
 import {
   SidePanel,
   SidePanelBackdrop,
@@ -784,17 +784,33 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           onTrailingClick={session.authenticated ? () => setMoreOpen(true) : undefined}
           className={!notice ? "border-b border-gray-50 bg-white" : undefined}
         />
-        {session.authenticated && !connected && (
-          <div className="bg-amber-50 py-1 text-center text-body-regular-12 text-amber-600">
-            {messages.chat.connecting}
-          </div>
-        )}
         {session.authenticated && socketError && (
           <div className="bg-red-50 py-1 text-center text-body-regular-12 text-red-500">
             {socketError}
           </div>
         )}
         <div className="relative min-h-0 flex-1">
+          {/*
+           * 연결 상태 알림 — 문의 접수 토스트와 같은 pill을 메시지 영역 최상단 중앙에
+           * 띄운다(issue #435). 이전에는 AppBar 아래 가로 전체 앰버 띠였는데, 레이아웃을
+           * 밀어내 진입할 때마다 메시지 목록이 한 번 내려갔다 올라왔다.
+           *
+           * 표시 조건은 연결 상태 그 자체다 — 문의 토스트처럼 타이머로 사라지지 않고,
+           * 연결되면 조용히 사라진다.
+           *
+           * 스크롤 컨테이너 바깥에 두어 메시지를 따라 스크롤되지 않게 하고, 공지
+           * 배너(sticky z-50)보다 위에 얹는다. 알림이 뜬 동안에도 아래 메시지를 만질 수
+           * 있어야 하므로 pointer-events는 통과시킨다.
+           */}
+          {session.authenticated && !connected && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="pointer-events-none absolute inset-x-0 top-2 z-[60] flex justify-center px-4"
+            >
+              <ToastPill>{messages.chat.connecting}</ToastPill>
+            </div>
+          )}
           <div
             ref={scrollContainerRef}
             onScroll={handleMessagesAreaScroll}
