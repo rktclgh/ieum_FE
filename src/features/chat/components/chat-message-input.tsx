@@ -46,6 +46,13 @@ function ChatMessageInput({
     if (replyMessageId != null) inputRef.current?.focus()
   }, [replyMessageId])
 
+  const focusInput = () => inputRef.current?.focus()
+
+  const preserveTextInputFocus = (event: React.PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    focusInput()
+  }
+
   const setValue = (next: string) => {
     if (!isControlled) setUncontrolledValue(next)
     onChange?.(next)
@@ -56,6 +63,7 @@ function ChatMessageInput({
     // 줄바꿈이 가능해지면서 앞뒤 개행이 그대로 실려 말풍선에 빈 줄이 생길 수 있어 다듬어 보낸다.
     const sent = onSend?.(currentValue.trim())
     if (sent !== "failed" && sent !== "awaiting-echo") setValue("")
+    focusInput()
   }
 
   const input = (
@@ -89,6 +97,7 @@ function ChatMessageInput({
       <button
         type="button"
         aria-label={messages.chat.sendButtonLabel}
+        onPointerDown={preserveTextInputFocus}
         onClick={handleSend}
         disabled={disabled}
         className="size-8 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"

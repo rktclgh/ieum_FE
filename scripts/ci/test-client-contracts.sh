@@ -26,6 +26,7 @@ node --experimental-strip-types --test src/features/chat/lib/chat-reply.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-message-actions.test.ts
 node --experimental-strip-types --test src/features/chat/components/chat-system-message.test.ts
 node --experimental-strip-types --test src/features/chat/components/chat-bubble-radius.test.ts
+node --experimental-strip-types --test src/features/chat/components/chat-message-input.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-leave.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-pin.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-notice.test.ts
