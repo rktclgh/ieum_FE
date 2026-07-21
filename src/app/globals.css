@@ -433,6 +433,19 @@
 }
 
 /*
+ * iOS standalone 뷰포트 확장 강제(812→874) — 위 100lvh 채움이 실제로 보이려면 필수.
+ *
+ * iOS standalone은 로드 시 작은 뷰포트(812)로 시작해 첫 스크롤에 큰 뷰포트(874)로 확장된다.
+ * 홈 지도처럼 스크롤이 없는 화면은 812에 갇혀 하단 62px이 그려지지 않는다(죽은 띠).
+ * body를 뷰포트보다 1px 높게 둬 항상 스크롤 여지를 만들면, StandaloneViewportExpander의
+ * 로드 직후 스크롤 넛지가 확장을 트리거하고, 남는 1px 여지가 재접힘을 막는다.
+ * 실기기 프로브로 검증(#419, docs/viewport-behavior.md).
+ */
+:root[data-standalone] body {
+  min-height: calc(100lvh + 1px);
+}
+
+/*
  * 지도 원형 마커 히트 영역 — issue #302.
  * Leaflet이 만드는 `.leaflet-marker-icon` 루트는 border-radius 없는 44x44 정사각형이라,
  * 원 밖 네 모서리(박스의 약 21%)까지 클릭을 가로챈다. 마커가 겹치면 눈에는 클러스터만
