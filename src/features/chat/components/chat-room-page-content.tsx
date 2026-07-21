@@ -870,10 +870,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             {activeDateBadgeText && <ChatScrollDateBadge text={activeDateBadgeText} />}
           </div>
         </div>
-        {/* 키보드가 열리면 홈 인디케이터(safe-area-bottom)는 키보드에 가리므로, 그만큼의
-            하단 여백을 접어 입력창을 키보드에 더 붙인다. max(safe − keyboard-inset, 0)은
-            키보드가 뜨면(inset이 safe보다 큼) 0으로, 닫히면 원래 safe로 수렴한다. */}
-        <div className="relative px-4 pt-2 pb-[calc(0.5rem+max(var(--safe-area-bottom)-var(--keyboard-inset,0px),0px))]">
+        {/* 하단 여백:
+            - 키보드 닫힘: `1rem + safe-area-bottom`(홈 인디케이터 회피).
+            - 키보드 열림: 키보드 위 입력 액세서리 바(완료/이전·다음, ~44px)는 visualViewport에
+              안 잡혀 `--keyboard-inset`이 항상 그만큼 모자라다(issue #328). 그래서 열렸을 때는
+              최소 2.75rem(≈44px) 클리어런스를 보장해 입력창이 그 바 위로 올라오게 한다.
+              `min(--keyboard-inset, 2.75rem)`은 닫힘(inset=0)일 때 0으로 접혀 위 규칙과 합쳐지고,
+              열림일 때 44px로 고정된다. safe-area가 0인 인앱 사파리에서도 바를 넘긴다. */}
+        <div className="relative px-4 pt-2 pb-[calc(1rem+max(var(--safe-area-bottom),min(var(--keyboard-inset,0px),2.75rem)))]">
           <input
             ref={fileInputRef}
             type="file"

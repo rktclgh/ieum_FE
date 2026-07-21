@@ -69,20 +69,24 @@ export function useKeyboardInset(): void {
         return
       }
 
-      // 스크롤 락 화면에서는 문서 스크롤을 0으로 고정하고 ICB−visual 로 인셋을 잰다.
+      // 스크롤 락 화면(fixed 셸·full-screen-overlay): ICB−visual 로 키보드 높이를 재고,
+      // **키보드가 실제로 떠 있을 때만** 문서 스크롤을 0으로 되돌려 셸을 뷰포트에 고정한다.
       if (document.querySelector(SCROLL_LOCK_SELECTOR) !== null) {
-        // iOS가 밀어 올린 스크롤을 되돌린다. 입력창은 아래 pb-[--keyboard-inset] 로 이미
-        // 키보드 위에 놓이므로, 스크롤을 0으로 되돌려도 iOS가 다시 밀어 올릴 이유가 없다.
-        if (window.scrollY !== 0) window.scrollTo(0, 0)
-        const scroller = document.scrollingElement
-        if (scroller && scroller.scrollTop !== 0) scroller.scrollTop = 0
-
         // clientHeight(ICB)는 키보드로 줄지 않으므로, 이 차이가 곧 키보드가 가린 높이다.
         const covered = root.clientHeight - viewport.height
-        root.style.setProperty(
-          CSS_VARIABLE,
-          covered <= KEYBOARD_RESIZE_THRESHOLD ? "0px" : `${Math.round(covered)}px`
-        )
+        const keyboardOpen = covered > KEYBOARD_RESIZE_THRESHOLD
+
+        // 키보드가 없을 때는 스크롤을 건드리지 않는다. 되돌리면 StandaloneViewportExpander의
+        // 뷰포트 확장(812→874, body 100lvh+1px)을 되접어 하단 죽은 띠를 재도입하고 확장
+        // 넛지와 밀당한다(#432와 협력). 키보드가 뜨면 iOS가 셸을 끌어올리므로 그때만 되돌린다 —
+        // 입력창은 pb-[--keyboard-inset] 로 이미 키보드 위에 놓여 iOS가 다시 밀어 올리지 않는다.
+        if (keyboardOpen) {
+          if (window.scrollY !== 0) window.scrollTo(0, 0)
+          const scroller = document.scrollingElement
+          if (scroller && scroller.scrollTop !== 0) scroller.scrollTop = 0
+        }
+
+        root.style.setProperty(CSS_VARIABLE, keyboardOpen ? `${Math.round(covered)}px` : "0px")
         return
       }
 
