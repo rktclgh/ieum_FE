@@ -17,6 +17,7 @@ import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
 import { executeLeaveChatRoom } from "@/features/chat/lib/chat-leave"
 import { executeSetPinned, resolvePinOperations, type PinRequest } from "@/features/chat/lib/chat-pin"
 import {
+  executeRegisterChatNotice,
   executeSetChatNoticePinned,
   type ChatNoticePinRequest,
 } from "@/features/chat/lib/chat-notice"
@@ -56,7 +57,10 @@ function useRegisterChatNotice() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ roomId, messageId }: { roomId: number; messageId: number }) =>
-      registerChatNotice(roomId, messageId),
+      executeRegisterChatNotice(
+        { roomId, messageId },
+        { registerNotice: registerChatNotice, pinNotice: setChatNoticePin }
+      ),
     onSettled: (_data, _error, { roomId }) => {
       queryClient.invalidateQueries({ queryKey: chatKeys.notices(roomId) })
     },

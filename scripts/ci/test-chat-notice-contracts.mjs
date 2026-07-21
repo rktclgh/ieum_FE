@@ -40,6 +40,7 @@ test("chat notice API exposes the server contract expected by the UI", () => {
   assert.match(functionBody(queries, "useChatNotices"), /fetchNextPage/)
   assert.match(functionBody(queries, "useChatNotices"), /hasNextPage/)
   assert.match(mutations, /function useRegisterChatNotice/)
+  assert.match(functionBody(mutations, "useRegisterChatNotice"), /executeRegisterChatNotice/)
   assert.match(mutations, /function useSetChatNoticePinned/)
   assert.doesNotMatch(functionBody(mutations, "useSetChatNoticePinned"), /onMutate/)
 })
