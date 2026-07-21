@@ -3,9 +3,10 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 
-import { SCREEN_BOTTOM_GAP } from "@/lib/constants/layout"
+import { SHEET_BOTTOM_GAP } from "@/lib/constants/layout"
 import { ScreenOverlayMarker } from "@/lib/overlay/screen-overlay"
 import { cn } from "@/lib/utils"
+import { useSheetKeyboardInset } from "@/lib/viewport/use-sheet-keyboard-inset"
 
 /**
  * 화면 하단에 여백을 두고 떠 있는 카드형 바텀시트.
@@ -23,6 +24,11 @@ interface BottomSheetProps extends Omit<DrawerPrimitive.Root.Props, "children"> 
 }
 
 function BottomSheet({ children, className, viewportClassName, ...props }: BottomSheetProps) {
+  // 키보드가 뜨면 시트를 그 위로 올린다(issue #458). base-ui의 VirtualKeyboardProvider는
+  // `--drawer-keyboard-inset`을 **노출만** 하고 적용은 소비자 몫인데, 그 값의 판정식이
+  // iOS에서 무력해(아래 주석) 여기서 직접 잰다.
+  const viewportRef = useSheetKeyboardInset()
+
   return (
     <DrawerPrimitive.Root data-slot="bottom-sheet" {...props}>
       <DrawerPrimitive.Portal>
@@ -32,16 +38,24 @@ function BottomSheet({ children, className, viewportClassName, ...props }: Botto
         <ScreenOverlayMarker />
         <DrawerPrimitive.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/20 opacity-[calc(1_-_var(--drawer-swipe-progress))] transition-opacity duration-base ease-base data-ending-style:opacity-0 data-starting-style:opacity-0" />
         {/* 시트 안에 텍스트 입력이 있는 소비자(예: 질문 답변창)를 위해 base-ui의 내장
-            키보드 회피(visualViewport 추적 + 포커스 스크롤)를 켠다. 포커스 가능한
-            입력 요소가 없는 소비자에게는 이벤트가 아예 발생하지 않아 동작이 그대로다. */}
+            키보드 회피(포커스된 필드를 시트 내부 스크롤 컨테이너에서 가운데로 스크롤)를 켠다.
+            포커스 가능한 입력 요소가 없는 소비자에게는 이벤트가 아예 발생하지 않는다.
+
+            단, **시트 자체를 키보드 위로 올리는 일은 이쪽이 하지 못한다.** 두 가지 이유다.
+            (1) base-ui는 `--drawer-keyboard-inset`을 노출만 하고 적용은 소비자 몫이다.
+            (2) 그 값의 판정식이 `innerHeight - visualViewport.height`인데, iOS에서는 둘이 함께
+                줄어 0이 되어 문턱값(60)에 걸린다 — #431이 실측으로 폐기한 공식이다.
+            그래서 시트를 올리는 책임은 아래 `useSheetKeyboardInset`이 진다(#458). */}
         <DrawerPrimitive.VirtualKeyboardProvider>
           <DrawerPrimitive.Viewport
+            ref={viewportRef}
             className={cn(
               // bottom-sheet-viewport: standalone(black-translucent)에서 inset-0(812) 대신 100lvh로
               // 늘려 items-end가 물리 바닥(874)에 정렬되게 한다(globals.css). 없으면 시트가 62px 뜬다.
               "bottom-sheet-viewport fixed inset-0 z-50 flex items-end justify-center px-4",
-              // 탭바와 같은 기준선에서 뜬다 — 시트가 탭바를 덮으므로 값이 어긋나면 모서리가 삐져나온다.
-              SCREEN_BOTTOM_GAP,
+              // 탭바와 같은 기준선(28px)에서 뜨고, 키보드가 있으면 그만큼 더 올라간다.
+              // 시트가 탭바를 덮으므로 기준선이 어긋나면 모서리가 삐져나온다.
+              SHEET_BOTTOM_GAP,
               viewportClassName
             )}
           >

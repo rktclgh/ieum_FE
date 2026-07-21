@@ -38,6 +38,13 @@ const CONTAINER_PADDING = "0.25rem"
  *    탭바가 없다. z-index로 덮는 것만으로는 진입·퇴장 모션 중과 키보드가 올라와 오버레이
  *    박스가 줄어들 때(`--keyboard-inset`), 그리고 반투명 backdrop 뒤로 그대로 비친다.
  *
+ *    단, 이 조건은 **언마운트가 아니라 숨김**으로 건다(issue #458). 언마운트하면 오버레이가
+ *    닫힐 때 탭 아이콘 8장(`next/image` → `images.unoptimized`라 소재 그대로의 `<img>`)이
+ *    새 엘리먼트로 다시 생성되고, 그 페인트가 비동기라 pill·라벨은 즉시 뜨는데 아이콘만
+ *    한두 프레임 늦게 나타난다 — "아이콘이 사라졌다 다시 뜨는" 깜빡임의 정체다.
+ *    (서비스워커가 낀 PWA에서는 캐시 히트여도 fetch가 비동기라 더 잘 보인다.)
+ *    `opacity-0`으로 숨기면 이미 디코드된 `<img>`가 그대로 살아 있어 복귀가 즉시다.
+ *
  * 경로·오버레이 판정을 먼저 하고 세션 조회를 안쪽 컴포넌트로 미루는 이유: 탭 경로가 아닌
  * 화면(`/login` 등)에서 `useMe` 요청이 새로 발생하지 않게 하기 위해서다.
  */
@@ -47,10 +54,14 @@ function TabBar(props: React.ComponentProps<"div">) {
 
   // 경로 판정은 `Screen`의 하단 클리어런스와 같은 함수를 쓴다 (issue #419).
   // 여기서만 판정하면 탭바 높이와 페이지가 비우는 공간이 조용히 어긋난다.
+  //
+  // 경로가 아예 다를 때는 언마운트가 맞다 — 라우트가 바뀌며 어차피 화면 전체가 갈리고,
+  // 탭 경로가 아닌 화면에서 `useMe`를 붙들지 않아야 한다. 깜빡임은 같은 경로 위에
+  // 오버레이만 여닫는 경우의 문제다.
   const activeIndex = findTabIndex(pathname)
-  if (activeIndex === -1 || hasScreenOverlay) return null
+  if (activeIndex === -1) return null
 
-  return <TabBarNav activeIndex={activeIndex} {...props} />
+  return <TabBarNav activeIndex={activeIndex} concealed={hasScreenOverlay} {...props} />
 }
 
 /**
@@ -60,9 +71,10 @@ function TabBar(props: React.ComponentProps<"div">) {
  */
 function TabBarNav({
   activeIndex,
+  concealed = false,
   className,
   ...props
-}: React.ComponentProps<"div"> & { activeIndex: number }) {
+}: React.ComponentProps<"div"> & { activeIndex: number; concealed?: boolean }) {
   const { messages } = useTranslation()
   const { data: me } = useMe()
 
@@ -71,6 +83,10 @@ function TabBarNav({
   return (
     <div
       data-slot="tab-bar"
+      // 숨김 중에는 보이지도, 눌리지도, 스크린리더에 읽히지도 않는다 — 언마운트와 같은
+      // 효과를 내되 DOM(과 디코드된 아이콘)은 유지한다(issue #458).
+      inert={concealed}
+      aria-hidden={concealed || undefined}
       className={cn(
         // 화면 물리 바닥에서 28px 위에 pill을 띄운다(issue #436 — safe-area 포함한 총합).
         // 바닥 여백은 바텀시트와 같은 기준선(SCREEN_BOTTOM_GAP)을 쓰고,
@@ -81,6 +97,8 @@ function TabBarNav({
         // Safari·비-standalone에서는 이 규칙이 적용되지 않아 위 app-bottom-fixed(bottom:0)가 산다.
         "bottom-anchor [--anchor-h:var(--tab-bar-height)]",
         SCREEN_BOTTOM_GAP,
+        // 트랜지션을 붙이지 않는다 — 종전 언마운트와 동일하게 즉시 사라지고 즉시 돌아온다.
+        concealed && "pointer-events-none opacity-0",
         className
       )}
       {...props}

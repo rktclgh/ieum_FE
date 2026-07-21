@@ -45,6 +45,17 @@ export const APP_BAR_SAFE_TOP = "pt-[calc(1rem+var(--safe-area-top))]"
 export const SCREEN_BOTTOM_GAP = "pb-7"
 
 /**
+ * 바텀시트 Viewport의 바닥 여백 — `SCREEN_BOTTOM_GAP`과 **같은 28px 기준선** + 키보드 회피분.
+ *
+ * `1.75rem`은 `pb-7`을 푼 값이다. 둘이 어긋나면 시트 아래로 탭바 모서리가 삐져나오므로,
+ * 한쪽을 바꾸면 다른 쪽도 함께 바꿔야 한다(Tailwind 클래스라 계산으로 파생시킬 수 없다).
+ *
+ * `--sheet-keyboard-inset`은 `use-sheet-keyboard-inset.ts`가 시트가 열려 있는 동안만 채운다.
+ * 키보드가 없으면 0px이고, 훅이 붙지 않은 경로에서는 fallback 0px이라 종전과 동일하다(#458).
+ */
+export const SHEET_BOTTOM_GAP = "pb-[calc(1.75rem+var(--sheet-keyboard-inset,0px))]"
+
+/**
  * 우측 하단 고정 원형 버튼(FAB)의 하단 위치 규칙.
  *
  * 규칙: FAB 하단 gap은 항상 12px. 기준선만 화면에 따라 다르다.

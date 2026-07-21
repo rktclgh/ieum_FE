@@ -40,6 +40,7 @@ node --experimental-strip-types --test src/features/map/lib/map-tile-error.test.
 node --experimental-strip-types --test src/features/map/lib/distance.test.ts
 node --experimental-strip-types --test src/features/report/lib/report-target.test.ts
 node --experimental-strip-types --test src/features/pwa/lib/install-availability.test.ts
+node --experimental-strip-types --test src/lib/viewport/sheet-keyboard-inset.test.ts
 node --experimental-strip-types --test src/features/pwa/lib/platform.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/lib/long-press-styles.test.ts
 node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/chat/lib/context-menu-geometry.test.ts
