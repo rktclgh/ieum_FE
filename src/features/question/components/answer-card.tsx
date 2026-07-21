@@ -46,6 +46,9 @@ function AnswerCard({
     ? messages.countries[answer.nationalityCode]
     : undefined
 
+  // 답변 작성 UI가 사진을 1장만 붙일 수 있어, 질문 본문과 동일하게 첫 장만 쓴다.
+  const answerImageUrl = answer.imageUrls[0]
+
   return (
     <div
       {...longPress}
@@ -91,6 +94,20 @@ function AnswerCard({
         </div>
         <AnswerAcceptButton state={acceptState} onClick={onAccept} />
       </div>
+      {/*
+        답변에 첨부된 사진. 카드가 gap-3(=Figma 2277:9114의 gap 12px)이라 프로필 행과의
+        간격은 형제로 끼워넣는 것만으로 유지된다.
+        높이를 고정하지 않아 원본 비율 그대로 보여주고, 세로로 긴 사진만 max-h로 잘라
+        카드가 한없이 길어지는 것을 막는다(그때 생기는 좌우 여백은 object-contain이 가운데 정렬).
+      */}
+      {answerImageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={answerImageUrl}
+          alt={messages.question.answerImageAlt}
+          className="max-h-80 w-full rounded-xl object-contain"
+        />
+      ) : null}
       <p className="text-body-regular-14 whitespace-pre-line text-gray-600">{answer.content}</p>
     </div>
   )

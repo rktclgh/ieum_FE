@@ -223,6 +223,7 @@ export const en: Messages = {
     answeredLabel: "Answered",
     closeLabel: "Close",
     imageAlt: "Question image",
+    answerImageAlt: "Answer image",
     flagAlt: "Flag",
     emptyAnswers: "No answers yet.",
     loadError: "Couldn't load the question.",

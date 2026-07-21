@@ -222,6 +222,7 @@ export const th: Messages = {
     answeredLabel: "ตอบแล้ว",
     closeLabel: "ปิด",
     imageAlt: "รูปคำถาม",
+    answerImageAlt: "รูปคำตอบ",
     flagAlt: "ธง",
     emptyAnswers: "ยังไม่มีคำตอบ",
     loadError: "ไม่สามารถโหลดคำถามได้",

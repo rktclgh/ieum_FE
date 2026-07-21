@@ -223,6 +223,7 @@ export const vi: Messages = {
     answeredLabel: "Đã trả lời",
     closeLabel: "Đóng",
     imageAlt: "Ảnh câu hỏi",
+    answerImageAlt: "Ảnh câu trả lời",
     flagAlt: "Cờ",
     emptyAnswers: "Chưa có câu trả lời nào.",
     loadError: "Không thể tải câu hỏi.",

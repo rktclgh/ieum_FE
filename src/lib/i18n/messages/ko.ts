@@ -208,6 +208,7 @@ export interface Messages {
     answeredLabel: string
     closeLabel: string
     imageAlt: string
+    answerImageAlt: string
     flagAlt: string
     emptyAnswers: string
     loadError: string
@@ -741,6 +742,7 @@ export const ko: Messages = {
     answeredLabel: "답변 완료",
     closeLabel: "닫기",
     imageAlt: "질문 이미지",
+    answerImageAlt: "답변 이미지",
     flagAlt: "국기",
     emptyAnswers: "아직 답변이 없어요.",
     loadError: "질문을 불러오지 못했어요.",
