@@ -197,13 +197,16 @@
    * 탭바 사이 간격이 기기별로 16~50px 사이에서 변했다. "핸드폰마다 다르게 보인다"의 정체다.
    *
    * 내역: pt-2(8) + pill(링크 52 + 컨테이너 패딩 4×2 = 60) + 바닥 gap(28) = 96px.
-   * 여기에 `--safe-area-bottom`을 더해 홈 인디케이터 위로 올린다. 이전에는 Figma의 28px을
-   * 근거로 safe-area를 일부러 빼서 탭바가 홈 인디케이터를 덮고 있었다(실측 34px).
+   *
+   * **`--safe-area-bottom`을 더하지 않는다**(issue #436). 바닥 gap 28px이 safe-area를 포함한
+   * 총합이라 기기와 무관하게 일정하다. #419에서 한 번 더했다가("탭바가 홈 인디케이터를 덮는다")
+   * 바닥에서 62px로 과하게 떠서 되돌렸다 — 근거는 `constants/layout.ts`의 SCREEN_BOTTOM_GAP 주석.
+   * 바닥이 어디인가는 아래 `.bottom-anchor`가 `100lvh`로 잡는다.
    */
-  --tab-bar-height: calc(96px + var(--safe-area-bottom));
+  --tab-bar-height: 96px;
 
-  /** FAB·바텀시트가 얹히는 기준선 — 뷰포트 바닥에서 pill 상단까지. */
-  --tab-bar-pill-top: calc(88px + var(--safe-area-bottom));
+  /** FAB·바텀시트가 얹히는 기준선 — 화면 바닥에서 pill 상단까지. */
+  --tab-bar-pill-top: 88px;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
