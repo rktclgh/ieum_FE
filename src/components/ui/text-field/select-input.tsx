@@ -181,7 +181,7 @@ function SelectInput({
               </div>
 
               <DrawerClose
-                render={<Button variant="primary" size="block" />}
+                render={<Button variant="accent" size="block" />}
                 onClick={() => {
                   setUncontrolledValue(pendingValue)
                   onValueChange?.(pendingValue)

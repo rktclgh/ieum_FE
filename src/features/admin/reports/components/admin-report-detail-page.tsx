@@ -453,7 +453,7 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
           <div className="flex flex-wrap gap-3">
             <Button
               type="button"
-              variant="primary"
+              variant="dark"
               disabled={decisionBusy}
               aria-busy={decisionBusy || undefined}
               onClick={() => openDecisionDialog("confirm")}

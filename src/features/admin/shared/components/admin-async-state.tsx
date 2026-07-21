@@ -44,7 +44,7 @@ function AdminAsyncState(props: AdminAsyncStateProps) {
       {props.kind === "error" && (
         <Button
           type="button"
-          variant="primary"
+          variant="dark"
           onClick={props.onRetry}
           disabled={props.retryDisabled || props.isRetrying}
           aria-busy={props.isRetrying || undefined}

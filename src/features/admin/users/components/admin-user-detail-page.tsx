@@ -372,7 +372,7 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
           <div className="lg:col-span-2">
             <Button
               type="submit"
-              variant="primary"
+              variant="dark"
               disabled={sanctionBusy}
               aria-busy={sanctionBusy || undefined}
             >

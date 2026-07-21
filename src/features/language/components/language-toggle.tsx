@@ -67,7 +67,7 @@ function LanguageToggle({ className, ...props }: React.ComponentProps<"button">)
               </div>
 
               <DrawerClose
-                render={<Button variant="primary" size="block" />}
+                render={<Button variant="accent" size="block" />}
                 onClick={() => setLanguage(pendingLanguage)}
               >
                 {MESSAGES[pendingLanguage].languagePicker.confirm}
