@@ -6,7 +6,14 @@ import { BottomSheet } from "@/components/ui/bottom-sheet"
 import type { MapPin } from "@/features/map/api/pin-types"
 import { MeetupDetailContainer } from "@/features/meetup/components/meetup-detail-container"
 import { QuestionDetailContainer } from "@/features/question/components/question-detail-container"
+import { LiftSurfaceProvider, useLiftSurfaceState } from "@/lib/hooks/use-lift-surface"
 import { useTranslation } from "@/lib/i18n/use-translation"
+import {
+  LONG_PRESS_INACTIVE,
+  LONG_PRESS_LIFT_ACTIVE,
+  LONG_PRESS_TRANSITION,
+} from "@/lib/long-press-styles"
+import { cn } from "@/lib/utils"
 
 /**
  * 슬라이드 폭 = 카드 폭 + 카드 사이 간격(12px).
@@ -24,6 +31,15 @@ const SLIDE_WIDTH = `min(${345 + SLIDE_GAP_PX}px, calc(100% - 3rem))`
 
 /** 활성 슬라이드 기준 좌우 몇 장까지 실제 내용을 렌더할지. 나머지는 자리만 잡아 조회를 아낀다. */
 const RENDER_WINDOW = 1
+
+/**
+ * 롱프레스 메뉴가 카드 위쪽에 뜰 때 트랙이 열어주는 여백.
+ *
+ * 트랙은 가로 스크롤(overflow-x-auto)이라 CSS 규칙상 세로도 함께 클리핑된다 — 카드 위로
+ * 삐져나온 메뉴가 그냥 잘린다. 시트는 화면 하단 정렬이라 이 여백이 생기면 위로 자란다.
+ * 값: 1항목 메뉴 64px + 카드와의 간격 12px = 76 → 80px(pt-20).
+ */
+const MENU_HEADROOM = "pt-20"
 
 interface PinStackSheetProps {
   /** 같은 좌표에 겹쳐 있어 지도에서 분리할 수 없는 핀들 */
@@ -45,6 +61,12 @@ function PinStackSheet({ pins, onClose }: PinStackSheetProps) {
   const { messages } = useTranslation()
   const trackRef = React.useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = React.useState(0)
+  // 롱프레스로 떠오른 슬라이드. 그 카드 위에 뜨는 메뉴가 잘리지 않게 트랙 위쪽을 열어둔다.
+  const [liftedIndex, setLiftedIndex] = React.useState<number | null>(null)
+
+  const handleLiftedChange = React.useCallback((index: number, lifted: boolean) => {
+    setLiftedIndex((current) => (lifted ? index : current === index ? null : current))
+  }, [])
 
   // 한 번이라도 창에 들어온 슬라이드는 계속 마운트해 둔다(지연 마운트).
   // 언마운트하면 질문 카드에 입력하던 답변 텍스트와 첨부 사진이 스와이프만으로 날아간다.
@@ -108,7 +130,11 @@ function PinStackSheet({ pins, onClose }: PinStackSheetProps) {
           onScroll={handleScroll}
           // items-end: 카드 높이는 내용에 따라 제각각이므로(모임은 짧고, 아바타가 있는 질문은 길다)
           // 바닥을 기준선으로 맞춰야 스와이프할 때 카드가 위아래로 튀지 않는다.
-          className="flex w-full items-end snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className={cn(
+            "flex w-full items-end snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            LONG_PRESS_TRANSITION,
+            liftedIndex === null ? "pt-0" : MENU_HEADROOM
+          )}
         >
           <StackSpacer />
           {pins.map((pin, index) => (
@@ -117,7 +143,7 @@ function PinStackSheet({ pins, onClose }: PinStackSheetProps) {
               data-pin-stack-slide
               className="w-[var(--pin-stack-slide)] shrink-0 snap-center px-1.5"
             >
-              <div className="flex w-full flex-col items-center gap-4 rounded-3xl bg-white px-4 pt-6 pb-5 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]">
+              <StackCard index={index} onLiftedChange={handleLiftedChange}>
                 {index >= mountedRange.min && index <= mountedRange.max ? (
                   pin.pinType === "meeting" ? (
                     <MeetupDetailContainer
@@ -135,13 +161,47 @@ function PinStackSheet({ pins, onClose }: PinStackSheetProps) {
                 ) : (
                   <div className="h-56 w-full" />
                 )}
-              </div>
+              </StackCard>
             </div>
           ))}
           <StackSpacer />
         </div>
       </div>
     </BottomSheet>
+  )
+}
+
+/**
+ * 슬라이드 한 장의 흰 카드. 단일 시트에서는 시트 팝업이 하는 두 가지 역할을 여기서 대신한다.
+ * (1) 롱프레스 시 떠오르는 표면, (2) 카드가 여는 번역 메뉴의 위치 기준(relative).
+ * 캐러셀에서는 시트가 아니라 눌린 카드 한 장만 떠올라야 한다.
+ */
+function StackCard({
+  index,
+  onLiftedChange,
+  children,
+}: {
+  index: number
+  onLiftedChange: (index: number, lifted: boolean) => void
+  children: React.ReactNode
+}) {
+  const { lifted, setLifted } = useLiftSurfaceState()
+
+  // 트랙이 세로로 클리핑하므로(아래 MENU_HEADROOM 참고) 부모가 공간을 열어줘야 한다.
+  React.useEffect(() => {
+    onLiftedChange(index, lifted)
+  }, [index, lifted, onLiftedChange])
+
+  return (
+    <div
+      className={cn(
+        "relative flex w-full flex-col items-center gap-4 rounded-3xl bg-white px-4 pt-6 pb-5 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)]",
+        LONG_PRESS_TRANSITION,
+        lifted ? LONG_PRESS_LIFT_ACTIVE : LONG_PRESS_INACTIVE
+      )}
+    >
+      <LiftSurfaceProvider value={setLifted}>{children}</LiftSurfaceProvider>
+    </div>
   )
 }
 

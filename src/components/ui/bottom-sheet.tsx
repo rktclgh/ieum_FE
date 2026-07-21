@@ -3,7 +3,9 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 
+import { LiftSurfaceProvider, useLiftSurfaceState } from "@/lib/hooks/use-lift-surface"
 import { SHEET_BOTTOM_GAP } from "@/lib/constants/layout"
+import { LONG_PRESS_LIFT_OFFSET, LONG_PRESS_LIFT_SCALE } from "@/lib/long-press-styles"
 import { ScreenOverlayMarker } from "@/lib/overlay/screen-overlay"
 import { cn } from "@/lib/utils"
 import { useSheetKeyboardInset } from "@/lib/viewport/use-sheet-keyboard-inset"
@@ -28,6 +30,10 @@ function BottomSheet({ children, className, viewportClassName, ...props }: Botto
   // `--drawer-keyboard-inset`을 **노출만** 하고 적용은 소비자 몫인데, 그 값의 판정식이
   // iOS에서 무력해(아래 주석) 여기서 직접 잰다.
   const viewportRef = useSheetKeyboardInset()
+
+  // 시트 안의 카드가 롱프레스되면 시트 전체가 떠오른다(#463). 메뉴 상태는 카드가 갖고 있으므로
+  // LiftSurfaceProvider 로 상태만 위로 받는다.
+  const { lifted, setLifted } = useLiftSurfaceState()
 
   return (
     <DrawerPrimitive.Root data-slot="bottom-sheet" {...props}>
@@ -61,12 +67,22 @@ function BottomSheet({ children, className, viewportClassName, ...props }: Botto
           >
             <DrawerPrimitive.Popup
               data-slot="bottom-sheet-popup"
+              // 리프트는 스와이프 변형과 같은 transform 한 줄에 CSS 변수로 합성한다. transform
+              // 클래스를 하나 더 얹으면 둘 중 하나가 조용히 덮여 스와이프가 멈춘다.
+              // 트랜지션은 팝업의 기존 transition-transform(300ms)을 그대로 쓴다.
+              // relative: 카드가 여는 롱프레스 메뉴가 이 팝업을 기준으로 잡힌다(시트 좌측 끝 정렬).
               className={cn(
-                "flex w-full max-w-[345px] flex-col items-center gap-4 rounded-3xl bg-white px-4 pt-6 pb-5 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)] outline-none [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-base ease-base data-ending-style:translate-y-[calc(100%_+_2rem)] data-starting-style:translate-y-[calc(100%_+_2rem)]",
+                "relative flex w-full max-w-[345px] flex-col items-center gap-4 rounded-3xl bg-white px-4 pt-6 pb-5 shadow-[0px_2px_20px_0px_rgba(0,0,0,0.1)] outline-none [transform:translateY(calc(var(--drawer-swipe-movement-y)_+_var(--sheet-lift,0px)))_scale(var(--sheet-lift-scale,1))] transition-transform duration-base ease-base data-ending-style:translate-y-[calc(100%_+_2rem)] data-starting-style:translate-y-[calc(100%_+_2rem)]",
                 className
               )}
+              style={
+                {
+                  "--sheet-lift": lifted ? LONG_PRESS_LIFT_OFFSET : "0px",
+                  "--sheet-lift-scale": lifted ? LONG_PRESS_LIFT_SCALE : "1",
+                } as React.CSSProperties
+              }
             >
-              {children}
+              <LiftSurfaceProvider value={setLifted}>{children}</LiftSurfaceProvider>
             </DrawerPrimitive.Popup>
           </DrawerPrimitive.Viewport>
         </DrawerPrimitive.VirtualKeyboardProvider>

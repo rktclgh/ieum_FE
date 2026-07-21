@@ -5,7 +5,7 @@ import Image from "next/image"
 import { HighlightedText } from "@/components/ui/highlighted-text"
 import { NoImage } from "@/components/ui/no-image"
 import type { MapPin } from "@/features/map/api/pin-types"
-import { SearchResultLongPress } from "@/features/map/components/search-result-long-press"
+import { TranslateLongPress } from "@/features/translate/components/translate-long-press"
 import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
 import { adaptMeetingDetail } from "@/features/meetup/lib/meetup-adapter"
 import { resolveFileUrl } from "@/lib/api/file-url"
@@ -34,7 +34,7 @@ function MeetupResultCard({ pin, query, isAuthenticated = false, onClick }: Meet
   const thumbnail = resolveFileUrl(pin.thumbnailUrl)
 
   return (
-    <SearchResultLongPress
+    <TranslateLongPress
       title={pin.title}
       body={detail?.description ?? ""}
       isAuthenticated={isAuthenticated}
@@ -71,7 +71,7 @@ function MeetupResultCard({ pin, query, isAuthenticated = false, onClick }: Meet
           </div>
         </button>
       )}
-    </SearchResultLongPress>
+    </TranslateLongPress>
   )
 }
 
