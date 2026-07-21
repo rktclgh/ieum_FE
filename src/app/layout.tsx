@@ -7,6 +7,15 @@ import { StandaloneViewportExpander } from "@/lib/viewport/standalone-viewport-e
 import { TabBar } from "@/features/navigation/components/tab-bar";
 import "./globals.css";
 
+const SITE_URL = "https://ieum.rktclgh.site";
+const SITE_NAME = "이음";
+const SITE_DESCRIPTION = "한국 생활을 잇는 외국인 커뮤니티";
+const OG_IMAGE = {
+  url: "/og-image.png",
+  width: 1200,
+  height: 630,
+  alt: `${SITE_NAME} - ${SITE_DESCRIPTION}`,
+};
 
 const pretendard = localFont({
   src: "../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
@@ -16,9 +25,25 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Ieum",
-  description: "이음",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [OG_IMAGE.url],
+  },
   appleWebApp: {
     capable: true,
     /*
@@ -48,7 +73,7 @@ export const metadata: Metadata = {
      * = `calc(1rem + var(--safe-area-top))`이 그만큼 콘텐츠를 상태바 아래로 민다. 사파리 탭은 종전대로.
      */
     statusBarStyle: "black-translucent",
-    title: "Ieum",
+    title: SITE_NAME,
   },
   // 파비콘/터치 아이콘은 app/ 파일 컨벤션(favicon.ico, icon.svg, apple-icon.png)이 처리한다.
   other: {
