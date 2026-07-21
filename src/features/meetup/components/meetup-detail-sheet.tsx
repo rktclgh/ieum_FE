@@ -14,6 +14,8 @@ interface MeetupDetailSheetProps {
   error?: string | null
   onJoin: () => void
   onEnterRoom: () => void
+  /** 번역 메뉴 노출 조건. 카드로 그대로 전달한다. */
+  isAuthenticated?: boolean
 }
 
 /**

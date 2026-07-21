@@ -11,6 +11,7 @@ import { useMeeting } from "@/features/meetup/hooks/use-meetup-queries"
 import { useJoinMeeting } from "@/features/meetup/hooks/use-meetup-mutations"
 import { adaptMeetingDetail } from "@/features/meetup/lib/meetup-adapter"
 import { getMeetupErrorMessage } from "@/features/meetup/lib/meetup-error"
+import { useMe } from "@/features/session/hooks/use-me"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { routes } from "@/lib/navigation/routes"
 
@@ -42,6 +43,8 @@ function MeetupDetailContainer({
   const { messages, language } = useTranslation()
 
   const meetingQuery = useMeeting(meetingId)
+  // 번역 메뉴 노출 조건. 회원 전용 앱이라 사실상 항상 true 지만, 세션 복구 전에는 감춘다.
+  const isAuthenticated = useMe().data != null
   const detail = meetingQuery.data
     ? adaptMeetingDetail(meetingQuery.data, language, messages.createMeetup.timeUndecidedLabel)
     : null
@@ -91,6 +94,7 @@ function MeetupDetailContainer({
       <MeetupDetailCard
         detail={detail}
         active={active}
+        isAuthenticated={isAuthenticated}
         pending={pending}
         error={error}
         onJoin={handleJoin}
@@ -106,6 +110,7 @@ function MeetupDetailContainer({
         if (!next) close()
       }}
       detail={detail}
+      isAuthenticated={isAuthenticated}
       pending={pending}
       error={error}
       onJoin={handleJoin}

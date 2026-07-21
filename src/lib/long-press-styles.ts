@@ -13,6 +13,16 @@
 const LONG_PRESS_TRANSITION = "transition-all duration-200 ease-out"
 
 /**
+ * 리프트 수치의 원시값.
+ *
+ * 유틸리티 클래스를 그대로 쓸 수 없는 곳 — 바텀시트 팝업처럼 이미 자기 transform 을 가진
+ * 대상에서 한 줄로 합성해야 하는 경우 — 에서 쓴다. 아래 LONG_PRESS_LIFT_ACTIVE 의
+ * `-translate-y-1`(= -4px) / `scale-[1.02]` 와 반드시 같은 값이어야 한다(테스트가 지킨다).
+ */
+const LONG_PRESS_LIFT_OFFSET = "-4px"
+const LONG_PRESS_LIFT_SCALE = "1.02"
+
+/**
  * 리프트 + 그림자만. 배경색·라운드가 고유해서 흰 카드로 덮으면 안 되는 대상
  * (채팅 말풍선 등)에 쓴다.
  */
@@ -38,6 +48,8 @@ const LONG_PRESS_TARGET_PROPS = { [LONG_PRESS_ATTRIBUTE]: "" }
 export {
   LONG_PRESS_TRANSITION,
   LONG_PRESS_LIFT_ACTIVE,
+  LONG_PRESS_LIFT_OFFSET,
+  LONG_PRESS_LIFT_SCALE,
   LONG_PRESS_SURFACE_ACTIVE,
   LONG_PRESS_INACTIVE,
   LONG_PRESS_ATTRIBUTE,
