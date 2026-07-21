@@ -405,6 +405,7 @@ export const ja: Messages = {
     noticeEmptyLabel: "登録されたお知らせがありません",
     noticeLoadFailed: "お知らせを読み込めませんでした。",
     noticeLoadMoreLabel: "もっと見る",
+    noticePinFailed: "お知らせの固定設定に失敗しました。",
     noticeRegisterFailed: "お知らせの登録に失敗しました。",
     blockAction: "ブロック",
     attachImageAction: "写真を添付",

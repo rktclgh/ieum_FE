@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Toast } from "@/components/ui/toast"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
@@ -122,6 +123,7 @@ function NoticePageContent({ roomId }: NoticePageContentProps) {
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = noticesQuery
 
   const [activeNoticeId, setActiveNoticeId] = React.useState<number | null>(null)
+  const [pinFailed, setPinFailed] = React.useState(false)
 
   const sortedNotices = React.useMemo(
     () => mergePinnedNoticeForDisplay(noticesQuery.notices, noticesQuery.pinnedNotice),
@@ -137,9 +139,13 @@ function NoticePageContent({ roomId }: NoticePageContentProps) {
             disabled: setNoticePinnedMutation.isPending,
             onClick: () => {
               if (setNoticePinnedMutation.isPending) return
+              setPinFailed(false)
               setNoticePinnedMutation.mutate(
                 { roomId, noticeId: notice.noticeId, pinned: false },
-                { onSettled: () => setActiveNoticeId(null) }
+                {
+                  onError: () => setPinFailed(true),
+                  onSettled: () => setActiveNoticeId(null),
+                }
               )
             },
           },
@@ -151,9 +157,13 @@ function NoticePageContent({ roomId }: NoticePageContentProps) {
             disabled: setNoticePinnedMutation.isPending,
             onClick: () => {
               if (setNoticePinnedMutation.isPending) return
+              setPinFailed(false)
               setNoticePinnedMutation.mutate(
                 { roomId, noticeId: notice.noticeId, pinned: true },
-                { onSettled: () => setActiveNoticeId(null) }
+                {
+                  onError: () => setPinFailed(true),
+                  onSettled: () => setActiveNoticeId(null),
+                }
               )
             },
           },
@@ -212,6 +222,7 @@ function NoticePageContent({ roomId }: NoticePageContentProps) {
           </>
         )}
       </div>
+      <Toast open={pinFailed} message={messages.chat.noticePinFailed} />
     </FullScreenOverlay>
   )
 }

@@ -406,6 +406,7 @@ export const ru: Messages = {
     noticeEmptyLabel: "Пока нет объявлений",
     noticeLoadFailed: "Не удалось загрузить объявления.",
     noticeLoadMoreLabel: "Показать еще",
+    noticePinFailed: "Не удалось обновить закрепление объявления.",
     noticeRegisterFailed: "Не удалось добавить объявление.",
     blockAction: "Заблокировать",
     attachImageAction: "Прикрепить фото",

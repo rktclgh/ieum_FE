@@ -399,6 +399,7 @@ export const zh: Messages = {
     noticeEmptyLabel: "暂无公告",
     noticeLoadFailed: "无法加载公告。",
     noticeLoadMoreLabel: "查看更多",
+    noticePinFailed: "公告置顶设置失败。",
     noticeRegisterFailed: "公告设置失败。",
     blockAction: "拉黑",
     attachImageAction: "添加照片",

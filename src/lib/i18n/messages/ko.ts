@@ -389,6 +389,7 @@ export interface Messages {
     noticeEmptyLabel: string
     noticeLoadFailed: string
     noticeLoadMoreLabel: string
+    noticePinFailed: string
     noticeRegisterFailed: string
     blockAction: string
     attachImageAction: string
@@ -923,6 +924,7 @@ export const ko: Messages = {
     noticeEmptyLabel: "등록된 공지가 없어요",
     noticeLoadFailed: "공지 목록을 불러오지 못했어요",
     noticeLoadMoreLabel: "더 보기",
+    noticePinFailed: "공지 고정 설정에 실패했어요",
     noticeRegisterFailed: "공지 등록에 실패했어요",
     blockAction: "차단",
     attachImageAction: "사진 첨부",

@@ -47,6 +47,7 @@ test("chat notice API exposes the server contract expected by the UI", () => {
 test("chat room notice UI uses backend state instead of mock or local notice state", () => {
   const roomPage = read("src/features/chat/components/chat-room-page-content.tsx")
   const noticePage = read("src/features/chat/components/notice-page-content.tsx")
+  const mockData = read("src/features/chat/constants/mock-data.ts")
   const route = compact("src/app/chats/notices/page.tsx")
 
   assert.doesNotMatch(roomPage, /const\s+\[notice,\s*setNotice\]/)
@@ -54,12 +55,24 @@ test("chat room notice UI uses backend state instead of mock or local notice sta
   assert.match(roomPage, /pinnedNotice/)
   assert.match(roomPage, /useChatNotices\(roomId,\s*session\)/)
   assert.match(roomPage, /useRegisterChatNotice\(\)/)
+  assert.doesNotMatch(mockData, /MOCK_NOTICES/)
   assert.doesNotMatch(noticePage, /MOCK_NOTICES/)
   assert.doesNotMatch(noticePage, /setNotices\(/)
   assert.match(noticePage, /roomId:\s*number/)
   assert.match(noticePage, /fetchNextPage/)
   assert.match(noticePage, /hasNextPage/)
   assert.match(route, /<NoticePageContentkey=\{roomId\}roomId=\{roomId\}\/>/)
+})
+
+test("notice pin failures surface a localized toast without optimistic local state", () => {
+  const noticePage = read("src/features/chat/components/notice-page-content.tsx")
+  const messages = read("src/lib/i18n/messages/ko.ts")
+
+  assert.match(noticePage, /import\s+\{\s*AppBar\s*\}[\s\S]*import\s+\{\s*Toast\s*\}/)
+  assert.match(noticePage, /noticePinFailed/)
+  assert.match(noticePage, /setPinFailed\(true\)/)
+  assert.match(noticePage, /<Toast\s+open=\{pinFailed\}\s+message=\{messages\.chat\.noticePinFailed\}/)
+  assert.match(messages, /noticePinFailed:\s*string/)
 })
 
 test("all chat room types can open the notice UI", () => {

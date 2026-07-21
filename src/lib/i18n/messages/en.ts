@@ -406,6 +406,7 @@ export const en: Messages = {
     noticeEmptyLabel: "No notices yet",
     noticeLoadFailed: "Couldn't load notices.",
     noticeLoadMoreLabel: "Load more",
+    noticePinFailed: "Couldn't update the notice pin.",
     noticeRegisterFailed: "Couldn't register the notice.",
     blockAction: "Block",
     attachImageAction: "Attach photo",

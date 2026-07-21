@@ -405,6 +405,7 @@ export const th: Messages = {
     noticeEmptyLabel: "ยังไม่มีประกาศ",
     noticeLoadFailed: "โหลดประกาศไม่สำเร็จ",
     noticeLoadMoreLabel: "ดูเพิ่มเติม",
+    noticePinFailed: "อัปเดตการปักหมุดประกาศไม่สำเร็จ",
     noticeRegisterFailed: "ตั้งประกาศไม่สำเร็จ",
     blockAction: "บล็อก",
     attachImageAction: "แนบรูปภาพ",

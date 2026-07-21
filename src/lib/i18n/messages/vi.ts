@@ -406,6 +406,7 @@ export const vi: Messages = {
     noticeEmptyLabel: "Chưa có thông báo nào",
     noticeLoadFailed: "Không thể tải thông báo.",
     noticeLoadMoreLabel: "Xem thêm",
+    noticePinFailed: "Không thể cập nhật ghim thông báo.",
     noticeRegisterFailed: "Không thể đặt thông báo.",
     blockAction: "Chặn",
     attachImageAction: "Đính kèm ảnh",
