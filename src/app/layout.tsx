@@ -9,7 +9,7 @@ import "./globals.css";
 
 const SITE_URL = "https://ieum.rktclgh.site";
 const SITE_NAME = "이음";
-const SITE_DESCRIPTION = "한국 생활을 잇는 외국인 커뮤니티";
+const SITE_DESCRIPTION = "Connecting lives in Korea";
 const OG_IMAGE = {
   url: "/og-image.png",
   width: 1200,
