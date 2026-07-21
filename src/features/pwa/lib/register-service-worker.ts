@@ -2,7 +2,12 @@
 // 실패를 삼키지 않는다 — 에러 정책은 호출자가 정한다(푸시는 fail-fast, 설치 배너는 best-effort).
 async function registerServiceWorker(): Promise<void> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return
-  await navigator.serviceWorker.register("/sw.js", { scope: "/" })
+  const registration = await navigator.serviceWorker.register("/sw.js", {
+    scope: "/",
+    updateViaCache: "none",
+  })
+
+  await registration.update()
 }
 
 export { registerServiceWorker }
