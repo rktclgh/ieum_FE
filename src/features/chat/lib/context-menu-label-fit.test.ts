@@ -94,3 +94,17 @@ test("메뉴 라벨은 nowrap 이라 항목 높이 계약이 유지된다", () =
   assert.match(menu, /whitespace-nowrap/)
   assert.match(menu, /fitContextMenuPanelLabelSize/)
 })
+
+/**
+ * 줄어든 크기에서 재고 기준 크기로 역산하면 서브픽셀 반올림이 섞여, 13px 에 맞는 라벨이
+ * 12px 로 한 단계 더 줄어든다. 측정은 반드시 기준 크기에서만 한다.
+ */
+test("라벨 측정은 기준 크기에서만 하고, 그 외에는 조기 반환한다", () => {
+  const menu = readFileSync("src/features/chat/components/chat-context-menu.tsx", "utf8")
+  assert.match(menu, /if \(labelSize !== CONTEXT_MENU_LABEL_BASE_SIZE\) return/)
+  assert.doesNotMatch(
+    menu,
+    /scrollWidth\s*\*/,
+    "역산(scrollWidth * 배율)이 남아 있으면 반올림 오차가 다시 들어온다"
+  )
+})

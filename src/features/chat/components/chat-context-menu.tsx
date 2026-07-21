@@ -92,35 +92,34 @@ function ChatContextMenu({
     setLabelSize(CONTEXT_MENU_LABEL_BASE_SIZE)
   }
 
+  // 측정은 **기준 크기일 때만** 한다. 줄어든 크기에서 재고 15px 로 역산하면 서브픽셀 반올림이
+  // 섞여, 실제로는 13px 에 맞는 라벨이 12px 로 한 단계 더 줄어드는 일이 생긴다.
+  // 기준 크기에서는 scrollWidth 가 곧 자연 폭이라 환산이 필요 없다.
   React.useLayoutEffect(() => {
-    const measure = () => {
-      const measurements = labelBoxRefs.current.flatMap((box, index) => {
-        const text = labelTextRefs.current[index]
-        if (!box || !text) return []
-        return [
-          {
-            availableWidth: box.clientWidth,
-            // 지금 적용된 크기로 잰 폭을 기준 크기(15px) 기준으로 환산한다.
-            // 폭은 폰트 크기에 비례하므로 한 번의 환산으로 값이 수렴한다.
-            naturalWidth: text.scrollWidth * (CONTEXT_MENU_LABEL_BASE_SIZE / labelSize),
-          },
-        ]
-      })
-      const next = fitContextMenuPanelLabelSize(measurements)
-      setLabelSize((current) => (current === next ? current : next))
-    }
+    if (labelSize !== CONTEXT_MENU_LABEL_BASE_SIZE) return
 
-    measure()
+    const measurements = labelBoxRefs.current.flatMap((box, index) => {
+      const text = labelTextRefs.current[index]
+      if (!box || !text) return []
+      return [{ availableWidth: box.clientWidth, naturalWidth: text.scrollWidth }]
+    })
+    setLabelSize(fitContextMenuPanelLabelSize(measurements))
+  }, [labelKey, labelSize])
 
-    // Pretendard 가 늦게 붙으면 폭이 달라진다. 로드 후 한 번만 다시 잰다.
+  // Pretendard 가 늦게 붙으면 폭이 달라진다. 기준 크기로 되돌려 위 effect 가 다시 재게 한다.
+  // 이미 로드된 상태(메뉴는 사용자 조작으로 열리므로 대부분 이쪽)면 프로미스를 걸지 않는다.
+  React.useEffect(() => {
+    const fonts = document.fonts
+    if (!fonts || fonts.status === "loaded") return
+
     let cancelled = false
-    void document.fonts?.ready.then(() => {
-      if (!cancelled) measure()
+    void fonts.ready.then(() => {
+      if (!cancelled) setLabelSize(CONTEXT_MENU_LABEL_BASE_SIZE)
     })
     return () => {
       cancelled = true
     }
-  }, [labelKey, labelSize])
+  }, [labelKey])
 
   return (
     <>
