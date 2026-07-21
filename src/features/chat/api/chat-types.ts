@@ -34,6 +34,15 @@ interface ChatMessageResponse {
   replyTo?: ChatReplyPreview | null
 }
 
+interface ChatNoticeResponse {
+  noticeId: number
+  roomId: number
+  message: ChatMessageResponse
+  createdByUserId: number | null
+  createdAt: string
+  pinned: boolean
+}
+
 interface ChatRoomSummaryResponse {
   roomId: number
   roomType: RoomType
@@ -69,6 +78,10 @@ interface ChatRoomDetailResponse {
 interface ChatCursorPage<T> {
   items: T[]
   nextCursor: string | null
+}
+
+interface ChatNoticePage extends ChatCursorPage<ChatNoticeResponse> {
+  pinnedNotice: ChatNoticeResponse | null
 }
 
 interface ChatRoomResponse {
@@ -126,6 +139,8 @@ export type {
   ChatReplyPreview,
   LeaveChatRoomTarget,
   ChatMessageResponse,
+  ChatNoticeResponse,
+  ChatNoticePage,
   ChatRoomSummaryResponse,
   ChatRoomMemberResponse,
   ChatRoomDetailResponse,

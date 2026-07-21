@@ -387,6 +387,9 @@ export interface Messages {
     setChatNoticeAction: string
     unsetChatNoticeAction: string
     noticeEmptyLabel: string
+    noticeLoadFailed: string
+    noticeLoadMoreLabel: string
+    noticeRegisterFailed: string
     blockAction: string
     attachImageAction: string
     noticeLabel: string
@@ -918,6 +921,9 @@ export const ko: Messages = {
     setChatNoticeAction: "채팅방 공지 등록하기",
     unsetChatNoticeAction: "채팅방 공지 해지하기",
     noticeEmptyLabel: "등록된 공지가 없어요",
+    noticeLoadFailed: "공지 목록을 불러오지 못했어요",
+    noticeLoadMoreLabel: "더 보기",
+    noticeRegisterFailed: "공지 등록에 실패했어요",
     blockAction: "차단",
     attachImageAction: "사진 첨부",
     noticeLabel: "공지",

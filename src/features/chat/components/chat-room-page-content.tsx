@@ -46,6 +46,7 @@ import {
 import {
   chatKeys,
   useChatMessages,
+  useChatNotices,
   useChatRoom,
   useChatSessionAccess,
   usePinnedRoomId,
@@ -54,6 +55,7 @@ import {
   useDisbandMeeting,
   useLeaveChatRoom,
   useMarkRead,
+  useRegisterChatNotice,
   useSetNotify,
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
@@ -290,7 +292,6 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   )
   // 낙관적 말풍선의 임시 messageId. 서버 id(양수)와 겹치지 않게 음수를 감소시켜 부여한다.
   const tempMessageIdRef = React.useRef(-1)
-  const [notice, setNotice] = React.useState<string | null>(null)
   const [moreOpen, setMoreOpen] = React.useState(false)
   const [activeMessageId, setActiveMessageId] = React.useState<string | null>(null)
   const [selectedReply, setSelectedReply] = React.useState<ChatReplyPreview | null>(null)
@@ -346,6 +347,12 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   }, [])
 
   const markReadMutation = useMarkRead()
+  const noticesQuery = useChatNotices(roomId, session)
+  const pinnedNotice = noticesQuery.pinnedNotice
+  const [dismissedPinnedNoticeId, setDismissedPinnedNoticeId] = React.useState<number | null>(null)
+  const visiblePinnedNotice = pinnedNotice?.noticeId === dismissedPinnedNoticeId ? null : pinnedNotice
+  const visiblePinnedNoticeText = visiblePinnedNotice?.message.content?.trim() ?? ""
+  const registerNoticeMutation = useRegisterChatNotice()
   const { pinnedRoomId, isLoading: isPinnedRoomLoading } = usePinnedRoomId()
   const [confirmPinReplaceOpen, setConfirmPinReplaceOpen] = React.useState(false)
   const setPinnedMutation = useSetPinned()
@@ -752,14 +759,6 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     }
     items.push(
       {
-        icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
-        label: messages.chat.registerAsNoticeAction,
-        onClick: () => {
-          if (text) setNotice(text)
-          setActiveMessageId(null)
-        },
-      },
-      {
         icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
         label: messages.chat.reportAction,
         tone: "destructive",
@@ -769,6 +768,21 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         },
       },
     )
+    if (session.authenticated && !message.pending && message.hasText && text?.trim()) {
+      items.splice(Math.max(items.length - 1, 0), 0, {
+        icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
+        label: messages.chat.registerAsNoticeAction,
+        disabled: registerNoticeMutation.isPending,
+        onClick: () => {
+          if (registerNoticeMutation.isPending) return
+          registerNoticeMutation.mutate(
+            { roomId, messageId: message.messageId },
+            { onError: () => setSocketError(messages.chat.noticeRegisterFailed) }
+          )
+          setActiveMessageId(null)
+        },
+      })
+    }
     return items
   }
 
@@ -782,7 +796,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           onLeadingClick={() => router.back()}
           trailingIcon={session.authenticated ? undefined : null}
           onTrailingClick={session.authenticated ? () => setMoreOpen(true) : undefined}
-          className={!notice ? "border-b border-gray-50 bg-white" : undefined}
+          className={!visiblePinnedNoticeText ? "border-b border-gray-50 bg-white" : undefined}
         />
         {session.authenticated && socketError && (
           <div className="bg-red-50 py-1 text-center text-body-regular-12 text-red-500">
@@ -817,12 +831,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             data-scrolling={isScrolling}
             className={cn("absolute inset-0 flex flex-col gap-3 overflow-y-auto px-4", FADE_SCROLLBAR_CLASSNAME)}
           >
-            {notice && (
+            {visiblePinnedNoticeText && visiblePinnedNotice && (
               <div className="sticky top-0 z-50 -mx-4 bg-white px-4 pt-2 pb-1">
                 <NoticeBanner
-                  text={notice}
+                  text={visiblePinnedNoticeText}
                   isAuthenticated={session.authenticated}
-                  onClose={() => setNotice(null)}
+                  onClose={() => {
+                    setDismissedPinnedNoticeId(visiblePinnedNotice.noticeId)
+                  }}
                 />
               </div>
             )}
@@ -967,13 +983,11 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                   secondaryAvatarSrc={roomAvatars.secondaryAvatarSrc}
                   grouped={roomAvatars.grouped}
                 />
-                {!isQuestionRoom && (
-                  <ChatRoomInfoSection
-                    className="w-full"
-                    onNoticeClick={() => router.push(routes.chatNotices(roomId))}
-                    onScheduleClick={() => router.push(routes.chatSchedule(roomId))}
-                  />
-                )}
+                <ChatRoomInfoSection
+                  className="w-full"
+                  onNoticeClick={() => router.push(routes.chatNotices(roomId))}
+                  onScheduleClick={() => router.push(routes.chatSchedule(roomId))}
+                />
                 <div className="flex w-full flex-col rounded-2xl bg-gray-50 py-3">
                   <SectionTitle
                     title={messages.chat.membersTitle}
