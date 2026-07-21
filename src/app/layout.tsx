@@ -11,7 +11,7 @@ const SITE_URL = "https://ieum.rktclgh.site";
 const SITE_NAME = "이음";
 const SITE_DESCRIPTION = "Connecting lives in Korea";
 const OG_IMAGE = {
-  url: "/og-image.png",
+  url: "/og-image-v2.png",
   width: 1200,
   height: 630,
   alt: `${SITE_NAME} - ${SITE_DESCRIPTION}`,
