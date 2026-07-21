@@ -23,19 +23,26 @@
 export const APP_BAR_SAFE_TOP = "pt-[calc(1rem+var(--safe-area-top))]"
 
 /**
- * 화면 하단에 떠 있는 요소의 바닥 여백 — **홈 인디케이터 위로 28px**.
+ * 화면 하단에 떠 있는 요소의 바닥 여백 — **화면 물리 바닥에서 28px**(safe-area 포함).
  *
  * 탭바와 바텀시트가 같은 기준선에서 뜨도록 한 곳에서 관리한다. 둘은 z축으로 겹치므로
  * (시트가 탭바 위를 덮는다) 값이 어긋나면 시트 아래로 탭바 모서리가 삐져나온다.
  *
- * issue #419에서 `pb-7`(28px 고정)에 `--safe-area-bottom`을 더했다. 이전에는 Figma가
- * 프레임 바닥 기준 28px이라는 이유로 일부러 빼고 있었는데, 실측 결과 아이폰의
- * `--safe-area-bottom`이 34px이라 **탭바가 홈 인디케이터를 덮고 있었다.**
+ * `--safe-area-bottom`을 **더하지 않는다**(issue #436). 28px은 safe-area를 포함한 총합이라
+ * 기기와 무관하게 일정하다 — Figma 프레임 바닥 기준 28px과 같은 의미다.
+ *
+ * issue #419에서 한 번 `+ var(--safe-area-bottom)`을 붙였는데("탭바가 홈 인디케이터를
+ * 덮는다"), 그 판단이 과했다. 아이폰의 34px은 보수적 여백이고 홈 인디케이터 **막대 자체**는
+ * 바닥에서 약 8~13px 구간이다. 28px 기준선이면 pill 하단이 28px, 탭 영역 시작은 32px이라
+ * 막대와 겹치지 않는다. 반대로 더했을 때는 바닥에서 62px이라 눈에 띄게 높이 떠 있었다.
+ *
+ * 기준선(어디가 "바닥"인가)은 `globals.css`의 `.bottom-anchor`가 `100lvh`로 잡는다.
+ * 이 상수는 그 바닥에서의 **거리**만 정한다.
  *
  * 이 값은 `globals.css`의 `--tab-bar-height` 내역(96px = 8 + 60 + 28)과 짝이다.
  * 한쪽만 바꾸면 탭바 높이와 페이지 클리어런스가 어긋난다.
  */
-export const SCREEN_BOTTOM_GAP = "pb-[calc(1.75rem+var(--safe-area-bottom))]"
+export const SCREEN_BOTTOM_GAP = "pb-7"
 
 /**
  * 우측 하단 고정 원형 버튼(FAB)의 하단 위치 규칙.
@@ -43,6 +50,9 @@ export const SCREEN_BOTTOM_GAP = "pb-[calc(1.75rem+var(--safe-area-bottom))]"
  * 규칙: FAB 하단 gap은 항상 12px. 기준선만 화면에 따라 다르다.
  * - 하단 탭바가 있는 화면(홈·모임·질문·마이): 탭바(가시 pill) 상단 기준 12px 위.
  * - 탭바가 없는 화면(지도 오버레이·장소 선택 등): 화면 바닥 기준 12px 위.
+ *
+ * 탭바와 달리 `FAB_BOTTOM_FLOOR`는 `--safe-area-bottom`을 그대로 더한다(issue #436에서
+ * 의도적으로 제외). 12px 총합으로 내리면 홈 인디케이터 막대(바닥 8~13px)와 실제로 겹친다.
  *
  * issue #419 이전에는 pill 상단 88px을 주석 안에서 손으로 계산해 `bottom-[6.25rem]`(100px)
  * 리터럴로 박아뒀다. 탭바 높이가 바뀌면 이 숫자를 손으로 따라 고쳐야 했고, 실제로
