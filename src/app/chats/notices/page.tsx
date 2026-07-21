@@ -13,7 +13,7 @@ function ChatNoticesRoute() {
 
   if (roomId === null) return <RoutePageState kind="invalid-link" />
 
-  return <NoticePageContent key={roomId} />
+  return <NoticePageContent key={roomId} roomId={roomId} />
 }
 
 export default function ChatNoticesPage() {

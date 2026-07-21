@@ -78,7 +78,7 @@ function LoginContent() {
         {loginMutation.isError && (
           <Explanation variant="error" text={messages.login.loginErrorExplanation} />
         )}
-        <Button type="submit" variant="primary" size="block">
+        <Button type="submit" variant="accent" size="block">
           {messages.login.submit}
         </Button>
       </form>

@@ -6,13 +6,20 @@ import {
   createDirectRoom,
   leaveRoom,
   markRead,
+  registerChatNotice,
+  setChatNoticePin,
   setNotify,
   setPinned,
+  unsetChatNoticePin,
 } from "@/features/chat/api/chat-api"
 import type { LeaveChatRoomTarget } from "@/features/chat/api/chat-types"
 import { chatKeys } from "@/features/chat/hooks/use-chat-queries"
 import { executeLeaveChatRoom } from "@/features/chat/lib/chat-leave"
 import { executeSetPinned, resolvePinOperations, type PinRequest } from "@/features/chat/lib/chat-pin"
+import {
+  executeSetChatNoticePinned,
+  type ChatNoticePinRequest,
+} from "@/features/chat/lib/chat-notice"
 import {
   patchRoomDetails,
   patchRoomsInLoadedListCaches,
@@ -42,6 +49,31 @@ function useMarkRead() {
     mutationFn: (roomId: number) => markRead(roomId),
     // unreadCount는 목록 요약에만 반영 → 메시지/방 상세는 건드리지 않는다
     onSuccess: () => queryClient.invalidateQueries({ queryKey: roomsListKey }),
+  })
+}
+
+function useRegisterChatNotice() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ roomId, messageId }: { roomId: number; messageId: number }) =>
+      registerChatNotice(roomId, messageId),
+    onSettled: (_data, _error, { roomId }) => {
+      queryClient.invalidateQueries({ queryKey: chatKeys.notices(roomId) })
+    },
+  })
+}
+
+function useSetChatNoticePinned() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (request: ChatNoticePinRequest) =>
+      executeSetChatNoticePinned(request, {
+        pinNotice: setChatNoticePin,
+        unpinNotice: unsetChatNoticePin,
+      }),
+    onSettled: (_data, _error, { roomId }) => {
+      queryClient.invalidateQueries({ queryKey: chatKeys.notices(roomId) })
+    },
   })
 }
 
@@ -143,6 +175,8 @@ function useDisbandMeeting() {
 export {
   useCreateDirectRoom,
   useMarkRead,
+  useRegisterChatNotice,
+  useSetChatNoticePinned,
   useSetPinned,
   useSetNotify,
   useLeaveChatRoom,

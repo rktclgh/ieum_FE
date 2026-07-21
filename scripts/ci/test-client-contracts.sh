@@ -16,15 +16,19 @@ node --test scripts/ci/test-meetup-source-contracts.mjs
 node --test scripts/ci/test-translation-source-contracts.mjs
 node --test scripts/ci/test-translation-ui-surface-contracts.mjs
 node --test scripts/ci/test-question-translation-ui.mjs
+node --test scripts/ci/test-chat-notice-contracts.mjs
 node --test scripts/ci/test-static-export-routes.mjs
 node --test scripts/ci/test-static-source-contracts.mjs
+node --test scripts/ci/test-flag-sprite-contracts.mjs
 node --experimental-strip-types --test src/features/chat/lib/chat-timeline.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-room-message-subscription.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-reply.test.ts
+node --experimental-strip-types --test src/features/chat/lib/chat-message-actions.test.ts
 node --experimental-strip-types --test src/features/chat/components/chat-system-message.test.ts
 node --experimental-strip-types --test src/features/chat/components/chat-bubble-radius.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-leave.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-pin.test.ts
+node --experimental-strip-types --test src/features/chat/lib/chat-notice.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-member-management.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-room-event.test.ts
 node --experimental-strip-types --test src/features/schedule/lib/schedule-actions.test.ts

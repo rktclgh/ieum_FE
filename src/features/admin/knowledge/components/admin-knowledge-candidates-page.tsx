@@ -178,7 +178,7 @@ function AdminKnowledgeCandidateDecisionForm({
         <div className="flex flex-wrap gap-3">
           <Button
             type="button"
-            variant="primary"
+            variant="dark"
             onClick={() => {
               if (normalizedSubject === null || normalizedObject === null) return
               onApprove({

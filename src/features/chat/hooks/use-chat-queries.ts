@@ -3,7 +3,7 @@
 import { useInfiniteQuery, useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo } from "react"
 
-import { getMessages, getRoom, getRooms } from "@/features/chat/api/chat-api"
+import { getChatNotices, getMessages, getRoom, getRooms } from "@/features/chat/api/chat-api"
 import type {
   ChatRoomSummaryResponse,
   RoomType,
@@ -15,6 +15,7 @@ import {
   type ChatListEntry,
   type ChatMessageView,
 } from "@/features/chat/lib/chat-adapter"
+import { flattenChatNoticePages } from "@/features/chat/lib/chat-notice"
 import {
   resolveChatSessionAccess,
   type ChatSessionAccess,
@@ -34,6 +35,7 @@ const chatKeys = {
   rooms: (type?: RoomType) => [...chatKeys.all, "rooms", type ?? "all"] as const,
   room: (roomId: number) => [...chatKeys.all, "room", roomId] as const,
   messages: (roomId: number) => [...chatKeys.all, "messages", roomId] as const,
+  notices: (roomId: number) => [...chatKeys.all, "notices", roomId] as const,
 }
 
 // 방 목록 요약 쿼리는 type별(chatKeys.rooms(type))로 나뉘어 캐시된다. 사용자 단위 토픽
@@ -223,6 +225,7 @@ function useChatRoom(roomId: number, session: ChatSessionAccess) {
 
 // 한 번에 불러올 메시지 페이지 크기. 서버는 최신순 items + nextCursor(더 과거 페이지 커서)를 내려준다.
 const MESSAGES_PAGE_SIZE = 30
+const NOTICES_PAGE_SIZE = 30
 
 // 커서 페이지네이션. pages[0]=최신 페이지, 뒤 페이지일수록 과거. 화면 표시는 오래된→최신이므로
 // 페이지를 역순으로, 각 페이지의 items(최신순)도 역순으로 평탄화한다.
@@ -256,9 +259,31 @@ function useChatMessages(roomId: number, session: ChatSessionAccess) {
   }
 }
 
+function useChatNotices(roomId: number, session: ChatSessionAccess) {
+  const enabled = session.activeRoomId === roomId
+  const query = useInfiniteQuery({
+    queryKey: chatKeys.notices(roomId),
+    queryFn: ({ pageParam }) => getChatNotices(roomId, pageParam, NOTICES_PAGE_SIZE),
+    enabled,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    staleTime: 0,
+  })
+
+  return {
+    ...query,
+    notices: enabled && query.data ? flattenChatNoticePages(query.data.pages) : [],
+    pinnedNotice: enabled ? query.data?.pages.find((page) => page.pinnedNotice)?.pinnedNotice ?? null : null,
+    fetchNextPage: query.fetchNextPage,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+  }
+}
+
 export {
   chatKeys,
   useChatMessages,
+  useChatNotices,
   useChatRoom,
   useChatRoomsView,
   useChatSessionAccess,

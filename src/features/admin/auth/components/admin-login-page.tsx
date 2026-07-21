@@ -74,7 +74,7 @@ function AdminLoginPage() {
 
           <Button
             type="submit"
-            variant="primary"
+            variant="dark"
             size="block"
             disabled={loginMutation.isPending}
           >

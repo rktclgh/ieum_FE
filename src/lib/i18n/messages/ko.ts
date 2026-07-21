@@ -208,6 +208,7 @@ export interface Messages {
     answeredLabel: string
     closeLabel: string
     imageAlt: string
+    answerImageAlt: string
     flagAlt: string
     emptyAnswers: string
     loadError: string
@@ -387,6 +388,10 @@ export interface Messages {
     setChatNoticeAction: string
     unsetChatNoticeAction: string
     noticeEmptyLabel: string
+    noticeLoadFailed: string
+    noticeLoadMoreLabel: string
+    noticePinFailed: string
+    noticeRegisterFailed: string
     blockAction: string
     attachImageAction: string
     noticeLabel: string
@@ -737,6 +742,7 @@ export const ko: Messages = {
     answeredLabel: "답변 완료",
     closeLabel: "닫기",
     imageAlt: "질문 이미지",
+    answerImageAlt: "답변 이미지",
     flagAlt: "국기",
     emptyAnswers: "아직 답변이 없어요.",
     loadError: "질문을 불러오지 못했어요.",
@@ -918,6 +924,10 @@ export const ko: Messages = {
     setChatNoticeAction: "채팅방 공지 등록하기",
     unsetChatNoticeAction: "채팅방 공지 해지하기",
     noticeEmptyLabel: "등록된 공지가 없어요",
+    noticeLoadFailed: "공지 목록을 불러오지 못했어요",
+    noticeLoadMoreLabel: "더 보기",
+    noticePinFailed: "공지 고정 설정에 실패했어요",
+    noticeRegisterFailed: "공지 등록에 실패했어요",
     blockAction: "차단",
     attachImageAction: "사진 첨부",
     noticeLabel: "공지",

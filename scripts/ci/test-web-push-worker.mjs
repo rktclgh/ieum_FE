@@ -21,12 +21,22 @@ function loadWorker(windowClients = [], options = {}) {
   const opened = []
   const requests = []
   const subscribeOptions = []
+  const installLifecycle = {
+    installCalls: 0,
+    activateCalls: 0,
+  }
 
   const self = {
     addEventListener(type, listener) {
       listeners.set(type, listener)
     },
+    skipWaiting: async () => {
+      installLifecycle.installCalls += 1
+    },
     clients: {
+      claim: async () => {
+        installLifecycle.activateCalls += 1
+      },
       matchAll: async () => windowClients,
       openWindow: async (url) => {
         opened.push(url)
@@ -69,7 +79,34 @@ function loadWorker(windowClients = [], options = {}) {
     { filename: "public/sw.js" },
   )
 
-  return { listeners, opened, shown, requests, subscribeOptions }
+  return {
+    listeners,
+    opened,
+    shown,
+    requests,
+    subscribeOptions,
+    installLifecycle,
+  }
+}
+
+async function dispatchInstall(worker) {
+  let completion
+  worker.listeners.get("install")({
+    waitUntil(promise) {
+      completion = promise
+    },
+  })
+  await completion
+}
+
+async function dispatchActivate(worker) {
+  let completion
+  worker.listeners.get("activate")({
+    waitUntil(promise) {
+      completion = promise
+    },
+  })
+  await completion
 }
 
 async function dispatchSubscriptionChange(worker, event = {}) {
@@ -113,8 +150,27 @@ test("registers push, notification click, and subscription change listeners", ()
   const worker = loadWorker()
   assert.deepEqual(
     [...worker.listeners.keys()].sort(),
-    ["fetch", "notificationclick", "push", "pushsubscriptionchange"],
+    [
+      "activate",
+      "fetch",
+      "install",
+      "notificationclick",
+      "push",
+      "pushsubscriptionchange",
+    ],
   )
+})
+
+test("installs incoming workers immediately", async () => {
+  const worker = loadWorker()
+  await dispatchInstall(worker)
+  assert.equal(worker.installLifecycle.installCalls, 1)
+})
+
+test("claims clients during activation", async () => {
+  const worker = loadWorker()
+  await dispatchActivate(worker)
+  assert.equal(worker.installLifecycle.activateCalls, 1)
 })
 
 test("syncs the browser-supplied replacement subscription to the backend", async () => {

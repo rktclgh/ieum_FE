@@ -186,34 +186,6 @@ export const MOCK_MESSAGES: {
   },
 ]
 
-export const MOCK_NOTICES: {
-  id: string
-  title: string
-  authorName: string
-  authorAvatarSrc?: string
-  /** 리스트에 표시할 등록 시각 (예: "7월 7일 오후 8:22") */
-  time: string
-  /** 최신 등록 순 정렬 기준. 값이 클수록 최근에 등록됨 */
-  registeredAt: number
-  /** 채팅방 공지로 고정된 항목. 목록 최상단에 배치되며 동시에 한 개만 존재 */
-  pinned?: boolean
-}[] = [
-  {
-    id: "n1",
-    title: "미가 양꼬치, 훠궈, 마라탕, 떡볶이, 순두부, 불고기, 포케, 짜장면, 완탕면, 쌀국수, 분짜",
-    authorName: "오이정",
-    time: "7월 7일 오후 8:22",
-    registeredAt: 1,
-  },
-  {
-    id: "n2",
-    title: "누가 용산역에서 그렇게 걸어다니래!!!!",
-    authorName: "오이정",
-    time: "7월 7일 오후 8:22",
-    registeredAt: 2,
-  },
-]
-
 export const MOCK_MEMBERS = [
   { id: "u1", name: "김이음", isMe: true, countryCode: "south-korea" as CountryCode, flagSrc: flagOf("south-korea") },
   { id: "u2", name: "오이정", isOwner: true, countryCode: "japan" as CountryCode, flagSrc: flagOf("japan") },

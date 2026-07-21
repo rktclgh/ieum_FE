@@ -50,9 +50,11 @@ function LocationListItem({
         aria-disabled={disabled || undefined}
         className={cn(
           "flex h-8 shrink-0 items-center justify-center rounded-lg px-3 py-2 text-body-regular-13 transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+          // Figma XS 규격: Primary/XS는 Gray/900 단색, Line/XS는 Gray/900 테두리다.
+          // pill CTA(XL·M)만 Primary/400 오렌지를 쓴다.
           actionVariant === "filled"
-            ? "bg-primary text-white"
-            : "border border-primary text-primary"
+            ? "bg-gray-900 text-white"
+            : "border border-gray-900 text-gray-900"
         )}
       >
         {actionLabel}

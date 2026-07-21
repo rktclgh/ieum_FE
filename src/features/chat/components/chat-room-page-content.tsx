@@ -9,7 +9,7 @@ import { Download, Globe } from "lucide-react"
 import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { Toast } from "@/components/ui/toast"
+import { Toast, ToastPill } from "@/components/ui/toast"
 import {
   SidePanel,
   SidePanelBackdrop,
@@ -46,6 +46,7 @@ import {
 import {
   chatKeys,
   useChatMessages,
+  useChatNotices,
   useChatRoom,
   useChatSessionAccess,
   usePinnedRoomId,
@@ -54,6 +55,7 @@ import {
   useDisbandMeeting,
   useLeaveChatRoom,
   useMarkRead,
+  useRegisterChatNotice,
   useSetNotify,
   useSetPinned,
 } from "@/features/chat/hooks/use-chat-mutations"
@@ -72,6 +74,7 @@ import {
   type ChatMessageView,
 } from "@/features/chat/lib/chat-adapter"
 import { resolveChatRoomAvatars } from "@/features/chat/lib/chat-avatar"
+import { canReportMessage, canTranslateMessage } from "@/features/chat/lib/chat-message-actions"
 import {
   buildGroupChatMemberList,
   type GroupChatMemberListItem,
@@ -147,10 +150,9 @@ function MessageRow({
     ? message.replyTo.content?.trim() || messages.chat.replyImageLabel
     : undefined
 
-  // 낙관적(pending) 말풍선은 아직 서버 메시지 ID가 없어 번역 대상에서 제외한다.
   const text = message.texts[0]
   const translate = useTranslateToggle({ text: text ?? "", isAuthenticated })
-  const canTranslate = isAuthenticated && !message.pending && message.hasText && translate.canTranslate
+  const canTranslate = canTranslateMessage(message, { isAuthenticated }) && translate.canTranslate
 
   const fullMenuItems: ChatContextMenuItem[] = canTranslate
     ? [
@@ -290,7 +292,6 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   )
   // 낙관적 말풍선의 임시 messageId. 서버 id(양수)와 겹치지 않게 음수를 감소시켜 부여한다.
   const tempMessageIdRef = React.useRef(-1)
-  const [notice, setNotice] = React.useState<string | null>(null)
   const [moreOpen, setMoreOpen] = React.useState(false)
   const [activeMessageId, setActiveMessageId] = React.useState<string | null>(null)
   const [selectedReply, setSelectedReply] = React.useState<ChatReplyPreview | null>(null)
@@ -346,6 +347,12 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   }, [])
 
   const markReadMutation = useMarkRead()
+  const noticesQuery = useChatNotices(roomId, session)
+  const pinnedNotice = noticesQuery.pinnedNotice
+  const [dismissedPinnedNoticeId, setDismissedPinnedNoticeId] = React.useState<number | null>(null)
+  const visiblePinnedNotice = pinnedNotice?.noticeId === dismissedPinnedNoticeId ? null : pinnedNotice
+  const visiblePinnedNoticeText = visiblePinnedNotice?.message.content?.trim() ?? ""
+  const registerNoticeMutation = useRegisterChatNotice()
   const { pinnedRoomId, isLoading: isPinnedRoomLoading } = usePinnedRoomId()
   const [confirmPinReplaceOpen, setConfirmPinReplaceOpen] = React.useState(false)
   const setPinnedMutation = useSetPinned()
@@ -750,16 +757,24 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         },
       })
     }
-    items.push(
-      {
+    if (session.authenticated && !message.pending && message.hasText && text?.trim()) {
+      items.push({
         icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
         label: messages.chat.registerAsNoticeAction,
+        disabled: registerNoticeMutation.isPending,
         onClick: () => {
-          if (text) setNotice(text)
+          if (registerNoticeMutation.isPending) return
+          registerNoticeMutation.mutate(
+            { roomId, messageId: message.messageId },
+            { onError: () => setSocketError(messages.chat.noticeRegisterFailed) }
+          )
           setActiveMessageId(null)
         },
-      },
-      {
+      })
+    }
+    // 내가 쓴 글은 내가 신고할 대상이 아니므로 항목 자체를 노출하지 않는다. (issue #452)
+    if (canReportMessage(message)) {
+      items.push({
         icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
         label: messages.chat.reportAction,
         tone: "destructive",
@@ -767,8 +782,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           setActiveMessageId(null)
           router.push(routes.chatReport(roomId, message.messageId, message.name || undefined))
         },
-      },
-    )
+      })
+    }
     return items
   }
 
@@ -782,31 +797,49 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           onLeadingClick={() => router.back()}
           trailingIcon={session.authenticated ? undefined : null}
           onTrailingClick={session.authenticated ? () => setMoreOpen(true) : undefined}
-          className={!notice ? "border-b border-gray-50 bg-white" : undefined}
+          className={!visiblePinnedNoticeText ? "border-b border-gray-50 bg-white" : undefined}
         />
-        {session.authenticated && !connected && (
-          <div className="bg-amber-50 py-1 text-center text-body-regular-12 text-amber-600">
-            {messages.chat.connecting}
-          </div>
-        )}
         {session.authenticated && socketError && (
           <div className="bg-red-50 py-1 text-center text-body-regular-12 text-red-500">
             {socketError}
           </div>
         )}
         <div className="relative min-h-0 flex-1">
+          {/*
+           * 연결 상태 알림 — 문의 접수 토스트와 같은 pill을 메시지 영역 최상단 중앙에
+           * 띄운다(issue #435). 이전에는 AppBar 아래 가로 전체 앰버 띠였는데, 레이아웃을
+           * 밀어내 진입할 때마다 메시지 목록이 한 번 내려갔다 올라왔다.
+           *
+           * 표시 조건은 연결 상태 그 자체다 — 문의 토스트처럼 타이머로 사라지지 않고,
+           * 연결되면 조용히 사라진다.
+           *
+           * 스크롤 컨테이너 바깥에 두어 메시지를 따라 스크롤되지 않게 하고, 공지
+           * 배너(sticky z-50)보다 위에 얹는다. 알림이 뜬 동안에도 아래 메시지를 만질 수
+           * 있어야 하므로 pointer-events는 통과시킨다.
+           */}
+          {session.authenticated && !connected && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="pointer-events-none absolute inset-x-0 top-2 z-[60] flex justify-center px-4"
+            >
+              <ToastPill>{messages.chat.connecting}</ToastPill>
+            </div>
+          )}
           <div
             ref={scrollContainerRef}
             onScroll={handleMessagesAreaScroll}
             data-scrolling={isScrolling}
             className={cn("absolute inset-0 flex flex-col gap-3 overflow-y-auto px-4", FADE_SCROLLBAR_CLASSNAME)}
           >
-            {notice && (
+            {visiblePinnedNoticeText && visiblePinnedNotice && (
               <div className="sticky top-0 z-50 -mx-4 bg-white px-4 pt-2 pb-1">
                 <NoticeBanner
-                  text={notice}
+                  text={visiblePinnedNoticeText}
                   isAuthenticated={session.authenticated}
-                  onClose={() => setNotice(null)}
+                  onClose={() => {
+                    setDismissedPinnedNoticeId(visiblePinnedNotice.noticeId)
+                  }}
                 />
               </div>
             )}
@@ -951,13 +984,11 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
                   secondaryAvatarSrc={roomAvatars.secondaryAvatarSrc}
                   grouped={roomAvatars.grouped}
                 />
-                {!isQuestionRoom && (
-                  <ChatRoomInfoSection
-                    className="w-full"
-                    onNoticeClick={() => router.push(routes.chatNotices(roomId))}
-                    onScheduleClick={() => router.push(routes.chatSchedule(roomId))}
-                  />
-                )}
+                <ChatRoomInfoSection
+                  className="w-full"
+                  onNoticeClick={() => router.push(routes.chatNotices(roomId))}
+                  onScheduleClick={() => router.push(routes.chatSchedule(roomId))}
+                />
                 <div className="flex w-full flex-col rounded-2xl bg-gray-50 py-3">
                   <SectionTitle
                     title={messages.chat.membersTitle}
