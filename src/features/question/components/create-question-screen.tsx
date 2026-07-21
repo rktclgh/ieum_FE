@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Button } from "@/components/ui/button"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { Input } from "@/components/ui/text-field/input"
@@ -22,7 +23,6 @@ import type { MeetupPlaceValue } from "@/features/meetup/constants/create-meetup
 import { MeetupImagePicker } from "@/features/meetup/components/meetup-image-picker"
 import { MeetupLocationPicker } from "@/features/meetup/components/meetup-location-picker"
 import { useTranslation } from "@/lib/i18n/use-translation"
-import { cn } from "@/lib/utils"
 
 // 서버 한도는 200자지만, 모임 제목과 같은 15자 규칙을 따른다(#387).
 const TITLE_MAX_LENGTH = 15
@@ -297,17 +297,15 @@ function CreateQuestionForm({
       {/* 제출 */}
       <div className="shrink-0 px-4 pt-2 pb-[calc(0.75rem+var(--safe-area-bottom))]">
         {error ? <Explanation variant="error" text={error} /> : null}
-        <button
+        <Button
           type="button"
+          variant="accent"
+          size="block"
           disabled={!canSubmit}
           onClick={handleSubmit}
-          className={cn(
-            "h-12 w-full rounded-full text-body-medium-14 text-white transition-colors",
-            canSubmit ? "bg-gray-900" : "bg-gray-200"
-          )}
         >
           {submitting ? t.submittingButton : mode === "edit" ? t.updateButton : t.submitButton}
-        </button>
+        </Button>
       </div>
 
       {/* 숨긴 파일 입력 (OS 시트에서 사진 보관함/사진 찍기 선택) */}

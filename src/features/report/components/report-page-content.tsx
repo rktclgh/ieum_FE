@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
+import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Textarea } from "@/components/ui/text-field/textarea"
 import { REPORT_REASON_KEYS, type ReportReasonKey } from "@/features/report/constants/report-reasons"
@@ -101,21 +102,25 @@ function ReportPageContent({ target }: ReportPageContentProps) {
       )}
 
       <div className="flex items-center gap-2 px-4 pt-2 pb-[calc(1rem+var(--safe-area-bottom))]">
-        <button
+        <Button
           type="button"
+          variant="grayscale"
+          size="md"
           onClick={handleClose}
-          className="flex-1 rounded-full bg-gray-100 px-4 py-3 text-center text-body-medium-14 text-gray-900"
+          className="flex-1"
         >
           {messages.report.cancelButton}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="accent"
+          size="md"
           disabled={!selectedReason || submitReport.isPending}
           onClick={() => setConfirmOpen(true)}
-          className="flex-1 rounded-full bg-gray-900 px-4 py-3 text-center text-body-medium-14 text-white disabled:opacity-50"
+          className="flex-1"
         >
           {messages.report.submitButton}
-        </button>
+        </Button>
       </div>
 
       <ConfirmDialog

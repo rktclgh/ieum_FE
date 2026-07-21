@@ -2,6 +2,7 @@
 
 import * as React from "react"
 
+import { Button } from "@/components/ui/button"
 import {
   Drawer,
   DrawerBackdrop,
@@ -137,20 +138,12 @@ function MeetupDatePickerContent({
         <span className="text-body-regular-14 text-gray-700">{t.dateUndecidedLabel}</span>
       </button>
       <div className="flex w-full items-center gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 rounded-full bg-gray-100 px-4 py-3 text-center text-body-medium-14 text-gray-900"
-        >
+        <Button type="button" variant="grayscale" size="md" onClick={onCancel} className="flex-1">
           {t.cancelButton}
-        </button>
-        <button
-          type="button"
-          onClick={handleConfirm}
-          className="flex-1 rounded-full bg-gray-900 px-4 py-3 text-center text-body-medium-14 text-white"
-        >
+        </Button>
+        <Button type="button" variant="accent" size="md" onClick={handleConfirm} className="flex-1">
           {t.confirmButton}
-        </button>
+        </Button>
       </div>
     </DrawerContent>
   )
