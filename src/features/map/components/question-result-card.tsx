@@ -5,7 +5,7 @@ import Image from "next/image"
 import { HighlightedText } from "@/components/ui/highlighted-text"
 import { NoImage } from "@/components/ui/no-image"
 import type { MapPin } from "@/features/map/api/pin-types"
-import { SearchResultLongPress } from "@/features/map/components/search-result-long-press"
+import { TranslateLongPress } from "@/features/translate/components/translate-long-press"
 import { useQuestionSummary } from "@/features/question/hooks/use-question-queries"
 import { resolveFileUrl } from "@/lib/api/file-url"
 import {
@@ -36,7 +36,7 @@ function QuestionResultCard({
   const thumbnail = resolveFileUrl(pin.thumbnailUrl)
 
   return (
-    <SearchResultLongPress
+    <TranslateLongPress
       title={pin.title}
       body={summary?.body ?? ""}
       isAuthenticated={isAuthenticated}
@@ -67,7 +67,7 @@ function QuestionResultCard({
           </div>
         </button>
       )}
-    </SearchResultLongPress>
+    </TranslateLongPress>
   )
 }
 

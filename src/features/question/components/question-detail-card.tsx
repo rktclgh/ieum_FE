@@ -12,6 +12,7 @@ import { Toast } from "@/components/ui/toast"
 import { ChatContextMenu } from "@/features/chat/components/chat-context-menu"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
 import type { QuestionSummary } from "@/features/question/types"
+import { TranslateLongPress } from "@/features/translate/components/translate-long-press"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useSaveImage } from "@/lib/hooks/use-save-image"
@@ -48,6 +49,8 @@ interface QuestionDetailCardProps {
    * 안 보이는 카드에 남아 화면을 덮는 것을 막는다.
    */
   active?: boolean
+  /** 번역 메뉴 노출 조건. 비로그인이면 롱프레스가 무반응이다. */
+  isAuthenticated?: boolean
 }
 
 /**
@@ -63,6 +66,7 @@ function QuestionDetailCard({
   onViewAnswers,
   onImageTooLarge,
   active = true,
+  isAuthenticated = false,
 }: QuestionDetailCardProps) {
   const { messages } = useTranslation()
   const t = messages.question
@@ -145,52 +149,66 @@ function QuestionDetailCard({
         </div>
       ) : null}
 
-      <div className="flex w-full flex-col gap-3">
-        <div className="flex w-full items-start justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="size-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
-              {question.authorAvatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={question.authorAvatarUrl} alt="" className="size-full object-cover" />
-              ) : (
-                <NoImageProfile />
-              )}
-            </div>
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-title-semibold-16 text-gray-900">{question.authorName}</span>
-                {question.countryFlagSrc ? (
-                  <span className="relative h-4 w-[22px] shrink-0 overflow-hidden rounded-[3px] border border-gray-100">
-                    <Image src={question.countryFlagSrc} alt={t.flagAlt} fill className="object-cover" />
-                  </span>
-                ) : null}
-              </div>
-              {timeLabel || location ? (
-                <div className="flex min-w-0 items-center gap-1 text-body-regular-14 text-gray-600">
-                  {timeLabel ? <span className="shrink-0">{timeLabel}</span> : null}
-                  {timeLabel && location ? (
-                    <span className="size-[3px] shrink-0 rounded-full bg-gray-400" />
-                  ) : null}
-                  {location ? <span className="truncate">{location}</span> : null}
+      {/* 본문 롱프레스 → 번역 메뉴(#463). 이미지·닫기·하단 액션은 제외한다. */}
+      <TranslateLongPress
+        title={question.title}
+        body={question.body}
+        isAuthenticated={isAuthenticated}
+        anchor="surface"
+        visible={active}
+      >
+        {({ title, body, longPress }) => (
+          <div className="flex w-full flex-col gap-3" {...longPress}>
+            <div className="flex w-full items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="size-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
+                  {question.authorAvatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={question.authorAvatarUrl} alt="" className="size-full object-cover" />
+                  ) : (
+                    <NoImageProfile />
+                  )}
                 </div>
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-title-semibold-16 text-gray-900">{question.authorName}</span>
+                    {question.countryFlagSrc ? (
+                      <span className="relative h-4 w-[22px] shrink-0 overflow-hidden rounded-[3px] border border-gray-100">
+                        <Image src={question.countryFlagSrc} alt={t.flagAlt} fill className="object-cover" />
+                      </span>
+                    ) : null}
+                  </div>
+                  {timeLabel || location ? (
+                    <div className="flex min-w-0 items-center gap-1 text-body-regular-14 text-gray-600">
+                      {timeLabel ? <span className="shrink-0">{timeLabel}</span> : null}
+                      {timeLabel && location ? (
+                        <span className="size-[3px] shrink-0 rounded-full bg-gray-400" />
+                      ) : null}
+                      {location ? <span className="truncate">{location}</span> : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+              {!hasImage ? (
+                <BottomSheetClose
+                  aria-label={t.closeLabel}
+                  // 닫기 버튼은 롱프레스 대상에서 제외한다 — 여기서 전파를 끊지 않으면 버튼을
+                  // 길게 눌러도 본문 번역 메뉴가 열린다.
+                  onPointerDown={(event) => event.stopPropagation()}
+                  className="flex size-6 shrink-0 items-center justify-center self-start"
+                >
+                  <Image src="/icons/app-bar/close.svg" alt="" width={24} height={24} className="size-6" />
+                </BottomSheetClose>
               ) : null}
             </div>
-          </div>
-          {!hasImage ? (
-            <BottomSheetClose
-              aria-label={t.closeLabel}
-              className="flex size-6 shrink-0 items-center justify-center self-start"
-            >
-              <Image src="/icons/app-bar/close.svg" alt="" width={24} height={24} className="size-6" />
-            </BottomSheetClose>
-          ) : null}
-        </div>
 
-        <div className="flex w-full flex-col gap-1">
-          <h2 className="text-title-semibold-18 text-gray-900">{question.title}</h2>
-          <p className="text-body-regular-14 whitespace-pre-line text-gray-600">{question.body}</p>
-        </div>
-      </div>
+            <div className="flex w-full flex-col gap-1">
+              <h2 className="text-title-semibold-18 text-gray-900">{title}</h2>
+              <p className="text-body-regular-14 whitespace-pre-line text-gray-600">{body}</p>
+            </div>
+          </div>
+        )}
+      </TranslateLongPress>
 
       {bottomVariant === "answer" ? (
         <>

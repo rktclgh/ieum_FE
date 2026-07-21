@@ -89,6 +89,8 @@ function QuestionDetailContainer({
 
   const cardProps = {
     bottomVariant,
+    // 번역 메뉴 노출 조건. 회원 전용 앱이라 사실상 항상 true 지만, 세션 복구 전에는 감춘다.
+    isAuthenticated: myUserId != null,
     onSend: handleSend,
     onViewAnswers: () => router.push(routes.questionDetail(questionId)),
     onImageTooLarge: () => setActionError(messages.question.imageTooLarge),

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/ui/toast"
 import { ChatContextMenu } from "@/features/chat/components/chat-context-menu"
 import type { MeetupDetailView } from "@/features/meetup/lib/meetup-adapter"
+import { TranslateLongPress } from "@/features/translate/components/translate-long-press"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { useLongPress } from "@/lib/hooks/use-long-press"
 import { useSaveImage } from "@/lib/hooks/use-save-image"
@@ -31,6 +32,8 @@ interface MeetupDetailCardProps {
    * 안 보이는 카드에 남아 화면을 덮는 것을 막는다.
    */
   active?: boolean
+  /** 번역 메뉴 노출 조건. 비로그인이면 롱프레스가 무반응이다. */
+  isAuthenticated?: boolean
 }
 
 function InfoRow({ iconSrc, children }: { iconSrc: string; children: React.ReactNode }) {
@@ -56,6 +59,7 @@ function MeetupDetailCard({
   onJoin,
   onEnterRoom,
   active = true,
+  isAuthenticated = false,
 }: MeetupDetailCardProps) {
   const { messages } = useTranslation()
   const t = messages.meetup
@@ -116,35 +120,52 @@ function MeetupDetailCard({
         </div>
       ) : null}
 
-      <div className="flex w-full flex-col gap-2">
-        <div className="flex items-start justify-between gap-2">
-          <h2 className="text-title-semibold-18 text-gray-900">{detail.title}</h2>
-          {!hasImage ? (
-            <BottomSheetClose
-              aria-label={t.closeLabel}
-              className="flex size-6 shrink-0 items-center justify-center"
-            >
-              <Image src="/icons/app-bar/close.svg" alt="" width={24} height={24} className="size-6" />
-            </BottomSheetClose>
-          ) : null}
-        </div>
+      {/* 본문 롱프레스 → 번역 메뉴(#463). 이미지·닫기·참여 버튼은 제외한다.
+          제목/정보/설명이 원래 팝업의 gap-4 로 벌어진 형제라, 묶는 래퍼도 같은 간격을 준다. */}
+      <TranslateLongPress
+        title={detail.title}
+        body={detail.description ?? ""}
+        isAuthenticated={isAuthenticated}
+        anchor="surface"
+        visible={active}
+      >
+        {({ title, body, longPress }) => (
+          <div className="flex w-full flex-col gap-4" {...longPress}>
+            <div className="flex w-full flex-col gap-2">
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="text-title-semibold-18 text-gray-900">{title}</h2>
+                {!hasImage ? (
+                  <BottomSheetClose
+                    aria-label={t.closeLabel}
+                    // 닫기 버튼은 롱프레스 대상에서 제외한다 — 전파를 끊지 않으면 버튼을
+                    // 길게 눌러도 본문 번역 메뉴가 열린다.
+                    onPointerDown={(event) => event.stopPropagation()}
+                    className="flex size-6 shrink-0 items-center justify-center"
+                  >
+                    <Image src="/icons/app-bar/close.svg" alt="" width={24} height={24} className="size-6" />
+                  </BottomSheetClose>
+                ) : null}
+              </div>
 
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-col gap-1">
-            <InfoRow iconSrc="/icons/meetup/time.svg">{detail.dateLabel || t.noSchedule}</InfoRow>
-            <InfoRow iconSrc="/icons/meetup/location.svg">{detail.locationLabel}</InfoRow>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col gap-1">
+                  <InfoRow iconSrc="/icons/meetup/time.svg">
+                    {detail.dateLabel || t.noSchedule}
+                  </InfoRow>
+                  <InfoRow iconSrc="/icons/meetup/location.svg">{detail.locationLabel}</InfoRow>
+                </div>
+                <InfoRow iconSrc="/icons/meetup/people.svg">
+                  {t.participantCount(detail.participantCount)}
+                </InfoRow>
+              </div>
+            </div>
+
+            {body ? (
+              <p className="w-full text-body-regular-14 whitespace-pre-line text-gray-600">{body}</p>
+            ) : null}
           </div>
-          <InfoRow iconSrc="/icons/meetup/people.svg">
-            {t.participantCount(detail.participantCount)}
-          </InfoRow>
-        </div>
-      </div>
-
-      {detail.description ? (
-        <p className="w-full text-body-regular-14 whitespace-pre-line text-gray-600">
-          {detail.description}
-        </p>
-      ) : null}
+        )}
+      </TranslateLongPress>
 
       {error ? <p className="w-full text-body-regular-12 text-red">{error}</p> : null}
 
