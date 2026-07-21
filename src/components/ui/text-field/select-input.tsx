@@ -21,7 +21,9 @@ import {
 interface SelectOption {
   value: string
   label: string
-  icon?: string
+  // 아이콘은 URL이 아니라 엘리먼트로 받는다. 국적처럼 목록 전체가 아이콘을 다는 경우
+  // 소비자 쪽에서 스프라이트 같은 방식으로 한 번에 그릴 수 있어야 하기 때문이다.
+  icon?: React.ReactNode
 }
 
 interface SelectInputProps {
@@ -59,13 +61,27 @@ function SelectInput({
   const selectedOption = options.find((option) => option.value === selectedValue)
 
   const [searchQuery, setSearchQuery] = React.useState("")
-  const filteredOptions = searchQuery.trim()
+  const isSearching = searchQuery.trim().length > 0
+  const filteredOptions = isSearching
     ? options.filter((option) =>
         option.label.toLowerCase().includes(searchQuery.trim().toLowerCase())
       )
     : options
 
   const { isScrolling, onScroll: handleOptionsScroll } = useFadeScrollbar()
+
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
+
+  // 확정은 항상 확인 버튼에서만 일어난다. 탭은 선택 표시(pending)까지다.
+  //
+  // 다만 검색 중이라면 탭한 뒤 키보드를 내려준다. 검색으로 항목을 찾아낸 시점에 키보드는
+  // 할 일이 끝났고, 남아 있으면 확인 버튼을 가려 한 번 더 스크롤하거나 키보드를 손으로
+  // 닫아야 하기 때문이다. 여기서 명시적으로 내리는 게 중요한 이유는 아래 onMouseDown
+  // 주석 참고 — 브라우저가 알아서 내리게 두면 그 타이밍이 탭 자체를 잡아먹는다.
+  const handleOptionClick = (nextValue: string) => {
+    setPendingValue(nextValue)
+    if (isSearching) searchInputRef.current?.blur()
+  }
 
   return (
     <Drawer
@@ -89,15 +105,7 @@ function SelectInput({
           )}
         >
           <span className="flex w-full min-w-0 items-center gap-2">
-            {selectedOption?.icon && (
-              <Image
-                src={selectedOption.icon}
-                alt=""
-                width={24}
-                height={17}
-                className="h-[17px] w-6 shrink-0 rounded-[3px] border border-gray-100 object-cover"
-              />
-            )}
+            {selectedOption?.icon}
             <span
               className={cn(
                 "truncate text-body-regular-16",
@@ -131,6 +139,7 @@ function SelectInput({
                     className="size-5 shrink-0"
                   />
                   <input
+                    ref={searchInputRef}
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder={searchPlaceholder}
@@ -156,22 +165,21 @@ function SelectInput({
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => setPendingValue(option.value)}
+                      // 탭이 검색창의 포커스를 뺏지 않게 막는다. 포커스가 빠지면 키보드가
+                      // 닫히고 시트 높이가 재계산되는데, 그 리플로우가 mousedown과 click
+                      // 사이에 끼어들어 탭이 유실되거나 다른 항목에 떨어진다. 키보드는
+                      // click이 등록된 뒤 handleOptionClick에서 직접 내린다.
+                      // (pointerdown이 아니라 mousedown인 이유: pointerdown을 막으면
+                      // click까지 함께 억제되어 탭 자체가 죽는다.)
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => handleOptionClick(option.value)}
                       className={cn(
                         "flex w-full items-center justify-between px-4 py-4 text-body-medium-16 text-gray-900",
                         selected ? "rounded-2xl bg-gray-50" : "rounded-xl"
                       )}
                     >
                       <span className="flex min-w-0 items-center gap-2">
-                        {option.icon && (
-                          <Image
-                            src={option.icon}
-                            alt=""
-                            width={24}
-                            height={17}
-                            className="h-[17px] w-6 shrink-0 rounded-[3px] border border-gray-100 object-cover"
-                          />
-                        )}
+                        {option.icon}
                         <span className="truncate">{option.label}</span>
                       </span>
                       {selected && <Check className="size-6 shrink-0 text-gray-400" strokeWidth={1.5} />}
