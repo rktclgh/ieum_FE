@@ -168,6 +168,22 @@
   --motion-duration-base: 300ms;
 
   /*
+   * 키보드를 따라 움직이는 요소 전용 — issue #460. **#280 단일 기준(300ms)의 의도적 예외다.**
+   *
+   * 이 값은 우리 모션 언어가 아니라 **OS 애니메이션에 맞추는 값**이다. iOS 소프트 키보드는
+   * 약 250ms에 걸쳐 올라오는데, 300ms를 쓰면 키보드가 다 올라온 뒤에 시트가 뒤늦게 따라붙어
+   * "키보드에 붙어 함께 움직인다"는 느낌이 깨진다. 기준값을 따르는 것보다 키보드와 프레임을
+   * 맞추는 쪽이 이 한 자리에서는 옳다.
+   *
+   * 커브는 `--ease-base`(0.32, 0.72, 0, 1)를 그대로 쓴다 — iOS 키보드 커브와 사실상 같은
+   * 모양이라 별도 예외가 필요 없다. 즉 예외는 duration 하나뿐이다.
+   *
+   * 새 용도로 가져다 쓰기 전에: "키보드 높이 변화를 따라가는가"를 먼저 확인할 것.
+   * 그게 아니면 `--motion-duration-base`가 맞다.
+   */
+  --motion-duration-keyboard: 250ms;
+
+  /*
    * Safe area — issue #279.
    * `layout.tsx`의 `viewportFit: "cover"`와 한 쌍이다. cover가 켜져야 아래 env()가
    * 0px이 아닌 실제 노치·홈 인디케이터 높이로 해석된다.
@@ -514,5 +530,8 @@
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-duration-base: 0.01ms;
+    /* 키보드 추종 모션도 함께 무력화한다(issue #460). 소비처가 `motion-reduce:transition-none`을
+       이미 달고 있어도, 토큰만 보고 가져다 쓰는 다음 소비처가 조용히 빠지지 않게 한다. */
+    --motion-duration-keyboard: 0.01ms;
   }
 }
