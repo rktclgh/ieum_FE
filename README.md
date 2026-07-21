@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/logo.png" width="120" alt="이음 로고" />
+
 # 이음 · Ieum
 
 ### 한국에 사는 외국인을 위한 위치 기반 커뮤니티
