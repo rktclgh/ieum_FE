@@ -56,6 +56,14 @@ function BottomSheet({ children, className, viewportClassName, ...props }: Botto
               // 탭바와 같은 기준선(28px)에서 뜨고, 키보드가 있으면 그만큼 더 올라간다.
               // 시트가 탭바를 덮으므로 기준선이 어긋나면 모서리가 삐져나온다.
               SHEET_BOTTOM_GAP,
+              // 키보드와 **함께** 미끄러져 올라가게 한다(issue #460). iOS는 키보드 애니메이션
+              // 중 visualViewport 이벤트를 연속으로 쏘지 않는 구간이 있어, 트랜지션이 없으면
+              // 최종값이 한 프레임에 반영돼 튀어 오른다.
+              //
+              // duration만 앱 기준값(300ms)이 아니라 키보드 전용 250ms를 쓴다 — iOS 키보드
+              // 애니메이션에 프레임을 맞추기 위한 의도적 예외다(근거는 globals.css의
+              // `--motion-duration-keyboard`). 커브는 아래 Popup의 진입·퇴장과 같은 ease-base다.
+              "transition-[padding-bottom] duration-[var(--motion-duration-keyboard)] ease-base motion-reduce:transition-none",
               viewportClassName
             )}
           >
