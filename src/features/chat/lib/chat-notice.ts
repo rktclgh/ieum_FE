@@ -15,6 +15,16 @@ interface ChatNoticePinTransport {
   unpinNotice: (roomId: number, noticeId: number) => Promise<unknown>
 }
 
+interface ChatNoticeRegistrationRequest {
+  roomId: number
+  messageId: number
+}
+
+interface ChatNoticeRegistrationTransport {
+  registerNotice: (roomId: number, messageId: number) => Promise<{ noticeId: number; pinned: boolean }>
+  pinNotice: (roomId: number, noticeId: number) => Promise<unknown>
+}
+
 interface ChatNoticePageShape<T> {
   items: T[]
 }
@@ -53,10 +63,28 @@ async function executeSetChatNoticePinned(
   await transport.unpinNotice(request.roomId, request.noticeId)
 }
 
+// 채팅방에서의 "공지로 등록"은 기존 UI처럼 곧바로 상단 공지로 노출한다.
+// 등록 API는 중복 시에도 정본 공지를 반환하므로, 이미 등록된 메시지도 같은 흐름으로 고정할 수 있다.
+async function executeRegisterChatNotice(
+  request: ChatNoticeRegistrationRequest,
+  transport: ChatNoticeRegistrationTransport
+): Promise<void> {
+  const notice = await transport.registerNotice(request.roomId, request.messageId)
+  if (notice.pinned) return
+  await transport.pinNotice(request.roomId, notice.noticeId)
+}
+
 export {
+  executeRegisterChatNotice,
   executeSetChatNoticePinned,
   flattenChatNoticePages,
   mergePinnedNoticeForDisplay,
   sortChatNoticesForDisplay,
 }
-export type { ChatNoticePinRequest, ChatNoticePinTransport, ChatNoticeSortShape }
+export type {
+  ChatNoticePinRequest,
+  ChatNoticePinTransport,
+  ChatNoticeRegistrationRequest,
+  ChatNoticeRegistrationTransport,
+  ChatNoticeSortShape,
+}

@@ -766,7 +766,10 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
           if (registerNoticeMutation.isPending) return
           registerNoticeMutation.mutate(
             { roomId, messageId: message.messageId },
-            { onError: () => setSocketError(messages.chat.noticeRegisterFailed) }
+            {
+              onSuccess: () => setDismissedPinnedNoticeId(null),
+              onError: () => setSocketError(messages.chat.noticeRegisterFailed),
+            }
           )
           setActiveMessageId(null)
         },

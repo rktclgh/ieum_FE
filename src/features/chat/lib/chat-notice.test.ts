@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import { executeSetChatNoticePinned, flattenChatNoticePages, mergePinnedNoticeForDisplay, sortChatNoticesForDisplay } from "./chat-notice.ts"
+import { executeRegisterChatNotice, executeSetChatNoticePinned, flattenChatNoticePages, mergePinnedNoticeForDisplay, sortChatNoticesForDisplay } from "./chat-notice.ts"
 
 test("registered notices render pinned first, then newest createdAt, then newest noticeId", () => {
   const notices = [
@@ -45,6 +45,44 @@ test("pin and unpin each use one server-owned notice command", async () => {
   )
 
   assert.deepEqual(calls, ["pin:9:14", "unpin:9:14"])
+})
+
+test("registering a chat notice pins the canonical server notice for the room banner", async () => {
+  const calls: string[] = []
+
+  await executeRegisterChatNotice(
+    { roomId: 9, messageId: 15 },
+    {
+      registerNotice: async (roomId: number, messageId: number) => {
+        calls.push(`register:${roomId}:${messageId}`)
+        return { noticeId: 14, pinned: false }
+      },
+      pinNotice: async (roomId: number, noticeId: number) => {
+        calls.push(`pin:${roomId}:${noticeId}`)
+      },
+    }
+  )
+
+  assert.deepEqual(calls, ["register:9:15", "pin:9:14"])
+})
+
+test("registering an already pinned notice does not repeat the pin command", async () => {
+  const calls: string[] = []
+
+  await executeRegisterChatNotice(
+    { roomId: 9, messageId: 15 },
+    {
+      registerNotice: async () => {
+        calls.push("register")
+        return { noticeId: 14, pinned: true }
+      },
+      pinNotice: async () => {
+        calls.push("pin")
+      },
+    }
+  )
+
+  assert.deepEqual(calls, ["register"])
 })
 
 test("pin failure is propagated without sending a fallback local replacement", async () => {
