@@ -6,6 +6,10 @@ const componentSource = readFileSync(
   new URL("./chat-bubble-segment.tsx", import.meta.url),
   "utf8"
 )
+const groupSource = readFileSync(
+  new URL("./chat-message-group.tsx", import.meta.url),
+  "utf8"
+)
 
 /** `rounded-3xl` = 24px, `rounded-[4px]` = 4px, 클래스가 없으면 0px. */
 const CORNERS = ["tl", "tr", "bl", "br"] as const
@@ -79,4 +83,19 @@ test("그룹 안쪽 모서리만 각지고 바깥 모서리는 24px을 유지한
 
   // middle은 위아래 모두 이웃이 있으므로 오른쪽 두 모서리가 4px로 좁혀진다.
   assert.deepEqual(corners(me.middle), { tl: 24, tr: 4, bl: 24, br: 4 })
+})
+
+test("답장 원문 미리보기는 두 줄 안에서 줄임표 처리된다", () => {
+  const replyQuote = componentSource.match(
+    /<p className="([^"]*)">\{replyQuote\}<\/p>/
+  )
+
+  assert.ok(replyQuote, "답장 원문 미리보기 요소를 찾지 못했다")
+  assert.match(replyQuote[1], /\bmin-w-0\b/)
+  assert.match(replyQuote[1], /\bline-clamp-2\b/)
+  assert.match(replyQuote[1], /\bbreak-words\b/)
+})
+
+test("메시지 그룹은 긴 답장 원문에 의해 가로로 확장되지 않는다", () => {
+  assert.match(groupSource, /"flex min-w-0 max-w-\[75%\] flex-col gap-1"/)
 })

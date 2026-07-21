@@ -20,6 +20,8 @@ interface QuestionDetailSheetProps {
   onViewAnswers?: () => void
   /** 첨부 이미지가 최대 크기를 초과했을 때(안내는 부모 토스트에서 처리). */
   onImageTooLarge?: () => void
+  /** 번역 메뉴 노출 조건. 카드로 그대로 전달한다. */
+  isAuthenticated?: boolean
 }
 
 /**

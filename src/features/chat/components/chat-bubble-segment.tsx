@@ -107,13 +107,13 @@ function ChatBubbleSegment({
 
   return (
     <div
-      className={cn("flex max-w-full flex-col gap-1", isMe ? "items-end" : "items-start", className)}
+      className={cn("flex min-w-0 max-w-full flex-col gap-1", isMe ? "items-end" : "items-start", className)}
       {...props}
     >
       <p className="max-w-full text-body-regular-12 text-gray-400">{replyLabel}</p>
       <div
         className={cn(
-          "flex max-w-full items-center gap-2 bg-gray-200 px-4 py-3",
+          "flex min-w-0 max-w-full items-center gap-2 bg-gray-200 px-4 py-3",
           isMe ? "rounded-tl-3xl rounded-bl-3xl rounded-tr-3xl" : "rounded-tl-3xl rounded-tr-3xl rounded-br-3xl"
         )}
       >
@@ -121,7 +121,7 @@ function ChatBubbleSegment({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={replyImageUrl} alt={replyImageAlt ?? ""} className="size-8 shrink-0 rounded object-cover opacity-70" />
         )}
-        <p className="truncate text-body-regular-14 text-gray-700">{replyQuote}</p>
+        <p className="min-w-0 break-words line-clamp-2 text-body-regular-14 text-gray-700">{replyQuote}</p>
       </div>
       {bubble}
     </div>

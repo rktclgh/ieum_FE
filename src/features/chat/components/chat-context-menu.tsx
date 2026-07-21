@@ -2,6 +2,12 @@
 
 import * as React from "react"
 
+import {
+  CONTEXT_MENU_LABEL_BASE_SIZE,
+  CONTEXT_MENU_LABEL_CLASS,
+  fitContextMenuPanelLabelSize,
+  type ContextMenuLabelSize,
+} from "@/features/chat/lib/context-menu-label-fit"
 import { cn } from "@/lib/utils"
 import { LONG_PRESS_TARGET_PROPS, LONG_PRESS_TRANSITION } from "@/lib/long-press-styles"
 
@@ -17,6 +23,11 @@ interface ChatContextMenuProps extends React.ComponentProps<"div"> {
   items: ChatContextMenuItem[]
   /** true면 뒤 배경에 반투명 딤 오버레이를 함께 렌더 (롱프레스 메뉴), false면 팝업만 (카메라 버튼 등) */
   dimmed?: boolean
+  /**
+   * 딤 오버레이 클래스 확장. 이미 딤이 깔린 곳(바텀시트 backdrop) 위에서는 `bg-transparent`
+   * 를 넘겨 어둡기를 겹치지 않게 하고, 바깥 탭으로 메뉴만 닫는 용도로만 쓴다.
+   */
+  scrimClassName?: string
   onDismiss?: () => void
 }
 
@@ -25,7 +36,15 @@ interface ChatContextMenuProps extends React.ComponentProps<"div"> {
  * 이 컴포넌트로 옮겼다 — 채팅 목록·채팅방·공지·일정·친구·프로필·모임 이미지 등 롱프레스
  * 메뉴를 쓰는 모든 화면이 이 컴포넌트 하나를 공유한다.
  */
-function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, ...props }: ChatContextMenuProps) {
+function ChatContextMenu({
+  className,
+  items,
+  dimmed = false,
+  scrimClassName,
+  onDismiss,
+  style,
+  ...props
+}: ChatContextMenuProps) {
   // 조건부 마운트라 첫 페인트에 이미 최종 상태면 트랜지션이 돌지 않는다.
   // 초기 상태로 한 프레임 그린 뒤 enter 상태로 넘겨야 눌린 아이템의 리프트와 같은 리듬으로 떠오른다.
   //
@@ -54,6 +73,54 @@ function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, .
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [onDismiss])
 
+  // 라벨 크기 자동 맞춤. 번역된 라벨은 언어마다 길이가 달라 고정 폭(w-[193px])을 넘길 수 있는데,
+  // 줄바꿈이 일어나면 항목 높이가 40px 를 넘어 contextMenuHeight() 배치 계산이 어긋난다.
+  const labelBoxRefs = React.useRef<(HTMLSpanElement | null)[]>([])
+  const labelTextRefs = React.useRef<(HTMLSpanElement | null)[]>([])
+  const [labelSize, setLabelSize] = React.useState<ContextMenuLabelSize>(
+    CONTEXT_MENU_LABEL_BASE_SIZE
+  )
+  // 라벨이 그대로면 다시 잴 이유가 없다. items 는 렌더마다 새 배열이라 참조를 쓸 수 없다.
+  const labelKey = items.map((item) => item.label).join(" ")
+
+  // 라벨이 바뀌면 기준 크기로 되돌린 뒤 다시 잰다(렌더 중 상태 조정 — React 권장 패턴).
+  // 줄어든 상태로 재면 짧아진 라벨이 가용폭에 꽉 찬 것처럼 측정돼("번역 중..." → "번역")
+  // 다시 커지지 못하고 작은 크기에 갇힌다.
+  const [measuredKey, setMeasuredKey] = React.useState(labelKey)
+  if (measuredKey !== labelKey) {
+    setMeasuredKey(labelKey)
+    setLabelSize(CONTEXT_MENU_LABEL_BASE_SIZE)
+  }
+
+  // 측정은 **기준 크기일 때만** 한다. 줄어든 크기에서 재고 15px 로 역산하면 서브픽셀 반올림이
+  // 섞여, 실제로는 13px 에 맞는 라벨이 12px 로 한 단계 더 줄어드는 일이 생긴다.
+  // 기준 크기에서는 scrollWidth 가 곧 자연 폭이라 환산이 필요 없다.
+  React.useLayoutEffect(() => {
+    if (labelSize !== CONTEXT_MENU_LABEL_BASE_SIZE) return
+
+    const measurements = labelBoxRefs.current.flatMap((box, index) => {
+      const text = labelTextRefs.current[index]
+      if (!box || !text) return []
+      return [{ availableWidth: box.clientWidth, naturalWidth: text.scrollWidth }]
+    })
+    setLabelSize(fitContextMenuPanelLabelSize(measurements))
+  }, [labelKey, labelSize])
+
+  // Pretendard 가 늦게 붙으면 폭이 달라진다. 기준 크기로 되돌려 위 effect 가 다시 재게 한다.
+  // 이미 로드된 상태(메뉴는 사용자 조작으로 열리므로 대부분 이쪽)면 프로미스를 걸지 않는다.
+  React.useEffect(() => {
+    const fonts = document.fonts
+    if (!fonts || fonts.status === "loaded") return
+
+    let cancelled = false
+    void fonts.ready.then(() => {
+      if (!cancelled) setLabelSize(CONTEXT_MENU_LABEL_BASE_SIZE)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [labelKey])
+
   return (
     <>
       {dimmed && (
@@ -61,7 +128,8 @@ function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, .
           className={cn(
             "fixed inset-0 z-40 bg-black/10",
             LONG_PRESS_TRANSITION,
-            entered ? "opacity-100" : "opacity-0"
+            entered ? "opacity-100" : "opacity-0",
+            scrimClassName
           )}
           onClick={onDismiss}
           role="presentation"
@@ -91,13 +159,25 @@ function ChatContextMenu({ className, items, dimmed = false, onDismiss, style, .
             className="flex w-[193px] items-center gap-2 py-2 text-left disabled:cursor-not-allowed disabled:opacity-50"
           >
             {item.icon}
+            {/* 바깥 span 이 가용폭, 안쪽 span 이 라벨의 자연 폭 — 둘의 비로 크기를 정한다. */}
             <span
-              className={cn(
-                "text-body-medium-15",
-                item.tone === "destructive" ? "text-red" : "text-gray-900"
-              )}
+              ref={(node) => {
+                labelBoxRefs.current[index] = node
+              }}
+              className="min-w-0 flex-1 overflow-hidden"
             >
-              {item.label}
+              <span
+                ref={(node) => {
+                  labelTextRefs.current[index] = node
+                }}
+                className={cn(
+                  "block truncate whitespace-nowrap",
+                  CONTEXT_MENU_LABEL_CLASS[labelSize],
+                  item.tone === "destructive" ? "text-red" : "text-gray-900"
+                )}
+              >
+                {item.label}
+              </span>
             </span>
           </button>
         ))}

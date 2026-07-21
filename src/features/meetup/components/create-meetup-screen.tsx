@@ -73,8 +73,10 @@ function CreateMeetupScreenContent({
   const [timePickerOpen, setTimePickerOpen] = React.useState(false)
   const [locationPickerOpen, setLocationPickerOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [submissionLocked, setSubmissionLocked] = React.useState(false)
 
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const submissionLatch = React.useRef(false)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -97,11 +99,13 @@ function CreateMeetupScreenContent({
   const dateValue = form.date ? formatDateValue(form.date) : null
   const timeValue = form.time ? formatTimeValue(form.time, periodLabel) : null
 
-  const submitting = createMeeting.isPending
+  const submitting = submissionLocked || createMeeting.isPending
 
   const handleSubmit = async () => {
-    if (!form.canSubmit || submitting) return
+    if (!form.canSubmit || submissionLatch.current) return
     if (!form.place) return
+    submissionLatch.current = true
+    setSubmissionLocked(true)
     setError(null)
 
     const schedule = buildMeetupSchedule({
@@ -111,18 +115,20 @@ function CreateMeetupScreenContent({
       isTimeUndecided: form.isTimeUndecided,
     })
 
-    // 이미지 업로드 실패와 모임 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
-    let imageFileId: string | undefined
-    if (form.image) {
-      try {
-        imageFileId = await uploadMeetingImage(form.image.file)
-      } catch {
-        setError(t.imageUploadFailed)
-        return
-      }
-    }
+    let created = false
 
     try {
+      // 이미지 업로드 실패와 모임 생성 실패를 구분해, 원인에 맞는 메시지를 노출한다.
+      let imageFileId: string | undefined
+      if (form.image) {
+        try {
+          imageFileId = await uploadMeetingImage(form.image.file)
+        } catch {
+          setError(t.imageUploadFailed)
+          return
+        }
+      }
+
       await createMeeting.mutateAsync({
         title: form.title.trim(),
         content: form.description.trim() || undefined,
@@ -137,10 +143,15 @@ function CreateMeetupScreenContent({
         maxMembers: DEFAULT_MAX_MEMBERS,
         imageFileId,
       })
-      onClose()
+      created = true
     } catch (err) {
       setError(getMeetupErrorMessage(err, messages))
+    } finally {
+      submissionLatch.current = false
+      setSubmissionLocked(false)
     }
+
+    if (created) onClose()
   }
 
   return (

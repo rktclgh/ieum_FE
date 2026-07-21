@@ -8,6 +8,8 @@ import {
   LONG_PRESS_ATTRIBUTE,
   LONG_PRESS_INACTIVE,
   LONG_PRESS_LIFT_ACTIVE,
+  LONG_PRESS_LIFT_OFFSET,
+  LONG_PRESS_LIFT_SCALE,
   LONG_PRESS_SURFACE_ACTIVE,
   LONG_PRESS_TARGET_PROPS,
   LONG_PRESS_TRANSITION,
@@ -29,6 +31,16 @@ test("리프트 변형은 배경·라운드를 갖지 않는다 (말풍선처럼
   assert.ok(has(LONG_PRESS_LIFT_ACTIVE, "-translate-y-1"))
   assert.ok(has(LONG_PRESS_LIFT_ACTIVE, "scale-[1.02]"))
   assert.ok(has(LONG_PRESS_LIFT_ACTIVE, "z-50"))
+})
+
+/**
+ * 원시값은 클래스를 쓸 수 없는 곳(바텀시트 팝업의 transform 합성)에서만 쓰는 두 번째 표현이다.
+ * 두 표현이 갈라지면 같은 롱프레스인데 화면마다 뜨는 높이가 달라진다.
+ */
+test("리프트 원시값이 유틸리티 클래스와 같은 값이다", () => {
+  assert.equal(LONG_PRESS_LIFT_OFFSET, "-4px") // -translate-y-1 = 0.25rem = 4px
+  assert.ok(has(LONG_PRESS_LIFT_ACTIVE, "-translate-y-1"))
+  assert.ok(has(LONG_PRESS_LIFT_ACTIVE, `scale-[${LONG_PRESS_LIFT_SCALE}]`))
 })
 
 test("표면 변형은 리프트 변형의 상위집합이다 — 두 경로의 모션이 갈라지면 안 된다", () => {

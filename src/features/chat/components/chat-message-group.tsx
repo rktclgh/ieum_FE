@@ -17,7 +17,7 @@ function ChatMessageGroup({ sender, name, time, avatarSrc, children }: ChatMessa
   return (
     <div className={cn("flex w-full items-end gap-2 py-2", isMe && "justify-end")}>
       {!isMe && <ChatProfile src={avatarSrc} size={26} />}
-      <div className={cn("flex max-w-[75%] flex-col gap-1", isMe ? "items-end" : "items-start")}>
+      <div className={cn("flex min-w-0 max-w-[75%] flex-col gap-1", isMe ? "items-end" : "items-start")}>
         {!isMe && name && <p className="text-body-regular-12 text-gray-400">{name}</p>}
         {children}
         {time && <p className="text-body-regular-12 text-gray-400">{time}</p>}
