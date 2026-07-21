@@ -74,6 +74,7 @@ import {
   type ChatMessageView,
 } from "@/features/chat/lib/chat-adapter"
 import { resolveChatRoomAvatars } from "@/features/chat/lib/chat-avatar"
+import { canReportMessage, canTranslateMessage } from "@/features/chat/lib/chat-message-actions"
 import {
   buildGroupChatMemberList,
   type GroupChatMemberListItem,
@@ -149,10 +150,9 @@ function MessageRow({
     ? message.replyTo.content?.trim() || messages.chat.replyImageLabel
     : undefined
 
-  // 낙관적(pending) 말풍선은 아직 서버 메시지 ID가 없어 번역 대상에서 제외한다.
   const text = message.texts[0]
   const translate = useTranslateToggle({ text: text ?? "", isAuthenticated })
-  const canTranslate = isAuthenticated && !message.pending && message.hasText && translate.canTranslate
+  const canTranslate = canTranslateMessage(message, { isAuthenticated }) && translate.canTranslate
 
   const fullMenuItems: ChatContextMenuItem[] = canTranslate
     ? [
@@ -757,19 +757,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
         },
       })
     }
-    items.push(
-      {
-        icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
-        label: messages.chat.reportAction,
-        tone: "destructive",
-        onClick: () => {
-          setActiveMessageId(null)
-          router.push(routes.chatReport(roomId, message.messageId, message.name || undefined))
-        },
-      },
-    )
     if (session.authenticated && !message.pending && message.hasText && text?.trim()) {
-      items.splice(Math.max(items.length - 1, 0), 0, {
+      items.push({
         icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
         label: messages.chat.registerAsNoticeAction,
         disabled: registerNoticeMutation.isPending,
@@ -780,6 +769,18 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
             { onError: () => setSocketError(messages.chat.noticeRegisterFailed) }
           )
           setActiveMessageId(null)
+        },
+      })
+    }
+    // 내가 쓴 글은 내가 신고할 대상이 아니므로 항목 자체를 노출하지 않는다. (issue #452)
+    if (canReportMessage(message)) {
+      items.push({
+        icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
+        label: messages.chat.reportAction,
+        tone: "destructive",
+        onClick: () => {
+          setActiveMessageId(null)
+          router.push(routes.chatReport(roomId, message.messageId, message.name || undefined))
         },
       })
     }

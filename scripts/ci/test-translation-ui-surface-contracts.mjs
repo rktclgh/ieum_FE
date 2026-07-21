@@ -20,7 +20,8 @@ test("chat bubbles translate displayed text for authenticated non-pending messag
 
   assert.match(compactChatRoom, /useTranslateToggle\(\{text:text\?\?"",isAuthenticated\}\)/)
   assert.match(chatRoom, /translate\.displayText/)
-  assert.match(compactChatRoom, /isAuthenticated&&!message\.pending&&message\.hasText/)
+  // 게이팅 조건 자체는 chat-message-actions.ts 유닛 테스트가 지킨다. 여기선 배선만 확인한다. (issue #452)
+  assert.match(compactChatRoom, /constcanTranslate=canTranslateMessage\(message,\{isAuthenticated\}\)/)
   assert.doesNotMatch(chatRoom, /resource:\s*\{\s*kind:\s*"chatMessage"/)
 })
 
