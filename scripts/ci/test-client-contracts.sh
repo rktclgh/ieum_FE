@@ -18,6 +18,7 @@ node --test scripts/ci/test-translation-ui-surface-contracts.mjs
 node --test scripts/ci/test-question-translation-ui.mjs
 node --test scripts/ci/test-static-export-routes.mjs
 node --test scripts/ci/test-static-source-contracts.mjs
+node --test scripts/ci/test-flag-sprite-contracts.mjs
 node --experimental-strip-types --test src/features/chat/lib/chat-timeline.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-room-message-subscription.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-reply.test.ts

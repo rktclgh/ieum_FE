@@ -21,7 +21,9 @@ import {
 interface SelectOption {
   value: string
   label: string
-  icon?: string
+  // 아이콘은 URL이 아니라 엘리먼트로 받는다. 국적처럼 목록 전체가 아이콘을 다는 경우
+  // 소비자 쪽에서 스프라이트 같은 방식으로 한 번에 그릴 수 있어야 하기 때문이다.
+  icon?: React.ReactNode
 }
 
 interface SelectInputProps {
@@ -89,15 +91,7 @@ function SelectInput({
           )}
         >
           <span className="flex w-full min-w-0 items-center gap-2">
-            {selectedOption?.icon && (
-              <Image
-                src={selectedOption.icon}
-                alt=""
-                width={24}
-                height={17}
-                className="h-[17px] w-6 shrink-0 rounded-[3px] border border-gray-100 object-cover"
-              />
-            )}
+            {selectedOption?.icon}
             <span
               className={cn(
                 "truncate text-body-regular-16",
@@ -163,15 +157,7 @@ function SelectInput({
                       )}
                     >
                       <span className="flex min-w-0 items-center gap-2">
-                        {option.icon && (
-                          <Image
-                            src={option.icon}
-                            alt=""
-                            width={24}
-                            height={17}
-                            className="h-[17px] w-6 shrink-0 rounded-[3px] border border-gray-100 object-cover"
-                          />
-                        )}
+                        {option.icon}
                         <span className="truncate">{option.label}</span>
                       </span>
                       {selected && <Check className="size-6 shrink-0 text-gray-400" strokeWidth={1.5} />}
