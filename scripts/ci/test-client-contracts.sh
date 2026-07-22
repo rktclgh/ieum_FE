@@ -30,6 +30,7 @@ node --experimental-strip-types --test src/features/chat/components/chat-system-
 node --experimental-strip-types --test src/features/chat/components/chat-bubble-radius.test.ts
 node --experimental-strip-types --test src/features/chat/components/chat-message-input.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-leave.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/chat/lib/chat-room-navigation.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-pin.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-notice.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-member-management.test.ts
