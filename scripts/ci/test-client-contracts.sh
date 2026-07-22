@@ -14,6 +14,7 @@ bash scripts/ci/test-map-contracts.sh
 bash scripts/ci/test-meetup-contracts.sh
 node --test scripts/ci/test-meetup-source-contracts.mjs
 node --test scripts/ci/test-translation-source-contracts.mjs
+node --test scripts/ci/test-translate-long-press-contracts.mjs
 node --test scripts/ci/test-translation-ui-surface-contracts.mjs
 node --test scripts/ci/test-question-translation-ui.mjs
 node --test scripts/ci/test-chat-notice-contracts.mjs

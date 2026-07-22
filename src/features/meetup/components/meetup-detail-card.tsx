@@ -128,6 +128,7 @@ function MeetupDetailCard({
         isAuthenticated={isAuthenticated}
         anchor="surface"
         visible={active}
+        persistMenu
       >
         {({ title, body, longPress }) => (
           <div className="flex w-full flex-col gap-4" {...longPress}>
