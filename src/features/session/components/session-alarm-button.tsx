@@ -28,7 +28,7 @@ function SessionAlarmButton() {
       {/* 미읽음 점 배지는 CSS가 아니라 아이콘 자체(alarm-on.svg)로 그린다 — 종 모양과 점의 상대 위치를
           디자인 원본 그대로 유지하기 위함. 개수는 버튼의 접근가능한 이름으로 전달한다. */}
       <Circle
-        iconSrc={hasUnread ? "/icons/circle/alarm-on.svg" : "/icons/circle/alarm.svg"}
+        iconSrc={hasUnread ? "circle/alarm-on" : "circle/alarm"}
         aria-label={
           isLoggedIn
             ? hasUnread
