@@ -31,6 +31,11 @@ test("모임 상세는 번역 롱프레스 메뉴를 명시적 dismiss 전까지
   )
   assert.match(
     translateLongPress,
+    /React\.useEffect\(\(\)\s*=>\s*\{\s*if\s*\(\s*!visible\s*&&\s*!persistMenu\s*\)\s*setSurfaceLifted\(false\)\s*\},\s*\[visible,\s*persistMenu,\s*setSurfaceLifted\]\)/,
+    "지속 모드에서는 캐러셀의 일시적인 inactive 전환이 리프트를 해제하면 안 된다"
+  )
+  assert.match(
+    translateLongPress,
     /titleTranslate\.toggle\(\)\s*bodyTranslate\.toggle\(\)\s*if\s*\(\s*!persistMenu\s*\)\s*openMenu\(false\)/,
     "지속 모드에서는 번역 액션이 메뉴와 리프트를 즉시 해제하면 안 된다"
   )
