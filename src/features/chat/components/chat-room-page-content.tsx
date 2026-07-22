@@ -64,6 +64,7 @@ import {
   isActiveRoomRemoval,
   removeRoomFromAllLoadedListCaches,
 } from "@/features/chat/lib/chat-room-event"
+import { navigateChatRoomBack } from "@/features/chat/lib/chat-room-navigation"
 import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
 import { uploadChatImage } from "@/features/chat/api/chat-file-api"
 import {
@@ -298,6 +299,10 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const [messageDraft, setMessageDraft] = React.useState("")
   const [confirmLeaveOpen, setConfirmLeaveOpen] = React.useState(false)
   const [confirmDisbandOpen, setConfirmDisbandOpen] = React.useState(false)
+
+  const handleBack = React.useCallback(() => {
+    navigateChatRoomBack(window.history.length, router)
+  }, [router])
   const [kickTarget, setKickTarget] = React.useState<GroupChatMemberListItem | null>(null)
   const [socketError, setSocketError] = React.useState<string | null>(null)
 
@@ -797,7 +802,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       <Screen kind="fixed" as="main" className="bg-white">
         <AppBar
           title={roomTitle}
-          onLeadingClick={() => router.back()}
+          onLeadingClick={handleBack}
           trailingIcon={session.authenticated ? undefined : null}
           onTrailingClick={session.authenticated ? () => setMoreOpen(true) : undefined}
           className={!visiblePinnedNoticeText ? "border-b border-gray-50 bg-white" : undefined}
