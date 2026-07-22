@@ -95,6 +95,10 @@ test("detail route builders produce the exact canonical query URLs", () => {
   )
 })
 
+test("in-app chat-room navigation carries an explicit back-entry marker", () => {
+  assert.equal(routes.chatRoom(11, "app"), "/chats/room/?chatId=11&entry=app")
+})
+
 test("detail route builders reject invalid numeric input", () => {
   const invalidIds = [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]
 

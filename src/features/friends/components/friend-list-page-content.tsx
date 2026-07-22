@@ -72,7 +72,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
   // 친구와의 1:1 방을 (없으면) 생성한 뒤 그 roomId로 이동한다. userId ≠ roomId.
   const handleStartChat = (friendId: number) => {
     createDirectRoom.mutate(friendId, {
-      onSuccess: (room) => router.push(routes.chatRoom(room.roomId)),
+      onSuccess: (room) => router.push(routes.chatRoom(room.roomId, "app")),
       onError: showError,
     })
   }

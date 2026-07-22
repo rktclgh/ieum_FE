@@ -108,7 +108,7 @@ function AnswerViewScreen({ questionId }: AnswerViewScreenProps) {
     createRoom.mutate(
       { questionId: question.questionId, targetUserId },
       {
-        onSuccess: (room) => router.push(routes.chatRoom(room.roomId)),
+        onSuccess: (room) => router.push(routes.chatRoom(room.roomId, "app")),
         onError: () => setActionError(messages.question.chatStartFailed),
       }
     )

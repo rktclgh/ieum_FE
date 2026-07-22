@@ -1,12 +1,18 @@
 import { routes } from "@/lib/navigation/routes"
 
+type ChatRoomEntry = "app" | "direct"
+
 interface ChatRoomBackRouter {
   back: () => void
   replace: (href: string) => void
 }
 
-function navigateChatRoomBack(historyLength: number, router: ChatRoomBackRouter) {
-  if (historyLength > 1) {
+function parseChatRoomEntry(value: string | null): ChatRoomEntry {
+  return value === "app" ? "app" : "direct"
+}
+
+function navigateChatRoomBack(entry: ChatRoomEntry, router: ChatRoomBackRouter) {
+  if (entry === "app") {
     router.back()
     return
   }
@@ -14,4 +20,5 @@ function navigateChatRoomBack(historyLength: number, router: ChatRoomBackRouter)
   router.replace(routes.chats())
 }
 
-export { navigateChatRoomBack }
+export { navigateChatRoomBack, parseChatRoomEntry }
+export type { ChatRoomEntry }

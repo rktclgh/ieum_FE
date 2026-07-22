@@ -72,7 +72,7 @@ function MeetupDetailContainer({
       router.replace(routes.chatRoom(roomId))
     })
   const handleEnterRoom = () => {
-    if (detail) router.push(routes.chatRoom(detail.roomId))
+    if (detail) router.push(routes.chatRoom(detail.roomId, "app"))
   }
 
   if (meetingQuery.isError) {
