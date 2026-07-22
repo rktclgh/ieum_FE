@@ -34,6 +34,8 @@ interface MeetupDetailCardProps {
   active?: boolean
   /** 번역 메뉴 노출 조건. 비로그인이면 롱프레스가 무반응이다. */
   isAuthenticated?: boolean
+  /** 캐러셀 카드에서는 활성 슬라이드가 바뀌어도 열린 번역 메뉴를 유지한다. */
+  retainTranslationMenuOnInactive?: boolean
 }
 
 function InfoRow({ iconSrc, children }: { iconSrc: string; children: React.ReactNode }) {
@@ -60,6 +62,7 @@ function MeetupDetailCard({
   onEnterRoom,
   active = true,
   isAuthenticated = false,
+  retainTranslationMenuOnInactive = false,
 }: MeetupDetailCardProps) {
   const { messages } = useTranslation()
   const t = messages.meetup
@@ -129,6 +132,7 @@ function MeetupDetailCard({
         anchor="surface"
         visible={active}
         persistMenu
+        retainMenuOnInactive={retainTranslationMenuOnInactive}
       >
         {({ title, body, longPress }) => (
           <div className="flex w-full flex-col gap-4" {...longPress}>
