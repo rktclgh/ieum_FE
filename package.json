@@ -9,6 +9,7 @@
     "lint": "eslint",
     "gen:map-glyphs": "node scripts/build-map-glyphs.mjs",
     "gen:flag-sprite": "node scripts/build-flag-sprite.mjs",
+    "gen:icon-sprite": "node scripts/build-icon-sprite.mjs",
     "typecheck": "next typegen && tsc --noEmit --incremental false",
     "test:contracts": "bash scripts/ci/test-client-contracts.sh",
     "check:layout": "bash scripts/ci/check-layout-contract.sh",

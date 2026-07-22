@@ -261,8 +261,8 @@ function CreateQuestionForm({
 
         {/* 장소 */}
         <SelectField
-          iconSrc="/icons/write/location-200.svg"
-          selectedIconSrc="/icons/write/location-700.svg"
+          iconSrc="write/location-200"
+          selectedIconSrc="write/location-700"
           placeholder={t.locationPlaceholder}
           value={place?.label ?? null}
           active={locationPickerOpen}

@@ -1,10 +1,10 @@
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 
 interface LocationListItemProps {
-  /** 좌측 원형 아이콘 경로 (24×24) */
+  /** 좌측 원형 아이콘 (24×24). 스프라이트 심볼 이름(예: "write/location-list") */
   iconSrc: string
   /** 장소명 — 검색 강조를 위해 ReactNode 허용 */
   title: React.ReactNode
@@ -35,7 +35,7 @@ function LocationListItem({
   return (
     <div className="flex w-full items-center gap-4">
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-50">
-        <Image src={iconSrc} alt="" width={24} height={24} className="size-6" />
+        <Icon name={iconSrc} width={24} height={24} className="size-6" />
       </span>
 
       <div className="flex min-w-0 flex-1 flex-col items-start">

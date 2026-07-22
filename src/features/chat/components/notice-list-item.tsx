@@ -1,6 +1,6 @@
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 import {
   LONG_PRESS_INACTIVE,
@@ -36,9 +36,8 @@ function NoticeListItem({ className, title, authorName, authorAvatarSrc, time, p
       <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
         <p className="text-body-medium-15 break-words text-gray-900">
           {pinned && (
-            <Image
-              src="/icons/chat/title-pin.svg"
-              alt=""
+            <Icon
+              name="chat/title-pin"
               width={15}
               height={15}
               // 글자 크기(15px)에 맞춰 제목 첫 줄 앞에 인라인 배치

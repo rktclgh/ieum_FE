@@ -14,12 +14,14 @@ bash scripts/ci/test-map-contracts.sh
 bash scripts/ci/test-meetup-contracts.sh
 node --test scripts/ci/test-meetup-source-contracts.mjs
 node --test scripts/ci/test-translation-source-contracts.mjs
+node --test scripts/ci/test-translate-long-press-contracts.mjs
 node --test scripts/ci/test-translation-ui-surface-contracts.mjs
 node --test scripts/ci/test-question-translation-ui.mjs
 node --test scripts/ci/test-chat-notice-contracts.mjs
 node --test scripts/ci/test-static-export-routes.mjs
 node --test scripts/ci/test-static-source-contracts.mjs
 node --test scripts/ci/test-flag-sprite-contracts.mjs
+node --test scripts/ci/test-icon-sprite-contracts.mjs
 node --experimental-strip-types --test src/features/chat/lib/chat-timeline.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-room-message-subscription.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-reply.test.ts
@@ -28,6 +30,7 @@ node --experimental-strip-types --test src/features/chat/components/chat-system-
 node --experimental-strip-types --test src/features/chat/components/chat-bubble-radius.test.ts
 node --experimental-strip-types --test src/features/chat/components/chat-message-input.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-leave.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/chat/lib/chat-room-navigation.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-pin.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-notice.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-member-management.test.ts

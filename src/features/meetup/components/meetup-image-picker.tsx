@@ -1,7 +1,6 @@
 "use client"
 
-import Image from "next/image"
-
+import { Icon } from "@/components/ui/icon"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
 
@@ -31,7 +30,7 @@ function MeetupImagePicker({ image, onPick, onRemove, className }: MeetupImagePi
           onClick={onRemove}
           className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-black/50"
         >
-          <Image src="/icons/circle/close-white.svg" alt="" width={10} height={10} className="size-2.5" />
+          <Icon name="circle/close-white" width={10} height={10} className="size-2.5" />
         </button>
       </div>
     )
@@ -46,7 +45,7 @@ function MeetupImagePicker({ image, onPick, onRemove, className }: MeetupImagePi
         className
       )}
     >
-      <Image src="/icons/write/photo.svg" alt="" width={20} height={20} className="size-5" />
+      <Icon name="write/photo" width={20} height={20} className="size-5" />
       <span className="text-body-regular-12 text-gray-400">{t.imagePickerLabel}</span>
     </button>
   )

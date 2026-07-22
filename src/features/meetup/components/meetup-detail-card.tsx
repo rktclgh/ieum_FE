@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { Download } from "lucide-react"
 
 import { BottomSheetClose } from "@/components/ui/bottom-sheet"
 import { Button } from "@/components/ui/button"
+import { Icon } from "@/components/ui/icon"
 import { Toast } from "@/components/ui/toast"
 import { ChatContextMenu } from "@/features/chat/components/chat-context-menu"
 import type { MeetupDetailView } from "@/features/meetup/lib/meetup-adapter"
@@ -39,7 +39,7 @@ interface MeetupDetailCardProps {
 function InfoRow({ iconSrc, children }: { iconSrc: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-1">
-      <Image src={iconSrc} alt="" width={18} height={18} className="size-[18px]" />
+      <Icon name={iconSrc} width={18} height={18} className="size-[18px]" />
       <span className="text-body-regular-14 text-gray-600">{children}</span>
     </div>
   )
@@ -97,7 +97,7 @@ function MeetupDetailCard({
               aria-label={t.closeLabel}
               className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-black/50"
             >
-              <Image src="/icons/circle/close-white.svg" alt="" width={16} height={16} className="size-4" />
+              <Icon name="circle/close-white" width={16} height={16} className="size-4" />
             </BottomSheetClose>
           </div>
           {imageMenuOpen && imageUrl ? (
@@ -128,6 +128,7 @@ function MeetupDetailCard({
         isAuthenticated={isAuthenticated}
         anchor="surface"
         visible={active}
+        persistMenu
       >
         {({ title, body, longPress }) => (
           <div className="flex w-full flex-col gap-4" {...longPress}>
@@ -142,19 +143,19 @@ function MeetupDetailCard({
                     onPointerDown={(event) => event.stopPropagation()}
                     className="flex size-6 shrink-0 items-center justify-center"
                   >
-                    <Image src="/icons/app-bar/close.svg" alt="" width={24} height={24} className="size-6" />
+                    <Icon name="app-bar/close" width={24} height={24} className="size-6" />
                   </BottomSheetClose>
                 ) : null}
               </div>
 
               <div className="flex items-start justify-between gap-2">
                 <div className="flex flex-col gap-1">
-                  <InfoRow iconSrc="/icons/meetup/time.svg">
+                  <InfoRow iconSrc="meetup/time">
                     {detail.dateLabel || t.noSchedule}
                   </InfoRow>
-                  <InfoRow iconSrc="/icons/meetup/location.svg">{detail.locationLabel}</InfoRow>
+                  <InfoRow iconSrc="meetup/location">{detail.locationLabel}</InfoRow>
                 </div>
-                <InfoRow iconSrc="/icons/meetup/people.svg">
+                <InfoRow iconSrc="meetup/people">
                   {t.participantCount(detail.participantCount)}
                 </InfoRow>
               </div>

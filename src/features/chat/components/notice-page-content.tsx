@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Icon } from "@/components/ui/icon"
 import { Toast } from "@/components/ui/toast"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
@@ -134,7 +134,7 @@ function NoticePageContent({ roomId }: NoticePageContentProps) {
     notice.pinned
       ? [
           {
-            icon: <Image src="/icons/chat/pin-off.svg" alt="" width={24} height={24} />,
+            icon: <Icon name="chat/pin-off" width={24} height={24} />,
             label: messages.chat.unsetChatNoticeAction,
             disabled: setNoticePinnedMutation.isPending,
             onClick: () => {
@@ -152,7 +152,7 @@ function NoticePageContent({ roomId }: NoticePageContentProps) {
         ]
       : [
           {
-            icon: <Image src="/icons/chat/pin-line.svg" alt="" width={24} height={24} />,
+            icon: <Icon name="chat/pin-line" width={24} height={24} />,
             label: messages.chat.setChatNoticeAction,
             disabled: setNoticePinnedMutation.isPending,
             onClick: () => {

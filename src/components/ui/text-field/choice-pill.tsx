@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 
 interface ChoicePillProps extends Omit<React.ComponentProps<"button">, "onClick"> {
@@ -31,15 +31,7 @@ function ChoicePill({ className, label, selected, onClick, ...props }: ChoicePil
           selected ? "border-gray-900 bg-gray-900" : "border-gray-200 bg-transparent"
         )}
       >
-        {selected && (
-          <Image
-            src="/icons/common/check.svg"
-            alt=""
-            width={14}
-            height={14}
-            className="size-3.5"
-          />
-        )}
+        {selected && <Icon name="common/check" width={14} height={14} className="size-3.5" />}
       </span>
       {label}
     </button>

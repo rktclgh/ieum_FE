@@ -1,6 +1,6 @@
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 
 interface ExplanationProps extends React.ComponentProps<"div"> {
@@ -19,13 +19,7 @@ function Explanation({ className, variant = "default", text, ...props }: Explana
       {...props}
     >
       {isGreat && (
-        <Image
-          src="/icons/explanation/green-check.svg"
-          alt=""
-          width={16}
-          height={16}
-          className="size-4 shrink-0"
-        />
+        <Icon name="explanation/green-check" width={16} height={16} className="size-4 shrink-0" />
       )}
       <p
         className={cn("text-body-regular-12", isError ? "text-red" : "text-gray-400")}

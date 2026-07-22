@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Icon } from "@/components/ui/icon"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface NotificationListAppBarProps extends React.ComponentProps<typeof AppBar> {
@@ -41,7 +41,7 @@ function NotificationListAppBar({
               onClick={onEnterDeleteMode}
               className="flex size-6 shrink-0 items-center justify-center"
             >
-              <Image src="/icons/app-bar/trash.svg" alt="" width={24} height={24} className="size-6" />
+              <Icon name="app-bar/trash" width={24} height={24} className="size-6" />
             </button>
           )}
           <button
@@ -50,7 +50,7 @@ function NotificationListAppBar({
             onClick={onOpenSettings}
             className="flex size-6 shrink-0 items-center justify-center"
           >
-            <Image src="/icons/app-bar/setting.svg" alt="" width={24} height={24} className="size-6" />
+            <Icon name="app-bar/setting" width={24} height={24} className="size-6" />
           </button>
         </div>
       }

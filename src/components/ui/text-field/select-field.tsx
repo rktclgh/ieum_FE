@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 
 interface SelectFieldProps extends Omit<React.ComponentProps<"button">, "value"> {
-  /** 값 선택 전 아이콘 */
+  /** 값 선택 전 아이콘. 스프라이트 심볼 이름(예: "write/clock-200") */
   iconSrc: string
   /** 값 선택 후 아이콘 (없으면 iconSrc 유지) */
   selectedIconSrc?: string
@@ -49,7 +49,7 @@ function SelectField({
       )}
       {...props}
     >
-      <Image src={icon} alt="" width={20} height={20} className="size-5 shrink-0" />
+      <Icon name={icon} width={20} height={20} className="size-5 shrink-0" />
       <span
         className={cn(
           "truncate",

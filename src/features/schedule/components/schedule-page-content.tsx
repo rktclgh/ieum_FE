@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Globe } from "lucide-react"
 
@@ -10,6 +9,7 @@ import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { Circle } from "@/components/ui/circle"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Icon } from "@/components/ui/icon"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { contextMenuHeight } from "@/features/chat/lib/context-menu-geometry"
 import { useChatRoom, useChatSessionAccess } from "@/features/chat/hooks/use-chat-queries"
@@ -228,7 +228,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
     buildScheduleActions(event).map((action) => {
       if (action === "report") {
         return {
-          icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
+          icon: <Icon name="chat/alert" width={24} height={24} />,
           label: messages.chat.reportAction,
           tone: "destructive",
           onClick: () => {
@@ -239,7 +239,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
       }
 
       return {
-        icon: <Image src="/icons/chat/trash.svg" alt="" width={24} height={24} />,
+        icon: <Icon name="chat/trash" width={24} height={24} />,
         label: messages.schedule.deleteAction,
         tone: "destructive",
         onClick: () => {
@@ -326,7 +326,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
             className="flex items-center gap-1"
           >
             <span className="text-title-semibold-18 text-gray-900">{formatYearMonth(language, year, month)}</span>
-            <Image src="/icons/arrow/down.svg" alt="" width={24} height={24} className="size-6" />
+            <Icon name="arrow/down" width={24} height={24} className="size-6" />
           </button>
         }
       />
@@ -349,7 +349,7 @@ function SchedulePageContent({ roomId }: SchedulePageContentProps) {
       {isOneTimeMeeting && !selectedDateIsPast ? (
         <Circle
           aria-label={messages.schedule.addButtonLabel}
-          iconSrc="/icons/circle/plus-white.svg"
+          iconSrc="circle/plus-white"
           background="primary"
           className="absolute right-4 bottom-[calc(1.5rem+var(--safe-area-bottom))] z-10"
           onClick={() => setEditor({ mode: "create" })}

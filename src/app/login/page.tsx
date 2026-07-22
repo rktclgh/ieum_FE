@@ -6,6 +6,7 @@ import type { FormEvent } from "react"
 
 import { Screen } from "@/components/layout/screen"
 import { Button } from "@/components/ui/button"
+import { Icon } from "@/components/ui/icon"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { Input } from "@/components/ui/text-field/input"
 import { PasswordInput } from "@/components/ui/text-field/password-input"
@@ -108,13 +109,7 @@ function LoginContent() {
           disabled={socialLogin.isPending}
           onClick={socialLogin.startGoogle}
         >
-          <Image
-            src="/icons/social-login/google.svg"
-            alt=""
-            width={20}
-            height={20}
-            className="size-5"
-          />
+          <Icon name="social-login/google" width={20} height={20} className="size-5" />
           {messages.login.continueWithGoogle}
         </Button>
         <Button
@@ -124,13 +119,7 @@ function LoginContent() {
           disabled={socialLogin.isPending}
           onClick={socialLogin.startKakao}
         >
-          <Image
-            src="/icons/social-login/kakao.svg"
-            alt=""
-            width={20}
-            height={20}
-            className="size-5"
-          />
+          <Icon name="social-login/kakao" width={20} height={20} className="size-5" />
           {messages.login.continueWithKakao}
         </Button>
       </div>

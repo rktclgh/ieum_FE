@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { Screen } from "@/components/layout/screen"
 import { SearchBox } from "@/components/ui/search-box"
 import { Circle } from "@/components/ui/circle"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Icon } from "@/components/ui/icon"
 import { ChatFilterChips, type ChatFilterCategory } from "@/features/chat/components/chat-filter-chips"
 import { ChatListItem } from "@/features/chat/components/chat-list-item"
 import { ChatListSkeleton } from "@/features/chat/components/chat-list-skeleton"
@@ -138,12 +138,7 @@ function ChatListPageContent() {
     return [
       ...(canPinRoom ? [{
         icon: (
-          <Image
-            src={chat.pinned ? "/icons/chat/pin-off.svg" : "/icons/chat/pin-line.svg"}
-            alt=""
-            width={24}
-            height={24}
-          />
+          <Icon name={chat.pinned ? "chat/pin-off" : "chat/pin-line"} width={24} height={24} />
         ),
         label: chat.pinned ? messages.chat.unpinAction : messages.chat.pinAction,
         disabled: setPinnedMutation.isPending,
@@ -158,9 +153,8 @@ function ChatListPageContent() {
       }] : []),
     {
       icon: (
-        <Image
-          src={chat.notifyEnabled ? "/icons/chat/alarm-off.svg" : "/icons/chat/alarm-on-line.svg"}
-          alt=""
+        <Icon
+          name={chat.notifyEnabled ? "chat/alarm-off" : "chat/alarm-on-line"}
           width={24}
           height={24}
         />
@@ -175,7 +169,7 @@ function ChatListPageContent() {
       },
     },
     {
-      icon: <Image src="/icons/chat/trash.svg" alt="" width={24} height={24} />,
+      icon: <Icon name="chat/trash" width={24} height={24} />,
       label: chat.roomType === "group" ? messages.meetup.leaveButton : messages.chat.deleteAction,
       tone: "destructive",
       disabled: leaveChatRoomMutation.isPending,
@@ -212,7 +206,7 @@ function ChatListPageContent() {
             onChange={(event) => setQuery(event.target.value)}
           />
           <Circle
-            iconSrc="/icons/circle/friend-list.svg"
+            iconSrc="circle/friend-list"
             aria-label={messages.chat.myFriendsTitle}
             tone="flat"
             onClick={() => router.push(routes.friends())}
