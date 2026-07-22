@@ -94,6 +94,7 @@ function MeetupDetailContainer({
       <MeetupDetailCard
         detail={detail}
         active={active}
+        retainTranslationMenuOnInactive
         isAuthenticated={isAuthenticated}
         pending={pending}
         error={error}
