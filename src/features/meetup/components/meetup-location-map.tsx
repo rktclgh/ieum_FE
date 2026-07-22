@@ -2,10 +2,10 @@
 
 import dynamic from "next/dynamic"
 import * as React from "react"
-import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
 import { CrossfadeIcon } from "@/components/ui/crossfade-icon"
+import { Icon } from "@/components/ui/icon"
 import type { Place } from "@/features/map/api/place-search-api"
 import { MapCenterPin } from "@/features/map/components/map-center-pin"
 import { MapLoadingSkeleton } from "@/features/map/components/map-loading-skeleton"
@@ -194,13 +194,7 @@ function MeetupLocationMap({
               onClick={onOpenSearch}
               className="flex h-[46px] w-full items-center gap-3 rounded-full bg-gray-50 px-4 py-3 text-left"
             >
-              <Image
-                src="/icons/search-bar/search.svg"
-                alt=""
-                width={20}
-                height={20}
-                className="size-5 shrink-0"
-              />
+              <Icon name="search-bar/search" width={20} height={20} className="size-5 shrink-0" />
               <span className="text-body-regular-15 text-gray-400">{t.searchPlaceholder}</span>
             </button>
           </div>
@@ -220,8 +214,8 @@ function MeetupLocationMap({
             className={`pointer-events-auto absolute ${FAB_BOTTOM_FLOOR} right-4 flex size-[46px] items-center justify-center rounded-full bg-white shadow-[0px_2px_2px_0px_rgba(0,0,0,0.1)] disabled:cursor-not-allowed disabled:opacity-40`}
           >
             <CrossfadeIcon
-              baseSrc="/icons/circle/location.svg"
-              activeSrc="/icons/circle/location-primary.svg"
+              baseSrc="circle/location"
+              activeSrc="circle/location-primary"
               active={isFollowingMe}
             />
           </button>
@@ -239,7 +233,7 @@ function MeetupLocationMap({
         >
           <div className="flex h-72 flex-col gap-4 overflow-y-auto px-4 pt-6 pb-[calc(0.75rem+var(--safe-area-bottom))]">
             <LocationListItem
-              iconSrc="/icons/write/location-plus.svg"
+              iconSrc="write/location-plus"
               title={t.createPlaceTitle}
               subtitle={locationSubtitle}
               actionLabel={t.createPlaceButton}
@@ -262,7 +256,7 @@ function MeetupLocationMap({
                 nearbyPlaces?.map((place) => (
                   <LocationListItem
                     key={place.id}
-                    iconSrc="/icons/write/location-list.svg"
+                    iconSrc="write/location-list"
                     title={place.name}
                     subtitle={place.address}
                     actionLabel={t.selectButton}

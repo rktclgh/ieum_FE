@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 import type { ScheduleCardEntry } from "@/features/schedule/lib/schedule-adapter"
 
@@ -52,11 +52,11 @@ function ScheduleListItem({
       >
         <span className="w-full truncate text-title-semibold-16 text-gray-900">{event.translatedTitle ?? event.title}</span>
         <span className="flex items-center gap-1">
-          <Image src="/icons/schedule/clock.svg" alt="" width={18} height={18} className="size-[18px]" />
+          <Icon name="schedule/clock" width={18} height={18} className="size-[18px]" />
           <span className="text-body-regular-14 text-gray-600">{event.timeLabel}</span>
         </span>
         <span className="flex items-center gap-1">
-          <Image src="/icons/schedule/map-pin.svg" alt="" width={18} height={18} className="size-[18px]" />
+          <Icon name="schedule/map-pin" width={18} height={18} className="size-[18px]" />
           <span className="text-body-regular-14 text-gray-600">{event.translatedLocationLabel ?? event.locationLabel}</span>
         </span>
       </ContentWrapper>
@@ -68,7 +68,7 @@ function ScheduleListItem({
             aria-label={moreAriaLabel}
             className="flex size-11 items-center justify-center"
           >
-            <Image src="/icons/schedule/more.svg" alt="" width={20} height={20} className="size-5" />
+            <Icon name="schedule/more" width={20} height={20} className="size-5" />
           </button>
           {menuSlot}
         </div>

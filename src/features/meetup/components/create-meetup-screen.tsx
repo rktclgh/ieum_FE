@@ -181,16 +181,16 @@ function CreateMeetupScreenContent({
         {/* 날짜 · 시간 */}
         <div className="flex shrink-0 items-center gap-3">
           <SelectField
-            iconSrc="/icons/write/calendar-200.svg"
-            selectedIconSrc="/icons/write/calendar-700.svg"
+            iconSrc="write/calendar-200"
+            selectedIconSrc="write/calendar-700"
             placeholder={t.datePlaceholder}
             value={form.isDateUndecided ? t.dateUndecidedLabel : dateValue}
             active={datePickerOpen}
             onClick={() => setDatePickerOpen(true)}
           />
           <SelectField
-            iconSrc="/icons/write/clock-200.svg"
-            selectedIconSrc="/icons/write/clock-700.svg"
+            iconSrc="write/clock-200"
+            selectedIconSrc="write/clock-700"
             placeholder={t.timePlaceholder}
             value={form.isTimeUndecided ? t.timeUndecidedLabel : timeValue}
             active={timePickerOpen}
@@ -201,8 +201,8 @@ function CreateMeetupScreenContent({
 
         {/* 장소 */}
         <SelectField
-          iconSrc="/icons/write/location-200.svg"
-          selectedIconSrc="/icons/write/location-700.svg"
+          iconSrc="write/location-200"
+          selectedIconSrc="write/location-700"
           placeholder={t.addressPlaceholder}
           value={form.place?.label ?? null}
           active={locationPickerOpen}

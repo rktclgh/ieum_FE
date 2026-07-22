@@ -1,8 +1,8 @@
 import * as React from "react"
-import Image from "next/image"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { CrossfadeIcon } from "@/components/ui/crossfade-icon"
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 
 const circleVariants = cva("inline-flex size-[46px] shrink-0 items-center justify-center rounded-full", {
@@ -33,8 +33,8 @@ const circleVariants = cva("inline-flex size-[46px] shrink-0 items-center justif
 interface CircleProps
   extends React.ComponentProps<"button">,
     VariantProps<typeof circleVariants> {
+  /** 스프라이트 심볼 이름. `public/icons/{dir}/{file}.svg`는 `"{dir}/{file}"`로 쓴다. */
   iconSrc: string
-  iconAlt?: string
   /** 내부 아이콘 이미지에 추가할 CSS 클래스명 (예: 회전/트랜지션 애니메이션은 호출부에서 주입) */
   iconClassName?: string
   /** 켜짐 상태에서 보여줄 아이콘. 주면 iconSrc와 크로스페이드되고 aria-pressed가 붙는다 */
@@ -48,7 +48,6 @@ function Circle({
   background,
   tone,
   iconSrc,
-  iconAlt = "",
   iconClassName,
   activeIconSrc,
   active,
@@ -70,7 +69,7 @@ function Circle({
           className={iconClassName}
         />
       ) : (
-        <Image src={iconSrc} alt={iconAlt} width={24} height={24} className={cn("size-6", iconClassName)} />
+        <Icon name={iconSrc} width={24} height={24} className={cn("size-6", iconClassName)} />
       )}
     </button>
   )

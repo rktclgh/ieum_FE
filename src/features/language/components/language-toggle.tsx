@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Icon } from "@/components/ui/icon"
 import {
   Drawer,
   DrawerBackdrop,
@@ -39,7 +39,7 @@ function LanguageToggle({ className, ...props }: React.ComponentProps<"button">)
         {...props}
       >
         {messages.languages[language]}
-        <Image src="/icons/arrow/down.svg" alt="" width={20} height={20} className="size-5" />
+        <Icon name="arrow/down" width={20} height={20} className="size-5" />
       </DrawerTrigger>
       <DrawerPortal>
         <DrawerBackdrop />

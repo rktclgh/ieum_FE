@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { Globe } from "lucide-react"
 
+import { Icon } from "@/components/ui/icon"
 import { ChatContextMenu, type ChatContextMenuItem } from "@/features/chat/components/chat-context-menu"
 import { useLongPress } from "@/lib/hooks/use-long-press"
 import {
@@ -58,7 +58,7 @@ function NoticeBanner({ className, text, isAuthenticated = false, onClose, ...pr
         {...props}
       >
         <div className="flex min-w-0 flex-1 items-center gap-2" {...(translate.canTranslate ? longPress : {})}>
-          <Image src="/icons/chat/notification.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
+          <Icon name="chat/notification" width={20} height={20} className="size-5 shrink-0" />
           <p className="min-w-0 break-words text-body-regular-14 text-gray-900">{translate.displayText}</p>
         </div>
         <button
@@ -67,7 +67,7 @@ function NoticeBanner({ className, text, isAuthenticated = false, onClose, ...pr
           onClick={onClose}
           className="flex size-4 shrink-0 items-center justify-center"
         >
-          <Image src="/icons/app-bar/close.svg" alt="" width={16} height={16} className="size-4" />
+          <Icon name="app-bar/close" width={16} height={16} className="size-4" />
         </button>
       </div>
       {translate.isError ? (

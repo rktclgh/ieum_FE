@@ -20,6 +20,7 @@ node --test scripts/ci/test-chat-notice-contracts.mjs
 node --test scripts/ci/test-static-export-routes.mjs
 node --test scripts/ci/test-static-source-contracts.mjs
 node --test scripts/ci/test-flag-sprite-contracts.mjs
+node --test scripts/ci/test-icon-sprite-contracts.mjs
 node --experimental-strip-types --test src/features/chat/lib/chat-timeline.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-room-message-subscription.test.ts
 node --experimental-strip-types --test src/features/chat/lib/chat-reply.test.ts

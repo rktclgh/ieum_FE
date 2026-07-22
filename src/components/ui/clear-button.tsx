@@ -1,6 +1,6 @@
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 
 interface ClearButtonProps extends React.ComponentProps<"button"> {
@@ -33,7 +33,7 @@ function ClearButton({ className, inputRef, ...props }: ClearButtonProps) {
       )}
       {...props}
     >
-      <Image src="/icons/common/clear.svg" alt="" width={8} height={8} className="size-2" />
+      <Icon name="common/clear" width={8} height={8} className="size-2" />
     </button>
   )
 }

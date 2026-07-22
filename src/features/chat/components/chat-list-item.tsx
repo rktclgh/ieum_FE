@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 import {
   LONG_PRESS_INACTIVE,
@@ -85,7 +85,7 @@ function ChatListItem({
         <div className="flex w-full min-w-0 items-center">
           <div className="flex min-w-0 items-center gap-2">
             {pinned && (
-              <Image src="/icons/chat/title-pin.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
+              <Icon name="chat/title-pin" width={20} height={20} className="size-5 shrink-0" />
             )}
             <span
               ref={titleRef}

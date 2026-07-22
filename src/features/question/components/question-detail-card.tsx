@@ -6,6 +6,7 @@ import { Download } from "lucide-react"
 
 import { BottomSheetClose } from "@/components/ui/bottom-sheet"
 import { Button } from "@/components/ui/button"
+import { Icon } from "@/components/ui/icon"
 import { NoImageProfile } from "@/components/ui/no-image"
 import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
 import { Toast } from "@/components/ui/toast"
@@ -126,7 +127,7 @@ function QuestionDetailCard({
               aria-label={t.closeLabel}
               className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-black/50"
             >
-              <Image src="/icons/circle/close-white.svg" alt="" width={16} height={16} className="size-4" />
+              <Icon name="circle/close-white" width={16} height={16} className="size-4" />
             </BottomSheetClose>
           </div>
           {imageMenuOpen && imageUrl ? (
@@ -197,7 +198,7 @@ function QuestionDetailCard({
                   onPointerDown={(event) => event.stopPropagation()}
                   className="flex size-6 shrink-0 items-center justify-center self-start"
                 >
-                  <Image src="/icons/app-bar/close.svg" alt="" width={24} height={24} className="size-6" />
+                  <Icon name="app-bar/close" width={24} height={24} className="size-6" />
                 </BottomSheetClose>
               ) : null}
             </div>
@@ -224,7 +225,7 @@ function QuestionDetailCard({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={image.preview} alt="" className="size-full object-cover" />
                 ) : (
-                  <Image src="/icons/chat/camera-fill.svg" alt="" width={20} height={20} className="size-5" />
+                  <Icon name="chat/camera-fill" width={20} height={20} className="size-5" />
                 )}
               </button>
               <MessageTextarea
@@ -237,7 +238,7 @@ function QuestionDetailCard({
               />
             </div>
             <button type="button" aria-label={t.sendLabel} onClick={handleSend} className="size-8 shrink-0">
-              <Image src="/icons/chat/send-button.svg" alt="" width={32} height={32} className="size-8" />
+              <Icon name="chat/send-button" width={32} height={32} className="size-8" />
             </button>
           </div>
 

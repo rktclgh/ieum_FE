@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -17,6 +16,7 @@ import {
   DrawerTrigger,
   DrawerViewport,
 } from "@/components/ui/drawer"
+import { Icon } from "@/components/ui/icon"
 
 interface SelectOption {
   value: string
@@ -115,13 +115,7 @@ function SelectInput({
               {selectedOption?.label ?? placeholder}
             </span>
           </span>
-          <Image
-            src="/icons/arrow/left.svg"
-            alt=""
-            width={24}
-            height={24}
-            className="size-6 shrink-0 -rotate-90"
-          />
+          <Icon name="arrow/left" width={24} height={24} className="size-6 shrink-0 -rotate-90" />
         </DrawerTrigger>
       )}
       <DrawerPortal>
@@ -131,13 +125,7 @@ function SelectInput({
             <DrawerContent className="min-h-0">
               {searchPlaceholder && (
                 <div className="flex h-[46px] w-full shrink-0 items-center gap-3 rounded-full bg-gray-50 px-4 py-3">
-                  <Image
-                    src="/icons/search-bar/search.svg"
-                    alt=""
-                    width={20}
-                    height={20}
-                    className="size-5 shrink-0"
-                  />
+                  <Icon name="search-bar/search" width={20} height={20} className="size-5 shrink-0" />
                   <input
                     ref={searchInputRef}
                     value={searchQuery}

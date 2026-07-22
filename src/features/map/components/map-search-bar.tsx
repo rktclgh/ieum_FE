@@ -1,7 +1,6 @@
 "use client"
 
-import Image from "next/image"
-
+import { Icon } from "@/components/ui/icon"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface MapSearchBarProps {
@@ -34,7 +33,7 @@ function MapSearchBar({
               onClick={onClearSelectedLocation}
               className="flex size-4 shrink-0 items-center justify-center rounded-full bg-gray-200"
             >
-              <Image src="/icons/common/clear.svg" alt="" width={8} height={8} className="size-2" />
+              <Icon name="common/clear" width={8} height={8} className="size-2" />
             </button>
           ) : null}
         </div>
@@ -51,7 +50,7 @@ function MapSearchBar({
         onClick={onOpenSearch}
         className="flex h-[45px] w-full items-center gap-3 rounded-full bg-white px-4 py-3 text-left shadow-[0px_2px_2px_0px_rgba(0,0,0,0.10)] outline outline-1 -outline-offset-1 outline-gray-50"
       >
-        <Image src="/icons/search-bar/search.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
+        <Icon name="search-bar/search" width={20} height={20} className="size-5 shrink-0" />
         <span className="truncate text-body-regular-15 text-gray-400">
           {messages.home.searchPlaceholder}
         </span>

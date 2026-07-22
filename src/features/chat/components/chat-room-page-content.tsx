@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { Download, Globe } from "lucide-react"
@@ -9,6 +8,7 @@ import { Download, Globe } from "lucide-react"
 import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Icon } from "@/components/ui/icon"
 import { Toast, ToastPill } from "@/components/ui/toast"
 import {
   SidePanel,
@@ -737,7 +737,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     const items: ChatContextMenuItem[] = []
     if (canReplyToMessage(message)) {
       items.push({
-        icon: <Image src="/icons/chat/respond.svg" alt="" width={24} height={24} />,
+        icon: <Icon name="chat/respond" width={24} height={24} />,
         label: messages.chat.replyAction,
         onClick: () => {
           setSelectedReply(replyTargetFromMessage(message))
@@ -759,7 +759,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     }
     if (session.authenticated && !message.pending && message.hasText && text?.trim()) {
       items.push({
-        icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
+        icon: <Icon name="chat/notification" width={24} height={24} />,
         label: messages.chat.registerAsNoticeAction,
         disabled: registerNoticeMutation.isPending,
         onClick: () => {
@@ -778,7 +778,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     // 내가 쓴 글은 내가 신고할 대상이 아니므로 항목 자체를 노출하지 않는다. (issue #452)
     if (canReportMessage(message)) {
       items.push({
-        icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
+        icon: <Icon name="chat/alert" width={24} height={24} />,
         label: messages.chat.reportAction,
         tone: "destructive",
         onClick: () => {
