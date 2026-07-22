@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
 import { FullScreenOverlay, useFocusOnOverlaySettled } from "@/components/ui/full-screen-overlay"
+import { Icon } from "@/components/ui/icon"
 import { SearchBox } from "@/components/ui/search-box"
 import type { MapBounds } from "@/features/map/api/pin-types"
 import type { Place } from "@/features/map/api/place-search-api"
@@ -109,7 +109,7 @@ function SearchOverlayContent({
           onClick={onClose}
           className="flex size-6 shrink-0 items-center justify-center"
         >
-          <Image src="/icons/arrow/left.svg" alt="" width={24} height={24} className="size-6" />
+          <Icon name="arrow/left" width={24} height={24} className="size-6" />
         </button>
         <SearchBox
           // autoFocus 금지 — 진입 모션이 끝난 뒤에 포커스를 준다 (issue #384).

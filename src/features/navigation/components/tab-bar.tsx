@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 import { SCREEN_BOTTOM_GAP } from "@/lib/constants/layout"
 import { TAB_ITEMS, findTabIndex } from "@/features/navigation/constants/tab-items"
@@ -38,12 +38,13 @@ const CONTAINER_PADDING = "0.25rem"
  *    탭바가 없다. z-index로 덮는 것만으로는 진입·퇴장 모션 중과 키보드가 올라와 오버레이
  *    박스가 줄어들 때(`--keyboard-inset`), 그리고 반투명 backdrop 뒤로 그대로 비친다.
  *
- *    단, 이 조건은 **언마운트가 아니라 숨김**으로 건다(issue #458). 언마운트하면 오버레이가
- *    닫힐 때 탭 아이콘 8장(`next/image` → `images.unoptimized`라 소재 그대로의 `<img>`)이
- *    새 엘리먼트로 다시 생성되고, 그 페인트가 비동기라 pill·라벨은 즉시 뜨는데 아이콘만
- *    한두 프레임 늦게 나타난다 — "아이콘이 사라졌다 다시 뜨는" 깜빡임의 정체다.
- *    (서비스워커가 낀 PWA에서는 캐시 히트여도 fetch가 비동기라 더 잘 보인다.)
- *    `opacity-0`으로 숨기면 이미 디코드된 `<img>`가 그대로 살아 있어 복귀가 즉시다.
+ *    단, 이 조건은 **언마운트가 아니라 숨김**으로 건다(issue #458). 원래는 언마운트 시
+ *    탭 아이콘 8장(`next/image` → `images.unoptimized`라 소재 그대로의 `<img>`)이 새
+ *    엘리먼트로 다시 생성되고 그 페인트가 비동기라 아이콘만 한두 프레임 늦게 나타나는
+ *    문제였다. issue #470에서 아이콘을 스프라이트(`Icon`, `<use>` 참조)로 옮겨 그 근본
+ *    원인은 없어졌지만, `opacity-0` 숨김 자체는 유지한다 — 언마운트·재마운트가 반복되면
+ *    `useMe` 등 안쪽 훅도 다시 초기화되어 불필요한 리렌더가 생기고, pill 슬라이딩처럼
+ *    인스턴스 유지가 전제인 애니메이션(위 #280)에도 더 안전하다.
  *
  * 경로·오버레이 판정을 먼저 하고 세션 조회를 안쪽 컴포넌트로 미루는 이유: 탭 경로가 아닌
  * 화면(`/login` 등)에서 `useMe` 요청이 새로 발생하지 않게 하기 위해서다.
@@ -137,10 +138,9 @@ function TabBarNav({
                 {/* line/fill 두 장을 겹쳐 두고 opacity를 교차시켜 pill과 같은 타이밍으로 크로스페이드 */}
                 <div className="relative size-5">
                   {ICON_VARIANTS.map(({ variant, activeVariant }) => (
-                    <Image
+                    <Icon
                       key={variant}
-                      src={`/icons/tab-bar/${item.icon}-${variant}.svg`}
-                      alt=""
+                      name={`tab-bar/${item.icon}-${variant}`}
                       width={20}
                       height={20}
                       className={cn(

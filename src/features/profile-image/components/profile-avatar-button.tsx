@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { NoImageProfile } from "@/components/ui/no-image"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -40,7 +40,7 @@ function ProfileAvatarButton({ previewUrl, onFileSelected, className }: ProfileA
           onClick={() => fileInputRef.current?.click()}
           className="absolute right-0 bottom-0 flex aspect-square size-8 items-center justify-center rounded-full border-[3px] border-white bg-gray-400"
         >
-          <Image src="/icons/chat/camera-line.svg" alt="" width={16} height={16} className="size-4 invert" />
+          <Icon name="chat/camera-line" width={16} height={16} className="size-4 invert" />
         </button>
       </div>
 

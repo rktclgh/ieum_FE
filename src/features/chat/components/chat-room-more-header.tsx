@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
@@ -45,7 +45,7 @@ function ChatRoomMoreHeader({
         onClick={onBack}
         className="flex size-6 shrink-0 items-center justify-center"
       >
-        <Image src="/icons/arrow/left.svg" alt="" width={24} height={24} className="size-6" />
+        <Icon name="arrow/left" width={24} height={24} className="size-6" />
       </button>
       {(showNotificationAction || showPinAction) && (
         <div className="flex items-center gap-3">
@@ -63,9 +63,8 @@ function ChatRoomMoreHeader({
               onClick={onToggleNotification}
               className="flex size-6 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Image
-                src={notificationOn ? "/icons/chat/alarm-on.svg" : "/icons/chat/alarm-off.svg"}
-                alt=""
+              <Icon
+                name={notificationOn ? "chat/alarm-on" : "chat/alarm-off"}
                 width={24}
                 height={24}
                 className="size-6"
@@ -82,9 +81,8 @@ function ChatRoomMoreHeader({
               onClick={onTogglePin}
               className="flex size-6 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Image
-                src={pinned ? "/icons/chat/pin-on.svg" : "/icons/chat/pin-off.svg"}
-                alt=""
+              <Icon
+                name={pinned ? "chat/pin-on" : "chat/pin-off"}
                 width={24}
                 height={24}
                 className="size-6"

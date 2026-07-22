@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
 import { cn } from "@/lib/utils"
 import { ClearButton } from "@/components/ui/clear-button"
+import { Icon } from "@/components/ui/icon"
 
 interface SearchBoxProps extends React.ComponentProps<"input"> {
   /** flat: 그림자·아웃라인 없이 Gray-50 배경으로 고정 (채팅목록 · 친구목록) */
@@ -49,7 +49,7 @@ function SearchBox({
         className
       )}
     >
-      <Image src="/icons/search-bar/search.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
+      <Icon name="search-bar/search" width={20} height={20} className="size-5 shrink-0" />
       <input
         ref={attachRef}
         defaultValue={defaultValue}
