@@ -16,6 +16,8 @@ export interface SheetKeyboardGeometry {
   visualHeight: number
   /** `visualViewport.offsetTop`. 레이아웃 뷰포트 안에서 가시 밴드가 내려간 거리. */
   visualOffsetTop: number
+  /** iOS가 입력을 보이게 하려고 문서를 강제 스크롤한 현재 위치. */
+  documentScrollY?: number
   /** `visualViewport.scale`. 핀치 줌 중에는 계산을 포기한다. */
   scale: number
   /** 시트 Viewport 박스의 바닥 — `getBoundingClientRect().bottom`(레이아웃 뷰포트 좌표계). */
@@ -29,7 +31,14 @@ export interface SheetKeyboardGeometry {
  * 뷰포트 단위도, 기기 상수도, "iOS가 얼마나 스크롤했는가"에 대한 가정도 쓰지 않는다.
  */
 export function resolveSheetKeyboardInset(geometry: SheetKeyboardGeometry): number {
-  const { layoutHeight, visualHeight, visualOffsetTop, scale, sheetBottom } = geometry
+  const {
+    layoutHeight,
+    visualHeight,
+    visualOffsetTop,
+    documentScrollY = 0,
+    scale,
+    sheetBottom,
+  } = geometry
 
   // 핀치 줌 중에는 visualViewport.height가 배율만큼 줄어 키보드가 없어도 큰 값이 나온다.
   // 전역 인셋·base-ui와 같은 정책으로 0으로 되돌린다(줌 아웃하면 다음 이벤트가 복구한다).
@@ -39,5 +48,10 @@ export function resolveSheetKeyboardInset(geometry: SheetKeyboardGeometry): numb
   // `innerHeight - visualHeight`는 iOS에서 둘이 같이 줄어 0이 되는 공식이라 쓰지 않는다(#431 실측).
   if (layoutHeight - visualHeight <= KEYBOARD_RESIZE_THRESHOLD) return 0
 
-  return Math.max(0, Math.round(sheetBottom - (visualOffsetTop + visualHeight)))
+  // iOS는 포커스 직후 문서를 먼저 스크롤하고 visualViewport.offsetTop 이벤트를 다음 프레임에
+  // 내보낼 수 있다. 지연된 0을 그대로 쓰면 438px처럼 키보드 높이를 이중으로 더해 시트가
+  // 화면 상단으로 튄다. 둘은 같은 레이아웃 좌표계이므로 앞선 값을 사용한다.
+  const visibleTop = Math.max(visualOffsetTop, documentScrollY)
+
+  return Math.max(0, Math.round(sheetBottom - (visibleTop + visualHeight)))
 }
