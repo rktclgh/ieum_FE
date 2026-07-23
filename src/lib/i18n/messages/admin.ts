@@ -175,6 +175,13 @@ interface AdminMessages {
     titleField: string
     body: string
     bodyPreview: string
+    status: string
+    active: string
+    deleted: string
+    resolved: string
+    unresolved: string
+    participantCount: string
+    noParticipants: string
     invalidId: string
     invalidTitle: string
     invalidContent: string
@@ -437,6 +444,13 @@ const adminKo: AdminMessages = {
     titleField: "제목",
     body: "본문",
     bodyPreview: "본문 미리보기",
+    status: "상태",
+    active: "활성",
+    deleted: "삭제됨",
+    resolved: "해결됨",
+    unresolved: "미해결",
+    participantCount: "참여자 수",
+    noParticipants: "해당 없음",
     invalidId: "1 이상의 정수 ID를 입력해 주세요.",
     invalidTitle: "제목을 1자 이상 200자 이하로 입력해 주세요.",
     invalidContent: "본문을 1자 이상 5000자 이하로 입력해 주세요.",
@@ -699,6 +713,13 @@ const adminEn: AdminMessages = {
     titleField: "Title",
     body: "Body",
     bodyPreview: "Body preview",
+    status: "Status",
+    active: "Active",
+    deleted: "Deleted",
+    resolved: "Resolved",
+    unresolved: "Unresolved",
+    participantCount: "Participants",
+    noParticipants: "Not applicable",
     invalidId: "Enter a positive integer ID.",
     invalidTitle: "Enter a title between 1 and 200 characters.",
     invalidContent: "Enter body text between 1 and 5000 characters.",

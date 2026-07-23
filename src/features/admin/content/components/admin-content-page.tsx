@@ -12,6 +12,11 @@ import {
   useDeleteAdminContent,
   useUpdateAdminContent,
 } from "@/features/admin/content/hooks/use-admin-content-hard-delete"
+import {
+  formatParticipantCount,
+  getContentStatusLabel,
+  getResolvedLabel,
+} from "@/features/admin/content/lib/admin-content-labels"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
 import { getApiErrorMessage } from "@/lib/api/errors"
 import type { AdminMessages } from "@/lib/i18n/messages/admin"
@@ -68,6 +73,7 @@ function AdminContentPage() {
     timeStyle: "short",
     timeZone: "Asia/Seoul",
   })
+  const numberFormatter = new Intl.NumberFormat(language)
 
   return (
     <section aria-labelledby="admin-content-title" className="space-y-6">
@@ -136,6 +142,9 @@ function AdminContentPage() {
                   <th scope="col" className="px-4 py-3">ID</th>
                   <th scope="col" className="px-4 py-3">{messages.admin.content.type}</th>
                   <th scope="col" className="px-4 py-3">{messages.admin.content.titleField}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.content.status}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.content.resolved}</th>
+                  <th scope="col" className="px-4 py-3">{messages.admin.content.participantCount}</th>
                   <th scope="col" className="px-4 py-3">{messages.admin.content.author}</th>
                   <th scope="col" className="px-4 py-3">{messages.admin.content.createdAt}</th>
                   <th scope="col" className="px-4 py-3">{messages.admin.content.updatedAt}</th>
@@ -151,6 +160,15 @@ function AdminContentPage() {
                       {getContentTypeLabel(item.contentType, messages)}
                     </td>
                     <td className="max-w-96 truncate px-4 py-3">{item.title}</td>
+                    <td className="px-4 py-3">
+                      {getContentStatusLabel(item.status, messages)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {getResolvedLabel(item.resolved, messages)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {formatParticipantCount(item.participantCount, numberFormatter, messages)}
+                    </td>
                     <td className="px-4 py-3">
                       {item.authorNickname} #{item.authorId}
                     </td>
@@ -230,6 +248,7 @@ function AdminContentDetailPage({
     timeStyle: "short",
     timeZone: "Asia/Seoul",
   })
+  const numberFormatter = new Intl.NumberFormat(language)
   const detail = detailQuery.data
   const currentDraft = {
     title: draft.title ?? detail?.title ?? "",
@@ -338,6 +357,30 @@ function AdminContentDetailPage({
           {messages.admin.content.preview}
         </h2>
         <dl className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="space-y-1 rounded-xl bg-gray-50 p-4">
+            <dt className="text-body-medium-14 text-gray-600">
+              {messages.admin.content.status}
+            </dt>
+            <dd className="break-words text-body-regular-14 text-gray-900">
+              {getContentStatusLabel(detail.status, messages)}
+            </dd>
+          </div>
+          <div className="space-y-1 rounded-xl bg-gray-50 p-4">
+            <dt className="text-body-medium-14 text-gray-600">
+              {messages.admin.content.resolved}
+            </dt>
+            <dd className="break-words text-body-regular-14 text-gray-900">
+              {getResolvedLabel(detail.resolved, messages)}
+            </dd>
+          </div>
+          <div className="space-y-1 rounded-xl bg-gray-50 p-4">
+            <dt className="text-body-medium-14 text-gray-600">
+              {messages.admin.content.participantCount}
+            </dt>
+            <dd className="break-words text-body-regular-14 text-gray-900">
+              {formatParticipantCount(detail.participantCount, numberFormatter, messages)}
+            </dd>
+          </div>
           <div className="space-y-1 rounded-xl bg-gray-50 p-4">
             <dt className="text-body-medium-14 text-gray-600">
               {messages.admin.content.author}

@@ -330,6 +330,13 @@ type ExpectedAdminMessages = {
     | "titleField"
     | "body"
     | "bodyPreview"
+    | "status"
+    | "active"
+    | "deleted"
+    | "resolved"
+    | "unresolved"
+    | "participantCount"
+    | "noParticipants"
     | "invalidId"
     | "invalidTitle"
     | "invalidContent"
@@ -515,11 +522,12 @@ const expectedAdminMessageKeys = {
     "convergenceError", "createdAt", "invalidAnswer", "missingUser", "pending", "answered", "status", "subject", "title", "userEmail",
   ],
   content: [
-    "author", "backToList", "body", "bodyPreview", "confirmation", "contentId", "createdAt", "deletedAt",
-    "deleteConfirmDescription", "deleteConfirmTitle", "deleteDescription", "deleteSection", "deleteSuccess",
-    "description", "detailTitle", "edit", "hardDelete", "invalidContent", "invalidId", "invalidTitle",
-    "listTitle", "loadPreview", "meeting", "notDeleted", "openDetail", "preview", "question", "requiredToken",
-    "reset", "search", "title", "titleField", "type", "updatedAt", "updateSuccess",
+    "active", "author", "backToList", "body", "bodyPreview", "confirmation", "contentId", "createdAt",
+    "deleted", "deletedAt", "deleteConfirmDescription", "deleteConfirmTitle", "deleteDescription",
+    "deleteSection", "deleteSuccess", "description", "detailTitle", "edit", "hardDelete", "invalidContent",
+    "invalidId", "invalidTitle", "listTitle", "loadPreview", "meeting", "noParticipants", "notDeleted",
+    "openDetail", "participantCount", "preview", "question", "requiredToken", "reset", "resolved", "search",
+    "status", "title", "titleField", "type", "unresolved", "updatedAt", "updateSuccess",
   ],
   knowledge: [
     "answerContent", "answerId", "approve", "backToList", "chunk", "chunkContent", "confidence", "conflictRefreshed",

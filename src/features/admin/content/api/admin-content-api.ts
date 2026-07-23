@@ -1,8 +1,11 @@
 import { apiClient } from "@/lib/api/client"
 import { compactQuery } from "@/features/admin/shared/lib/admin-query"
+import { toAdminContentListPath } from "@/features/admin/content/lib/admin-content-path"
 import type { CursorPage } from "@/features/admin/shared/types/admin-types"
 
 type AdminContentType = "question" | "meeting"
+type AdminContentListPath = "questions" | "meetings"
+type AdminContentStatus = "active" | "deleted"
 
 interface AdminContentListItem {
   contentType: AdminContentType
@@ -10,6 +13,9 @@ interface AdminContentListItem {
   title: string
   authorNickname: string
   authorId: number
+  resolved: boolean
+  status: AdminContentStatus
+  participantCount: number | null
   createdAt: string
   updatedAt: string
   deletedAt: string | null
@@ -34,7 +40,7 @@ async function getAdminContents(
   params: AdminContentListParams,
 ): Promise<CursorPage<AdminContentListItem>> {
   const response = await apiClient.get<CursorPage<AdminContentListItem>>(
-    `/api/v1/admin/content/${params.type}`,
+    `/api/v1/admin/content/${toAdminContentListPath(params.type)}`,
     {
       params: compactQuery({
         cursor: params.cursor,
@@ -87,6 +93,8 @@ export type {
   AdminContentDetail,
   AdminContentListItem,
   AdminContentListParams,
+  AdminContentListPath,
+  AdminContentStatus,
   AdminContentType,
   AdminContentUpdateRequest,
 }

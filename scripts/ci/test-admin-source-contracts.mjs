@@ -1735,6 +1735,46 @@ test("admin content detail hard delete blocks duplicate same-tick submissions", 
   assert.doesNotMatch(source, /aria-busy=\{deleteMutation\.isPending \|\| undefined\}/)
 })
 
+test("admin content API uses plural list paths and exposes status metadata", () => {
+  const source = readSource("src/features/admin/content/api/admin-content-api.ts")
+  const pathSource = readSource("src/features/admin/content/lib/admin-content-path.ts")
+  const compactPath = compactSource(pathSource)
+  const compact = compactSource(source)
+  const listSource = compactSource(asyncFunctionSource(source, "getAdminContents"))
+
+  assert.match(source, /type AdminContentListPath = "questions" \| "meetings"/)
+  assert.match(source, /type AdminContentStatus = "active" \| "deleted"/)
+  assert.match(source, /resolved: boolean/)
+  assert.match(source, /status: AdminContentStatus/)
+  assert.match(source, /participantCount: number \| null/)
+  assert.match(
+    compactPath,
+    /function toAdminContentListPath\(type: AdminContentType\): AdminContentListPath \{ return type === "question" \? "questions" : "meetings" \}/,
+  )
+  assert.match(compact, /import \{ toAdminContentListPath \} from/)
+  assert.match(
+    listSource,
+    /apiClient\.get<CursorPage<AdminContentListItem>>\( `\/api\/v1\/admin\/content\/\$\{toAdminContentListPath\(params\.type\)\}`/,
+  )
+  assert.doesNotMatch(listSource, /`\/api\/v1\/admin\/content\/\$\{params\.type\}`/)
+})
+
+test("admin content page renders backend status metadata in list and detail", () => {
+  const source = readSource(
+    "src/features/admin/content/components/admin-content-page.tsx",
+  )
+
+  assert.match(source, /messages\.admin\.content\.status/)
+  assert.match(source, /messages\.admin\.content\.resolved/)
+  assert.match(source, /messages\.admin\.content\.participantCount/)
+  assert.match(source, /getContentStatusLabel\(item\.status, messages\)/)
+  assert.match(source, /getResolvedLabel\(item\.resolved, messages\)/)
+  assert.match(source, /formatParticipantCount\(item\.participantCount, numberFormatter, messages\)/)
+  assert.match(source, /getContentStatusLabel\(detail\.status, messages\)/)
+  assert.match(source, /getResolvedLabel\(detail\.resolved, messages\)/)
+  assert.match(source, /formatParticipantCount\(detail\.participantCount, numberFormatter, messages\)/)
+})
+
 test("admin dashboard overview owns one query, accessible charts, and cached retry", () => {
   assertAdminStatsOverviewContract({
     apiSource: readSource("src/features/admin/dashboard/api/admin-stats-api.ts"),
