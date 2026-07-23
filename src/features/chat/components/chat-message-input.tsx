@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
@@ -83,7 +83,7 @@ function ChatMessageInput({
         disabled={disabled}
         className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <Image src="/icons/chat/camera-fill.svg" alt="" width={20} height={20} className="size-5" />
+        <Icon name="chat/camera-fill" width={20} height={20} className="size-5" />
       </button>
       <MessageTextarea
         ref={inputRef}
@@ -102,7 +102,7 @@ function ChatMessageInput({
         disabled={disabled}
         className="size-8 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <Image src="/icons/chat/send-button.svg" alt="" width={32} height={32} className="size-8" />
+        <Icon name="chat/send-button" width={32} height={32} className="size-8" />
       </button>
     </div>
   )
@@ -112,7 +112,7 @@ function ChatMessageInput({
   return (
     <div className="flex flex-col gap-1 rounded-2xl bg-gray-50/95 p-2 shadow-[0px_2px_4px_0px_rgba(0,0,0,0.1)]">
       <div className="flex min-w-0 items-center gap-2 px-2 pt-1">
-        <Image src="/icons/chat/respond.svg" alt="" width={18} height={18} className="size-[18px] shrink-0" />
+        <Icon name="chat/respond" width={18} height={18} className="size-[18px] shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-body-regular-12 text-gray-400">{replyPreview.label}</p>
           <div className="flex min-w-0 items-center gap-1">

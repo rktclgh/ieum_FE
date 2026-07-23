@@ -80,7 +80,7 @@ function MeetupLocationSearch({
         {places?.map((place: Place) => (
           <LocationListItem
             key={`place-${place.id}`}
-            iconSrc="/icons/write/location-list.svg"
+            iconSrc="write/location-list"
             title={<HighlightedText text={place.name} query={apiQuery} />}
             subtitle={place.address}
             actionLabel={t.selectButton}
@@ -94,7 +94,7 @@ function MeetupLocationSearch({
           return (
             <LocationListItem
               key={`addr-${primary}-${index}`}
-              iconSrc="/icons/write/location-plus.svg"
+              iconSrc="write/location-plus"
               title={<HighlightedText text={primary} query={apiQuery} />}
               subtitle={secondary}
               actionLabel={t.createPlaceButton}

@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import type { NotificationEntry } from "@/features/notification/lib/notification-adapter"
 import { formatRelativeTime } from "@/features/question/lib/question-time"
 import { cn } from "@/lib/utils"
@@ -76,7 +76,7 @@ function NotificationItem({ entry, onOpen, deleteMode, onDelete }: NotificationI
           onClick={onDelete}
           className="absolute top-[15px] right-4 flex size-5 items-center justify-center rounded-full"
         >
-          <Image src="/icons/app-bar/close.svg" alt="" width={20} height={20} className="size-5" />
+          <Icon name="app-bar/close" width={20} height={20} className="size-5" />
         </button>
       )}
     </div>

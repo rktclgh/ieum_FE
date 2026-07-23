@@ -29,7 +29,7 @@ function LanguageSettingItem({ settings }: { settings: UserSettings }) {
       confirmLabel={messages.languagePicker.confirm}
       renderTrigger={
         <button type="button" className="w-full transition-colors active:bg-gray-100">
-          <MyMenuRow icon="/icons/my/global.svg" label={messages.my.menu.language} />
+          <MyMenuRow icon="my/global" label={messages.my.menu.language} />
         </button>
       }
     />

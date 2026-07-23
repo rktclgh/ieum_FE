@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { Download, Globe } from "lucide-react"
@@ -9,6 +8,7 @@ import { Download, Globe } from "lucide-react"
 import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Icon } from "@/components/ui/icon"
 import { Toast, ToastPill } from "@/components/ui/toast"
 import {
   SidePanel,
@@ -64,6 +64,10 @@ import {
   isActiveRoomRemoval,
   removeRoomFromAllLoadedListCaches,
 } from "@/features/chat/lib/chat-room-event"
+import {
+  navigateChatRoomBack,
+  type ChatRoomEntry,
+} from "@/features/chat/lib/chat-room-navigation"
 import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
 import { uploadChatImage } from "@/features/chat/api/chat-file-api"
 import {
@@ -228,6 +232,7 @@ function MessageRow({
 
 interface ChatRoomPageContentProps {
   roomId: number
+  entry: ChatRoomEntry
 }
 
 interface ChatRoomSessionContentProps extends ChatRoomPageContentProps {
@@ -265,7 +270,7 @@ function mergeMessages(base: ChatMessageView[], live: ChatMessageView[]): ChatMe
   })
 }
 
-function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps) {
+function ChatRoomSessionContent({ roomId, entry, session }: ChatRoomSessionContentProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { messages } = useTranslation()
@@ -298,6 +303,10 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const [messageDraft, setMessageDraft] = React.useState("")
   const [confirmLeaveOpen, setConfirmLeaveOpen] = React.useState(false)
   const [confirmDisbandOpen, setConfirmDisbandOpen] = React.useState(false)
+
+  const handleBack = React.useCallback(() => {
+    navigateChatRoomBack(entry, router)
+  }, [entry, router])
   const [kickTarget, setKickTarget] = React.useState<GroupChatMemberListItem | null>(null)
   const [socketError, setSocketError] = React.useState<string | null>(null)
 
@@ -737,7 +746,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     const items: ChatContextMenuItem[] = []
     if (canReplyToMessage(message)) {
       items.push({
-        icon: <Image src="/icons/chat/respond.svg" alt="" width={24} height={24} />,
+        icon: <Icon name="chat/respond" width={24} height={24} />,
         label: messages.chat.replyAction,
         onClick: () => {
           setSelectedReply(replyTargetFromMessage(message))
@@ -759,7 +768,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     }
     if (session.authenticated && !message.pending && message.hasText && text?.trim()) {
       items.push({
-        icon: <Image src="/icons/chat/notification.svg" alt="" width={24} height={24} />,
+        icon: <Icon name="chat/notification" width={24} height={24} />,
         label: messages.chat.registerAsNoticeAction,
         disabled: registerNoticeMutation.isPending,
         onClick: () => {
@@ -778,7 +787,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
     // 내가 쓴 글은 내가 신고할 대상이 아니므로 항목 자체를 노출하지 않는다. (issue #452)
     if (canReportMessage(message)) {
       items.push({
-        icon: <Image src="/icons/chat/alert.svg" alt="" width={24} height={24} />,
+        icon: <Icon name="chat/alert" width={24} height={24} />,
         label: messages.chat.reportAction,
         tone: "destructive",
         onClick: () => {
@@ -797,7 +806,7 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
       <Screen kind="fixed" as="main" className="bg-white">
         <AppBar
           title={roomTitle}
-          onLeadingClick={() => router.back()}
+          onLeadingClick={handleBack}
           trailingIcon={session.authenticated ? undefined : null}
           onTrailingClick={session.authenticated ? () => setMoreOpen(true) : undefined}
           className={!visiblePinnedNoticeText ? "border-b border-gray-50 bg-white" : undefined}
@@ -1156,13 +1165,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   )
 }
 
-function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
+function ChatRoomPageContent({ roomId, entry }: ChatRoomPageContentProps) {
   const session = useChatSessionAccess(roomId)
 
   return (
     <ChatRoomSessionContent
       key={session.scopeKey}
       roomId={roomId}
+      entry={entry}
       session={session}
     />
   )

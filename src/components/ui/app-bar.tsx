@@ -1,15 +1,15 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 import { APP_BAR_SAFE_TOP } from "@/lib/constants/layout"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
-const TRAILING_ICON_SRC = {
-  more: "/icons/app-bar/more.svg",
-  close: "/icons/app-bar/close.svg",
+const TRAILING_ICON_NAME = {
+  more: "app-bar/more",
+  close: "app-bar/close",
 } as const
 
 interface AppBarProps extends React.ComponentProps<"div"> {
@@ -24,7 +24,7 @@ interface AppBarProps extends React.ComponentProps<"div"> {
    */
   centerTitle?: boolean
   /** 기본 trailing 아이콘 선택. `trailingIcon`이 주어지면 무시됨 */
-  trailingVariant?: keyof typeof TRAILING_ICON_SRC
+  trailingVariant?: keyof typeof TRAILING_ICON_NAME
   leadingIcon?: React.ReactNode | null
   trailingIcon?: React.ReactNode | null
   /**
@@ -73,9 +73,7 @@ function AppBar({
           onClick={onLeadingClick}
           className="flex size-6 shrink-0 items-center justify-center"
         >
-          {leadingIcon ?? (
-            <Image src="/icons/arrow/left.svg" alt="" width={24} height={24} className="size-6" />
-          )}
+          {leadingIcon ?? <Icon name="arrow/left" width={24} height={24} className="size-6" />}
         </button>
       )}
 
@@ -102,13 +100,7 @@ function AppBar({
           className="flex size-6 shrink-0 items-center justify-center"
         >
           {trailingIcon ?? (
-            <Image
-              src={TRAILING_ICON_SRC[trailingVariant]}
-              alt=""
-              width={24}
-              height={24}
-              className="size-6"
-            />
+            <Icon name={TRAILING_ICON_NAME[trailingVariant]} width={24} height={24} className="size-6" />
           )}
         </button>
       )}

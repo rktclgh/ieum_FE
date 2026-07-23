@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { Screen } from "@/components/layout/screen"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Icon } from "@/components/ui/icon"
 import { NoImageProfile } from "@/components/ui/no-image"
 import { CountryFlag } from "@/features/chat/components/country-flag"
 import { LanguageSettingItem } from "@/features/my/components/language-setting-item"
@@ -85,15 +85,15 @@ function MyPageContent() {
             )}
           </div>
 
-          <Link href={routes.myEdit()} className="flex items-center gap-2">
+          {/* 접근 가능한 이름은 링크 자체에 붙인다 — 연필 아이콘은 장식이라 Icon이 항상
+              aria-hidden이라서(다른 모든 아이콘과 동일하게) alt를 못 받는다. */}
+          <Link
+            href={routes.myEdit()}
+            aria-label={`${user.nickname} ${messages.my.editInfoLabel}`}
+            className="flex items-center gap-2"
+          >
             <span className="text-title-semibold-20 text-gray-900">{user.nickname}</span>
-            <Image
-              src="/icons/my/pencil.svg"
-              alt={messages.my.editInfoLabel}
-              width={16}
-              height={16}
-              className="size-4 shrink-0"
-            />
+            <Icon name="my/pencil" width={16} height={16} className="size-4 shrink-0" />
           </Link>
 
           {countryCode && (
@@ -108,23 +108,23 @@ function MyPageContent() {
               href={routes.myNotifications()}
               className="w-full transition-colors active:bg-gray-100"
             >
-              <MyMenuRow icon="/icons/my/bell.svg" label={messages.my.menu.notifications} />
+              <MyMenuRow icon="my/bell" label={messages.my.menu.notifications} />
             </Link>
             <Link
               href={routes.myPermissions()}
               className="w-full transition-colors active:bg-gray-100"
             >
-              <MyMenuRow icon="/icons/my/device.svg" label={messages.my.menu.permissions} />
+              <MyMenuRow icon="my/device" label={messages.my.menu.permissions} />
             </Link>
             <LanguageSettingItem settings={user.settings} />
             <Link
               href={routes.myInquiry()}
               className="w-full transition-colors active:bg-gray-100"
             >
-              <MyMenuRow icon="/icons/my/mail.svg" label={messages.my.menu.inquiry} />
+              <MyMenuRow icon="my/mail" label={messages.my.menu.inquiry} />
             </Link>
             <MyMenuRow
-              icon="/icons/my/information.svg"
+              icon="my/information"
               label={messages.my.menu.version}
               trailing={
                 <span className="text-body-regular-14 text-gray-400">{APP_VERSION}</span>

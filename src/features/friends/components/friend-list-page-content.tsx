@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 import { Screen } from "@/components/layout/screen"
 import { AppBar } from "@/components/ui/app-bar"
 import { SearchBox } from "@/components/ui/search-box"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Icon } from "@/components/ui/icon"
 import { FriendListSkeleton } from "@/features/friends/components/friend-list-skeleton"
 import { SectionTitle } from "@/features/chat/components/section-title"
 import { FriendRequestItem } from "@/features/friends/components/friend-request-item"
@@ -72,7 +72,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
   // 친구와의 1:1 방을 (없으면) 생성한 뒤 그 roomId로 이동한다. userId ≠ roomId.
   const handleStartChat = (friendId: number) => {
     createDirectRoom.mutate(friendId, {
-      onSuccess: (room) => router.push(routes.chatRoom(room.roomId)),
+      onSuccess: (room) => router.push(routes.chatRoom(room.roomId, "app")),
       onError: showError,
     })
   }
@@ -132,7 +132,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
 
   const friendMenuItems: ChatContextMenuItem[] = [
     {
-      icon: <Image src="/icons/chat/block.svg" alt="" width={24} height={24} />,
+      icon: <Icon name="chat/block" width={24} height={24} />,
       label: messages.chat.blockAction,
       tone: "destructive",
       onClick: () => {
@@ -141,7 +141,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
       },
     },
     {
-      icon: <Image src="/icons/chat/trash.svg" alt="" width={24} height={24} />,
+      icon: <Icon name="chat/trash" width={24} height={24} />,
       label: messages.chat.deleteAction,
       tone: "destructive",
       onClick: () => {

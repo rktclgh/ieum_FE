@@ -1,7 +1,6 @@
 "use client"
 
-import Image from "next/image"
-
+import { Icon } from "@/components/ui/icon"
 import type { SimilarQuestion } from "@/features/question/api/question-types"
 import { useTranslation } from "@/lib/i18n/use-translation"
 import { cn } from "@/lib/utils"
@@ -26,7 +25,7 @@ function SimilarQuestionsSection({ items, onSelect, className }: SimilarQuestion
   return (
     <div className={cn("flex flex-col gap-1 rounded-2xl bg-gray-50 py-3", className)}>
       <div className="flex items-center gap-1 px-4 py-1">
-        <Image src="/icons/map/question.svg" alt="" width={20} height={20} className="size-5" />
+        <Icon name="map/question" width={20} height={20} className="size-5" />
         <span className="text-body-medium-14 text-gray-900">{messages.question.similarTitle}</span>
       </div>
 
@@ -38,13 +37,7 @@ function SimilarQuestionsSection({ items, onSelect, className }: SimilarQuestion
           className="flex items-center justify-between px-4 py-2 text-left"
         >
           <span className="truncate text-body-medium-16 text-gray-900">{item.title}</span>
-          <Image
-            src="/icons/arrow/right.svg"
-            alt=""
-            width={20}
-            height={20}
-            className="size-5 shrink-0"
-          />
+          <Icon name="arrow/right" width={20} height={20} className="size-5 shrink-0" />
         </button>
       ))}
     </div>

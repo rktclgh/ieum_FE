@@ -31,7 +31,7 @@ function resolveNotificationRoute(type: string, refId: number | null): string | 
     normalized.includes("message") ||
     normalized.includes("room")
   ) {
-    return routes.chatRoom(refId)
+    return routes.chatRoom(refId, "app")
   }
   return null
 }

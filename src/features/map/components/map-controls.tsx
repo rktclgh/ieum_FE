@@ -28,14 +28,14 @@ function MapControls({
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <Circle
-        iconSrc="/icons/circle/location.svg"
-        activeIconSrc="/icons/circle/location-primary.svg"
+        iconSrc="circle/location"
+        activeIconSrc="circle/location-primary"
         active={isLocateActive}
         aria-label={messages.home.locateMeLabel}
         onClick={onRecenter}
       />
       <Circle
-        iconSrc="/icons/circle/list.svg"
+        iconSrc="circle/list"
         aria-label={messages.home.listViewLabel}
         onClick={onListView}
       />

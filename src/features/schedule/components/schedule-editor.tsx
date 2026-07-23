@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
 import { AppBar } from "@/components/ui/app-bar"
+import { Icon } from "@/components/ui/icon"
 import { FullScreenOverlay } from "@/components/ui/full-screen-overlay"
 import { Explanation } from "@/components/ui/text-field/explanation"
 import { Input } from "@/components/ui/text-field/input"
@@ -118,7 +118,7 @@ function ScheduleEditorContent({
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3">
         {/* 날짜는 캘린더에서 이미 고른 값이라 읽기 전용 — 생김새만 다른 필드와 맞춘다 */}
         <div className="flex h-[3.375rem] w-full items-center gap-2 rounded-2xl border border-gray-100 p-4">
-          <Image src="/icons/write/calendar-700.svg" alt="" width={20} height={20} className="size-5 shrink-0" />
+          <Icon name="write/calendar-700" width={20} height={20} className="size-5 shrink-0" />
           <span className="text-body-medium-16 text-gray-900">{formatDateValue(dateValue)}</span>
           <span className="ml-auto text-body-regular-12 text-gray-400">{t.dateLabel}</span>
         </div>
@@ -130,8 +130,8 @@ function ScheduleEditorContent({
         />
 
         <SelectField
-          iconSrc="/icons/write/clock-200.svg"
-          selectedIconSrc="/icons/write/clock-700.svg"
+          iconSrc="write/clock-200"
+          selectedIconSrc="write/clock-700"
           placeholder={t.timePlaceholder}
           value={timeValue}
           active={timePickerOpen}
@@ -139,8 +139,8 @@ function ScheduleEditorContent({
         />
 
         <SelectField
-          iconSrc="/icons/write/location-200.svg"
-          selectedIconSrc="/icons/write/location-700.svg"
+          iconSrc="write/location-200"
+          selectedIconSrc="write/location-700"
           placeholder={t.locationPlaceholder}
           value={place?.label ?? place?.address ?? null}
           active={locationPickerOpen}

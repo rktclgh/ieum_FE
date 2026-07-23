@@ -50,6 +50,16 @@ interface TranslateLongPressProps {
    * 캐러셀의 비활성 슬라이드에서 메뉴·딤이 남아 화면을 덮는 것을 막는다.
    */
   visible?: boolean
+  /**
+   * 번역 액션 뒤에도 메뉴와 리프트를 명시적 dismiss 전까지 유지한다.
+   * 기본값은 기존 화면의 즉시 닫힘 동작이다.
+   */
+  persistMenu?: boolean
+  /**
+   * 캐러셀의 활성 슬라이드가 일시적으로 바뀌어도 열린 메뉴와 리프트를 보존한다.
+   * 단일 상세 시트의 닫힘과는 다른 수명이라 `persistMenu`와 분리한다.
+   */
+  retainMenuOnInactive?: boolean
   children: (props: TranslateLongPressRenderProps) => React.ReactNode
 }
 
@@ -69,6 +79,8 @@ function TranslateLongPress({
   isAuthenticated = false,
   anchor = "self",
   visible = true,
+  persistMenu = false,
+  retainMenuOnInactive = false,
   children,
 }: TranslateLongPressProps) {
   const { messages } = useTranslation()
@@ -77,14 +89,15 @@ function TranslateLongPress({
   const [placement, setPlacement] = React.useState<"top" | "bottom">("bottom")
   const setSurfaceLifted = useLiftSurface()
 
-  // 렌더 중 상태 조정(React 권장 패턴) — 대상이 가려지면 effect 없이 즉시 메뉴를 닫는다.
-  if (!visible && menuOpen) setMenuOpen(false)
+  // 렌더 중 상태 조정(React 권장 패턴) — 일반 대상이 가려지면 effect 없이 즉시 메뉴를 닫는다.
+  // 캐러셀 카드만 active 전환 중에도 명시적 dismiss 전까지 유지한다.
+  if (!visible && menuOpen && !retainMenuOnInactive) setMenuOpen(false)
 
   // 표면 리프트 해제는 effect 로 미룬다. 표면은 다른 컴포넌트라 렌더 중에 상태를 바꿀 수 없다.
   // 없으면 캐러셀에서 슬라이드를 넘겼을 때 메뉴만 닫히고 카드는 떠오른 채로 굳는다.
   React.useEffect(() => {
-    if (!visible) setSurfaceLifted(false)
-  }, [visible, setSurfaceLifted])
+    if (!visible && !retainMenuOnInactive) setSurfaceLifted(false)
+  }, [visible, retainMenuOnInactive, setSurfaceLifted])
 
   const openMenu = (open: boolean) => {
     setMenuOpen(open)
@@ -114,7 +127,7 @@ function TranslateLongPress({
           onClick: () => {
             titleTranslate.toggle()
             bodyTranslate.toggle()
-            openMenu(false)
+            if (!persistMenu) openMenu(false)
           },
         },
       ]

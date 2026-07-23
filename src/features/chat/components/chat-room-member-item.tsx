@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/lib/utils"
 import { ChatProfile } from "@/features/chat/components/chat-profile"
 import { CountryFlag } from "@/features/chat/components/country-flag"
@@ -53,7 +53,7 @@ function ChatRoomMemberItem({
             )}
             <span className={cn("text-gray-900", isMe ? "text-title-semibold-16" : "text-body-medium-16")}>{name}</span>
             {isOwner && (
-              <Image src="/icons/chat/crown.svg" alt="" width={20} height={20} className="size-5" />
+              <Icon name="chat/crown" width={20} height={20} className="size-5" />
             )}
           </div>
           {countryCode && (
