@@ -67,6 +67,7 @@ function useSheetKeyboardInset(): (node: HTMLElement | null) => void {
         layoutHeight: root.clientHeight,
         visualHeight: viewport.height,
         visualOffsetTop: viewport.offsetTop,
+        documentScrollY: window.scrollY,
         scale: viewport.scale,
         sheetBottom: node.getBoundingClientRect().bottom,
       })

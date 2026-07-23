@@ -64,7 +64,10 @@ import {
   isActiveRoomRemoval,
   removeRoomFromAllLoadedListCaches,
 } from "@/features/chat/lib/chat-room-event"
-import { navigateChatRoomBack } from "@/features/chat/lib/chat-room-navigation"
+import {
+  navigateChatRoomBack,
+  type ChatRoomEntry,
+} from "@/features/chat/lib/chat-room-navigation"
 import { useChatRoomSocket } from "@/features/chat/lib/chat-socket"
 import { uploadChatImage } from "@/features/chat/api/chat-file-api"
 import {
@@ -229,6 +232,7 @@ function MessageRow({
 
 interface ChatRoomPageContentProps {
   roomId: number
+  entry: ChatRoomEntry
 }
 
 interface ChatRoomSessionContentProps extends ChatRoomPageContentProps {
@@ -266,7 +270,7 @@ function mergeMessages(base: ChatMessageView[], live: ChatMessageView[]): ChatMe
   })
 }
 
-function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps) {
+function ChatRoomSessionContent({ roomId, entry, session }: ChatRoomSessionContentProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { messages } = useTranslation()
@@ -301,8 +305,8 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   const [confirmDisbandOpen, setConfirmDisbandOpen] = React.useState(false)
 
   const handleBack = React.useCallback(() => {
-    navigateChatRoomBack(window.history.length, router)
-  }, [router])
+    navigateChatRoomBack(entry, router)
+  }, [entry, router])
   const [kickTarget, setKickTarget] = React.useState<GroupChatMemberListItem | null>(null)
   const [socketError, setSocketError] = React.useState<string | null>(null)
 
@@ -1161,13 +1165,14 @@ function ChatRoomSessionContent({ roomId, session }: ChatRoomSessionContentProps
   )
 }
 
-function ChatRoomPageContent({ roomId }: ChatRoomPageContentProps) {
+function ChatRoomPageContent({ roomId, entry }: ChatRoomPageContentProps) {
   const session = useChatSessionAccess(roomId)
 
   return (
     <ChatRoomSessionContent
       key={session.scopeKey}
       roomId={roomId}
+      entry={entry}
       session={session}
     />
   )

@@ -45,10 +45,14 @@ const routes = {
   adminUsers: () => "/admin/users/",
   adminReports: () => "/admin/reports/",
   adminInquiries: () => "/admin/inquiries/",
+  adminContent: () => "/admin/content/",
   adminKnowledge: () => "/admin/knowledge/",
   adminKnowledgeGraph: () => "/admin/knowledge/graph/",
-  chatRoom: (chatId: number) =>
-    queryRoute("/chats/room/", { chatId: requirePositiveInteger(chatId, "chatId") }),
+  chatRoom: (chatId: number, entry?: "app") =>
+    queryRoute("/chats/room/", {
+      chatId: requirePositiveInteger(chatId, "chatId"),
+      ...(entry === "app" ? { entry } : {}),
+    }),
   chatNotices: (chatId: number) =>
     queryRoute("/chats/notices/", { chatId: requirePositiveInteger(chatId, "chatId") }),
   chatReport: (chatId: number, messageId: number, target?: string) =>

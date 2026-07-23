@@ -1628,7 +1628,7 @@ test("disabled credential fields also disable their auxiliary controls", () => {
   )
 })
 
-test("the admin shell has six fixed destinations, prefix current-page semantics, and logout", () => {
+test("the admin shell has seven fixed destinations, prefix current-page semantics, and logout", () => {
   const source = readSource("src/features/admin/shared/components/admin-shell.tsx")
 
   for (const route of [
@@ -1638,11 +1638,13 @@ test("the admin shell has six fixed destinations, prefix current-page semantics,
     "adminInquiries",
     "adminKnowledge",
     "adminKnowledgeGraph",
+    "adminContent",
   ]) {
     assert.match(source, new RegExp(`routes\\.${route}\\(\\)`))
   }
   assert.match(source, /messages\.admin\.navigation\.operations/)
   assert.match(source, /messages\.admin\.navigation\.review/)
+  assert.match(source, /messages\.admin\.navigation\.content/)
   assert.doesNotMatch(source, /routes\.adminLogin\(\)/)
   assert.match(source, /function isAdminNavCurrent\(/)
   assert.match(source, /pathname === href/)
@@ -1689,6 +1691,48 @@ test("ConfirmDialog can disable confirmation without making the prop required", 
 
   assert.match(source, /confirmDisabled\?: boolean/)
   assert.match(source, /disabled=\{confirmDisabled\}/)
+})
+
+test("admin content hard delete blocks duplicate same-tick submissions", () => {
+  const source = readSource(
+    "src/features/admin/content/components/admin-content-hard-delete-page.tsx",
+  )
+  const compact = compactSource(source)
+  const handler = compactSource(
+    boundedSource(
+      source,
+      "const handleDelete = () =>",
+      "\n  return (",
+    ),
+  )
+
+  assert.match(source, /const deleteSubmitLatch = React\.useRef\(false\)/)
+  assert.match(
+    source,
+    /const \[deleteSubmitBusy, setDeleteSubmitBusy\] = React\.useState\(false\)/,
+  )
+  assert.match(
+    compact,
+    /const deleteBusy = deleteSubmitBusy \|\| deleteMutation\.isPending/,
+  )
+  assert.match(
+    compact,
+    /preview !== undefined && confirmationToken === requiredToken && !deleteBusy/,
+  )
+  assertOrdered(handler, [
+    "if (loadedTarget === null || !canDelete || deleteSubmitLatch.current) return",
+    "deleteSubmitLatch.current = true",
+    "setDeleteSubmitBusy(true)",
+    "deleteMutation.mutate(",
+    "onSettled: () => {",
+    "deleteSubmitLatch.current = false",
+    "setDeleteSubmitBusy(false)",
+  ])
+  assert.equal((handler.match(/deleteMutation\.mutate\(/g) ?? []).length, 1)
+  assert.match(source, /disabled=\{!canDelete\}/)
+  assert.match(source, /aria-busy=\{deleteBusy \|\| undefined\}/)
+  assert.doesNotMatch(source, /disabled=\{deleteMutation\.isPending\}/)
+  assert.doesNotMatch(source, /aria-busy=\{deleteMutation\.isPending \|\| undefined\}/)
 })
 
 test("admin dashboard overview owns one query, accessible charts, and cached retry", () => {

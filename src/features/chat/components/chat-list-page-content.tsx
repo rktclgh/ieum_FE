@@ -234,7 +234,7 @@ function ChatListPageContent() {
               menuItems={menuItemsFor(chat)}
               onOpenMenu={() => setOpenMenuRoomId(chat.roomId)}
               onCloseMenu={() => setOpenMenuRoomId(null)}
-              onNavigate={() => router.push(routes.chatRoom(chat.roomId))}
+              onNavigate={() => router.push(routes.chatRoom(chat.roomId, "app"))}
             />
           ))}
           {!isLoading && filteredChats.length === 0 && (

@@ -46,6 +46,7 @@ test("fixed route builders preserve the static export path contract", () => {
       adminUsers: routes.adminUsers(),
       adminReports: routes.adminReports(),
       adminInquiries: routes.adminInquiries(),
+      adminContent: routes.adminContent(),
     },
     {
       home: "/",
@@ -66,6 +67,7 @@ test("fixed route builders preserve the static export path contract", () => {
       adminUsers: "/admin/users/",
       adminReports: "/admin/reports/",
       adminInquiries: "/admin/inquiries/",
+      adminContent: "/admin/content/",
     }
   )
 })
@@ -93,6 +95,10 @@ test("detail route builders produce the exact canonical query URLs", () => {
       adminReportDetail: "/admin/reports/detail/?reportId=9",
     }
   )
+})
+
+test("in-app chat-room navigation carries an explicit back-entry marker", () => {
+  assert.equal(routes.chatRoom(11, "app"), "/chats/room/?chatId=11&entry=app")
 })
 
 test("detail route builders reject invalid numeric input", () => {

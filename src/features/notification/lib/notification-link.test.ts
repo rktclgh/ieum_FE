@@ -22,8 +22,8 @@ test("모임 알림은 모임 상세로 딥링크한다", () => {
 })
 
 test("채팅 알림은 채팅방으로 딥링크한다", () => {
-  assert.equal(resolveNotificationRoute("chat", 7), "/chats/room/?chatId=7")
-  assert.equal(resolveNotificationRoute("NEW_CHAT_MESSAGE", 7), "/chats/room/?chatId=7")
+  assert.equal(resolveNotificationRoute("chat", 7), "/chats/room/?chatId=7&entry=app")
+  assert.equal(resolveNotificationRoute("NEW_CHAT_MESSAGE", 7), "/chats/room/?chatId=7&entry=app")
 })
 
 test("refId 가 필요한 타입은 refId 가 유효하지 않으면 이동하지 않는다", () => {
