@@ -4,7 +4,7 @@
 >
 > - 와이어프레임: [Figma – 신한해커톤 와이어프레임](https://www.figma.com/design/FPRPYHC1ukJph6hjRiyU0Z/?node-id=782-1049)
 > - 생성: 2026-07-02
-> - 최종 수정: 2026-07-15 (운영자 데스크톱 라우트 7개 + 전체 정적 export 인벤토리 동기화)
+> - 최종 수정: 2026-07-24 (운영자 콘텐츠 하드삭제 라우트 추가)
 
 ## 배포 및 URL 원칙
 
@@ -98,6 +98,7 @@
 | `/admin/reports/` | 신고 필터·목록 | `GET /api/v1/admin/reports` | `role=admin` protected gate + desktop-only |
 | `/admin/reports/detail/?reportId={reportId}` | 신고 증거 상세·확정·기각 | `GET /api/v1/admin/reports/{reportId}`, `POST /api/v1/admin/reports/{reportId}/confirm`, `POST /api/v1/admin/reports/{reportId}/dismiss` | `role=admin` protected gate + desktop-only |
 | `/admin/inquiries/` | 문의 목록·답변 | `GET /api/v1/admin/inquiries`, `POST /api/v1/admin/inquiries/{inquiryId}/answer` | `role=admin` protected gate + desktop-only |
+| `/admin/content/` | 질문·모임 하드삭제 | `GET /api/v1/admin/content/{type}/{id}`, `DELETE /api/v1/admin/content/{type}/{id}/hard` | `role=admin` protected gate + desktop-only |
 
 - 운영자 화면은 `1024px` 이상에서만 기능 UI를 mount한다. 더 작은 viewport에서는 `/api/v1/users/me` 인증 확인만 허용하고 `/api/v1/admin/**` 요청을 시작하지 않는다.
 - `userId`와 `reportId`는 positive safe integer query여야 한다. 상세 path literal은 `src/lib/navigation/routes.ts`의 route builder만 소유하며 런타임 `[userId]`·`[reportId]` 디렉터리를 만들지 않는다.

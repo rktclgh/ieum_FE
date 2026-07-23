@@ -35,14 +35,17 @@ function AdminContentHardDeletePage() {
   const [rawId, setRawId] = React.useState("")
   const [loadedTarget, setLoadedTarget] = React.useState<AdminContentTarget | null>(null)
   const [confirmationToken, setConfirmationToken] = React.useState("")
+  const deleteSubmitLatch = React.useRef(false)
+  const [deleteSubmitBusy, setDeleteSubmitBusy] = React.useState(false)
   const parsedId = parsePositiveInteger(rawId)
   const previewQuery = useAdminContentPreview(loadedTarget?.type ?? null, loadedTarget?.id ?? null)
   const deleteMutation = useDeleteAdminContent()
   const preview = previewQuery.data
   const requiredToken =
     loadedTarget === null ? "" : getAdminContentConfirmationToken(loadedTarget.type, loadedTarget.id)
+  const deleteBusy = deleteSubmitBusy || deleteMutation.isPending
   const canDelete =
-    preview !== undefined && confirmationToken === requiredToken && !deleteMutation.isPending
+    preview !== undefined && confirmationToken === requiredToken && !deleteBusy
 
   const handleLoadSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -53,7 +56,10 @@ function AdminContentHardDeletePage() {
   }
 
   const handleDelete = () => {
-    if (loadedTarget === null || !canDelete) return
+    if (loadedTarget === null || !canDelete || deleteSubmitLatch.current) return
+
+    deleteSubmitLatch.current = true
+    setDeleteSubmitBusy(true)
 
     deleteMutation.mutate(
       { type: loadedTarget.type, id: loadedTarget.id, confirmationToken },
@@ -62,6 +68,10 @@ function AdminContentHardDeletePage() {
           setLoadedTarget(null)
           setRawId("")
           setConfirmationToken("")
+        },
+        onSettled: () => {
+          deleteSubmitLatch.current = false
+          setDeleteSubmitBusy(false)
         },
       },
     )
@@ -91,6 +101,7 @@ function AdminContentHardDeletePage() {
             id="admin-content-type"
             className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-body-medium-14 text-gray-900 outline-none focus:border-primary"
             value={contentType}
+            disabled={deleteBusy}
             onChange={(event) => {
               setContentType(event.target.value as AdminContentType)
               setConfirmationToken("")
@@ -112,6 +123,7 @@ function AdminContentHardDeletePage() {
             pattern="[1-9][0-9]*"
             className="h-10 w-full rounded-lg border border-gray-200 px-3 text-body-medium-14 text-gray-900 outline-none focus:border-primary"
             value={rawId}
+            disabled={deleteBusy}
             onChange={(event) => {
               setRawId(event.target.value.trim())
               setConfirmationToken("")
@@ -131,8 +143,8 @@ function AdminContentHardDeletePage() {
             type="submit"
             variant="dark"
             size="md"
-            disabled={parsedId === null || previewQuery.isFetching}
-            aria-busy={previewQuery.isFetching || undefined}
+            disabled={parsedId === null || previewQuery.isFetching || deleteBusy}
+            aria-busy={previewQuery.isFetching || deleteBusy || undefined}
           >
             {messages.admin.content.loadPreview}
           </Button>
@@ -214,6 +226,7 @@ function AdminContentHardDeletePage() {
               id="admin-content-confirmation"
               className="h-10 w-full rounded-lg border border-gray-200 px-3 font-mono text-body-medium-14 text-gray-900 outline-none focus:border-destructive"
               value={confirmationToken}
+              disabled={deleteBusy}
               onChange={(event) => {
                 setConfirmationToken(event.target.value)
                 deleteMutation.reset()
@@ -227,7 +240,7 @@ function AdminContentHardDeletePage() {
             variant="destructive"
             size="md"
             disabled={!canDelete}
-            aria-busy={deleteMutation.isPending || undefined}
+            aria-busy={deleteBusy || undefined}
             onClick={handleDelete}
           >
             {messages.admin.content.hardDelete}
