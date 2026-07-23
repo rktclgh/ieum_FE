@@ -181,6 +181,7 @@ type ExpectedAdminMessages = {
     | "users"
     | "reports"
     | "inquiries"
+    | "content"
     | "knowledge"
     | "knowledgeGraph"
   >
@@ -316,6 +317,24 @@ type ExpectedAdminMessages = {
     | "answeredConflict"
     | "convergenceError"
   >
+  content: StringMessages<
+    | "title"
+    | "description"
+    | "type"
+    | "question"
+    | "meeting"
+    | "contentId"
+    | "invalidId"
+    | "loadPreview"
+    | "preview"
+    | "author"
+    | "createdAt"
+    | "deletedAt"
+    | "notDeleted"
+    | "requiredToken"
+    | "confirmation"
+    | "hardDelete"
+  >
   knowledge: StringMessages<
     | "title"
     | "status"
@@ -387,10 +406,11 @@ const adminMessageTypeContracts: [
   Expect<Exact<keyof AdminMessages["users"], keyof ExpectedAdminMessages["users"]>>,
   Expect<Exact<keyof AdminMessages["reports"], keyof ExpectedAdminMessages["reports"]>>,
   Expect<Exact<keyof AdminMessages["inquiries"], keyof ExpectedAdminMessages["inquiries"]>>,
+  Expect<Exact<keyof AdminMessages["content"], keyof ExpectedAdminMessages["content"]>>,
   Expect<Exact<keyof AdminMessages["knowledge"], keyof ExpectedAdminMessages["knowledge"]>>,
   Expect<Exact<typeof adminKo, AdminMessages>>,
   Expect<Exact<typeof adminEn, AdminMessages>>,
-] = [true, true, true, true, true, true, true, true, true, true, true, true]
+] = [true, true, true, true, true, true, true, true, true, true, true, true, true]
 
 const responseRoleTypeContracts: [
   Expect<Exact<UserMeResponse["role"], UserRole>>,
@@ -448,7 +468,7 @@ const expectedAdminMessageKeys = {
     "description", "desktopOnly", "email", "forbidden", "loginError", "password", "submit", "switchAccount", "title",
   ],
   navigation: [
-    "dashboard", "inquiries", "knowledge", "knowledgeGraph", "operations", "reports", "review", "users",
+    "content", "dashboard", "inquiries", "knowledge", "knowledgeGraph", "operations", "reports", "review", "users",
   ],
   dashboard: [
     "accepted", "acceptedRate", "activeUsers", "aiReviewed", "answers", "applyRange", "cachedError",
@@ -474,6 +494,10 @@ const expectedAdminMessageKeys = {
   inquiries: [
     "answer", "answerPlaceholder", "answerSubmit", "answeredAt", "answeredBy", "answeredConflict", "content",
     "convergenceError", "createdAt", "invalidAnswer", "missingUser", "pending", "answered", "status", "subject", "title", "userEmail",
+  ],
+  content: [
+    "author", "confirmation", "contentId", "createdAt", "deletedAt", "description", "hardDelete", "invalidId",
+    "loadPreview", "meeting", "notDeleted", "preview", "question", "requiredToken", "title", "type",
   ],
   knowledge: [
     "answerContent", "answerId", "approve", "backToList", "chunk", "chunkContent", "confidence", "conflictRefreshed",
@@ -550,7 +574,7 @@ test("admin literal unions match the backend contract exactly", () => {
 
 test("admin message types and both translations expose the exact agreed keys", () => {
   assert.deepEqual(adminMessageTypeContracts, [
-    true, true, true, true, true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true,
   ])
 
   for (const [group, expectedKeys] of Object.entries(expectedAdminMessageKeys)) {

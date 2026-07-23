@@ -33,6 +33,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       items: [
         { href: routes.adminReports(), label: messages.admin.navigation.reports },
         { href: routes.adminInquiries(), label: messages.admin.navigation.inquiries },
+        { href: routes.adminContent(), label: messages.admin.navigation.content },
         { href: routes.adminKnowledge(), label: messages.admin.navigation.knowledge },
         { href: routes.adminKnowledgeGraph(), label: messages.admin.navigation.knowledgeGraph },
       ],

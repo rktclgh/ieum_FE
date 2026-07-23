@@ -1628,7 +1628,7 @@ test("disabled credential fields also disable their auxiliary controls", () => {
   )
 })
 
-test("the admin shell has six fixed destinations, prefix current-page semantics, and logout", () => {
+test("the admin shell has seven fixed destinations, prefix current-page semantics, and logout", () => {
   const source = readSource("src/features/admin/shared/components/admin-shell.tsx")
 
   for (const route of [
@@ -1638,11 +1638,13 @@ test("the admin shell has six fixed destinations, prefix current-page semantics,
     "adminInquiries",
     "adminKnowledge",
     "adminKnowledgeGraph",
+    "adminContent",
   ]) {
     assert.match(source, new RegExp(`routes\\.${route}\\(\\)`))
   }
   assert.match(source, /messages\.admin\.navigation\.operations/)
   assert.match(source, /messages\.admin\.navigation\.review/)
+  assert.match(source, /messages\.admin\.navigation\.content/)
   assert.doesNotMatch(source, /routes\.adminLogin\(\)/)
   assert.match(source, /function isAdminNavCurrent\(/)
   assert.match(source, /pathname === href/)
