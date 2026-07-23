@@ -1,6 +1,8 @@
-import type { QueryClient } from "@tanstack/react-query"
+import type { QueryClient, QueryKey } from "@tanstack/react-query"
 
 import type { ChatRoomSummaryResponse, WsRoomEvent } from "@/features/chat/api/chat-types"
+
+type RoomsListSnapshot = [QueryKey, ChatRoomSummaryResponse[] | undefined][]
 
 function isActiveRoomRemoval(event: WsRoomEvent, activeRoomId: number | null): boolean {
   return event.type === "remove" && activeRoomId !== null && event.roomId === activeRoomId
@@ -31,19 +33,36 @@ function markRoomReadInLoadedListCaches(
   roomsListKey: readonly unknown[],
   roomId: number
 ) {
-  for (const query of queryClient.getQueryCache().findAll({ queryKey: roomsListKey })) {
-    const oldData = queryClient.getQueryData<ChatRoomSummaryResponse[]>(query.queryKey)
-    if (oldData === undefined) continue
+  queryClient.setQueriesData<ChatRoomSummaryResponse[]>({ queryKey: roomsListKey }, (rooms) => {
+    if (rooms === undefined) return rooms
+    return rooms.map((room) => (room.roomId === roomId ? { ...room, unreadCount: 0 } : room))
+  })
+}
 
-    queryClient.setQueryData<ChatRoomSummaryResponse[]>(
-      query.queryKey,
-      oldData.map((room) => (room.roomId === roomId ? { ...room, unreadCount: 0 } : room))
-    )
+async function prepareMarkRoomReadCache(
+  queryClient: QueryClient,
+  roomsListKey: readonly unknown[],
+  roomId: number
+): Promise<RoomsListSnapshot> {
+  await queryClient.cancelQueries({ queryKey: roomsListKey })
+  const snapshot = queryClient.getQueriesData<ChatRoomSummaryResponse[]>({
+    queryKey: roomsListKey,
+  })
+  markRoomReadInLoadedListCaches(queryClient, roomsListKey, roomId)
+  return snapshot
+}
+
+function restoreMarkRoomReadCache(queryClient: QueryClient, snapshot: RoomsListSnapshot | undefined) {
+  if (!snapshot) return
+  for (const [queryKey, rooms] of snapshot) {
+    queryClient.setQueryData(queryKey, rooms)
   }
 }
 
 export {
   isActiveRoomRemoval,
   markRoomReadInLoadedListCaches,
+  prepareMarkRoomReadCache,
   removeRoomFromAllLoadedListCaches,
+  restoreMarkRoomReadCache,
 }

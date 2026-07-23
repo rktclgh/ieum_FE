@@ -3,7 +3,7 @@ import test from "node:test"
 import { QueryClient } from "@tanstack/react-query"
 
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import { isActiveRoomRemoval, markRoomReadInLoadedListCaches, removeRoomFromAllLoadedListCaches } from "./chat-room-event.ts"
+import { isActiveRoomRemoval, markRoomReadInLoadedListCaches, prepareMarkRoomReadCache, removeRoomFromAllLoadedListCaches, restoreMarkRoomReadCache } from "./chat-room-event.ts"
 
 function roomSummary(roomId: number) {
   return {
@@ -88,4 +88,49 @@ test("marking a room read synchronously clears only that room unread count in lo
     { ...roomSummary(21), unreadCount: 9 },
   ])
   assert.deepEqual(queryClient.getQueryData(["chat", "room", 11]), { roomId: 11, unreadCount: 4 })
+})
+
+test("preparing a room read waits for room-list query cancellation before patching and can restore on error", async () => {
+  const queryClient = new QueryClient()
+  const roomsListKey = ["chat", "rooms"] as const
+  const allRoomsKey = [...roomsListKey, "all"] as const
+  queryClient.setQueryData(allRoomsKey, [
+    { ...roomSummary(11), unreadCount: 4 },
+    { ...roomSummary(12), unreadCount: 2 },
+  ])
+
+  let resolveCancel!: () => void
+  let cancelCalled = false
+  const originalCancelQueries = queryClient.cancelQueries.bind(queryClient)
+  queryClient.cancelQueries = async (filters, options) => {
+    cancelCalled = true
+    assert.deepEqual(filters, { queryKey: roomsListKey })
+    await new Promise<void>((resolve) => {
+      resolveCancel = resolve
+    })
+    return originalCancelQueries(filters, options)
+  }
+
+  const prepared = prepareMarkRoomReadCache(queryClient, roomsListKey, 11)
+
+  assert.equal(cancelCalled, true)
+  assert.deepEqual(queryClient.getQueryData(allRoomsKey), [
+    { ...roomSummary(11), unreadCount: 4 },
+    { ...roomSummary(12), unreadCount: 2 },
+  ])
+
+  resolveCancel()
+  const snapshot = await prepared
+
+  assert.deepEqual(queryClient.getQueryData(allRoomsKey), [
+    { ...roomSummary(11), unreadCount: 0 },
+    { ...roomSummary(12), unreadCount: 2 },
+  ])
+
+  restoreMarkRoomReadCache(queryClient, snapshot)
+
+  assert.deepEqual(queryClient.getQueryData(allRoomsKey), [
+    { ...roomSummary(11), unreadCount: 4 },
+    { ...roomSummary(12), unreadCount: 2 },
+  ])
 })
