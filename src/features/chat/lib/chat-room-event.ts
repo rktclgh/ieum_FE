@@ -4,8 +4,29 @@ import type { ChatRoomSummaryResponse, WsRoomEvent } from "@/features/chat/api/c
 
 type RoomsListSnapshot = [QueryKey, ChatRoomSummaryResponse[] | undefined][]
 
+interface RoomReadGeneration {
+  roomId: number
+  generation: number
+}
+
 function isActiveRoomRemoval(event: WsRoomEvent, activeRoomId: number | null): boolean {
   return event.type === "remove" && activeRoomId !== null && event.roomId === activeRoomId
+}
+
+function beginRoomReadGeneration(
+  generations: Map<number, number>,
+  roomId: number
+): RoomReadGeneration {
+  const generation = (generations.get(roomId) ?? 0) + 1
+  generations.set(roomId, generation)
+  return { roomId, generation }
+}
+
+function isLatestRoomReadGeneration(
+  generations: Map<number, number>,
+  token: RoomReadGeneration | undefined
+): boolean {
+  return token !== undefined && generations.get(token.roomId) === token.generation
 }
 
 // 사용자 단위 remove 이벤트는 목록 화면이 마운트되지 않은 동안에도 열린 방에서 수신된다.
@@ -60,9 +81,12 @@ function restoreMarkRoomReadCache(queryClient: QueryClient, snapshot: RoomsListS
 }
 
 export {
+  beginRoomReadGeneration,
   isActiveRoomRemoval,
+  isLatestRoomReadGeneration,
   markRoomReadInLoadedListCaches,
   prepareMarkRoomReadCache,
   removeRoomFromAllLoadedListCaches,
   restoreMarkRoomReadCache,
 }
+export type { RoomReadGeneration, RoomsListSnapshot }

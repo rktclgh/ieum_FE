@@ -1,6 +1,7 @@
 "use client"
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import * as React from "react"
 
 import {
   createDirectRoom,
@@ -28,6 +29,8 @@ import {
   restoreRoomsListCaches,
 } from "@/features/chat/lib/chat-room-cache"
 import {
+  beginRoomReadGeneration,
+  isLatestRoomReadGeneration,
   prepareMarkRoomReadCache,
   restoreMarkRoomReadCache,
 } from "@/features/chat/lib/chat-room-event"
@@ -50,16 +53,25 @@ function useCreateDirectRoom() {
 
 function useMarkRead() {
   const queryClient = useQueryClient()
+  const readGenerationsRef = React.useRef(new Map<number, number>())
   return useMutation({
     mutationFn: (roomId: number) => markRead(roomId),
     onMutate: async (roomId) => {
-      return prepareMarkRoomReadCache(queryClient, roomsListKey, roomId)
+      const token = beginRoomReadGeneration(readGenerationsRef.current, roomId)
+      const snapshot = await prepareMarkRoomReadCache(queryClient, roomsListKey, roomId)
+      return { ...token, snapshot }
     },
-    onError: (_error, _roomId, snapshot) => {
-      restoreMarkRoomReadCache(queryClient, snapshot)
+    onError: (_error, _roomId, context) => {
+      if (context === undefined) return
+      if (!isLatestRoomReadGeneration(readGenerationsRef.current, context)) return
+      restoreMarkRoomReadCache(queryClient, context.snapshot)
     },
     // unreadCount는 목록 요약에만 반영 → 메시지/방 상세는 건드리지 않는다
-    onSettled: () => queryClient.invalidateQueries({ queryKey: roomsListKey }),
+    onSettled: (_data, _error, _roomId, context) => {
+      if (context === undefined) return
+      if (!isLatestRoomReadGeneration(readGenerationsRef.current, context)) return
+      queryClient.invalidateQueries({ queryKey: roomsListKey })
+    },
   })
 }
 

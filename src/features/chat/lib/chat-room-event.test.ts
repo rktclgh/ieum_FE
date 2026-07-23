@@ -3,7 +3,7 @@ import test from "node:test"
 import { QueryClient } from "@tanstack/react-query"
 
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import { isActiveRoomRemoval, markRoomReadInLoadedListCaches, prepareMarkRoomReadCache, removeRoomFromAllLoadedListCaches, restoreMarkRoomReadCache } from "./chat-room-event.ts"
+import { beginRoomReadGeneration, isActiveRoomRemoval, isLatestRoomReadGeneration, markRoomReadInLoadedListCaches, prepareMarkRoomReadCache, removeRoomFromAllLoadedListCaches, restoreMarkRoomReadCache } from "./chat-room-event.ts"
 
 function roomSummary(roomId: number) {
   return {
@@ -133,4 +133,15 @@ test("preparing a room read waits for room-list query cancellation before patchi
     { ...roomSummary(11), unreadCount: 4 },
     { ...roomSummary(12), unreadCount: 2 },
   ])
+})
+
+test("an older failed room read generation cannot restore after a newer read intent for the same room", () => {
+  const generations = new Map<number, number>()
+  const older = beginRoomReadGeneration(generations, 11)
+  const otherRoom = beginRoomReadGeneration(generations, 12)
+  const newer = beginRoomReadGeneration(generations, 11)
+
+  assert.equal(isLatestRoomReadGeneration(generations, older), false)
+  assert.equal(isLatestRoomReadGeneration(generations, newer), true)
+  assert.equal(isLatestRoomReadGeneration(generations, otherRoom), true)
 })
