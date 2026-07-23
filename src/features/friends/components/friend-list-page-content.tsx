@@ -228,7 +228,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
                         <FriendRequestItem
                           name={request.nickname}
                           avatarSrc={request.avatarSrc}
-                          flagSrc={request.flagSrc}
+                          countryCode={request.countryCode}
                           nation={nationOf(request)}
                           variant="request"
                           onAccept={() => handleAccept(request)}
@@ -248,7 +248,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
                       key={request.userId}
                       name={request.nickname}
                       avatarSrc={request.avatarSrc}
-                      flagSrc={request.flagSrc}
+                      countryCode={request.countryCode}
                       nation={nationOf(request)}
                       variant="sent"
                       onCancel={() => handleCancelRequest(request)}
@@ -304,7 +304,7 @@ function FriendListPageContent({ highlightUserId = null }: FriendListPageContent
                       name={user.nickname}
                       avatarSrc={user.avatarSrc}
                       highlightQuery={query}
-                      flagSrc={user.flagSrc}
+                      countryCode={user.countryCode}
                       nation={nationOf(user)}
                       variant={variant}
                       onAdd={() => handleAddFriend(user.userId)}
@@ -410,7 +410,7 @@ function FriendRequestItemWithLongPress({
         name={friend.nickname}
         avatarSrc={friend.avatarSrc}
         highlightQuery={highlightQuery}
-        flagSrc={friend.flagSrc}
+        countryCode={friend.countryCode}
         nation={nation}
         variant="friend"
         online={friend.active}

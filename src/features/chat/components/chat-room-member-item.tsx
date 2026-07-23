@@ -6,6 +6,7 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { ChatProfile } from "@/features/chat/components/chat-profile"
 import { CountryFlag } from "@/features/chat/components/country-flag"
+import type { CountryCode } from "@/lib/constants/countries"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 interface ChatRoomMemberItemProps extends React.ComponentProps<"div"> {
@@ -13,7 +14,7 @@ interface ChatRoomMemberItemProps extends React.ComponentProps<"div"> {
   name: string
   isMe?: boolean
   isOwner?: boolean
-  flagSrc?: string
+  countryCode?: CountryCode
   nation?: string
   onRemove?: () => void
   disabled?: boolean
@@ -26,7 +27,7 @@ function ChatRoomMemberItem({
   name,
   isMe,
   isOwner,
-  flagSrc,
+  countryCode,
   nation,
   onRemove,
   disabled,
@@ -55,8 +56,8 @@ function ChatRoomMemberItem({
               <Image src="/icons/chat/crown.svg" alt="" width={20} height={20} className="size-5" />
             )}
           </div>
-          {flagSrc && (
-            <CountryFlag flagSrc={flagSrc} country={nation ?? ""} className="[&_span]:text-body-regular-13" />
+          {countryCode && (
+            <CountryFlag code={countryCode} country={nation ?? ""} className="[&_span]:text-body-regular-13" />
           )}
         </div>
       </div>

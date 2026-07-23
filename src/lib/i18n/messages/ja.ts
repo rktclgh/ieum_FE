@@ -223,7 +223,6 @@ export const ja: Messages = {
     closeLabel: "閉じる",
     imageAlt: "質問の画像",
     answerImageAlt: "回答の画像",
-    flagAlt: "国旗",
     emptyAnswers: "まだ回答がありません。",
     loadError: "質問を読み込めませんでした。",
     acceptAction: "回答を採用",

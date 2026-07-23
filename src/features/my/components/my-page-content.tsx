@@ -13,7 +13,7 @@ import { LanguageSettingItem } from "@/features/my/components/language-setting-i
 import { MyMenuRow } from "@/features/my/components/my-menu-row"
 import { MyPageSkeleton } from "@/features/my/components/my-page-skeleton"
 import { useWithdrawMe } from "@/features/my/hooks/use-my-mutations"
-import { fromIso2, flagFromIso2 } from "@/features/join/lib/nationality-map"
+import { fromIso2 } from "@/features/join/lib/nationality-map"
 import { useLogoutMutation } from "@/features/session/hooks/use-logout-mutation"
 import { useMe } from "@/features/session/hooks/use-me"
 import { resolveFileUrl } from "@/lib/api/file-url"
@@ -39,7 +39,6 @@ function MyPageContent() {
   if (!user) return <MyPageSkeleton />
 
   const countryCode = fromIso2(user.nationality)
-  const flagSrc = flagFromIso2(user.nationality)
 
   const handleLogout = () => {
     if (logout.isPending) return
@@ -97,8 +96,8 @@ function MyPageContent() {
             />
           </Link>
 
-          {countryCode && flagSrc && (
-            <CountryFlag flagSrc={flagSrc} country={messages.countries[countryCode]} />
+          {countryCode && (
+            <CountryFlag code={countryCode} country={messages.countries[countryCode]} />
           )}
         </div>
 

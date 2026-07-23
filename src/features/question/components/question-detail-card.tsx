@@ -6,6 +6,7 @@ import { Download } from "lucide-react"
 
 import { BottomSheetClose } from "@/components/ui/bottom-sheet"
 import { Button } from "@/components/ui/button"
+import { FlagIcon } from "@/components/ui/flag-icon"
 import { NoImageProfile } from "@/components/ui/no-image"
 import { MessageTextarea } from "@/components/ui/text-field/message-textarea"
 import { Toast } from "@/components/ui/toast"
@@ -172,10 +173,8 @@ function QuestionDetailCard({
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <div className="flex items-center gap-2">
                     <span className="text-title-semibold-16 text-gray-900">{question.authorName}</span>
-                    {question.countryFlagSrc ? (
-                      <span className="relative h-4 w-[22px] shrink-0 overflow-hidden rounded-[3px] border border-gray-100">
-                        <Image src={question.countryFlagSrc} alt={t.flagAlt} fill className="object-cover" />
-                      </span>
+                    {question.nationalityCode ? (
+                      <FlagIcon code={question.nationalityCode} className="h-4 w-[22px]" />
                     ) : null}
                   </div>
                   {timeLabel || location ? (

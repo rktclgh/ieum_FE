@@ -13,7 +13,6 @@ interface GroupChatMemberListItem {
   profileImageUrl: string | null
   isMe: boolean
   isOwner: boolean
-  countryFlagSrc?: string
   nationalityCode?: ChatMemberEntry["nationalityCode"]
   canRemove: boolean
 }
@@ -58,7 +57,6 @@ function buildGroupChatMemberList({
         profileImageUrl: participant.profileImageUrl,
         isMe,
         isOwner: participant.isHost,
-        countryFlagSrc: metadata?.countryFlagSrc,
         nationalityCode: metadata?.nationalityCode,
         canRemove: currentUserIsHost && !isMe && !participant.isHost,
       }

@@ -36,7 +36,6 @@ test("participant API is the member-list SSOT while chat metadata only enriches 
         name: "오래된 채팅 닉네임",
         avatarSrc: "/api/v1/files/stale",
         isMe: false,
-        countryFlagSrc: "/flags/kr.svg",
         nationalityCode: "south-korea",
       },
     ],
@@ -52,12 +51,11 @@ test("participant API is the member-list SSOT while chat metadata only enriches 
     profileImageUrl: "/api/v1/files/participant",
     isMe: false,
     isOwner: false,
-    countryFlagSrc: "/flags/kr.svg",
     nationalityCode: "south-korea",
     canRemove: true,
   })
   assert.equal(members[2]?.name, "메타데이터 없는 참가자")
-  assert.equal(members[2]?.countryFlagSrc, undefined)
+  assert.equal(members[2]?.nationalityCode, undefined)
 })
 
 test("non-host current user still ranks above the host, then the rest sort by join time", () => {
