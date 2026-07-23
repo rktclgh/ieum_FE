@@ -165,20 +165,39 @@ interface AdminMessages {
   content: {
     title: string
     description: string
+    listTitle: string
+    detailTitle: string
     type: string
     question: string
     meeting: string
+    search: string
     contentId: string
+    titleField: string
+    body: string
+    bodyPreview: string
     invalidId: string
+    invalidTitle: string
+    invalidContent: string
     loadPreview: string
     preview: string
     author: string
     createdAt: string
+    updatedAt: string
     deletedAt: string
     notDeleted: string
     requiredToken: string
     confirmation: string
     hardDelete: string
+    edit: string
+    reset: string
+    openDetail: string
+    backToList: string
+    deleteSection: string
+    deleteDescription: string
+    deleteConfirmTitle: string
+    deleteConfirmDescription: string
+    updateSuccess: string
+    deleteSuccess: string
   }
   knowledge: {
     title: string
@@ -270,7 +289,7 @@ const adminKo: AdminMessages = {
     users: "회원",
     reports: "신고",
     inquiries: "문의",
-    content: "콘텐츠 삭제",
+    content: "콘텐츠 관리",
     knowledge: "지식",
     knowledgeGraph: "지식 그래프",
   },
@@ -406,22 +425,41 @@ const adminKo: AdminMessages = {
     convergenceError: "서버의 최신 문의 상태를 확인하지 못했습니다.",
   },
   content: {
-    title: "콘텐츠 영구 삭제",
-    description: "질문 또는 모임 ID 하나를 조회한 뒤 확인 문구가 정확히 일치할 때만 영구 삭제합니다.",
+    title: "콘텐츠 관리",
+    description: "질문과 모임을 목록에서 확인하고 상세 화면에서 수정하거나 영구 삭제합니다.",
+    listTitle: "콘텐츠 목록",
+    detailTitle: "콘텐츠 상세",
     type: "콘텐츠 유형",
     question: "질문",
     meeting: "모임",
+    search: "목록 필터",
     contentId: "콘텐츠 ID",
+    titleField: "제목",
+    body: "본문",
+    bodyPreview: "본문 미리보기",
     invalidId: "1 이상의 정수 ID를 입력해 주세요.",
+    invalidTitle: "제목을 1자 이상 200자 이하로 입력해 주세요.",
+    invalidContent: "본문을 1자 이상 5000자 이하로 입력해 주세요.",
     loadPreview: "미리보기 불러오기",
     preview: "삭제 대상",
     author: "작성자",
     createdAt: "생성일",
+    updatedAt: "수정일",
     deletedAt: "소프트 삭제일",
     notDeleted: "삭제되지 않음",
     requiredToken: "아래 확인 문구를 정확히 입력해야 합니다.",
     confirmation: "확인 문구",
     hardDelete: "영구 삭제",
+    edit: "수정 저장",
+    reset: "되돌리기",
+    openDetail: "상세 보기",
+    backToList: "목록으로",
+    deleteSection: "위험 작업",
+    deleteDescription: "영구 삭제는 복구할 수 없으며 연결된 이미지 파일 정리 작업도 함께 예약됩니다.",
+    deleteConfirmTitle: "이 콘텐츠를 영구 삭제할까요?",
+    deleteConfirmDescription: "확인 문구가 일치할 때만 삭제가 실행됩니다.",
+    updateSuccess: "콘텐츠가 수정되었습니다.",
+    deleteSuccess: "콘텐츠가 영구 삭제되었습니다.",
   },
   knowledge: {
     title: "지식 후보 검토",
@@ -513,7 +551,7 @@ const adminEn: AdminMessages = {
     users: "Users",
     reports: "Reports",
     inquiries: "Inquiries",
-    content: "Content deletion",
+    content: "Content management",
     knowledge: "Knowledge",
     knowledgeGraph: "Knowledge graph",
   },
@@ -649,22 +687,41 @@ const adminEn: AdminMessages = {
     convergenceError: "Unable to confirm the latest inquiry state from the server.",
   },
   content: {
-    title: "Permanent content deletion",
-    description: "Load one question or meeting by ID, then permanently delete only when the confirmation phrase matches exactly.",
+    title: "Content management",
+    description: "Review questions and meetings in a list, then edit or permanently delete them from the detail page.",
+    listTitle: "Content list",
+    detailTitle: "Content details",
     type: "Content type",
     question: "Question",
     meeting: "Meeting",
+    search: "List filter",
     contentId: "Content ID",
+    titleField: "Title",
+    body: "Body",
+    bodyPreview: "Body preview",
     invalidId: "Enter a positive integer ID.",
+    invalidTitle: "Enter a title between 1 and 200 characters.",
+    invalidContent: "Enter body text between 1 and 5000 characters.",
     loadPreview: "Load preview",
     preview: "Deletion target",
     author: "Author",
     createdAt: "Created at",
+    updatedAt: "Updated at",
     deletedAt: "Soft-deleted at",
     notDeleted: "Not deleted",
     requiredToken: "Type the confirmation phrase exactly.",
     confirmation: "Confirmation phrase",
     hardDelete: "Permanently delete",
+    edit: "Save changes",
+    reset: "Reset",
+    openDetail: "Open details",
+    backToList: "Back to list",
+    deleteSection: "Danger zone",
+    deleteDescription: "Permanent deletion cannot be undone and also schedules cleanup for linked image files.",
+    deleteConfirmTitle: "Permanently delete this content?",
+    deleteConfirmDescription: "Deletion runs only when the confirmation phrase matches exactly.",
+    updateSuccess: "Content has been updated.",
+    deleteSuccess: "Content has been permanently deleted.",
   },
   knowledge: {
     title: "Knowledge candidate review",

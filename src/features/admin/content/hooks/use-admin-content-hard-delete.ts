@@ -1,18 +1,32 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 import {
   deleteAdminContent,
-  getAdminContentPreview,
+  getAdminContentDetail,
+  getAdminContents,
+  updateAdminContent,
 } from "@/features/admin/content/api/admin-content-api"
-import type { AdminContentType } from "@/features/admin/content/api/admin-content-api"
+import type {
+  AdminContentListParams,
+  AdminContentType,
+  AdminContentUpdateRequest,
+} from "@/features/admin/content/api/admin-content-api"
 
 const adminContentKeys = {
   all: ["admin", "content"] as const,
-  preview: (type: AdminContentType, id: number) => [
+  lists: () => [...adminContentKeys.all, "list"] as const,
+  list: ({ type, size }: Omit<AdminContentListParams, "cursor">) =>
+    [...adminContentKeys.lists(), { type, size }] as const,
+  detail: (type: AdminContentType, id: number) => [
     ...adminContentKeys.all,
-    "preview",
+    "detail",
     type,
     id,
   ] as const,
@@ -24,17 +38,46 @@ interface DeleteAdminContentInput {
   confirmationToken: string
 }
 
-function useAdminContentPreview(
-  type: AdminContentType | null,
-  id: number | null,
-) {
+interface UpdateAdminContentInput {
+  type: AdminContentType
+  id: number
+  body: AdminContentUpdateRequest
+}
+
+function useAdminContents({
+  type,
+  size,
+}: Omit<AdminContentListParams, "cursor">) {
+  return useInfiniteQuery({
+    queryKey: adminContentKeys.list({ type, size }),
+    queryFn: ({ pageParam }) =>
+      getAdminContents({ type, cursor: pageParam, size }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (page) => page.nextCursor,
+  })
+}
+
+function useAdminContentDetail(type: AdminContentType, id: number) {
   return useQuery({
-    queryKey:
-      type !== null && id !== null
-        ? adminContentKeys.preview(type, id)
-        : [...adminContentKeys.all, "preview", "idle"] as const,
-    queryFn: () => getAdminContentPreview(type as AdminContentType, id as number),
-    enabled: type !== null && id !== null,
+    queryKey: adminContentKeys.detail(type, id),
+    queryFn: () => getAdminContentDetail(type, id),
+  })
+}
+
+function useUpdateAdminContent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ type, id, body }: UpdateAdminContentInput) =>
+      updateAdminContent(type, id, body),
+    onSuccess: (_data, { type, id }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminContentKeys.lists() }),
+        queryClient.invalidateQueries({
+          queryKey: adminContentKeys.detail(type, id),
+          exact: true,
+        }),
+      ]),
   })
 }
 
@@ -45,13 +88,20 @@ function useDeleteAdminContent() {
     mutationFn: ({ type, id, confirmationToken }: DeleteAdminContentInput) =>
       deleteAdminContent(type, id, confirmationToken),
     onSuccess: (_data, { type, id }) => {
+      void queryClient.invalidateQueries({ queryKey: adminContentKeys.lists() })
       queryClient.removeQueries({
-        queryKey: adminContentKeys.preview(type, id),
+        queryKey: adminContentKeys.detail(type, id),
         exact: true,
       })
     },
   })
 }
 
-export { adminContentKeys, useAdminContentPreview, useDeleteAdminContent }
-export type { DeleteAdminContentInput }
+export {
+  adminContentKeys,
+  useAdminContentDetail,
+  useAdminContents,
+  useDeleteAdminContent,
+  useUpdateAdminContent,
+}
+export type { DeleteAdminContentInput, UpdateAdminContentInput }

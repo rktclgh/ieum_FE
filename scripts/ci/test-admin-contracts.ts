@@ -320,20 +320,39 @@ type ExpectedAdminMessages = {
   content: StringMessages<
     | "title"
     | "description"
+    | "listTitle"
+    | "detailTitle"
     | "type"
     | "question"
     | "meeting"
+    | "search"
     | "contentId"
+    | "titleField"
+    | "body"
+    | "bodyPreview"
     | "invalidId"
+    | "invalidTitle"
+    | "invalidContent"
     | "loadPreview"
     | "preview"
     | "author"
     | "createdAt"
+    | "updatedAt"
     | "deletedAt"
     | "notDeleted"
     | "requiredToken"
     | "confirmation"
     | "hardDelete"
+    | "edit"
+    | "reset"
+    | "openDetail"
+    | "backToList"
+    | "deleteSection"
+    | "deleteDescription"
+    | "deleteConfirmTitle"
+    | "deleteConfirmDescription"
+    | "updateSuccess"
+    | "deleteSuccess"
   >
   knowledge: StringMessages<
     | "title"
@@ -496,8 +515,11 @@ const expectedAdminMessageKeys = {
     "convergenceError", "createdAt", "invalidAnswer", "missingUser", "pending", "answered", "status", "subject", "title", "userEmail",
   ],
   content: [
-    "author", "confirmation", "contentId", "createdAt", "deletedAt", "description", "hardDelete", "invalidId",
-    "loadPreview", "meeting", "notDeleted", "preview", "question", "requiredToken", "title", "type",
+    "author", "backToList", "body", "bodyPreview", "confirmation", "contentId", "createdAt", "deletedAt",
+    "deleteConfirmDescription", "deleteConfirmTitle", "deleteDescription", "deleteSection", "deleteSuccess",
+    "description", "detailTitle", "edit", "hardDelete", "invalidContent", "invalidId", "invalidTitle",
+    "listTitle", "loadPreview", "meeting", "notDeleted", "openDetail", "preview", "question", "requiredToken",
+    "reset", "search", "title", "titleField", "type", "updatedAt", "updateSuccess",
   ],
   knowledge: [
     "answerContent", "answerId", "approve", "backToList", "chunk", "chunkContent", "confidence", "conflictRefreshed",

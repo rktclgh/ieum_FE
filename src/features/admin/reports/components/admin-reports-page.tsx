@@ -5,6 +5,12 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
+import {
+  getAdminReportDecisionLabel,
+  getReportAiReviewStateLabel,
+  getReportReasonLabel,
+  getReportStatusLabel,
+} from "@/features/admin/shared/lib/admin-labels"
 import type {
   AdminReportDecision,
   ReportAiReviewState,
@@ -48,10 +54,16 @@ function AdminReportsPage() {
             className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="">{messages.admin.common.all}</option>
-            <option value="pending">pending</option>
-            <option value="ai_reviewed">ai_reviewed</option>
-            <option value="confirmed">confirmed</option>
-            <option value="dismissed">dismissed</option>
+            <option value="pending">{getReportStatusLabel("pending", language)}</option>
+            <option value="ai_reviewed">
+              {getReportStatusLabel("ai_reviewed", language)}
+            </option>
+            <option value="confirmed">
+              {getReportStatusLabel("confirmed", language)}
+            </option>
+            <option value="dismissed">
+              {getReportStatusLabel("dismissed", language)}
+            </option>
           </select>
         </label>
 
@@ -69,12 +81,20 @@ function AdminReportsPage() {
             className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="">{messages.admin.common.all}</option>
-            <option value="pending">pending</option>
-            <option value="processing">processing</option>
-            <option value="retry">retry</option>
-            <option value="completed">completed</option>
-            <option value="cancelled">cancelled</option>
-            <option value="dead">dead</option>
+            <option value="pending">
+              {getReportAiReviewStateLabel("pending", language)}
+            </option>
+            <option value="processing">
+              {getReportAiReviewStateLabel("processing", language)}
+            </option>
+            <option value="retry">{getReportAiReviewStateLabel("retry", language)}</option>
+            <option value="completed">
+              {getReportAiReviewStateLabel("completed", language)}
+            </option>
+            <option value="cancelled">
+              {getReportAiReviewStateLabel("cancelled", language)}
+            </option>
+            <option value="dead">{getReportAiReviewStateLabel("dead", language)}</option>
           </select>
         </label>
 
@@ -92,9 +112,13 @@ function AdminReportsPage() {
             className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="">{messages.admin.common.all}</option>
-            <option value="suspend">suspend</option>
-            <option value="hold">hold</option>
-            <option value="normal">normal</option>
+            <option value="suspend">
+              {getAdminReportDecisionLabel("suspend", language)}
+            </option>
+            <option value="hold">{getAdminReportDecisionLabel("hold", language)}</option>
+            <option value="normal">
+              {getAdminReportDecisionLabel("normal", language)}
+            </option>
           </select>
         </label>
       </div>
@@ -156,10 +180,18 @@ function AdminReportsPage() {
                         ? `${report.reportedUser.nickname} #${report.reportedUser.userId}`
                         : messages.admin.reports.missingReportedUser}
                     </td>
-                    <td className="px-4 py-3">{report.reason}</td>
-                    <td className="px-4 py-3">{report.status}</td>
-                    <td className="px-4 py-3">{report.ai.reviewState}</td>
-                    <td className="px-4 py-3">{report.ai.decision ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {getReportReasonLabel(report.reason, language)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {getReportStatusLabel(report.status, language)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {getReportAiReviewStateLabel(report.ai.reviewState, language)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {getAdminReportDecisionLabel(report.ai.decision, language)}
+                    </td>
                     <td className="px-4 py-3">
                       {dateFormatter.format(new Date(report.createdAt))}
                     </td>

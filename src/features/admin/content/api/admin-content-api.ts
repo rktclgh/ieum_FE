@@ -1,23 +1,68 @@
 import { apiClient } from "@/lib/api/client"
+import { compactQuery } from "@/features/admin/shared/lib/admin-query"
+import type { CursorPage } from "@/features/admin/shared/types/admin-types"
 
 type AdminContentType = "question" | "meeting"
 
-interface AdminContentPreview {
+interface AdminContentListItem {
   contentType: AdminContentType
   contentId: number
   title: string
   authorNickname: string
   authorId: number
   createdAt: string
+  updatedAt: string
   deletedAt: string | null
 }
 
-async function getAdminContentPreview(
+interface AdminContentDetail extends AdminContentListItem {
+  content: string
+}
+
+interface AdminContentListParams {
+  type: AdminContentType
+  cursor?: string | null
+  size: number
+}
+
+interface AdminContentUpdateRequest {
+  title: string
+  content: string
+}
+
+async function getAdminContents(
+  params: AdminContentListParams,
+): Promise<CursorPage<AdminContentListItem>> {
+  const response = await apiClient.get<CursorPage<AdminContentListItem>>(
+    `/api/v1/admin/content/${params.type}`,
+    {
+      params: compactQuery({
+        cursor: params.cursor,
+        size: params.size,
+      }),
+    },
+  )
+  return response.data
+}
+
+async function getAdminContentDetail(
   type: AdminContentType,
   id: number,
-): Promise<AdminContentPreview> {
-  const response = await apiClient.get<AdminContentPreview>(
+): Promise<AdminContentDetail> {
+  const response = await apiClient.get<AdminContentDetail>(
     `/api/v1/admin/content/${type}/${id}`,
+  )
+  return response.data
+}
+
+async function updateAdminContent(
+  type: AdminContentType,
+  id: number,
+  body: AdminContentUpdateRequest,
+): Promise<AdminContentDetail> {
+  const response = await apiClient.patch<AdminContentDetail>(
+    `/api/v1/admin/content/${type}/${id}`,
+    body,
   )
   return response.data
 }
@@ -32,5 +77,16 @@ async function deleteAdminContent(
   })
 }
 
-export { deleteAdminContent, getAdminContentPreview }
-export type { AdminContentPreview, AdminContentType }
+export {
+  deleteAdminContent,
+  getAdminContentDetail,
+  getAdminContents,
+  updateAdminContent,
+}
+export type {
+  AdminContentDetail,
+  AdminContentListItem,
+  AdminContentListParams,
+  AdminContentType,
+  AdminContentUpdateRequest,
+}

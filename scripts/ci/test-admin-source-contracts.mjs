@@ -677,7 +677,7 @@ function assertAdminReportSemanticLabels(source) {
 
   assertOrdered(resolution, [
     "label={messages.admin.reports.resolutionDecision}",
-    "value={resolution.decision}",
+    "value={getReportStatusLabel(resolution.decision, language)}",
     "label={messages.admin.reports.resolvedBy}",
     "resolution.resolvedBy.nickname",
     "resolution.resolvedBy.userId",
@@ -1693,43 +1693,43 @@ test("ConfirmDialog can disable confirmation without making the prop required", 
   assert.match(source, /disabled=\{confirmDisabled\}/)
 })
 
-test("admin content hard delete blocks duplicate same-tick submissions", () => {
+test("admin content detail hard delete blocks duplicate same-tick submissions", () => {
   const source = readSource(
-    "src/features/admin/content/components/admin-content-hard-delete-page.tsx",
+    "src/features/admin/content/components/admin-content-page.tsx",
   )
   const compact = compactSource(source)
   const handler = compactSource(
     boundedSource(
       source,
-      "const handleDelete = () =>",
+      "const handleDeleteConfirm = () =>",
       "\n  return (",
     ),
   )
 
-  assert.match(source, /const deleteSubmitLatch = React\.useRef\(false\)/)
+  assert.match(source, /const deleteLatch = React\.useRef\(false\)/)
   assert.match(
     source,
-    /const \[deleteSubmitBusy, setDeleteSubmitBusy\] = React\.useState\(false\)/,
+    /const \[deleteConfirmBusy, setDeleteConfirmBusy\] = React\.useState\(false\)/,
   )
   assert.match(
     compact,
-    /const deleteBusy = deleteSubmitBusy \|\| deleteMutation\.isPending/,
+    /const deleteBusy = deleteConfirmBusy \|\| deleteMutation\.isPending/,
   )
   assert.match(
     compact,
-    /preview !== undefined && confirmationToken === requiredToken && !deleteBusy/,
+    /detail !== undefined && confirmationToken === requiredToken && !deleteBusy/,
   )
   assertOrdered(handler, [
-    "if (loadedTarget === null || !canDelete || deleteSubmitLatch.current) return",
-    "deleteSubmitLatch.current = true",
-    "setDeleteSubmitBusy(true)",
+    "if (!canDelete || deleteLatch.current) return",
+    "deleteLatch.current = true",
+    "setDeleteConfirmBusy(true)",
     "deleteMutation.mutate(",
     "onSettled: () => {",
-    "deleteSubmitLatch.current = false",
-    "setDeleteSubmitBusy(false)",
+    "deleteLatch.current = false",
+    "setDeleteConfirmBusy(false)",
   ])
   assert.equal((handler.match(/deleteMutation\.mutate\(/g) ?? []).length, 1)
-  assert.match(source, /disabled=\{!canDelete\}/)
+  assert.match(source, /disabled=\{!canDelete \|\| deleteMutation\.isSuccess\}/)
   assert.match(source, /aria-busy=\{deleteBusy \|\| undefined\}/)
   assert.doesNotMatch(source, /disabled=\{deleteMutation\.isPending\}/)
   assert.doesNotMatch(source, /aria-busy=\{deleteMutation\.isPending \|\| undefined\}/)
