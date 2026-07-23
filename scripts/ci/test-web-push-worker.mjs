@@ -327,6 +327,25 @@ test("marks an AI durable answer notification and deep-links to the question", a
   assert.equal(worker.shown[0].options.data.url, "/questions/detail/?questionId=9")
 })
 
+test("deep-links a new-question push with questionId to the exact question detail", async () => {
+  const worker = loadWorker()
+  await dispatchPush(worker, {
+    version: 1,
+    kind: "notification",
+    notificationId: 51,
+    type: "question",
+    title: "주변 새 질문",
+    body: "오늘 저녁 뭐 먹을까요?",
+    messageKey: "notification.radius.question",
+    messageParams: { subject: "오늘 저녁 뭐 먹을까요?" },
+    refId: null,
+    questionId: 123,
+    answerIsAi: null,
+  })
+
+  assert.equal(worker.shown[0].options.data.url, "/questions/detail/?questionId=123")
+})
+
 test("deep-links a friend-request durable notification to the friends page", async () => {
   const worker = loadWorker()
   await dispatchPush(worker, {
