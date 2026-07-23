@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
 import {
+  getAdminReportDecisionLabel,
+  getReportAiReviewStateLabel,
+  getReportReasonLabel,
+  getReportStatusLabel,
+  getSanctionTypeLabel,
+} from "@/features/admin/shared/lib/admin-labels"
+import {
   useAdminReportDetail,
   useConfirmAdminReport,
   useDismissAdminReport,
@@ -225,7 +232,9 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
         <h1 id="admin-report-detail-title" className="text-title-bold-28 text-gray-900">
           {messages.admin.reports.detail} #{report.reportId}
         </h1>
-        <p className="text-body-regular-14 text-gray-600">{report.status}</p>
+        <p className="text-body-regular-14 text-gray-600">
+          {getReportStatusLabel(report.status, language)}
+        </p>
       </header>
 
       {detailQuery.isError &&
@@ -260,8 +269,14 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
                 : messages.admin.reports.missingReportedUser
             }
           />
-          <DetailField label={messages.admin.reports.reason} value={report.reason} />
-          <DetailField label={messages.admin.reports.status} value={report.status} />
+          <DetailField
+            label={messages.admin.reports.reason}
+            value={getReportReasonLabel(report.reason, language)}
+          />
+          <DetailField
+            label={messages.admin.reports.status}
+            value={getReportStatusLabel(report.status, language)}
+          />
           <DetailField
             label={messages.admin.reports.createdAt}
             value={formatDateTime(report.createdAt, dateFormatter)}
@@ -297,7 +312,10 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
           {messages.admin.reports.aiResult}
         </h2>
         <dl className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <DetailField label={messages.admin.reports.aiState} value={ai.reviewState} />
+          <DetailField
+            label={messages.admin.reports.aiState}
+            value={getReportAiReviewStateLabel(ai.reviewState, language)}
+          />
           <DetailField
             label={messages.admin.reports.recommendation}
             value={ai.recommendation ?? "—"}
@@ -313,7 +331,7 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
           />
           <DetailField
             label={messages.admin.reports.decision}
-            value={ai.decision ?? "—"}
+            value={getAdminReportDecisionLabel(ai.decision, language)}
           />
           <DetailField
             label={messages.admin.reports.modelVersion}
@@ -347,7 +365,7 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
           <dl className="grid gap-3 md:grid-cols-3">
             <DetailField
               label={messages.admin.reports.resolutionDecision}
-              value={resolution.decision}
+              value={getReportStatusLabel(resolution.decision, language)}
             />
             <DetailField
               label={messages.admin.reports.resolvedBy}
@@ -390,7 +408,9 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
                   <tr key={sanction.sanctionId}>
                     <td className="px-4 py-3">{sanction.sanctionId}</td>
                     <td className="px-4 py-3">{sanction.decisionSource}</td>
-                    <td className="px-4 py-3">{sanction.type}</td>
+                    <td className="px-4 py-3">
+                      {getSanctionTypeLabel(sanction.type, language)}
+                    </td>
                     <td className="max-w-80 whitespace-pre-wrap px-4 py-3">
                       {sanction.reason}
                     </td>
@@ -476,7 +496,7 @@ function AdminReportDetailPage({ reportId }: { reportId: number }) {
             {messages.admin.reports.resolution}
           </h2>
           <p className="text-body-regular-14 text-gray-700">
-            {resolution?.decision ?? report.status}
+            {getReportStatusLabel(resolution?.decision ?? report.status, language)}
           </p>
         </section>
       )}

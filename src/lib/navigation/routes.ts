@@ -86,6 +86,11 @@ const routes = {
     queryRoute("/admin/reports/detail/", {
       reportId: requirePositiveInteger(reportId, "reportId"),
     }),
+  adminContentDetail: (type: "question" | "meeting", contentId: number) =>
+    queryRoute("/admin/content/detail/", {
+      type,
+      contentId: requirePositiveInteger(contentId, "contentId"),
+    }),
   adminKnowledgeCandidate: (candidateId: number) =>
     queryRoute("/admin/knowledge/", {
       candidateId: requirePositiveInteger(candidateId, "candidateId"),

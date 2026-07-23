@@ -1,5 +1,5 @@
-import { AdminContentHardDeletePage } from "@/features/admin/content/components/admin-content-hard-delete-page"
+import { AdminContentPage } from "@/features/admin/content/components/admin-content-page"
 
 export default function AdminContentRoutePage() {
-  return <AdminContentHardDeletePage />
+  return <AdminContentPage />
 }

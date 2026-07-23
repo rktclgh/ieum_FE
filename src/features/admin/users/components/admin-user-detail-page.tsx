@@ -5,6 +5,12 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
+import {
+  getReportReasonLabel,
+  getReportStatusLabel,
+  getSanctionTypeLabel,
+  getUserStatusLabel,
+} from "@/features/admin/shared/lib/admin-labels"
 import type { SanctionType } from "@/features/admin/shared/types/admin-types"
 import {
   useActivateAdminUser,
@@ -168,7 +174,10 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
           <DetailField label={messages.admin.users.email} value={user.email} />
           <DetailField label={messages.admin.users.nickname} value={user.nickname} />
           <DetailField label={messages.admin.users.role} value={user.role} />
-          <DetailField label={messages.admin.users.status} value={user.status} />
+          <DetailField
+            label={messages.admin.users.status}
+            value={getUserStatusLabel(user.status, language)}
+          />
           <DetailField label={messages.admin.users.grade} value={user.grade} />
           <DetailField label={messages.admin.users.provider} value={user.provider} />
           <DetailField
@@ -250,8 +259,12 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
                 {reports.map((report) => (
                   <tr key={report.reportId}>
                     <td className="px-4 py-3">{report.reportId}</td>
-                    <td className="px-4 py-3">{report.reason}</td>
-                    <td className="px-4 py-3">{report.status}</td>
+                    <td className="px-4 py-3">
+                      {getReportReasonLabel(report.reason, language)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {getReportStatusLabel(report.status, language)}
+                    </td>
                     <td className="px-4 py-3">
                       {report.reporterNickname ?? String(report.reporterId)}
                     </td>
@@ -296,7 +309,9 @@ function AdminUserDetailPage({ userId }: { userId: number }) {
                 {sanctions.map((sanction) => (
                   <tr key={sanction.sanctionId}>
                     <td className="px-4 py-3">{sanction.sanctionId}</td>
-                    <td className="px-4 py-3">{sanction.type}</td>
+                    <td className="px-4 py-3">
+                      {getSanctionTypeLabel(sanction.type, language)}
+                    </td>
                     <td className="max-w-80 whitespace-pre-wrap px-4 py-3">{sanction.reason}</td>
                     <td className="px-4 py-3">{formatDateTime(sanction.createdAt, dateFormatter)}</td>
                     <td className="px-4 py-3">{sanction.createdBy ?? "—"}</td>
