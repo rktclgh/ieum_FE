@@ -3,7 +3,7 @@ import test from "node:test"
 import { QueryClient } from "@tanstack/react-query"
 
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import { isActiveRoomRemoval, removeRoomFromAllLoadedListCaches } from "./chat-room-event.ts"
+import { isActiveRoomRemoval, markRoomReadInLoadedListCaches, removeRoomFromAllLoadedListCaches } from "./chat-room-event.ts"
 
 function roomSummary(roomId: number) {
   return {
@@ -62,4 +62,30 @@ test("a room removal synchronously strips that room from every loaded room-list 
   assert.deepEqual(queryClient.getQueryData([...roomsListKey, "group"]), [])
   assert.deepEqual(queryClient.getQueryData([...roomsListKey, "direct"]), [roomSummary(21)])
   assert.deepEqual(queryClient.getQueryData(["chat", "room", 11]), { roomId: 11 })
+})
+
+test("marking a room read synchronously clears only that room unread count in loaded room-list caches", () => {
+  const queryClient = new QueryClient()
+  const roomsListKey = ["chat", "rooms"] as const
+  queryClient.setQueryData([...roomsListKey, "all"], [
+    { ...roomSummary(11), unreadCount: 4 },
+    { ...roomSummary(12), unreadCount: 2 },
+  ])
+  queryClient.setQueryData([...roomsListKey, "group"], [{ ...roomSummary(11), unreadCount: 4 }])
+  queryClient.setQueryData([...roomsListKey, "direct"], [{ ...roomSummary(21), unreadCount: 9 }])
+  queryClient.setQueryData(["chat", "room", 11], { roomId: 11, unreadCount: 4 })
+
+  markRoomReadInLoadedListCaches(queryClient, roomsListKey, 11)
+
+  assert.deepEqual(queryClient.getQueryData([...roomsListKey, "all"]), [
+    { ...roomSummary(11), unreadCount: 0 },
+    { ...roomSummary(12), unreadCount: 2 },
+  ])
+  assert.deepEqual(queryClient.getQueryData([...roomsListKey, "group"]), [
+    { ...roomSummary(11), unreadCount: 0 },
+  ])
+  assert.deepEqual(queryClient.getQueryData([...roomsListKey, "direct"]), [
+    { ...roomSummary(21), unreadCount: 9 },
+  ])
+  assert.deepEqual(queryClient.getQueryData(["chat", "room", 11]), { roomId: 11, unreadCount: 4 })
 })

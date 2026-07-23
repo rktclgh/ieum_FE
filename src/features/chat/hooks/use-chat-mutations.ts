@@ -27,6 +27,7 @@ import {
   restoreRoomDetails,
   restoreRoomsListCaches,
 } from "@/features/chat/lib/chat-room-cache"
+import { markRoomReadInLoadedListCaches } from "@/features/chat/lib/chat-room-event"
 import { deleteMeeting, leaveMeeting } from "@/features/meetup/api/meetup-api"
 import { meetupKeys } from "@/features/meetup/hooks/use-meetup-queries"
 
@@ -48,6 +49,9 @@ function useMarkRead() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (roomId: number) => markRead(roomId),
+    onMutate: (roomId) => {
+      markRoomReadInLoadedListCaches(queryClient, roomsListKey, roomId)
+    },
     // unreadCount는 목록 요약에만 반영 → 메시지/방 상세는 건드리지 않는다
     onSuccess: () => queryClient.invalidateQueries({ queryKey: roomsListKey }),
   })

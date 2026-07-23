@@ -424,6 +424,7 @@ function ChatRoomSessionContent({ roomId, entry, session }: ChatRoomSessionConte
         queryClient.invalidateQueries({ queryKey: chatKeys.messages(roomId) })
       }
       // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
+      markReadMutation.mutate(roomId)
       queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })
       if (incoming.messageType === "system" && isGroup && meetingId != null) {
         queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
