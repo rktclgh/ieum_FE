@@ -5,7 +5,6 @@ import type { CursorPage } from "@/features/admin/shared/types/admin-types"
 
 type AdminContentType = "question" | "meeting"
 type AdminContentListPath = "questions" | "meetings"
-type AdminContentStatus = "active" | "deleted"
 
 interface AdminContentListItem {
   contentType: AdminContentType
@@ -13,8 +12,8 @@ interface AdminContentListItem {
   title: string
   authorNickname: string
   authorId: number
-  resolved: boolean
-  status: AdminContentStatus
+  resolved: boolean | null
+  status: string | null
   participantCount: number | null
   createdAt: string
   updatedAt: string
@@ -94,7 +93,6 @@ export type {
   AdminContentListItem,
   AdminContentListParams,
   AdminContentListPath,
-  AdminContentStatus,
   AdminContentType,
   AdminContentUpdateRequest,
 }

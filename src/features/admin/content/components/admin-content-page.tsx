@@ -13,9 +13,9 @@ import {
   useUpdateAdminContent,
 } from "@/features/admin/content/hooks/use-admin-content-hard-delete"
 import {
+  getContentResolvedLabel,
   formatParticipantCount,
   getContentStatusLabel,
-  getResolvedLabel,
 } from "@/features/admin/content/lib/admin-content-labels"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
 import { getApiErrorMessage } from "@/lib/api/errors"
@@ -161,13 +161,23 @@ function AdminContentPage() {
                     </td>
                     <td className="max-w-96 truncate px-4 py-3">{item.title}</td>
                     <td className="px-4 py-3">
-                      {getContentStatusLabel(item.status, messages)}
+                      {getContentStatusLabel(
+                        item.contentType,
+                        item.status,
+                        language,
+                        messages,
+                      )}
                     </td>
                     <td className="px-4 py-3">
-                      {getResolvedLabel(item.resolved, messages)}
+                      {getContentResolvedLabel(item.contentType, item.resolved, messages)}
                     </td>
                     <td className="px-4 py-3">
-                      {formatParticipantCount(item.participantCount, numberFormatter, messages)}
+                      {formatParticipantCount(
+                        item.contentType,
+                        item.participantCount,
+                        numberFormatter,
+                        messages,
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {item.authorNickname} #{item.authorId}
@@ -362,7 +372,12 @@ function AdminContentDetailPage({
               {messages.admin.content.status}
             </dt>
             <dd className="break-words text-body-regular-14 text-gray-900">
-              {getContentStatusLabel(detail.status, messages)}
+              {getContentStatusLabel(
+                detail.contentType,
+                detail.status,
+                language,
+                messages,
+              )}
             </dd>
           </div>
           <div className="space-y-1 rounded-xl bg-gray-50 p-4">
@@ -370,7 +385,7 @@ function AdminContentDetailPage({
               {messages.admin.content.resolved}
             </dt>
             <dd className="break-words text-body-regular-14 text-gray-900">
-              {getResolvedLabel(detail.resolved, messages)}
+              {getContentResolvedLabel(detail.contentType, detail.resolved, messages)}
             </dd>
           </div>
           <div className="space-y-1 rounded-xl bg-gray-50 p-4">
@@ -378,7 +393,12 @@ function AdminContentDetailPage({
               {messages.admin.content.participantCount}
             </dt>
             <dd className="break-words text-body-regular-14 text-gray-900">
-              {formatParticipantCount(detail.participantCount, numberFormatter, messages)}
+              {formatParticipantCount(
+                detail.contentType,
+                detail.participantCount,
+                numberFormatter,
+                messages,
+              )}
             </dd>
           </div>
           <div className="space-y-1 rounded-xl bg-gray-50 p-4">
