@@ -45,6 +45,7 @@ const routes = {
   adminUsers: () => "/admin/users/",
   adminReports: () => "/admin/reports/",
   adminInquiries: () => "/admin/inquiries/",
+  adminContent: () => "/admin/content/",
   adminKnowledge: () => "/admin/knowledge/",
   adminKnowledgeGraph: () => "/admin/knowledge/graph/",
   chatRoom: (chatId: number, entry?: "app") =>

@@ -27,6 +27,7 @@ interface AdminMessages {
     users: string
     reports: string
     inquiries: string
+    content: string
     knowledge: string
     knowledgeGraph: string
   }
@@ -161,6 +162,24 @@ interface AdminMessages {
     answeredConflict: string
     convergenceError: string
   }
+  content: {
+    title: string
+    description: string
+    type: string
+    question: string
+    meeting: string
+    contentId: string
+    invalidId: string
+    loadPreview: string
+    preview: string
+    author: string
+    createdAt: string
+    deletedAt: string
+    notDeleted: string
+    requiredToken: string
+    confirmation: string
+    hardDelete: string
+  }
   knowledge: {
     title: string
     status: string
@@ -251,6 +270,7 @@ const adminKo: AdminMessages = {
     users: "회원",
     reports: "신고",
     inquiries: "문의",
+    content: "콘텐츠 삭제",
     knowledge: "지식",
     knowledgeGraph: "지식 그래프",
   },
@@ -385,6 +405,24 @@ const adminKo: AdminMessages = {
     answeredConflict: "이미 답변된 문의입니다. 서버의 최신 답변을 불러왔습니다.",
     convergenceError: "서버의 최신 문의 상태를 확인하지 못했습니다.",
   },
+  content: {
+    title: "콘텐츠 영구 삭제",
+    description: "질문 또는 모임 ID 하나를 조회한 뒤 확인 문구가 정확히 일치할 때만 영구 삭제합니다.",
+    type: "콘텐츠 유형",
+    question: "질문",
+    meeting: "모임",
+    contentId: "콘텐츠 ID",
+    invalidId: "1 이상의 정수 ID를 입력해 주세요.",
+    loadPreview: "미리보기 불러오기",
+    preview: "삭제 대상",
+    author: "작성자",
+    createdAt: "생성일",
+    deletedAt: "소프트 삭제일",
+    notDeleted: "삭제되지 않음",
+    requiredToken: "아래 확인 문구를 정확히 입력해야 합니다.",
+    confirmation: "확인 문구",
+    hardDelete: "영구 삭제",
+  },
   knowledge: {
     title: "지식 후보 검토",
     status: "상태",
@@ -475,6 +513,7 @@ const adminEn: AdminMessages = {
     users: "Users",
     reports: "Reports",
     inquiries: "Inquiries",
+    content: "Content deletion",
     knowledge: "Knowledge",
     knowledgeGraph: "Knowledge graph",
   },
@@ -608,6 +647,24 @@ const adminEn: AdminMessages = {
     invalidAnswer: "Enter an answer between 1 and 2000 characters.",
     answeredConflict: "This inquiry was already answered. The latest server answer is now displayed.",
     convergenceError: "Unable to confirm the latest inquiry state from the server.",
+  },
+  content: {
+    title: "Permanent content deletion",
+    description: "Load one question or meeting by ID, then permanently delete only when the confirmation phrase matches exactly.",
+    type: "Content type",
+    question: "Question",
+    meeting: "Meeting",
+    contentId: "Content ID",
+    invalidId: "Enter a positive integer ID.",
+    loadPreview: "Load preview",
+    preview: "Deletion target",
+    author: "Author",
+    createdAt: "Created at",
+    deletedAt: "Soft-deleted at",
+    notDeleted: "Not deleted",
+    requiredToken: "Type the confirmation phrase exactly.",
+    confirmation: "Confirmation phrase",
+    hardDelete: "Permanently delete",
   },
   knowledge: {
     title: "Knowledge candidate review",

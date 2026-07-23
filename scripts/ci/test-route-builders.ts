@@ -46,6 +46,7 @@ test("fixed route builders preserve the static export path contract", () => {
       adminUsers: routes.adminUsers(),
       adminReports: routes.adminReports(),
       adminInquiries: routes.adminInquiries(),
+      adminContent: routes.adminContent(),
     },
     {
       home: "/",
@@ -66,6 +67,7 @@ test("fixed route builders preserve the static export path contract", () => {
       adminUsers: "/admin/users/",
       adminReports: "/admin/reports/",
       adminInquiries: "/admin/inquiries/",
+      adminContent: "/admin/content/",
     }
   )
 })
