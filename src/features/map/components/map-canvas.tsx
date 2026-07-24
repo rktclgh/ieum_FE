@@ -395,7 +395,7 @@ function MarkerLayerBridge({
   topInset?: number
   bottomInset?: number
 }) {
-  // 해결된 질문은 지도와 클러스터 모두에서 제외한다 — clustered-pins.tsx의 기존 필터 그대로.
+  // 해결된 질문은 지도와 클러스터 모두에서 제외한다.
   const visiblePins = React.useMemo(() => pins.filter((pin) => !pin.resolved), [pins])
   const { items, index } = usePinClusters(visiblePins)
 
