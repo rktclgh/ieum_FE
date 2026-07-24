@@ -1,9 +1,32 @@
-import type { QueryClient } from "@tanstack/react-query"
+import type { QueryClient, QueryKey } from "@tanstack/react-query"
 
 import type { ChatRoomSummaryResponse, WsRoomEvent } from "@/features/chat/api/chat-types"
 
+type RoomsListSnapshot = [QueryKey, ChatRoomSummaryResponse[] | undefined][]
+
+interface RoomReadGeneration {
+  roomId: number
+  generation: number
+}
+
 function isActiveRoomRemoval(event: WsRoomEvent, activeRoomId: number | null): boolean {
   return event.type === "remove" && activeRoomId !== null && event.roomId === activeRoomId
+}
+
+function beginRoomReadGeneration(
+  generations: Map<number, number>,
+  roomId: number
+): RoomReadGeneration {
+  const generation = (generations.get(roomId) ?? 0) + 1
+  generations.set(roomId, generation)
+  return { roomId, generation }
+}
+
+function isLatestRoomReadGeneration(
+  generations: Map<number, number>,
+  token: RoomReadGeneration | undefined
+): boolean {
+  return token !== undefined && generations.get(token.roomId) === token.generation
 }
 
 // 사용자 단위 remove 이벤트는 목록 화면이 마운트되지 않은 동안에도 열린 방에서 수신된다.
@@ -24,4 +47,46 @@ function removeRoomFromAllLoadedListCaches(
   }
 }
 
-export { isActiveRoomRemoval, removeRoomFromAllLoadedListCaches }
+// 읽음 처리는 서버 read cursor가 정본이지만, 이미 로드된 목록 캐시는 즉시 unreadCount를
+// 0으로 맞춰야 방에서 나와 목록으로 돌아갈 때 이전 뱃지가 다시 보이지 않는다.
+function markRoomReadInLoadedListCaches(
+  queryClient: QueryClient,
+  roomsListKey: readonly unknown[],
+  roomId: number
+) {
+  queryClient.setQueriesData<ChatRoomSummaryResponse[]>({ queryKey: roomsListKey }, (rooms) => {
+    if (rooms === undefined) return rooms
+    return rooms.map((room) => (room.roomId === roomId ? { ...room, unreadCount: 0 } : room))
+  })
+}
+
+async function prepareMarkRoomReadCache(
+  queryClient: QueryClient,
+  roomsListKey: readonly unknown[],
+  roomId: number
+): Promise<RoomsListSnapshot> {
+  await queryClient.cancelQueries({ queryKey: roomsListKey })
+  const snapshot = queryClient.getQueriesData<ChatRoomSummaryResponse[]>({
+    queryKey: roomsListKey,
+  })
+  markRoomReadInLoadedListCaches(queryClient, roomsListKey, roomId)
+  return snapshot
+}
+
+function restoreMarkRoomReadCache(queryClient: QueryClient, snapshot: RoomsListSnapshot | undefined) {
+  if (!snapshot) return
+  for (const [queryKey, rooms] of snapshot) {
+    queryClient.setQueryData(queryKey, rooms)
+  }
+}
+
+export {
+  beginRoomReadGeneration,
+  isActiveRoomRemoval,
+  isLatestRoomReadGeneration,
+  markRoomReadInLoadedListCaches,
+  prepareMarkRoomReadCache,
+  removeRoomFromAllLoadedListCaches,
+  restoreMarkRoomReadCache,
+}
+export type { RoomReadGeneration, RoomsListSnapshot }

@@ -5,6 +5,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { AdminAsyncState } from "@/features/admin/shared/components/admin-async-state"
+import { getUserStatusLabel } from "@/features/admin/shared/lib/admin-labels"
 import type { UserStatus } from "@/features/admin/shared/types/admin-types"
 import { useAdminUsers } from "@/features/admin/users/hooks/use-admin-users"
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value"
@@ -64,8 +65,10 @@ function AdminUsersPage() {
             className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-body-regular-14 text-gray-900 outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
           >
             <option value="">{messages.admin.common.all}</option>
-            <option value="active">active</option>
-            <option value="suspended">suspended</option>
+            <option value="active">{getUserStatusLabel("active", language)}</option>
+            <option value="suspended">
+              {getUserStatusLabel("suspended", language)}
+            </option>
           </select>
         </div>
       </div>
@@ -113,7 +116,9 @@ function AdminUsersPage() {
                     <td className="px-4 py-3">{user.email}</td>
                     <td className="px-4 py-3">{user.nickname}</td>
                     <td className="px-4 py-3">{user.role}</td>
-                    <td className="px-4 py-3">{user.status}</td>
+                    <td className="px-4 py-3">
+                      {getUserStatusLabel(user.status, language)}
+                    </td>
                     <td className="px-4 py-3">{user.grade}</td>
                     <td className="px-4 py-3">{user.provider}</td>
                     <td className="px-4 py-3">

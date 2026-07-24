@@ -320,20 +320,46 @@ type ExpectedAdminMessages = {
   content: StringMessages<
     | "title"
     | "description"
+    | "listTitle"
+    | "detailTitle"
     | "type"
     | "question"
     | "meeting"
+    | "search"
     | "contentId"
+    | "titleField"
+    | "body"
+    | "bodyPreview"
+    | "status"
+    | "active"
+    | "deleted"
+    | "resolved"
+    | "unresolved"
+    | "participantCount"
+    | "noParticipants"
     | "invalidId"
+    | "invalidTitle"
+    | "invalidContent"
     | "loadPreview"
     | "preview"
     | "author"
     | "createdAt"
+    | "updatedAt"
     | "deletedAt"
     | "notDeleted"
     | "requiredToken"
     | "confirmation"
     | "hardDelete"
+    | "edit"
+    | "reset"
+    | "openDetail"
+    | "backToList"
+    | "deleteSection"
+    | "deleteDescription"
+    | "deleteConfirmTitle"
+    | "deleteConfirmDescription"
+    | "updateSuccess"
+    | "deleteSuccess"
   >
   knowledge: StringMessages<
     | "title"
@@ -496,8 +522,12 @@ const expectedAdminMessageKeys = {
     "convergenceError", "createdAt", "invalidAnswer", "missingUser", "pending", "answered", "status", "subject", "title", "userEmail",
   ],
   content: [
-    "author", "confirmation", "contentId", "createdAt", "deletedAt", "description", "hardDelete", "invalidId",
-    "loadPreview", "meeting", "notDeleted", "preview", "question", "requiredToken", "title", "type",
+    "active", "author", "backToList", "body", "bodyPreview", "confirmation", "contentId", "createdAt",
+    "deleted", "deletedAt", "deleteConfirmDescription", "deleteConfirmTitle", "deleteDescription",
+    "deleteSection", "deleteSuccess", "description", "detailTitle", "edit", "hardDelete", "invalidContent",
+    "invalidId", "invalidTitle", "listTitle", "loadPreview", "meeting", "noParticipants", "notDeleted",
+    "openDetail", "participantCount", "preview", "question", "requiredToken", "reset", "resolved", "search",
+    "status", "title", "titleField", "type", "unresolved", "updatedAt", "updateSuccess",
   ],
   knowledge: [
     "answerContent", "answerId", "approve", "backToList", "chunk", "chunkContent", "confidence", "conflictRefreshed",
