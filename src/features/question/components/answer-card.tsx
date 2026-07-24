@@ -87,8 +87,8 @@ function AnswerCard({
             <span className="truncate text-title-semibold-16 text-gray-900">
               {answer.authorName}
             </span>
-            {answer.countryFlagSrc && countryName ? (
-              <CountryFlag flagSrc={answer.countryFlagSrc} country={countryName} />
+            {answer.nationalityCode && countryName ? (
+              <CountryFlag code={answer.nationalityCode} country={countryName} />
             ) : null}
           </div>
         </div>

@@ -109,4 +109,4 @@ function FlagIcon({ code, className }: FlagIconProps) {
   )
 }
 
-export { FlagIcon, FLAG_SPRITE_URL, FLAG_SYMBOL_PREFIX }
+export { FlagIcon, useFlagSprite, FLAG_SPRITE_URL, FLAG_SYMBOL_PREFIX }

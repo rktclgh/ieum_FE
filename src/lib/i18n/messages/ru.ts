@@ -224,7 +224,6 @@ export const ru: Messages = {
     closeLabel: "Закрыть",
     imageAlt: "Изображение вопроса",
     answerImageAlt: "Изображение ответа",
-    flagAlt: "Флаг",
     emptyAnswers: "Пока нет ответов.",
     loadError: "Не удалось загрузить вопрос.",
     acceptAction: "Выбрать ответ",

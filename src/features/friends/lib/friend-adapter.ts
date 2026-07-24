@@ -1,4 +1,4 @@
-import { COUNTRIES, type CountryCode } from "@/lib/constants/countries"
+import type { CountryCode } from "@/lib/constants/countries"
 import { resolveFileUrl } from "@/lib/api/file-url"
 import { fromIso2 } from "@/features/join/lib/nationality-map"
 import type {
@@ -13,7 +13,6 @@ interface FriendEntry {
   nickname: string
   avatarSrc?: string
   countryCode?: CountryCode
-  flagSrc?: string
   active?: boolean
 }
 
@@ -21,42 +20,31 @@ interface SearchEntry extends FriendEntry {
   isFriend: boolean
 }
 
-function flagOf(code: CountryCode | undefined) {
-  if (!code) return undefined
-  return COUNTRIES.find((country) => country.code === code)?.flag
-}
-
 function adaptFriend(friend: FriendResponse): FriendEntry {
-  const countryCode = fromIso2(friend.nationality)
   return {
     userId: friend.userId,
     nickname: friend.nickname,
     avatarSrc: resolveFileUrl(friend.profileImageUrl),
-    countryCode,
-    flagSrc: flagOf(countryCode),
+    countryCode: fromIso2(friend.nationality),
     active: friend.active,
   }
 }
 
 function adaptRequest(request: FriendRequestResponse): FriendEntry {
-  const countryCode = fromIso2(request.nationality)
   return {
     userId: request.userId,
     nickname: request.nickname,
     avatarSrc: resolveFileUrl(request.profileImageUrl),
-    countryCode,
-    flagSrc: flagOf(countryCode),
+    countryCode: fromIso2(request.nationality),
   }
 }
 
 function adaptSearchResult(user: UserSearchResponse): SearchEntry {
-  const countryCode = fromIso2(user.nationality)
   return {
     userId: user.userId,
     nickname: user.nickname,
     avatarSrc: resolveFileUrl(user.profileImageUrl),
-    countryCode,
-    flagSrc: flagOf(countryCode),
+    countryCode: fromIso2(user.nationality),
     isFriend: user.isFriend,
   }
 }

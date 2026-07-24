@@ -1,4 +1,4 @@
-import { COUNTRIES, type CountryCode } from "@/lib/constants/countries"
+import type { CountryCode } from "@/lib/constants/countries"
 
 // Backend expects an ISO 3166-1 alpha-2 code (^[A-Z]{2}$), while the UI works
 // with the kebab-case country slugs used across COUNTRY_CODES/COUNTRIES.
@@ -219,12 +219,4 @@ function fromIso2(iso2: string | null | undefined): CountryCode | undefined {
   return ISO2_NATIONALITY_MAP[iso2.toUpperCase()]
 }
 
-const FLAG_BY_COUNTRY_CODE = new Map(COUNTRIES.map((country) => [country.code, country.flag]))
-
-// 백엔드 nationality(ISO2, "KR") → 국기 SVG 경로. 매칭 실패 시 undefined(국기 생략).
-function flagFromIso2(iso2: string | null | undefined): string | undefined {
-  const code = fromIso2(iso2)
-  return code ? FLAG_BY_COUNTRY_CODE.get(code) : undefined
-}
-
-export { NATIONALITY_ISO2_MAP, ISO2_NATIONALITY_MAP, toIso2, fromIso2, flagFromIso2 }
+export { NATIONALITY_ISO2_MAP, ISO2_NATIONALITY_MAP, toIso2, fromIso2 }

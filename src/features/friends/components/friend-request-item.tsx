@@ -11,6 +11,7 @@ import {
 import { HighlightedText } from "@/components/ui/highlighted-text"
 import { ChatProfile } from "@/features/chat/components/chat-profile"
 import { CountryFlag } from "@/features/chat/components/country-flag"
+import type { CountryCode } from "@/lib/constants/countries"
 import { useTranslation } from "@/lib/i18n/use-translation"
 
 type FriendRequestVariant = "request" | "add" | "requested" | "friend" | "sent"
@@ -21,7 +22,7 @@ interface FriendRequestItemProps extends React.ComponentProps<"div"> {
   /** 이름 중 이 문자열과 일치하는 부분을 강조 표시 (친구 검색 화면) */
   highlightQuery?: string
   /** 국적. 국가 코드 매칭에 실패하면 국기를 생략하므로 선택값이다. */
-  flagSrc?: string
+  countryCode?: CountryCode
   nation?: string
   variant: FriendRequestVariant
   /** 롱프레스 메뉴가 열려 있는 동안 딤 오버레이 위로 떠 보이도록 강조 */
@@ -61,7 +62,7 @@ function FriendRequestItem({
   avatarSrc,
   name,
   highlightQuery,
-  flagSrc,
+  countryCode,
   nation,
   variant,
   active,
@@ -122,7 +123,7 @@ function FriendRequestItem({
           >
             <HighlightedText text={name} query={highlightQuery} />
           </p>
-          {flagSrc && nation && <CountryFlag flagSrc={flagSrc} country={nation} />}
+          {countryCode && nation && <CountryFlag code={countryCode} country={nation} />}
         </div>
       </div>
 

@@ -224,7 +224,6 @@ export const en: Messages = {
     closeLabel: "Close",
     imageAlt: "Question image",
     answerImageAlt: "Answer image",
-    flagAlt: "Flag",
     emptyAnswers: "No answers yet.",
     loadError: "Couldn't load the question.",
     acceptAction: "Accept",
