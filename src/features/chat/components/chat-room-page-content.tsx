@@ -423,8 +423,8 @@ function ChatRoomSessionContent({ roomId, entry, session }: ChatRoomSessionConte
         // 구 이벤트 형식에는 replyTo가 없을 수 있다. 확정 링크가 보이는 REST snapshot을 다시 읽는다.
         queryClient.invalidateQueries({ queryKey: chatKeys.messages(roomId) })
       }
-      // 새 메시지 수신 → 채팅 목록(미리보기·안읽음) 캐시를 무효화해 목록 재진입 시 최신 상태로 갱신한다.
-      queryClient.invalidateQueries({ queryKey: [...chatKeys.all, "rooms"] })
+      // 열린 방에서 받은 메시지는 즉시 읽음으로 올리고, 목록 갱신 순서는 read mutation이 소유한다.
+      markReadMutation.mutate(roomId)
       if (incoming.messageType === "system" && isGroup && meetingId != null) {
         queryClient.invalidateQueries({ queryKey: chatKeys.room(roomId) })
         queryClient.invalidateQueries({ queryKey: meetupKeys.participants(meetingId) })
