@@ -8,7 +8,7 @@ import { TabBar } from "@/features/navigation/components/tab-bar";
 import "./globals.css";
 
 const SITE_URL = "https://ieum.rktclgh.site";
-const SITE_NAME = "ieum";
+const SITE_NAME = "Ieum";
 const SITE_DESCRIPTION = "Connecting lives in Korea";
 const OG_IMAGE = {
   url: "/og-image-v2.png",
