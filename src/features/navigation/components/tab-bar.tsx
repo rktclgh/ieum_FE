@@ -76,6 +76,22 @@ function TabBarNav({
   className,
   ...props
 }: React.ComponentProps<"div"> & { activeIndex: number; concealed?: boolean }) {
+  const pillContainerRef = React.useRef<HTMLDivElement>(null)
+  const isFirstRender = React.useRef(true)
+
+  React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    const el = pillContainerRef.current
+    if (!el) return
+    el.removeAttribute("data-bounce")
+    // 강제 reflow로 애니메이션을 재시작시킨다 (값 읽기 자체가 의도된 부수효과다).
+    void el.offsetWidth
+    el.setAttribute("data-bounce", "true")
+  }, [activeIndex])
+
   const { messages } = useTranslation()
   const { data: me } = useMe()
 
@@ -105,6 +121,7 @@ function TabBarNav({
       {...props}
     >
       <div
+        ref={pillContainerRef}
         className="relative flex w-full items-center justify-between overflow-hidden rounded-full shadow-[0px_2px_16px_0px_rgba(0,0,0,0.12)] backdrop-blur-[3px]"
         style={{ padding: CONTAINER_PADDING }}
       >
