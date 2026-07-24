@@ -15,15 +15,34 @@ test("replaces a direct chat-room entry with the chat list regardless of browser
   assert.deepEqual(calls, ["replace:/chats/"])
 })
 
-test("preserves browser back navigation only after an explicit in-app room entry", () => {
+test("preserves browser back navigation after an explicit in-app room entry with usable history", () => {
   const calls: string[] = []
 
-  navigateChatRoomBack(parseChatRoomEntry("app"), {
-    back: () => calls.push("back"),
-    replace: (href) => calls.push(`replace:${href}`),
-  })
+  navigateChatRoomBack(
+    parseChatRoomEntry("app"),
+    {
+      back: () => calls.push("back"),
+      replace: (href) => calls.push(`replace:${href}`),
+    },
+    () => true
+  )
 
   assert.deepEqual(calls, ["back"])
+})
+
+test("falls back to the chat list for an app-marked deep link without browser history", () => {
+  const calls: string[] = []
+
+  navigateChatRoomBack(
+    parseChatRoomEntry("app"),
+    {
+      back: () => calls.push("back"),
+      replace: (href) => calls.push(`replace:${href}`),
+    },
+    () => false
+  )
+
+  assert.deepEqual(calls, ["replace:/chats/"])
 })
 
 test("treats an unknown entry marker as a direct entry", () => {
