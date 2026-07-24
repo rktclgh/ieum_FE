@@ -76,6 +76,26 @@ function TabBarNav({
   className,
   ...props
 }: React.ComponentProps<"div"> & { activeIndex: number; concealed?: boolean }) {
+  const pillContainerRef = React.useRef<HTMLDivElement>(null)
+  // activeIndex 그 자체를 초기값으로 잡아, 마운트 시점의 activeIndex와 비교했을 때
+  // "변화 없음"으로 시작한다. 불리언 플래그(예: isFirstRender)로 "최초 렌더인가"만
+  // 판단하면 React StrictMode의 mount 이펙트 이중 호출에서 두 번째 호출을 "실제 변화"로
+  // 오인해 마운트마다(=탭바가 없는 화면에 갔다 돌아올 때마다) 바운스가 잘못 발생한다.
+  // 이전 값과의 비교는 몇 번을 다시 호출해도 결과가 같아 이 문제에서 자유롭다.
+  const previousActiveIndexRef = React.useRef(activeIndex)
+
+  React.useEffect(() => {
+    const hasMoved = previousActiveIndexRef.current !== activeIndex
+    previousActiveIndexRef.current = activeIndex
+    if (!hasMoved) return
+    const el = pillContainerRef.current
+    if (!el) return
+    el.removeAttribute("data-bounce")
+    // 강제 reflow로 애니메이션을 재시작시킨다 (값 읽기 자체가 의도된 부수효과다).
+    void el.offsetWidth
+    el.setAttribute("data-bounce", "true")
+  }, [activeIndex])
+
   const { messages } = useTranslation()
   const { data: me } = useMe()
 
@@ -105,6 +125,7 @@ function TabBarNav({
       {...props}
     >
       <div
+        ref={pillContainerRef}
         className="relative flex w-full items-center justify-between overflow-hidden rounded-full shadow-[0px_2px_16px_0px_rgba(0,0,0,0.12)] backdrop-blur-[3px]"
         style={{ padding: CONTAINER_PADDING }}
       >
