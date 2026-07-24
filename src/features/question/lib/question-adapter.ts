@@ -1,5 +1,5 @@
 import { resolveFileUrl } from "@/lib/api/file-url"
-import { flagFromIso2, fromIso2 } from "@/features/join/lib/nationality-map"
+import { fromIso2 } from "@/features/join/lib/nationality-map"
 import type {
   AnswerResponse,
   LocationSnapshot,
@@ -19,7 +19,6 @@ interface QuestionAnswerView {
   authorUserId: number | null
   authorName: string
   authorAvatarUrl?: string
-  countryFlagSrc?: string
   nationalityCode?: CountryCode
   content: string
   createdAt: string
@@ -48,7 +47,6 @@ function adaptAnswer(answer: AnswerResponse): QuestionAnswerView {
     authorUserId: answer.author?.userId ?? null,
     authorName: answer.author?.nickname ?? "",
     authorAvatarUrl: resolveFileUrl(answer.author?.profileImageUrl),
-    countryFlagSrc: flagFromIso2(answer.author?.nationality),
     nationalityCode: fromIso2(answer.author?.nationality),
     content: answer.content ?? "",
     createdAt: answer.createdAt,
@@ -86,7 +84,7 @@ function adaptQuestionSummary(detail: QuestionDetailResponse): QuestionSummary {
       .flatMap((answer) => (!answer.isAi && answer.author ? [answer.author.userId] : [])),
     authorName: detail.author.nickname,
     authorAvatarUrl: resolveFileUrl(detail.author.profileImageUrl),
-    countryFlagSrc: flagFromIso2(detail.author.nationality),
+    nationalityCode: fromIso2(detail.author.nationality),
     createdAt: detail.createdAt ?? undefined,
     location: detail.location.label ?? detail.location.address,
     title: detail.title,

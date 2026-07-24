@@ -224,7 +224,6 @@ export const vi: Messages = {
     closeLabel: "Đóng",
     imageAlt: "Ảnh câu hỏi",
     answerImageAlt: "Ảnh câu trả lời",
-    flagAlt: "Cờ",
     emptyAnswers: "Chưa có câu trả lời nào.",
     loadError: "Không thể tải câu hỏi.",
     acceptAction: "Chọn câu trả lời",

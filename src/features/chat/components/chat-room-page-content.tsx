@@ -1024,7 +1024,7 @@ function ChatRoomSessionContent({ roomId, entry, session }: ChatRoomSessionConte
                           avatarSrc={resolveFileUrl(member.profileImageUrl)}
                           isMe={member.isMe}
                           isOwner={member.isOwner}
-                          flagSrc={member.countryFlagSrc}
+                          countryCode={member.nationalityCode}
                           nation={member.nationalityCode ? messages.countries[member.nationalityCode] : undefined}
                           onRemove={
                             member.canRemove
@@ -1047,7 +1047,7 @@ function ChatRoomSessionContent({ roomId, entry, session }: ChatRoomSessionConte
                         name={member.name}
                         avatarSrc={member.avatarSrc}
                         isMe={member.isMe}
-                        flagSrc={member.countryFlagSrc}
+                        countryCode={member.nationalityCode}
                         nation={member.nationalityCode ? messages.countries[member.nationalityCode] : undefined}
                       />
                     ))

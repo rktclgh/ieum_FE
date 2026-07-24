@@ -20,7 +20,6 @@ test("adaptAnswer preserves an AI answer that has no author", () => {
   assert.equal(answer.authorUserId, null)
   assert.equal(answer.authorName, "")
   assert.equal(answer.authorAvatarUrl, undefined)
-  assert.equal(answer.countryFlagSrc, undefined)
   assert.equal(answer.nationalityCode, undefined)
   assert.equal(answer.content, "AI 답변")
   assert.deepEqual(answer.imageUrls, [])

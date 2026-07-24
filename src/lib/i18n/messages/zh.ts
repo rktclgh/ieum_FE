@@ -217,7 +217,6 @@ export const zh: Messages = {
     closeLabel: "关闭",
     imageAlt: "提问图片",
     answerImageAlt: "回答图片",
-    flagAlt: "国旗",
     emptyAnswers: "还没有回答。",
     loadError: "无法加载问题。",
     acceptAction: "采纳回答",

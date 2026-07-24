@@ -51,7 +51,7 @@ function LoginContent() {
           변하면 로고 영역이 따라 움직여 레이아웃이 흔들린다. main과 동일 기준(620px). */}
       <div className="flex h-[120px] w-full shrink-0 items-center justify-center [@media(max-height:620px)]:h-[90px]">
         <Image
-          src="/icons/common/ieum-logo.png"
+          src="/icons/common/ieum-logo.svg"
           alt={messages.login.logoText}
           width={108}
           height={56}
