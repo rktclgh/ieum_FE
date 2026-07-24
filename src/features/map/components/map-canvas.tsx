@@ -1,16 +1,17 @@
 "use client"
 
 import L from "leaflet"
+import type { Map as MaplibreMap } from "maplibre-gl"
 import * as React from "react"
-import { MapContainer, Marker, useMap } from "react-leaflet"
+import { MapContainer, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
 import type { MapBounds, MapPin } from "@/features/map/api/pin-types"
-import { ClusteredPins } from "@/features/map/components/clustered-pins"
-import { PIN_ACCENT, PIN_COMBINED_SVG } from "@/features/map/components/map-center-pin"
 import { VectorTileLayer } from "@/features/map/components/vector-tile-layer"
-import type { Coordinates } from "@/features/map/hooks/use-geolocation"
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/features/map/constants/map"
+import type { Coordinates } from "@/features/map/hooks/use-geolocation"
+import { useMarkerLayers } from "@/features/map/hooks/use-marker-layers"
+import { usePinClusters } from "@/features/map/hooks/use-pin-clusters"
 import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import {
   createProgrammaticMoveGate,
@@ -75,54 +76,6 @@ interface MapCanvasProps {
    * 지도가 잠깐 보였다가 애니메이션이 끝난 뒤 툭 튀는(스냅) 것처럼 보인다.
    */
   onSizeSettle?: () => void
-}
-
-const LIVE_ACCENT = PIN_ACCENT
-
-// Figma Location/XL (node 1716:12220): primary 색 물방울 핀 + 흰 구멍 + 회색 그림자 타원. 팁이 좌표를 가리킨다.
-// 마크업은 화면 고정 핀(MapCenterPin)과 같은 path 데이터를 공유한다.
-const selectedLocationIcon = L.divIcon({
-  html: PIN_COMBINED_SVG,
-  className: "",
-  iconSize: [40, 47],
-  iconAnchor: [20, 41],
-})
-
-// Leaflet은 같은 pane의 마커를 화면 y좌표 순으로 쌓아, 남쪽(아래) 마커가 위로 온다.
-// 겹침 순서를 좌표가 아닌 역할로 고정하기 위해, 뷰포트 높이(px)보다 훨씬 큰 오프셋을 준다.
-// 장소 선택 핀 > 내 위치 > 모임/질문 핀(오프셋 0).
-const USER_LOCATION_Z_OFFSET = 10000
-const SELECTED_LOCATION_Z_OFFSET = 20000
-
-// 내 위치 마커: 연한 헤일로 → 중간 링 → 진한 코어로 이어지는 동심원 "핑".
-// 44x44 컨테이너·앵커·z-index·accent 색은 그대로 두고 세 겹의 원만 새 디자인으로 교체한다.
-//
-// issue #412 — 세 겹을 **명시적 z-index로** 아래에서 위로 쌓는다: z-0 헤일로 → z-1 중간 링 → z-2 코어.
-// DOM 순서만으로도 이론상 같은 결과지만, 실기기에서 바깥 링이 코어 위로 보인다는 리포트가
-// 반복돼 순서를 브라우저 해석에 맡기지 않고 못 박는다.
-const USER_LOCATION_SIZE = 44
-// 바깥 헤일로(가장 옅음) = 컨테이너 전체, 중간 링 = 절반 남짓, 코어 = 진한 점.
-const USER_LOCATION_HALO_SIZE = 44
-const USER_LOCATION_RING_SIZE = 24
-const USER_LOCATION_CORE_SIZE = 14
-const centered = (size: number) => (USER_LOCATION_SIZE - size) / 2
-const userLocationIcon = L.divIcon({
-  html: `<div style="position:relative;width:${USER_LOCATION_SIZE}px;height:${USER_LOCATION_SIZE}px;isolation:isolate">
-    <div style="position:absolute;left:${centered(USER_LOCATION_HALO_SIZE)}px;top:${centered(USER_LOCATION_HALO_SIZE)}px;width:${USER_LOCATION_HALO_SIZE}px;height:${USER_LOCATION_HALO_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};opacity:0.15;z-index:0"></div>
-    <div style="position:absolute;left:${centered(USER_LOCATION_RING_SIZE)}px;top:${centered(USER_LOCATION_RING_SIZE)}px;width:${USER_LOCATION_RING_SIZE}px;height:${USER_LOCATION_RING_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};opacity:0.3;z-index:1"></div>
-    <div style="position:absolute;left:${centered(USER_LOCATION_CORE_SIZE)}px;top:${centered(USER_LOCATION_CORE_SIZE)}px;width:${USER_LOCATION_CORE_SIZE}px;height:${USER_LOCATION_CORE_SIZE}px;border-radius:999px;background:${LIVE_ACCENT};box-shadow:0 0 3px 0 rgba(0,0,0,0.25);z-index:2"></div>
-  </div>`,
-  className: "",
-  iconSize: [USER_LOCATION_SIZE, USER_LOCATION_SIZE],
-  iconAnchor: [USER_LOCATION_SIZE / 2, USER_LOCATION_SIZE / 2],
-})
-
-// react-leaflet Marker는 map이 해제되는 중(StrictMode 재마운트·HMR)에 마운트되면 mapPane이 없어
-// leaflet Marker._initIcon의 getPane().appendChild에서 터진다. map이 살아 있을 때만 렌더한다.
-function ActiveMarker(props: React.ComponentProps<typeof Marker>) {
-  const map = useMap()
-  if (!isLeafletMapActive(map)) return null
-  return <Marker {...props} />
 }
 
 function MapCenterUpdater({
@@ -419,6 +372,50 @@ function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBoun
   return null
 }
 
+// usePinClusters(react-leaflet useMap 필요)와 useMarkerLayers(MapLibre glMap 필요)를 한곳에서
+// 호출해 MapContainer 자식으로 렌더한다. 렌더 출력은 없다(return null).
+function MarkerLayerBridge({
+  glMap,
+  pins,
+  onPinClick,
+  onPinStackClick,
+  livePosition,
+  selectedPosition,
+  onSelectedPositionClick,
+  topInset,
+  bottomInset,
+}: {
+  glMap: MaplibreMap | null
+  pins: MapPin[]
+  onPinClick?: (pin: MapPin) => void
+  onPinStackClick?: (pins: MapPin[]) => void
+  livePosition?: Coordinates | null
+  selectedPosition?: Coordinates | null
+  onSelectedPositionClick?: () => void
+  topInset?: number
+  bottomInset?: number
+}) {
+  // 해결된 질문은 지도와 클러스터 모두에서 제외한다.
+  const visiblePins = React.useMemo(() => pins.filter((pin) => !pin.resolved), [pins])
+  const { items, index } = usePinClusters(visiblePins)
+
+  useMarkerLayers({
+    glMap,
+    items,
+    index,
+    pins: visiblePins,
+    livePosition,
+    selectedPosition,
+    topInset,
+    bottomInset,
+    onPinClick,
+    onPinStackClick,
+    onSelectedPositionClick,
+  })
+
+  return null
+}
+
 // 홈 탭 재진입 시 탭 전환 슬라이드 애니메이션(app/template.tsx)이 지도 조상 요소에
 // transform을 거는 동안, transform이 없는 요소가 아닌 이상 그 조상이 하위 fixed 요소의
 // containing block이 된다(CSS 스펙). 지도 루트가 fixed라 이 구간에 Leaflet이 마운트되면
@@ -489,6 +486,7 @@ function MapCanvas({
   const [mapContainerKey] = React.useState(() => crypto.randomUUID())
   // 재중심을 일으키는 쪽(MapCenterUpdater)과 제스처를 판정하는 쪽(MapUserGestureWatcher)이 공유한다.
   const [moveGate] = React.useState(createProgrammaticMoveGate)
+  const [glMap, setGlMap] = React.useState<MaplibreMap | null>(null)
 
   return (
     <MapContainer
@@ -499,7 +497,7 @@ function MapCanvas({
       attributionControl={false}
       className={className}
     >
-      <VectorTileLayer onReady={onReady} />
+      <VectorTileLayer onReady={onReady} onMapReady={setGlMap} />
       <MapSizeObserver onSizeSettle={onSizeSettle} />
       <MapCenterUpdater
         center={center}
@@ -523,33 +521,17 @@ function MapCanvas({
       )}
       {onUserGesture && <MapUserGestureWatcher onUserGesture={onUserGesture} moveGate={moveGate} />}
       {onBoundsChange && <MapBoundsWatcher onBoundsChange={onBoundsChange} />}
-      {pins && pins.length > 0 && (
-        <ClusteredPins
-          pins={pins}
-          onPinClick={onPinClick}
-          onPinStackClick={onPinStackClick}
-          topInset={topInset}
-          bottomInset={bottomInset}
-        />
-      )}
-      {selectedPosition && (
-        <ActiveMarker
-          position={[selectedPosition.lat, selectedPosition.lng]}
-          icon={selectedLocationIcon}
-          zIndexOffset={SELECTED_LOCATION_Z_OFFSET}
-          eventHandlers={onSelectedPositionClick ? { click: onSelectedPositionClick } : undefined}
-        />
-      )}
-      {livePosition && (
-        <ActiveMarker
-          position={[livePosition.lat, livePosition.lng]}
-          icon={userLocationIcon}
-          zIndexOffset={USER_LOCATION_Z_OFFSET}
-          // 시각적으로는 맨 위지만 클릭은 통과시킨다(leaflet.css: .leaflet-interactive가 없으면 pointer-events:none).
-          // 아래에 겹친 모임/질문 핀이 선택되도록.
-          interactive={false}
-        />
-      )}
+      <MarkerLayerBridge
+        glMap={glMap}
+        pins={pins ?? []}
+        onPinClick={onPinClick}
+        onPinStackClick={onPinStackClick}
+        livePosition={livePosition}
+        selectedPosition={selectedPosition}
+        onSelectedPositionClick={onSelectedPositionClick}
+        topInset={topInset}
+        bottomInset={bottomInset}
+      />
     </MapContainer>
   )
 }

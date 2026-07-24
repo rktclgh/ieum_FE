@@ -9,8 +9,9 @@ const NO_IMAGE_SRC = "/icons/map/pin-no-image.svg"
 const OUTER = "relative flex size-11 items-center justify-center rounded-full bg-white shadow-[0_2px_4px_0_rgba(0,0,0,0.25)]"
 const INNER = "flex size-10 items-center justify-center overflow-hidden rounded-full"
 
-// ⚠️ 지도 위 실제 핀은 leaflet divIcon(React 트리 밖)이라 pin-marker.tsx/cluster-marker.tsx의
-// plain HTML이 렌더링한다. 아래 컴포넌트는 동일 비주얼의 참조용 React 구현이다.
+// ⚠️ 지도 위 실제 핀은 MapLibre 네이티브 레이어(marker-static-icons.ts가 래스터화한 이미지 +
+// marker-layers.ts의 symbol/circle layer)가 그린다(React 트리 밖). 아래 컴포넌트는 동일
+// 비주얼의 참조용 React 구현이다.
 
 /** 모임 핀 — 흰 원 위에 40px 원형 프로필 이미지(없으면 no-image 아이콘) */
 interface MeetupPinProps {
@@ -37,7 +38,7 @@ function MeetupPin({ imageSrc, imageAlt = "", className }: MeetupPinProps) {
 /**
  * 질문 핀 — 흰 원 위에 40px 원.
  * 미해결: 흰 원 + gray900 물음표(#111). 해결됨: primary 원 + 흰 체크.
- * resolved는 pin-marker.tsx divIcon의 해결 분기와 동일 전제(현재 BE 미전송 선제 필드).
+ * resolved는 지도 마커의 해결 분기와 동일 전제(현재 BE 미전송 선제 필드).
  */
 function QuestionPin({ resolved, className }: { resolved?: boolean; className?: string }) {
   return (
