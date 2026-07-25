@@ -6,18 +6,21 @@ import { fileURLToPath } from "node:url"
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const read = (relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), "utf8")
+const MAPLIBRE_INTERACTIVE_LAYER_CREATION =
+  /const glLayer = L\.maplibreGL\(\{\s*style\s*,\s*interactive:\s*true\s*,?\s*\}\)/
 
 test("홈 지도 현재 위치는 정확도 반경 없이 마커 halo만 표시한다", () => {
   const canvas = read("src/features/map/components/map-canvas.tsx")
   const home = read("src/features/map/components/home-map-screen.tsx")
-  // #233: 해제 중인 map에 Marker가 마운트되면 터지므로 실시간 위치도 ActiveMarker 래퍼로만 그린다.
-  const liveMarkerPattern = new RegExp(
-    String.raw`<ActiveMarker\b(?=[^>]*\bposition\s*=\s*\{\s*\[\s*livePosition\.lat\s*,\s*livePosition\.lng\s*\]\s*\})(?=[^>]*\bicon\s*=\s*\{\s*userLocationIcon\s*\})[^>]*\/?>`
-  )
+  const markerLayers = read("src/features/map/hooks/use-marker-layers.ts")
+  const markerSpecs = read("src/features/map/lib/marker-layers.ts")
 
   assert.doesNotMatch(canvas, /liveAccuracy/)
   assert.doesNotMatch(canvas, /<Circle/)
-  assert.match(canvas, liveMarkerPattern)
+  assert.doesNotMatch(canvas, /ActiveMarker/)
+  assert.match(canvas, /useMarkerLayers/)
+  assert.match(markerLayers, /source\.setData\(pointFeatureCollection\(livePosition\)\)/)
+  assert.match(markerSpecs, /const USER_LOCATION_HALO_SPEC = userLocationCircleSpec/)
   assert.doesNotMatch(home, /liveAccuracy=\{accuracy\}/)
 })
 
@@ -65,13 +68,17 @@ test("#339 홈 지도는 GPS·청크·타일을 직렬로 기다리지 않는다
   assert.match(home, /React\.useEffect\(preloadMapCanvas, \[\]\)/)
   assert.match(home, /void import\("@\/features\/map\/components\/map-canvas"\)/)
 
-  // (4) 스켈레톤은 고정 타이머가 아니라 베이스맵 로드 완료(onReady)에 연결한다.
-  assert.match(home, /onReady=\{\(\) => setMapReady\(true\)\}/)
+  // (4) 스켈레톤은 베이스맵 로드 완료(onReady)에 연결하고, 실패 시에만 상한 타이머로 푼다.
+  assert.match(home, /onReady=\{\(\) => setTilesReady\(true\)\}/)
+  assert.match(home, /const isMapReady = tilesReady && sizeSettled/)
   assert.match(home, /if \(!isMapReady\) return\s*const timer = setTimeout\(\(\) => setShowSkeleton\(false\), SKELETON_FADE_MS\)/)
-  assert.match(canvas, /<VectorTileLayer onReady=\{onReady\} \/>/)
+  assert.match(canvas, /<VectorTileLayer onReady=\{onReady\} onMapReady=\{setGlMap\} \/>/)
   assert.match(tileLayer, /glMap\.on\("load", notifyReady\)/)
   // 스타일 로드가 실패해 onReady가 오지 않아도 스켈레톤이 갇히지 않아야 한다.
-  assert.match(home, /setTimeout\(\(\) => setMapReady\(true\), MAP_READY_MAX_WAIT_MS\)/)
+  assert.match(
+    home,
+    /setTimeout\(\(\) => \{\s*setTilesReady\(true\)\s*setSizeSettled\(true\)\s*\}, MAP_READY_MAX_WAIT_MS\)/
+  )
 })
 
 test("장소 선택 picker가 geolocation initialStatus를 map step에 전달한다", () => {
@@ -168,13 +175,12 @@ test("보이는 영역 중심 수식은 visible-center 한 곳에서만 나온�
 })
 
 test("모임 마커 썸네일은 파일 URL을 정규화한다", () => {
-  const source = read("src/features/map/components/pin-marker.tsx")
+  const source = read("src/features/map/hooks/use-marker-layers.ts")
 
   assert.match(source, /import\s+\{\s*resolveFileUrl\s*\}\s+from\s+['"]@\/lib\/api\/file-url['"]/)
   assert.match(source, /const\s+thumbnailUrl\s*=\s*resolveFileUrl\(\s*pin\.thumbnailUrl\s*\)/)
-  // prettier가 인자를 멀티라인 + trailing comma로 재포맷할 수 있어 둘 다 허용한다.
-  assert.match(source, /escapeAttr\(\s*thumbnailUrl\s*,?\s*\)/)
-  assert.doesNotMatch(source, /escapeAttr\(\s*pin\.thumbnailUrl\s*\)/)
+  assert.match(source, /cache\.getOrLoad\(thumbnailUrl/)
+  assert.doesNotMatch(source, /getOrLoad\(pin\.thumbnailUrl/)
 })
 
 test("벡터 타일 레이어는 해제된 Leaflet map에 다시 붙지 않는다", () => {
@@ -186,7 +192,7 @@ test("벡터 타일 레이어는 해제된 Leaflet map에 다시 붙지 않는�
   const mountGuardIndex = indexOfPattern(/if \(!isLeafletMapActive\(map\)\)\s*return/)
   // #209: 스타일 로드가 비동기라 그 사이 언마운트될 수 있어, 붙이기 직전에 다시 확인해야 한다.
   const asyncGuardIndex = indexOfPattern(/if \(cancelled \|\| !isLeafletMapActive\(map\)\)\s*return/)
-  const layerCreationIndex = indexOfPattern(/const glLayer = L\.maplibreGL\(\{\s*style\s*,?\s*\}\)/)
+  const layerCreationIndex = indexOfPattern(MAPLIBRE_INTERACTIVE_LAYER_CREATION)
   // 생성된 레이어를 cleanup이 볼 수 있도록 effect 스코프 변수에 붙잡아 둔다.
   const layerTrackIndex = indexOfPattern(/\blayer = glLayer\b/)
   const layerAddIndex = indexOfPattern(/\bglLayer\.addTo\(map\)/)
@@ -203,4 +209,12 @@ test("벡터 타일 레이어는 해제된 Leaflet map에 다시 붙지 않는�
     source,
     /if \(layer && isLeafletMapActive\(map\) && map\.hasLayer\(layer\)\) \{\s*map\.removeLayer\(layer\)\s*\}/
   )
+})
+
+test("MapLibre 네이티브 핀 레이어는 클릭 이벤트를 받을 수 있어야 한다", () => {
+  const source = read("src/features/map/components/vector-tile-layer.tsx")
+
+  // maplibre-gl-leaflet은 interactive 기본값이 false라 캔버스에 pointer-events:none을 둔다.
+  // MapLibre 레이어에 그린 핀의 click 핸들러가 동작하려면 명시적으로 켜야 한다.
+  assert.match(source, MAPLIBRE_INTERACTIVE_LAYER_CREATION)
 })
