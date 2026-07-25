@@ -90,7 +90,10 @@ function VectorTileLayer({
         // 스타일을 받는 사이 언마운트됐거나 map이 해제 중이면 죽은 pane에 붙이지 않는다.
         if (cancelled || !isLeafletMapActive(map)) return
 
-        const glLayer = L.maplibreGL({ style })
+        // maplibre-gl-leaflet의 기본값은 interactive:false라 캔버스가 Leaflet CSS에서
+        // pointer-events:none이 된다. 네이티브 MapLibre 레이어로 그린 핀의 click 이벤트를
+        // 받으려면 명시적으로 켜야 한다.
+        const glLayer = L.maplibreGL({ style, interactive: true })
         layer = glLayer
         glLayer.addTo(map)
 
