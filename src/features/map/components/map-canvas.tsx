@@ -372,8 +372,9 @@ function MapBoundsWatcher({ onBoundsChange }: { onBoundsChange: (bounds: MapBoun
   return null
 }
 
-// usePinClusters(react-leaflet useMap 필요)와 useMarkerLayers(MapLibre glMap 필요)를 한곳에서
-// 호출해 MapContainer 자식으로 렌더한다. 렌더 출력은 없다(return null).
+// usePinClusters(react-leaflet useMap 필요)와 useMarkerLayers(MapLibre glMap + Leaflet map 둘 다 필요 —
+// 클러스터 확장은 Leaflet map.flyToBounds로 움직여야 한다)를 한곳에서 호출해 MapContainer 자식으로
+// 렌더한다. 렌더 출력은 없다(return null).
 function MarkerLayerBridge({
   glMap,
   pins,
@@ -395,11 +396,13 @@ function MarkerLayerBridge({
   topInset?: number
   bottomInset?: number
 }) {
+  const map = useMap()
   // 해결된 질문은 지도와 클러스터 모두에서 제외한다.
   const visiblePins = React.useMemo(() => pins.filter((pin) => !pin.resolved), [pins])
   const { items, index } = usePinClusters(visiblePins)
 
   useMarkerLayers({
+    map,
     glMap,
     items,
     index,

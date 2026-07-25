@@ -1,7 +1,7 @@
 "use client"
 
-import type { GeoJSONSource, LngLatBoundsLike, Map as MaplibreMap, MapLayerMouseEvent } from "maplibre-gl"
-import { LngLatBounds } from "maplibre-gl"
+import L, { type Map as LeafletMap } from "leaflet"
+import type { GeoJSONSource, Map as MaplibreMap, MapLayerMouseEvent } from "maplibre-gl"
 import * as React from "react"
 
 import type { MapPin } from "@/features/map/api/pin-types"
@@ -13,6 +13,7 @@ import {
   type PinClusterIndex,
   type PinClusterItem,
 } from "@/features/map/lib/cluster-index"
+import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import { buildMarkerFeatureCollection } from "@/features/map/lib/marker-geojson"
 import { MarkerImageCache } from "@/features/map/lib/marker-image-cache"
 import {
@@ -34,6 +35,7 @@ import { resolveFileUrl } from "@/lib/api/file-url"
 const EXPAND_EDGE_PADDING = 24
 
 interface UseMarkerLayersOptions {
+  map: LeafletMap
   glMap: MaplibreMap | null
   items: PinClusterItem[]
   index: PinClusterIndex
@@ -75,6 +77,7 @@ function pointFeatureCollection(position: Coordinates | null | undefined) {
 // map-canvas.tsx의 selectedLocationIcon/userLocationIcon)를 전부 대체한다.
 function useMarkerLayers(options: UseMarkerLayersOptions): void {
   const {
+    map,
     glMap,
     items,
     index,
@@ -94,6 +97,7 @@ function useMarkerLayers(options: UseMarkerLayersOptions): void {
 
   // 최신 값/콜백을 ref로 받아 아래 effect들이 매 렌더 재구독하지 않게 한다
   // (map-canvas.tsx의 기존 관례: onClickRef 패턴).
+  const mapRef = React.useRef(map)
   const pinsRef = React.useRef(pins)
   const indexRef = React.useRef(index)
   const insetsRef = React.useRef({ topInset, bottomInset })
@@ -102,6 +106,7 @@ function useMarkerLayers(options: UseMarkerLayersOptions): void {
   const onSelectedPositionClickRef = React.useRef(onSelectedPositionClick)
 
   React.useEffect(() => {
+    mapRef.current = map
     pinsRef.current = pins
     indexRef.current = index
     insetsRef.current = { topInset, bottomInset }
@@ -146,26 +151,26 @@ function useMarkerLayers(options: UseMarkerLayersOptions): void {
         return
       }
 
+      const leafletMap = mapRef.current
+      if (!isLeafletMapActive(leafletMap)) return
+
       const leaves = getClusterLeaves(indexRef.current, clusterId)
       if (leaves.length === 0) return
 
       const expansionZoom = getClusterExpansionZoom(indexRef.current, clusterId)
-      const bounds = leaves.reduce(
-        (acc, pin) => acc.extend([pin.location.lng, pin.location.lat]),
-        new LngLatBounds(
-          [leaves[0].location.lng, leaves[0].location.lat],
-          [leaves[0].location.lng, leaves[0].location.lat]
-        )
+      const bounds = L.latLngBounds(
+        leaves.map((pin) => [pin.location.lat, pin.location.lng] as [number, number])
       )
 
+      // glMap(MapLibre 인스턴스)을 직접 움직이면 안 된다 — @maplibre/maplibre-gl-leaflet은
+      // Leaflet → GL 단방향 동기화만 하므로(getEvents가 Leaflet move/zoom만 구독), glMap을
+      // 직접 fitBounds해도 Leaflet의 zoom/bounds가 안 바뀌어 usePinClusters가 재계산되지 않고
+      // (클러스터가 개별 핀으로 영영 안 풀림), 다음 Leaflet 이벤트에 원래 위치로 되돌아간다.
+      // 재중심(RecenterController)과 동일하게 반드시 Leaflet map으로 이동시킨다.
       const { topInset: top, bottomInset: bottom } = insetsRef.current
-      glMap.fitBounds(bounds as LngLatBoundsLike, {
-        padding: {
-          top: top + EXPAND_EDGE_PADDING,
-          bottom: bottom + EXPAND_EDGE_PADDING,
-          left: EXPAND_EDGE_PADDING,
-          right: EXPAND_EDGE_PADDING,
-        },
+      leafletMap.flyToBounds(bounds, {
+        paddingTopLeft: [EXPAND_EDGE_PADDING, top + EXPAND_EDGE_PADDING],
+        paddingBottomRight: [EXPAND_EDGE_PADDING, bottom + EXPAND_EDGE_PADDING],
         maxZoom: expansionZoom,
       })
     }
