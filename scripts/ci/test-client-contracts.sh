@@ -42,6 +42,7 @@ node --experimental-strip-types --test src/features/schedule/lib/schedule-query-
 node --experimental-strip-types --test src/features/schedule/lib/schedule-query-range.test.ts
 node --experimental-strip-types --test src/features/map/lib/map-tile-error.test.ts
 node --experimental-strip-types --test src/features/map/lib/distance.test.ts
+node --no-warnings --experimental-strip-types --import ./scripts/ci/register-ts-path-loader.mjs --test src/features/map/lib/live-position-filter.test.ts
 node --experimental-strip-types --test src/features/report/lib/report-target.test.ts
 node --experimental-strip-types --test src/features/pwa/lib/install-availability.test.ts
 node --experimental-strip-types --test src/lib/viewport/sheet-keyboard-inset.test.ts
