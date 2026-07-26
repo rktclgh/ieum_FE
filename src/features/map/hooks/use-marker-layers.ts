@@ -15,6 +15,7 @@ import {
 } from "@/features/map/lib/cluster-index"
 import { isLeafletMapActive } from "@/features/map/lib/leaflet-map-lifecycle"
 import { buildMarkerFeatureCollection } from "@/features/map/lib/marker-geojson"
+import { easeOutCubic, lerpLatLng } from "@/features/map/lib/point-interpolation"
 import { MarkerImageCache } from "@/features/map/lib/marker-image-cache"
 import {
   MARKER_LAYER_SPECS,
@@ -50,6 +51,10 @@ interface UseMarkerLayersOptions {
 }
 
 const EMPTY_FEATURE_COLLECTION = { type: "FeatureCollection" as const, features: [] }
+
+// 전역 모션 표준과 동일한 300ms(app/globals.css의 --motion-duration-base)를 써서
+// 다른 지도 전환 애니메이션과 속도감이 어긋나지 않게 한다.
+const LIVE_POSITION_TRANSITION_MS = 300
 
 interface MarkerClickProperties {
   kind: "pin" | "cluster" | "stack"
@@ -94,6 +99,11 @@ function useMarkerLayers(options: UseMarkerLayersOptions): void {
   const imageCacheRef = React.useRef<MarkerImageCache | null>(null)
   // 썸네일 로딩이 끝나면 이 값을 올려 markers 소스를 다시 그린다(아래 effect 2).
   const [imageVersion, setImageVersion] = React.useState(0)
+  // 내 위치 점이 매 GPS 갱신마다 즉시 스냅하지 않고 짧게 보간 이동하도록 진행 상태를 담는다.
+  const liveAnimationRef = React.useRef<{ raf: number | null; current: Coordinates | null }>({
+    raf: null,
+    current: null,
+  })
 
   // 최신 값/콜백을 ref로 받아 아래 effect들이 매 렌더 재구독하지 않게 한다
   // (map-canvas.tsx의 기존 관례: onClickRef 패턴).
@@ -247,12 +257,54 @@ function useMarkerLayers(options: UseMarkerLayersOptions): void {
     // imageVersion은 값 자체를 안 쓰지만, 오를 때 위 setData를 다시 실행시키는 트리거다.
   }, [glMap, items, imageVersion])
 
-  // 3) 내 위치 소스.
+  // 3) 내 위치 소스. setData는 보간 없이 즉시 스냅하므로(MapLibre GL 특성), 노이즈 섞인 GPS
+  // 갱신이 그대로 순간이동으로 보여 떨림처럼 느껴진다. 매 갱신을 rAF로 짧게 보간해 이동시킨다.
+  // 중간에 새 좌표가 도착하면(진행 중인 애니메이션을 취소하고) 그 시점의 화면상 위치(state.current)
+  // 에서 새 목표로 이어서 보간한다 — 매번 예전 시작점으로 되돌아가 재생하면 오히려 더 떨어 보인다.
   React.useEffect(() => {
     if (!glMap) return
     const source = glMap.getSource<GeoJSONSource>(USER_LOCATION_SOURCE_ID)
     if (!source) return
-    source.setData(pointFeatureCollection(livePosition))
+
+    const state = liveAnimationRef.current
+    if (state.raf !== null) {
+      cancelAnimationFrame(state.raf)
+      state.raf = null
+    }
+
+    if (!livePosition) {
+      source.setData(EMPTY_FEATURE_COLLECTION)
+      state.current = null
+      return
+    }
+
+    const start = state.current
+    if (!start) {
+      // 최초 표시(진입 시점)는 애니메이션 없이 바로 스냅한다.
+      source.setData(pointFeatureCollection(livePosition))
+      state.current = livePosition
+      return
+    }
+
+    const target = livePosition
+    const startTime = performance.now()
+
+    const step = (now: number) => {
+      const t = Math.min((now - startTime) / LIVE_POSITION_TRANSITION_MS, 1)
+      const point = lerpLatLng(start, target, easeOutCubic(t))
+      source.setData(pointFeatureCollection(point))
+      state.current = point
+      state.raf = t < 1 ? requestAnimationFrame(step) : null
+    }
+
+    state.raf = requestAnimationFrame(step)
+
+    return () => {
+      if (state.raf !== null) {
+        cancelAnimationFrame(state.raf)
+        state.raf = null
+      }
+    }
   }, [glMap, livePosition])
 
   // 4) 선택 위치 소스.
