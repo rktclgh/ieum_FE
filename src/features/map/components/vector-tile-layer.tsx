@@ -49,13 +49,7 @@ function handleMapError(event: MaplibreErrorEvent) {
 
 // 기존 Leaflet 지도 위에 OpenFreeMap 벡터 타일 레이어를 얹고, 지형 카테고리별로 색을 덮어쓴다.
 // 렌더 출력은 없다. 마커·실시간 위치·재중심 등 다른 Leaflet 로직과 독립적으로 동작한다.
-function VectorTileLayer({
-  onReady,
-  onMapReady,
-}: {
-  onReady?: () => void
-  onMapReady?: (map: MaplibreMap | null) => void
-}) {
+function VectorTileLayer({ onReady }: { onReady?: () => void }) {
   const map = useMap()
   const language = useLanguageStore((state) => state.language)
 
@@ -66,11 +60,6 @@ function VectorTileLayer({
   React.useEffect(() => {
     onReadyRef.current = onReady
   }, [onReady])
-
-  const onMapReadyRef = React.useRef(onMapReady)
-  React.useEffect(() => {
-    onMapReadyRef.current = onMapReady
-  }, [onMapReady])
 
   React.useEffect(() => {
     let layer: L.Layer | null = null
@@ -90,10 +79,7 @@ function VectorTileLayer({
         // 스타일을 받는 사이 언마운트됐거나 map이 해제 중이면 죽은 pane에 붙이지 않는다.
         if (cancelled || !isLeafletMapActive(map)) return
 
-        // maplibre-gl-leaflet의 기본값은 interactive:false라 캔버스가 Leaflet CSS에서
-        // pointer-events:none이 된다. 네이티브 MapLibre 레이어로 그린 핀의 click 이벤트를
-        // 받으려면 명시적으로 켜야 한다.
-        const glLayer = L.maplibreGL({ style, interactive: true })
+        const glLayer = L.maplibreGL({ style })
         layer = glLayer
         glLayer.addTo(map)
 
@@ -105,7 +91,6 @@ function VectorTileLayer({
         // 상태 반영에 렌더 한 틱이 걸리는데, 첫 타일 요청은 그 전에 시작되기 때문이다.
         instance.on("error", handleMapError)
         setGlMap(instance)
-        onMapReadyRef.current?.(instance)
       })
       .catch((error: unknown) => {
         // 스타일을 못 받으면 지도는 마커만 뜬 빈 배경이 된다. 조용히 죽지 않도록 남긴다.
@@ -116,7 +101,6 @@ function VectorTileLayer({
       cancelled = true
       instance?.off("error", handleMapError)
       setGlMap(null)
-      onMapReadyRef.current?.(null)
       // 부모 MapContainer가 먼저 제거한 경우에는 이미 layer가 빠져 있다. 해제 중인 map에
       // removeLayer를 호출하면 예외가 나므로 살아 있고 실제로 붙어 있을 때만 제거한다.
       if (layer && isLeafletMapActive(map) && map.hasLayer(layer)) {
