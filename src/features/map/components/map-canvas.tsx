@@ -21,6 +21,7 @@ import {
   resolveVisibleCenterOffsetY,
   resolveVisibleCenterPoint,
 } from "@/features/map/lib/visible-center"
+import { cn } from "@/lib/utils"
 
 /** 지도가 멈춘 뒤 중심 좌표를 방출하기까지의 지연(ms). 드래그 중 재조회를 막는다. */
 const CENTER_SETTLE_DEBOUNCE_MS = 400
@@ -496,13 +497,12 @@ function MapCanvas({
       key={mapContainerKey}
       center={[initialCenter.lat, initialCenter.lng]}
       zoom={DEFAULT_MAP_ZOOM}
-      // 핀치줌은 연속(소수점) 확대인데 기본값(zoomSnap:1)은 제스처 종료 시 가장 가까운
-      // 정수 줌으로 강제 스냅하며 지도 중심이 한 번에 튄다. 소수 단위로 낮춰 이 점프를 없앤다.
-      zoomSnap={0.25}
-      zoomDelta={0.5}
       zoomControl={false}
       attributionControl={false}
-      className={className}
+      // 제스처가 없을 동안 브라우저가 이 레이어의 GPU 합성(compositing) 승격을 해제했다가,
+      // 새 드래그가 시작될 때 다시 승격하면서 첫 프레임이 멈칫한다(모바일 WebGL 캔버스에서
+      // 흔한 현상). will-change로 항상 승격 상태를 유지해 제스처 시작 시 멈칫을 없앤다.
+      className={cn(className, "will-change-transform")}
     >
       <VectorTileLayer onReady={onReady} onMapReady={setGlMap} />
       <MapSizeObserver onSizeSettle={onSizeSettle} />
