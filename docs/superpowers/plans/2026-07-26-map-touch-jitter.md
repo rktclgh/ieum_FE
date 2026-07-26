@@ -2,6 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **최종 결과 업데이트 (2026-07-26)**: Task 1(zoomSnap)은 줌아웃을 깨뜨려 롤백했고, Task 4·5(내 위치
+> 점 보간 애니메이션)는 #493(MapLibre GL 마커 마이그레이션) 자체를 되돌리면서 함께 제거됐다(마커가
+> Leaflet DOM 마커로 복귀해 MapLibre GL 소스에 대한 보간이 더는 적용되지 않음). Task 2·3(GPS 필터)만
+> 최종 채택되어 유지된다. 드래그/핀치줌 진동의 실제 원인과 최종 해법은 이슈 #507·PR #508 참고.
+
 **Goal:** 지도의 내 위치 점(GPS dot)이 이동 중 위아래로 떨리는 문제와, 드래그·핀치줌 터치 후 지도가 딱 멈추지 않고 떨리는 문제를 해결한다.
 
 **Architecture:** (1) `use-geolocation`의 `watchPosition` 콜백에 정확도/최소이동거리 필터를 추가해 노이즈 낀 GPS fix를 걸러내고, (2) `use-marker-layers`의 내 위치 소스 갱신을 즉시 스냅에서 짧은 rAF 보간 애니메이션으로 바꾸며, (3) `MapCanvas`의 `MapContainer`에 `zoomSnap`/`zoomDelta`를 소수 단위로 설정해 핀치줌 종료 시 정수 줌으로 튀는 점프를 없앤다. 세 항목 모두 `home-map-screen.tsx`/`meetup-location-map.tsx` 양쪽이 공유하는 `MapCanvas` 계층에서 이뤄지므로 한 번의 수정으로 두 화면에 모두 적용된다.
