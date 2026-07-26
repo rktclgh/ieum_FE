@@ -496,6 +496,10 @@ function MapCanvas({
       key={mapContainerKey}
       center={[initialCenter.lat, initialCenter.lng]}
       zoom={DEFAULT_MAP_ZOOM}
+      // 핀치줌은 연속(소수점) 확대인데 기본값(zoomSnap:1)은 제스처 종료 시 가장 가까운
+      // 정수 줌으로 강제 스냅하며 지도 중심이 한 번에 튄다. 소수 단위로 낮춰 이 점프를 없앤다.
+      zoomSnap={0.25}
+      zoomDelta={0.5}
       zoomControl={false}
       attributionControl={false}
       className={className}
