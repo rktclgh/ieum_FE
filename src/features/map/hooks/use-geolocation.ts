@@ -4,6 +4,7 @@ import * as React from "react"
 
 import { readUsablePosition, rememberPosition } from "@/features/map/lib/geolocation-cache"
 import { resolveInitialGeolocationStatus } from "@/features/map/lib/geolocation-initial-status"
+import { shouldAcceptLiveFix } from "@/features/map/lib/live-position-filter"
 
 interface Coordinates {
   lat: number
@@ -35,6 +36,9 @@ function useGeolocation({ enabled = true }: UseGeolocationOptions = {}) {
   // 게이트에 가려 서버와 동일하므로 hydration은 어긋나지 않는다.
   const [seededPosition] = React.useState<Coordinates | null>(() => readUsablePosition(Date.now()))
   const [position, setPosition] = React.useState<Coordinates | null>(seededPosition)
+  // shouldAcceptLiveFix가 "이전 좌표"로 비교할 마지막 수락 좌표. state는 effect 밖 콜백에서
+  // stale하게 캡처되므로(watchPosition 구독은 마운트 시 1회) ref로 최신값을 유지한다.
+  const positionRef = React.useRef(seededPosition)
   const [status, setStatus] = React.useState<GeolocationStatus>(
     seededPosition ? "success" : "loading"
   )
@@ -50,13 +54,21 @@ function useGeolocation({ enabled = true }: UseGeolocationOptions = {}) {
     const watchId = navigator.geolocation.watchPosition(
       (result) => {
         const next = { lat: result.coords.latitude, lng: result.coords.longitude }
-        // 다음 마운트가 곧바로 출발할 수 있도록 남긴다. timestamp는 측위 시각이라 나이 계산에 맞다.
-        rememberPosition(next, result.timestamp)
-        setPosition(next)
         setStatus("success")
         setInitialStatus((currentStatus) =>
           resolveInitialGeolocationStatus(currentStatus, { type: "success" })
         )
+
+        // 정확도가 나쁘거나 이전 좌표에서 거의 움직이지 않은 fix는 반영하지 않는다 — GPS
+        // 자연 흔들림이 그대로 위치 점에 스냅되며 떨림처럼 보이는 문제(이슈 #507)를 막는다.
+        if (!shouldAcceptLiveFix(positionRef.current, { ...next, accuracyMeters: result.coords.accuracy })) {
+          return
+        }
+
+        // 다음 마운트가 곧바로 출발할 수 있도록 남긴다. timestamp는 측위 시각이라 나이 계산에 맞다.
+        rememberPosition(next, result.timestamp)
+        positionRef.current = next
+        setPosition(next)
       },
       (error) => {
         setStatus("error")

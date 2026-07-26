@@ -2,11 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 // @ts-expect-error Node type stripping requires explicit TypeScript extensions at runtime.
-import {
-  shouldAcceptLiveFix,
-  MAX_ACCEPTABLE_ACCURACY_METERS,
-  MIN_MOVEMENT_METERS,
-} from "./live-position-filter.ts"
+import { shouldAcceptLiveFix, MAX_ACCEPTABLE_ACCURACY_METERS } from "./live-position-filter.ts"
 
 const BASE = { lat: 37.5665, lng: 126.978 }
 
