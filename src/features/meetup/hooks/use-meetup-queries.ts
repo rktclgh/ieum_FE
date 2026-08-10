@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 
 import { getMeeting, getParticipants } from "@/features/meetup/api/meetup-api"
 import { PUBLIC_QUERY_META } from "@/features/session/lib/session-cache"
+import { isNotFoundError } from "@/lib/api/errors"
 
 const meetupKeys = {
   all: ["meetup"] as const,
@@ -17,6 +18,7 @@ function useMeeting(meetingId: number, enabled = true) {
     queryFn: () => getMeeting(meetingId),
     enabled: enabled && Number.isFinite(meetingId) && meetingId > 0,
     meta: PUBLIC_QUERY_META,
+    retry: (failureCount, error) => !isNotFoundError(error) && failureCount < 3,
   })
 }
 
