@@ -25,5 +25,9 @@ function getApiErrorCode(error: unknown): string | undefined {
   return undefined
 }
 
-export { getApiErrorMessage, getApiErrorCode }
+function isNotFoundError(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 404
+}
+
+export { getApiErrorMessage, getApiErrorCode, isNotFoundError }
 export type { ApiErrorResponse, ApiFieldError }
